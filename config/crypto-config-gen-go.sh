@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-sudo apt-get install -y jq
+sudo apt-get -qq install -y jq
 
 CURRENT="$(dirname $(readlink -f ${BASH_SOURCE}))"
 
@@ -16,7 +16,7 @@ if [ -z "$2" ]; then
 	echo "missing organization param"
 	exit 1
 fi
-if echo "$2" | jq '.'; then
+if echo $2 | jq '.'; then
 	echo "set organization from json $2"
 	length=$(echo $2 | jq '.|length')
 	for ((i = 0; i < $length; i++)); do
@@ -41,9 +41,9 @@ while getopts "i:h:" shortname $remain_params; do
 		crypto_config_file="$OPTARG"
 		;;
 	h)
-	    echo "set hostname (default: $HOSTNAME) ==> $OPTARG"
-	    hostName=$OPTARG
-	;;
+		echo "set hostname (default: $HOSTNAME) ==> $OPTARG"
+		hostName=$OPTARG
+		;;
 	?) #当有不认识的选项的时候arg为?
 		echo "unknown argument"
 		exit 1
@@ -51,8 +51,9 @@ while getopts "i:h:" shortname $remain_params; do
 	esac
 done
 
-
 company_domain="${company,,}.com"
+rm $crypto_config_file
+>$crypto_config_file
 yaml w -i $crypto_config_file OrdererOrgs[0].Name OrdererCrytoName
 yaml w -i $crypto_config_file OrdererOrgs[0].Domain $company_domain
 yaml w -i $crypto_config_file OrdererOrgs[0].Specs[0].Hostname ${hostName,,}
