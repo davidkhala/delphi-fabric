@@ -1,0 +1,27 @@
+OrdererOrgs:
+- Name: Orderer
+  Domain: delphi.com
+  Specs:
+  - Hostname: Orderer
+PeerOrgs:
+- Name: BU
+  Domain: bu.delphi.com
+  Template:
+    Count: 1
+    Start: 0
+  Users:
+    Count: 0
+- Name: ENG
+  Domain: eng.delphi.com
+  Template:
+    Count: 1
+    Start: 0
+  Users:
+    Count: 0
+- Name: PM
+  Domain: pm.delphi.com
+  Template:
+    Count: 1
+    Start: 0
+  Users:
+    Count: 0

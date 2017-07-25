@@ -1,0 +1,86 @@
+# For reference only
+Organizations:
+
+    - &OrdererOrg
+        Name: OrdererOrg
+
+        ID: OrdererMSP
+
+        MSPDir: ./crypto-config/ordererOrganizations/delphi.com/msp
+
+    - &BU
+        Name: BUMSP
+
+        ID: BUMSP
+
+        MSPDir: ./crypto-config/peerOrganizations/bu.delphi.com/msp
+
+        AnchorPeers:
+            - Host: peer0.bu.delphi.com
+              Port: 7051
+
+    - &ENG
+        Name: ENGMSP
+
+        ID: ENGMSP
+
+        MSPDir: ./crypto-config/peerOrganizations/eng.delphi.com/msp
+
+        AnchorPeers:
+            - Host: peer0.eng.delphi.com
+              Port: 7051
+    - &PM
+            Name: PMMSP
+
+            ID: PMMSP
+
+            MSPDir: ./crypto-config/peerOrganizations/pm.delphi.com/msp
+
+            AnchorPeers:
+                - Host: peer0.pm.delphi.com
+                  Port: 7051
+
+Orderer: &OrdererDelphi
+
+    OrdererType: solo
+
+    Addresses:
+        - orderer.delphi.com:7050
+
+    BatchTimeout: 2s
+
+    BatchSize:
+
+        MaxMessageCount: 10
+
+        AbsoluteMaxBytes: 99 MB
+
+        PreferredMaxBytes: 512 KB
+
+    Organizations:
+        - *OrdererOrg
+
+
+
+Application: &ApplicationDefaults
+
+    Organizations:
+      - *BU
+      - *ENG
+      - *PM
+
+Profiles:
+
+    DelphiGenesis:
+        Orderer:
+            <<: *OrdererDelphi
+        Consortiums:
+            SampleConsortium:
+                Organizations:
+                    - *BU
+                    - *ENG
+                    - *PM
+    DelphiChannel:
+        Consortium: SampleConsortium
+        Application:
+            <<: *ApplicationDefaults
