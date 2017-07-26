@@ -1,8 +1,8 @@
 OrdererOrgs:
-- Name: Orderer
+- Name: OrdererCrytoName
   Domain: delphi.com
   Specs:
-  - Hostname: Orderer
+  - Hostname: orderer
 PeerOrgs:
 - Name: BU
   Domain: bu.delphi.com

@@ -5,6 +5,7 @@ sudo apt-get -qq install -y jq
 CURRENT="$(dirname $(readlink -f ${BASH_SOURCE}))"
 
 crypto_config_file="crypto-config.yaml"
+CONFIG_JSON="orgs.json"
 company=$1
 if [ -z "$company" ]; then
 	echo "missing company param"
@@ -16,6 +17,8 @@ if [ -z "$2" ]; then
 	echo "missing organization param"
 	exit 1
 fi
+# jq '.delphi.orgs|keys' orgs.json
+
 if echo $2 | jq '.'; then
 	echo "set organization from json $2"
 	length=$(echo $2 | jq '.|length')
@@ -28,21 +31,22 @@ else
 	exit 1
 fi
 
-hostName="Orderer"
+hostName=$(jq ".$company.orderer.hostName" $CONFIG_JSON)
+
 remain_params=""
 for ((i = 3; i <= $#; i++)); do
 	j=${!i}
 	remain_params="$remain_params $j"
 done
-while getopts "i:h:" shortname $remain_params; do
+while getopts "i:j:" shortname $remain_params; do
 	case $shortname in
 	i)
 		echo "set crypto config yaml file (default: $crypto_config_file) ==> $OPTARG"
 		crypto_config_file="$OPTARG"
 		;;
-	h)
-		echo "set hostname (default: $HOSTNAME) ==> $OPTARG"
-		hostName=$OPTARG
+	j)
+		echo "set config json file (default: $CONFIG_JSON) ==> $OPTARG"
+		CONFIG_JSON=$OPTARG
 		;;
 	?) #当有不认识的选项的时候arg为?
 		echo "unknown argument"
