@@ -4,37 +4,18 @@ sudo apt-get -qq install -y jq
 
 CURRENT="$(dirname $(readlink -f ${BASH_SOURCE}))"
 
-crypto_config_file="crypto-config.yaml"
-CONFIG_JSON="orgs.json"
+crypto_config_file="$CURRENT/crypto-config.yaml"
+
+################### company, orgs setting
+CONFIG_JSON="$CURRENT/orgs.json"
 company=$1
 if [ -z "$company" ]; then
 	echo "missing company param"
 	exit 1
 fi
 orgs=()
-
-if [ -z "$2" ]; then
-	echo "missing organization param"
-	exit 1
-fi
-# jq '.delphi.orgs|keys' orgs.json
-
-if echo $2 | jq '.'; then
-	echo "set organization from json $2"
-	length=$(echo $2 | jq '.|length')
-	for ((i = 0; i < $length; i++)); do
-		orgs[i]=$(echo $2 | jq -r ".[$i]")
-	done
-	echo "organization set to ${orgs[@]}"
-else
-	echo "invalid organization json param: $2"
-	exit 1
-fi
-
-hostName=$(jq ".$company.orderer.hostName" $CONFIG_JSON)
-
 remain_params=""
-for ((i = 3; i <= $#; i++)); do
+for ((i = 2; i <= $#; i++)); do
 	j=${!i}
 	remain_params="$remain_params $j"
 done
@@ -55,7 +36,22 @@ while getopts "i:j:" shortname $remain_params; do
 	esac
 done
 
-company_domain="${company,,}.com"
+# build orgs from config.json
+p2=$(jq -r ".$company.orgs|keys[]" $CONFIG_JSON)
+if [ "$?" -eq "0" ]; then
+	for org in $p2; do
+		orgs+=($org)
+	done
+else
+	echo "invalid organization json param:"
+	echo "--company: $company"
+	exit 1
+fi
+company_domain=$(jq -r ".$company.domain" $CONFIG_JSON)
+
+###################
+hostName=$(jq ".$company.orderer.hostName" $CONFIG_JSON)
+
 rm $crypto_config_file
 >$crypto_config_file
 yaml w -i $crypto_config_file OrdererOrgs[0].Name OrdererCrytoName

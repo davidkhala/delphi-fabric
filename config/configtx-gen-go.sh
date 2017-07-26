@@ -4,49 +4,31 @@ sudo apt-get -qq install -y jq
 
 CURRENT="$(dirname $(readlink -f ${BASH_SOURCE}))"
 
-configtx_file="configtx.yaml"
+configtx_file="$CURRENT/configtx.yaml"
+
+################### company, orgs setting
+CONFIG_JSON="$CURRENT/orgs.json"
 company=$1
 if [ -z "$company" ]; then
 	echo "missing company param"
 	exit 1
 fi
-company_domain="${company,,}.com"
-
-MSPROOT=$3
-if [ -z "$MSPROOT" ]; then
-	echo "missing MSPROOT param. Generally, it should be .../crypto-config"
-	exit 1
-fi
 orgs=()
-
-if [ -z "$2" ]; then
-	echo "missing organization param"
-	exit 1
-fi
-if echo "$2" | jq '.'; then
-	echo "set organization from json $2"
-	length=$(echo $2 | jq '.|length')
-	for ((i = 0; i < $length; i++)); do
-		orgs[i]=$(echo $2 | jq -r ".[$i]")
-	done
-	echo "organization set to ${orgs[@]}"
-else
-	echo "invalid organization json param: $2"
-	exit 1
-fi
-
-PROFILE_BLOCK=${company}Genesis
-PROFILE_CHANNEL=${company}Channel
-
-ORDERER_PORT=7050
-ANCHOR_PEER_PORT=7051
+PROFILE_BLOCK=${company}Genesis   # Take care, it is not file!
+PROFILE_CHANNEL=${company}Channel # Take care, it is not file!
 remain_params=""
-for ((i = 4; i <= $#; i++)); do
+for ((i = 3; i <= $#; i++)); do
 	j=${!i}
 	remain_params="$remain_params $j"
 done
-while getopts "i:b:c:o:a:" shortname $remain_params; do
+
+while getopts "j:i:b:c:" shortname $remain_params; do
 	case $shortname in
+	j)
+		echo "set config json file (default: $CONFIG_JSON) ==> $OPTARG"
+		CONFIG_JSON=$OPTARG
+		;;
+
 	i)
 		echo "set configtx yaml file (default: $configtx_file) ==> $OPTARG"
 		configtx_file="$OPTARG"
@@ -59,14 +41,6 @@ while getopts "i:b:c:o:a:" shortname $remain_params; do
 		echo "set channel profile (default: $PROFILE_CHANNEL) ==> $OPTARG"
 		PROFILE_CHANNEL="$OPTARG"
 		;;
-	o)
-		echo "set orderer port (default: $ORDERER_PORT) ==> $OPTARG"
-		ORDERER_PORT="$OPTARG"
-		;;
-	a)
-		echo "set anchor peer port (default: $ANCHOR_PEER_PORT) ==> $OPTARG"
-		ANCHOR_PEER_PORT="$OPTARG"
-		;;
 	?) #当有不认识的选项的时候arg为?
 		echo "unknown argument"
 		exit 1
@@ -74,14 +48,51 @@ while getopts "i:b:c:o:a:" shortname $remain_params; do
 	esac
 done
 
-orderer_container="orderer.$company_domain"
+# build orgs from config.json
+p2=$(jq -r ".$company.orgs|keys[]" $CONFIG_JSON)
+if [ "$?" -eq "0" ]; then
+	for org in $p2; do
+		orgs+=($org)
+	done
+else
+	echo "invalid organization json param:"
+	echo "--company: $company"
+	exit 1
+fi
+company_domain=$(jq -r ".$company.domain" $CONFIG_JSON)
+
+###################
+
+MSPROOT=$2
+if [ -z "$MSPROOT" ]; then
+	echo "missing MSPROOT param. Generally, it should be .../crypto-config"
+	exit 1
+fi
+orgs=()
+
+p2=$(jq -r ".$company.orgs|keys[]" $CONFIG_JSON)
+if [ "$?" -eq "0" ]; then
+	for org in $p2; do
+		orgs+=($org)
+	done
+else
+	echo "invalid organization json param:"
+	echo "--company: $company"
+	exit 1
+fi
+
+ORDERER_CONTAINER_PORT=$(jq -r ".$company.orderer.portMap[0].container" $CONFIG_JSON)
+ANCHOR_PEER_CONTAINER_PORT=7051
+
+ORDERER_CONTAINER=$(jq -r ".$company.orderer.containerName" $CONFIG_JSON).$company_domain
 
 rm $configtx_file
 >$configtx_file
 # block profile
 
 yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Orderer.OrdererType 'solo'
-yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Orderer.Addresses[0] $orderer_container:$ORDERER_PORT
+yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Orderer.Addresses[0] $ORDERER_CONTAINER:$ORDERER_CONTAINER_PORT
+# containerFullName:container port, see in marbles
 yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Orderer.BatchTimeout '2s'
 
 yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Orderer.BatchSize.MaxMessageCount 10
@@ -96,10 +107,13 @@ for ((i = 0; i < ${#orgs[@]}; i++)); do
 	yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Consortiums.SampleConsortium.Organizations[$i].ID ${orgs[$i]}MSP
 	yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Consortiums.SampleConsortium.Organizations[$i].MSPDir \
 		"${MSPROOT}peerOrganizations/${orgs[$i],,}.$company_domain/msp"
+
+	peerContainer=$(jq -r ".$company.orgs.${orgs[$i]}.peers[0].containerName" $CONFIG_JSON).$company_domain
+
 	yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Consortiums.SampleConsortium.Organizations[$i].AnchorPeers[0].Host \
-		"peer0.${orgs[$i],,}.$company_domain"
+		$peerContainer
 	yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Consortiums.SampleConsortium.Organizations[$i].AnchorPeers[0].Port \
-		$ANCHOR_PEER_PORT
+		$ANCHOR_PEER_CONTAINER_PORT
 
 done
 
@@ -111,8 +125,10 @@ for ((i = 0; i < ${#orgs[@]}; i++)); do
 	yaml w -i $configtx_file Profiles.$PROFILE_CHANNEL.Application.Organizations[$i].ID ${orgs[$i]}MSP
 	yaml w -i $configtx_file Profiles.$PROFILE_CHANNEL.Application.Organizations[$i].MSPDir \
 		"${MSPROOT}peerOrganizations/${orgs[$i],,}.$company_domain/msp"
+
+	peerContainer=$(jq -r ".$company.orgs.${orgs[$i]}.peers[0].containerName" $CONFIG_JSON).$company_domain
 	yaml w -i $configtx_file Profiles.$PROFILE_CHANNEL.Application.Organizations[$i].AnchorPeers[0].Host \
-		"peer0.${orgs[$i],,}.$company_domain"
+		$peerContainer
 	yaml w -i $configtx_file Profiles.$PROFILE_CHANNEL.Application.Organizations[$i].AnchorPeers[0].Port \
-		$ANCHOR_PEER_PORT
+		$ANCHOR_PEER_CONTAINER_PORT
 done

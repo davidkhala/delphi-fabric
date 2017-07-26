@@ -3,49 +3,53 @@
     "name": "Delphi",
     "domain": "delphi.com",
     "orderer":{
-      "hostName":"order0",
+      "hostName":"order0ForCryptoFile",
+      "containerName":"orderContainerName",
       "portMap":[
-        "7050:7050"
+        {"host":7250,"container":7050}
       ]
     },
     "orgs": {
       "BU": {
         "peers": [
           {
+            "containerName":"BUContainerName",
             "portMap": [
-              "7051:7051",
-              "7053:7053"
+              {"host":7051,"container":7051},
+              {"host":7053,"container":7053}
             ]
           }
         ],
         "ca": {
-          "portMap": ["7054:7054"]
+          "portMap": [{"host":7054,"container":7054}]
         }
       },
       "ENG": {
         "peers": [
           {
+            "containerName":"ENGContainerName",
             "portMap": [
-              "8051:7051",
-              "8053:7053"
+              {"host":8051,"container":7051},
+              {"host":8053,"container":7053}
             ]
           }
         ],
         "ca": {
-          "portMap": ["8054:7054"]
+          "portMap": [{"host":8054,"container":7054}]
         }
       },
       "PM": {
         "peers": [
           {
+            "containerName":"PMContainerName",
             "portMap": [
-              "9051:7051",
-              "9053:7053"
+              {"host":9051,"container":7051},
+              {"host":9053,"container":7053}
             ]
           }
         ],
         "ca": {
-          "portMap": ["9054:7054"]
+          "portMap": [{"host":9054,"container":7054}]
         }
       }
     }
