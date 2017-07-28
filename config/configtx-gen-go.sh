@@ -8,14 +8,14 @@ configtx_file="$CURRENT/configtx.yaml"
 
 ################### company, orgs setting
 CONFIG_JSON="$CURRENT/orgs.json"
-company=$1
-if [ -z "$company" ]; then
+COMPANY=$1
+if [ -z "$COMPANY" ]; then
 	echo "missing company param"
 	exit 1
 fi
 orgs=()
-PROFILE_BLOCK=${company}Genesis   # Take care, it is not file!
-PROFILE_CHANNEL=${company}Channel # Take care, it is not file!
+PROFILE_BLOCK=${COMPANY}Genesis   # Take care, it is not file!
+PROFILE_CHANNEL=${COMPANY}Channel # Take care, it is not file!
 remain_params=""
 for ((i = 3; i <= $#; i++)); do
 	j=${!i}
@@ -41,7 +41,7 @@ while getopts "j:i:b:c:" shortname $remain_params; do
 		echo "set channel profile (default: $PROFILE_CHANNEL) ==> $OPTARG"
 		PROFILE_CHANNEL="$OPTARG"
 		;;
-	?) #当有不认识的选项的时候arg为?
+	?)
 		echo "unknown argument"
 		exit 1
 		;;
@@ -49,17 +49,17 @@ while getopts "j:i:b:c:" shortname $remain_params; do
 done
 
 # build orgs from config.json
-p2=$(jq -r ".$company.orgs|keys[]" $CONFIG_JSON)
+p2=$(jq -r ".$COMPANY.orgs|keys[]" $CONFIG_JSON)
 if [ "$?" -eq "0" ]; then
 	for org in $p2; do
 		orgs+=($org)
 	done
 else
 	echo "invalid organization json param:"
-	echo "--company: $company"
+	echo "--company: $COMPANY"
 	exit 1
 fi
-company_domain=$(jq -r ".$company.domain" $CONFIG_JSON)
+COMPANY_DOMAIN=$(jq -r ".$COMPANY.domain" $CONFIG_JSON)
 
 ###################
 
@@ -70,21 +70,21 @@ if [ -z "$MSPROOT" ]; then
 fi
 orgs=()
 
-p2=$(jq -r ".$company.orgs|keys[]" $CONFIG_JSON)
+p2=$(jq -r ".$COMPANY.orgs|keys[]" $CONFIG_JSON)
 if [ "$?" -eq "0" ]; then
 	for org in $p2; do
 		orgs+=($org)
 	done
 else
 	echo "invalid organization json param:"
-	echo "--company: $company"
+	echo "--company: $COMPANY"
 	exit 1
 fi
 
-ORDERER_CONTAINER_PORT=$(jq -r ".$company.orderer.portMap[0].container" $CONFIG_JSON)
+ORDERER_CONTAINER_PORT=$(jq -r ".$COMPANY.orderer.portMap[0].container" $CONFIG_JSON)
 ANCHOR_PEER_CONTAINER_PORT=7051
 
-ORDERER_CONTAINER=$(jq -r ".$company.orderer.containerName" $CONFIG_JSON).$company_domain
+ORDERER_CONTAINER=$(jq -r ".$COMPANY.orderer.containerName" $CONFIG_JSON).$COMPANY_DOMAIN
 
 rm $configtx_file
 >$configtx_file
@@ -100,15 +100,15 @@ yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Orderer.BatchSize.AbsoluteMaxBy
 yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Orderer.BatchSize.PreferredMaxBytes '512 KB'
 yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Orderer.Organizations[0].Name OrdererMSPName
 yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Orderer.Organizations[0].ID OrdererMSP
-yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Orderer.Organizations[0].MSPDir "${MSPROOT}ordererOrganizations/$company_domain/msp"
+yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Orderer.Organizations[0].MSPDir "${MSPROOT}ordererOrganizations/$COMPANY_DOMAIN/msp"
 
 for ((i = 0; i < ${#orgs[@]}; i++)); do
 	yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Consortiums.SampleConsortium.Organizations[$i].Name ${orgs[$i]}MSPName
 	yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Consortiums.SampleConsortium.Organizations[$i].ID ${orgs[$i]}MSP
 	yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Consortiums.SampleConsortium.Organizations[$i].MSPDir \
-		"${MSPROOT}peerOrganizations/${orgs[$i],,}.$company_domain/msp"
+		"${MSPROOT}peerOrganizations/${orgs[$i],,}.$COMPANY_DOMAIN/msp"
 
-	peerContainer=$(jq -r ".$company.orgs.${orgs[$i]}.peers[0].containerName" $CONFIG_JSON).$company_domain
+	peerContainer=$(jq -r ".$COMPANY.orgs.${orgs[$i]}.peers[0].containerName" $CONFIG_JSON).$COMPANY_DOMAIN
 
 	yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Consortiums.SampleConsortium.Organizations[$i].AnchorPeers[0].Host \
 		$peerContainer
@@ -124,9 +124,9 @@ for ((i = 0; i < ${#orgs[@]}; i++)); do
 
 	yaml w -i $configtx_file Profiles.$PROFILE_CHANNEL.Application.Organizations[$i].ID ${orgs[$i]}MSP
 	yaml w -i $configtx_file Profiles.$PROFILE_CHANNEL.Application.Organizations[$i].MSPDir \
-		"${MSPROOT}peerOrganizations/${orgs[$i],,}.$company_domain/msp"
+		"${MSPROOT}peerOrganizations/${orgs[$i],,}.$COMPANY_DOMAIN/msp"
 
-	peerContainer=$(jq -r ".$company.orgs.${orgs[$i]}.peers[0].containerName" $CONFIG_JSON).$company_domain
+	peerContainer=$(jq -r ".$COMPANY.orgs.${orgs[$i]}.peers[0].containerName" $CONFIG_JSON).$COMPANY_DOMAIN
 	yaml w -i $configtx_file Profiles.$PROFILE_CHANNEL.Application.Organizations[$i].AnchorPeers[0].Host \
 		$peerContainer
 	yaml w -i $configtx_file Profiles.$PROFILE_CHANNEL.Application.Organizations[$i].AnchorPeers[0].Port \

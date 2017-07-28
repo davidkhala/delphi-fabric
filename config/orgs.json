@@ -3,7 +3,6 @@
     "name": "Delphi",
     "domain": "delphi.com",
     "orderer":{
-      "hostName":"order0ForCryptoFile",
       "containerName":"orderContainerName",
       "portMap":[
         {"host":7250,"container":7050}
