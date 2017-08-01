@@ -28,6 +28,6 @@ for peerContainerName in $peerContainerNames; do
     PEER_CONTAINER="$peerContainerName.$COMPANY_DOMAIN"
     echo loop peer container: $PEER_CONTAINER
     docker cp $BLOCK_FILE_NEW $PEER_CONTAINER:/opt/gopath/src/github.com/hyperledger/fabric/peer/${CHANNEL_ID,,}.block
-    ./config/joinChannel.sh $COMPANY $CHANNEL_ID $PEER_CONTAINER -s $TLS_ENABLED
+    ./config/joinChannel.sh $COMPANY $CHANNEL_ID $PEER_CONTAINER
 
 done

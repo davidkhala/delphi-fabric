@@ -46,11 +46,11 @@ while getopts "j:v:s:" shortname $remain_params; do
 	esac
 done
 COMPANY_DOMAIN=$(jq -r ".$COMPANY.domain" $CONFIG_JSON)
-container_name=$(jq -r ".$COMPANY.orderer.containerName" $CONFIG_JSON)
-hostName=${container_name,,} # SHOULD be the same with containerName, otherwize TLS problem
-orderer_host=$hostName.$COMPANY_DOMAIN
-ORDERER_CONTAINER=$container_name.$COMPANY_DOMAIN
-tls_opts="--tls --cafile $CONTAINER_CRYPTO_CONFIG_DIR/ordererOrganizations/$COMPANY_DOMAIN/orderers/$orderer_host/tls/ca.crt"
+orderer_container_name=$(jq -r ".$COMPANY.orderer.containerName" $CONFIG_JSON)
+orderer_hostName=${orderer_container_name,,}
+orderer_hostName_full=$orderer_hostName.$COMPANY_DOMAIN
+ORDERER_CONTAINER=$orderer_container_name.$COMPANY_DOMAIN
+tls_opts="--tls --cafile $CONTAINER_CRYPTO_CONFIG_DIR/ordererOrganizations/$COMPANY_DOMAIN/orderers/$orderer_hostName_full/tls/ca.crt"
 # tls_opts="--tls --cafile /etc/hyperledger/crypto-config/ordererOrganizations/delphi.com/orderers/ordercontainername.delphi.com/tls/ca.crt
 
 ORDERER_ENDPOINT="$ORDERER_CONTAINER:7050" # Must for channel create or Error: Ordering service endpoint  is not valid or missing
@@ -64,7 +64,7 @@ fi
 
 #docker exec -ti $PEER_CONTAINER sh -c "test -e $CONTAINER_CONFIGTX_DIR/$COMPANY.channel; echo \$?"
 
-echo ===start channel create
+echo ===$PEER_CONTAINER channel create
 echo CMD : $CMD
 # ?? still see  WARN: Error reading from stream: rpc error: code = Canceled desc = context canceled
 

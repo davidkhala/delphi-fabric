@@ -98,8 +98,9 @@ yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Orderer.BatchTimeout '2s'
 yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Orderer.BatchSize.MaxMessageCount 10
 yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Orderer.BatchSize.AbsoluteMaxBytes '99 MB'
 yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Orderer.BatchSize.PreferredMaxBytes '512 KB'
-yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Orderer.Organizations[0].Name OrdererMSPName
-yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Orderer.Organizations[0].ID OrdererMSP
+# TODO: MSP name here is using assumption here, make sure it align with other modules
+yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Orderer.Organizations[0].Name $(jq -r ".$COMPANY.orderer.MSP.name" $CONFIG_JSON)
+yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Orderer.Organizations[0].ID $(jq -r ".$COMPANY.orderer.MSP.id" $CONFIG_JSON)
 yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Orderer.Organizations[0].MSPDir "${MSPROOT}ordererOrganizations/$COMPANY_DOMAIN/msp"
 
 for ((i = 0; i < ${#orgs[@]}; i++)); do
@@ -120,9 +121,9 @@ done
 # channel profile
 yaml w -i $configtx_file Profiles.$PROFILE_CHANNEL.Consortium SampleConsortium
 for ((i = 0; i < ${#orgs[@]}; i++)); do
-	yaml w -i $configtx_file Profiles.$PROFILE_CHANNEL.Application.Organizations[$i].Name ${orgs[$i]}MSPName
+	yaml w -i $configtx_file Profiles.$PROFILE_CHANNEL.Application.Organizations[$i].Name $(jq -r ".$COMPANY.orgs.${orgs[$i]}.MSP.name" $CONFIG_JSON)
 
-	yaml w -i $configtx_file Profiles.$PROFILE_CHANNEL.Application.Organizations[$i].ID ${orgs[$i]}MSP
+	yaml w -i $configtx_file Profiles.$PROFILE_CHANNEL.Application.Organizations[$i].ID $(jq -r ".$COMPANY.orgs.${orgs[$i]}.MSP.id" $CONFIG_JSON)
 	yaml w -i $configtx_file Profiles.$PROFILE_CHANNEL.Application.Organizations[$i].MSPDir \
 		"${MSPROOT}peerOrganizations/${orgs[$i],,}.$COMPANY_DOMAIN/msp"
 

@@ -50,14 +50,18 @@ fi
 COMPANY_DOMAIN=$(jq -r ".$COMPANY.domain" $CONFIG_JSON)
 
 ###################
-container_name=$(jq -r ".$COMPANY.orderer.containerName" $CONFIG_JSON)
-hostName=${container_name,,} # SHOULD be the same with containerName, otherwize TLS problem
+orderer_container_name=$(jq -r ".$COMPANY.orderer.containerName" $CONFIG_JSON)
+orderer_hostName=${orderer_container_name,,}
+# SHOULD be the same with containerName or its lowercase, otherwize transport: authentication handshake failed: x509: certificate is valid for Order0.delphi.com, Order0, not orderContainerName.delphi.com"
+
+
+
 
 rm $crypto_config_file
 >$crypto_config_file
 yaml w -i $crypto_config_file OrdererOrgs[0].Name OrdererCrytoName
 yaml w -i $crypto_config_file OrdererOrgs[0].Domain $COMPANY_DOMAIN
-yaml w -i $crypto_config_file OrdererOrgs[0].Specs[0].Hostname ${hostName,,} # be lower case for identity
+yaml w -i $crypto_config_file OrdererOrgs[0].Specs[0].Hostname ${orderer_hostName} # be lower case for identity
 
 for ((i = 0; i < ${#orgs[@]}; i++)); do
 	yaml w -i $crypto_config_file PeerOrgs[$i].Name ${orgs[$i]}

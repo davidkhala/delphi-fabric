@@ -6,6 +6,7 @@ CURRENT="$(dirname $(readlink -f ${BASH_SOURCE}))"
 
 COMPOSE_FILE="$CURRENT/docker-compose.yaml"
 CONFIG_JSON="$CURRENT/orgs.json"
+GOPATH="$(dirname $CURRENT)/GOPATH/"
 IMAGE_TAG="x86_64-1.0.0" # latest
 CONTAINER_CONFIGTX_DIR="/etc/hyperledger/configtx"
 CONTAINER_CRYPTO_CONFIG_DIR="/etc/hyperledger/crypto-config"
@@ -25,7 +26,7 @@ for ((i = 4; i <= $#; i++)); do
 	j=${!i}
 	remain_params="$remain_params $j"
 done
-while getopts "j:s:v:f:" shortname $remain_params; do
+while getopts "j:s:v:f:g:" shortname $remain_params; do
 	case $shortname in
 	j)
 		echo "set config json file (default: $CONFIG_JSON) ==> $OPTARG"
@@ -43,6 +44,10 @@ while getopts "j:s:v:f:" shortname $remain_params; do
 		echo "set docker-compose file (default: $COMPOSE_FILE) ==> $OPTARG"
 		COMPOSE_FILE=$OPTARG
 		;;
+    g)
+        echo "set GOPATH on host machine (default: $GOPATH) ==> $OPTARG"
+        GOPATH=$OPTARG
+    ;;
 	?)
 		echo "unknown argument"
 		exit 1
@@ -51,7 +56,8 @@ while getopts "j:s:v:f:" shortname $remain_params; do
 done
 COMPANY_DOMAIN=$(jq -r ".$COMPANY.domain" $CONFIG_JSON)
 
-ORDERER_CONTAINER=$(jq -r ".$COMPANY.orderer.containerName" $CONFIG_JSON).$COMPANY_DOMAIN
+orderer_container_name=$(jq -r ".$COMPANY.orderer.containerName" $CONFIG_JSON)
+ORDERER_CONTAINER=$orderer_container_name.$COMPANY_DOMAIN
 
 p2=$(jq -r ".$COMPANY.orgs|keys[]" $CONFIG_JSON)
 if [ "$?" -eq "0" ]; then
@@ -87,7 +93,11 @@ function envPush() {
 
 yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].container_name $ORDERER_CONTAINER
 yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].image hyperledger/fabric-orderer:$IMAGE_TAG
-yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].working_dir /opt/gopath/src/github.com/hyperledger/fabric/orderers
+CONTAINER_GOPATH="/etc/hyperledger/gopath/"
+yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].working_dir "/opt/gopath/src/github.com/hyperledger/fabric/orderers"
+
+
+
 yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].command "orderer"
 yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].ports[0] $ORDERER_HOST_PORT:$ORDERER_CONTAINER_PORT
 
@@ -97,9 +107,9 @@ yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].environment[0] ORDERER
 yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].environment[1] ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
 yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].environment[2] ORDERER_GENERAL_GENESISMETHOD=file
 
-orderer_hostName=$(jq -r ".$COMPANY.orderer.containerName" $CONFIG_JSON)
-ORDERER_HOST_FULLNAME=${orderer_hostName,,}.$COMPANY_DOMAIN
-ORDERER_STRUCTURE="ordererOrganizations/$COMPANY_DOMAIN/orderers/$ORDERER_HOST_FULLNAME"
+orderer_hostName=${orderer_container_name,,}
+orderer_hostName_full=$orderer_hostName.$COMPANY_DOMAIN
+ORDERER_STRUCTURE="ordererOrganizations/$COMPANY_DOMAIN/orderers/$orderer_hostName_full"
 CONTAINER_ORDERER_TLS_DIR="$CONTAINER_CRYPTO_CONFIG_DIR/$ORDERER_STRUCTURE/tls"
 
 yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].environment[3] ORDERER_GENERAL_GENESISFILE=$CONTAINER_CONFIGTX_DIR/$(basename $BLOCK_FILE)
@@ -133,11 +143,11 @@ for ((i = 0; i < ${#orgs[@]}; i++)); do
 	$PEERCMD.depends_on[0] $ORDERER_SERVICE_NAME
 	$PEERCMD.image hyperledger/fabric-peer:$IMAGE_TAG
 	$PEERCMD.working_dir /opt/gopath/src/github.com/hyperledger/fabric/peer
+	# TODO: can working_dir and container_GOPATH be user defined?
 	$PEERCMD.command "peer node start"
 
 	#common env
 	p=0
-
 	envPush "$PEERCMD" CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
 	envPush "$PEERCMD" CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=$COMPANY
 	envPush "$PEERCMD" CORE_LOGGING_LEVEL=DEBUG
@@ -173,6 +183,14 @@ for ((i = 0; i < ${#orgs[@]}; i++)); do
 	$PEERCMD.volumes[0] "/var/run/:/host/var/run/"
 	$PEERCMD.volumes[1] "$MSPROOT:$CONTAINER_CRYPTO_CONFIG_DIR" # for peer channel --cafile
 	$PEERCMD.volumes[2] "$(dirname $BLOCK_FILE):$CONTAINER_CONFIGTX_DIR" # for later channel create
+
+    #   TODO GO setup failed on peer container: only fabric-tools has go dependencies
+    #set GOPATH map
+	#
+	#   envPush "$PEERCMD" GOPATH=$CONTAINER_GOPATH
+
+    #GOPATH and working_dir conflict: ERROR: for PMContainerName.delphi.com  Cannot start service peer0.pm.delphi.com: oci runtime error: container_linux.go:262: starting container process caused "chdir to cwd (\"/opt/gopath/src/github.com/hyperledger/fabric/peer\") set in config.json failed: no such file or directory"
+    #   $PEERCMD.volumes[3] "$GOPATH:$CONTAINER_GOPATH"
 
 	# CA
 	p=0

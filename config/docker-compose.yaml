@@ -3,29 +3,31 @@ services:
   ccenv:
     image: hyperledger/fabric-ccenv:x86_64-1.0.0
     container_name: ccenv.delphi.com
-  AnyServiceName:
-    container_name: orderer.delphi.com
+  OrdererServiceName.delphi.com:
+    container_name: orderContainerName.delphi.com
     image: hyperledger/fabric-orderer:x86_64-1.0.0
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/orderers
     command: orderer
     ports:
-    - 7050:7050
+    - 7250:7050
     environment:
     - ORDERER_GENERAL_LOGLEVEL=debug
     - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
     - ORDERER_GENERAL_GENESISMETHOD=file
     - ORDERER_GENERAL_GENESISFILE=/etc/hyperledger/configtx/delphi.block
     - ORDERER_GENERAL_TLS_ENABLED=true
-    - ORDERER_GENERAL_TLS_PRIVATEKEY=/etc/hyperledger/crypto-config/ordererOrganizations/delphi.com/orderers/orderer.delphi.com/tls/server.key
-    - ORDERER_GENERAL_TLS_CERTIFICATE=/etc/hyperledger/crypto-config/ordererOrganizations/delphi.com/orderers/orderer.delphi.com/tls/server.crt
-    - ORDERER_GENERAL_TLS_ROOTCAS=[/etc/hyperledger/crypto-config/ordererOrganizations/delphi.com/orderers/orderer.delphi.com/tls/ca.crt,/etc/hyperledger/crypto-config/peerOrganizations/bu.delphi.com/peers/peer0.bu.delphi.com/tls/ca.crt,/etc/hyperledger/crypto-config/peerOrganizations/eng.delphi.com/peers/peer0.eng.delphi.com/tls/ca.crt,/etc/hyperledger/crypto-config/peerOrganizations/pm.delphi.com/peers/peer0.pm.delphi.com/tls/ca.crt]
+    - ORDERER_GENERAL_TLS_PRIVATEKEY=/etc/hyperledger/crypto-config/ordererOrganizations/delphi.com/orderers/ordercontainername.delphi.com/tls/server.key
+    - ORDERER_GENERAL_TLS_CERTIFICATE=/etc/hyperledger/crypto-config/ordererOrganizations/delphi.com/orderers/ordercontainername.delphi.com/tls/server.crt
+    - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
+    - ORDERER_GENERAL_LOCALMSPDIR=/etc/hyperledger/crypto-config/ordererOrganizations/delphi.com/orderers/ordercontainername.delphi.com/msp
+    - ORDERER_GENERAL_TLS_ROOTCAS=[/etc/hyperledger/crypto-config/ordererOrganizations/delphi.com/orderers/ordercontainername.delphi.com/tls/ca.crt,/etc/hyperledger/crypto-config/peerOrganizations/bu.delphi.com/peers/peer0.bu.delphi.com/tls/ca.crt,/etc/hyperledger/crypto-config/peerOrganizations/eng.delphi.com/peers/peer0.eng.delphi.com/tls/ca.crt,/etc/hyperledger/crypto-config/peerOrganizations/pm.delphi.com/peers/peer0.pm.delphi.com/tls/ca.crt]
     volumes:
-    - /home/david/Documents/delphi-fabric/config:/etc/hyperledger/configtx/
-    - /home/david/Documents/delphi-fabric/config/crypto-config:/etc/hyperledger/crypto-config/
+    - /home/david/Documents/delphi-fabric/config/configtx:/etc/hyperledger/configtx
+    - /home/david/Documents/delphi-fabric/config/crypto-config/:/etc/hyperledger/crypto-config
   peer0.bu.delphi.com:
-    container_name: peer0.bu.delphi.com
+    container_name: BUContainerName.delphi.com
     depends_on:
-    - AnyServiceName
+    - OrdererServiceName.delphi.com
     image: hyperledger/fabric-peer:x86_64-1.0.0
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
     command: peer node start
@@ -37,7 +39,9 @@ services:
     - CORE_PEER_GOSSIP_USELEADERELECTION=true
     - CORE_PEER_GOSSIP_ORGLEADER=false
     - CORE_PEER_GOSSIP_SKIPHANDSHAKE=true
-    - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/bu.delphi.com/peers/peer0.bu.delphi.com/msp
+    - CORE_PEER_GOSSIP_EXTERNALENDPOINT=BUContainerName.delphi.com:7051
+    - CORE_PEER_LOCALMSPID=BUMSP
+    - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/bu.delphi.com/users/Admin@bu.delphi.com/msp
     - CORE_PEER_TLS_ENABLED=true
     - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/crypto-config/peerOrganizations/bu.delphi.com/peers/peer0.bu.delphi.com/tls/server.key
     - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/crypto-config/peerOrganizations/bu.delphi.com/peers/peer0.bu.delphi.com/tls/server.crt
@@ -49,7 +53,8 @@ services:
     - 7053:7053
     volumes:
     - /var/run/:/host/var/run/
-    - /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/bu.delphi.com/peers/peer0.bu.delphi.com:/etc/hyperledger/crypto-config/peerOrganizations/bu.delphi.com/peers/peer0.bu.delphi.com
+    - /home/david/Documents/delphi-fabric/config/crypto-config/:/etc/hyperledger/crypto-config
+    - /home/david/Documents/delphi-fabric/config/configtx:/etc/hyperledger/configtx
   ca.bu.delphi.com:
     image: hyperledger/fabric-ca:x86_64-1.0.0
     container_name: ca.bu.delphi.com
@@ -60,15 +65,15 @@ services:
     - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
     - FABRIC_CA_SERVER_CA_CERTFILE=/etc/hyperledger/crypto-config/peerOrganizations/bu.delphi.com/ca/ca.bu.delphi.com-cert.pem
     - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/crypto-config/peerOrganizations/bu.delphi.com/ca/ca.bu.delphi.com-cert.pem
-    - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/crypto-config/peerOrganizations/bu.delphi.com/ca/5b210de5e5ddbaf15512c62927d117d37b78b11a50a42a99bd34391f053f19c1_sk
-    - FABRIC_CA_SERVER_CA_KEYFILE=/etc/hyperledger/crypto-config/peerOrganizations/bu.delphi.com/ca/5b210de5e5ddbaf15512c62927d117d37b78b11a50a42a99bd34391f053f19c1_sk
+    - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/crypto-config/peerOrganizations/bu.delphi.com/ca/d4b8ac84ee8e623d9b2c5bdf3998b3ca9f2bd139fd37ab147625e80ed56ffa54_sk
+    - FABRIC_CA_SERVER_CA_KEYFILE=/etc/hyperledger/crypto-config/peerOrganizations/bu.delphi.com/ca/d4b8ac84ee8e623d9b2c5bdf3998b3ca9f2bd139fd37ab147625e80ed56ffa54_sk
     - FABRIC_CA_SERVER_TLS_ENABLED=true
     ports:
     - 7054:7054
   peer0.eng.delphi.com:
-    container_name: peer0.eng.delphi.com
+    container_name: ENGContainerName.delphi.com
     depends_on:
-    - AnyServiceName
+    - OrdererServiceName.delphi.com
     image: hyperledger/fabric-peer:x86_64-1.0.0
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
     command: peer node start
@@ -80,7 +85,9 @@ services:
     - CORE_PEER_GOSSIP_USELEADERELECTION=true
     - CORE_PEER_GOSSIP_ORGLEADER=false
     - CORE_PEER_GOSSIP_SKIPHANDSHAKE=true
-    - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/eng.delphi.com/peers/peer0.eng.delphi.com/msp
+    - CORE_PEER_GOSSIP_EXTERNALENDPOINT=ENGContainerName.delphi.com:7051
+    - CORE_PEER_LOCALMSPID=ENGMSP
+    - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/eng.delphi.com/users/Admin@eng.delphi.com/msp
     - CORE_PEER_TLS_ENABLED=true
     - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/crypto-config/peerOrganizations/eng.delphi.com/peers/peer0.eng.delphi.com/tls/server.key
     - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/crypto-config/peerOrganizations/eng.delphi.com/peers/peer0.eng.delphi.com/tls/server.crt
@@ -92,7 +99,8 @@ services:
     - 8053:7053
     volumes:
     - /var/run/:/host/var/run/
-    - /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/eng.delphi.com/peers/peer0.eng.delphi.com:/etc/hyperledger/crypto-config/peerOrganizations/eng.delphi.com/peers/peer0.eng.delphi.com
+    - /home/david/Documents/delphi-fabric/config/crypto-config/:/etc/hyperledger/crypto-config
+    - /home/david/Documents/delphi-fabric/config/configtx:/etc/hyperledger/configtx
   ca.eng.delphi.com:
     image: hyperledger/fabric-ca:x86_64-1.0.0
     container_name: ca.eng.delphi.com
@@ -103,15 +111,15 @@ services:
     - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
     - FABRIC_CA_SERVER_CA_CERTFILE=/etc/hyperledger/crypto-config/peerOrganizations/eng.delphi.com/ca/ca.eng.delphi.com-cert.pem
     - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/crypto-config/peerOrganizations/eng.delphi.com/ca/ca.eng.delphi.com-cert.pem
-    - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/crypto-config/peerOrganizations/eng.delphi.com/ca/fccf385190d94dd6ad67fee2e576ade6b88cbb3fbd81c6017afb6dd1bde44127_sk
-    - FABRIC_CA_SERVER_CA_KEYFILE=/etc/hyperledger/crypto-config/peerOrganizations/eng.delphi.com/ca/fccf385190d94dd6ad67fee2e576ade6b88cbb3fbd81c6017afb6dd1bde44127_sk
+    - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/crypto-config/peerOrganizations/eng.delphi.com/ca/c357f557df450288bc505a7dca34eabc23e14027db811d42183627f4c8678c19_sk
+    - FABRIC_CA_SERVER_CA_KEYFILE=/etc/hyperledger/crypto-config/peerOrganizations/eng.delphi.com/ca/c357f557df450288bc505a7dca34eabc23e14027db811d42183627f4c8678c19_sk
     - FABRIC_CA_SERVER_TLS_ENABLED=true
     ports:
     - 8054:7054
   peer0.pm.delphi.com:
-    container_name: peer0.pm.delphi.com
+    container_name: PMContainerName.delphi.com
     depends_on:
-    - AnyServiceName
+    - OrdererServiceName.delphi.com
     image: hyperledger/fabric-peer:x86_64-1.0.0
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
     command: peer node start
@@ -123,7 +131,9 @@ services:
     - CORE_PEER_GOSSIP_USELEADERELECTION=true
     - CORE_PEER_GOSSIP_ORGLEADER=false
     - CORE_PEER_GOSSIP_SKIPHANDSHAKE=true
-    - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/pm.delphi.com/peers/peer0.pm.delphi.com/msp
+    - CORE_PEER_GOSSIP_EXTERNALENDPOINT=PMContainerName.delphi.com:7051
+    - CORE_PEER_LOCALMSPID=PMMSP
+    - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/pm.delphi.com/users/Admin@pm.delphi.com/msp
     - CORE_PEER_TLS_ENABLED=true
     - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/crypto-config/peerOrganizations/pm.delphi.com/peers/peer0.pm.delphi.com/tls/server.key
     - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/crypto-config/peerOrganizations/pm.delphi.com/peers/peer0.pm.delphi.com/tls/server.crt
@@ -135,7 +145,8 @@ services:
     - 9053:7053
     volumes:
     - /var/run/:/host/var/run/
-    - /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/pm.delphi.com/peers/peer0.pm.delphi.com:/etc/hyperledger/crypto-config/peerOrganizations/pm.delphi.com/peers/peer0.pm.delphi.com
+    - /home/david/Documents/delphi-fabric/config/crypto-config/:/etc/hyperledger/crypto-config
+    - /home/david/Documents/delphi-fabric/config/configtx:/etc/hyperledger/configtx
   ca.pm.delphi.com:
     image: hyperledger/fabric-ca:x86_64-1.0.0
     container_name: ca.pm.delphi.com
@@ -146,8 +157,8 @@ services:
     - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
     - FABRIC_CA_SERVER_CA_CERTFILE=/etc/hyperledger/crypto-config/peerOrganizations/pm.delphi.com/ca/ca.pm.delphi.com-cert.pem
     - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/crypto-config/peerOrganizations/pm.delphi.com/ca/ca.pm.delphi.com-cert.pem
-    - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/crypto-config/peerOrganizations/pm.delphi.com/ca/af10ddb31a4850041e130b0050285959dcaafccb25ec5999cd00839c19746e4d_sk
-    - FABRIC_CA_SERVER_CA_KEYFILE=/etc/hyperledger/crypto-config/peerOrganizations/pm.delphi.com/ca/af10ddb31a4850041e130b0050285959dcaafccb25ec5999cd00839c19746e4d_sk
+    - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/crypto-config/peerOrganizations/pm.delphi.com/ca/95af71afefd17da55065978ee387b10764c82ab5d762c7f16c8602ad394400d3_sk
+    - FABRIC_CA_SERVER_CA_KEYFILE=/etc/hyperledger/crypto-config/peerOrganizations/pm.delphi.com/ca/95af71afefd17da55065978ee387b10764c82ab5d762c7f16c8602ad394400d3_sk
     - FABRIC_CA_SERVER_TLS_ENABLED=true
     ports:
     - 9054:7054

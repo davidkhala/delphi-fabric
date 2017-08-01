@@ -1,12 +1,15 @@
 {
   "delphi": {
-    "name": "Delphi",
     "domain": "delphi.com",
     "orderer":{
       "containerName":"orderContainerName",
       "portMap":[
         {"host":7250,"container":7050}
-      ]
+      ],
+      "MSP":{
+        "name":"OrdererMSPName",
+        "id":"OrdererMSP"
+      }
     },
     "orgs": {
       "BU": {
@@ -21,6 +24,10 @@
         ],
         "ca": {
           "portMap": [{"host":7054,"container":7054}]
+        },
+        "MSP":{
+          "name":"BUMSPName",
+          "id":"BUMSP"
         }
       },
       "ENG": {
@@ -35,6 +42,10 @@
         ],
         "ca": {
           "portMap": [{"host":8054,"container":7054}]
+        },
+        "MSP":{
+          "name":"ENGMSPName",
+          "id":"ENGMSP"
         }
       },
       "PM": {
@@ -49,6 +60,10 @@
         ],
         "ca": {
           "portMap": [{"host":9054,"container":7054}]
+        },
+        "MSP":{
+          "name":"PMMSPName",
+          "id":"PMMSP"
         }
       }
     }
