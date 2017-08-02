@@ -1,69 +1,122 @@
 {
   "delphi": {
     "domain": "delphi.com",
-    "orderer":{
-      "containerName":"orderContainerName",
-      "portMap":[
-        {"host":7250,"container":7050}
+    "orderer": {
+      "containerName": "orderContainerName",
+      "portMap": [
+        {
+          "host": 7250,
+          "container": 7050
+        }
       ],
-      "MSP":{
-        "name":"OrdererMSPName",
-        "id":"OrdererMSP"
+      "MSP": {
+        "name": "OrdererMSPName",
+        "id": "OrdererMSP"
       }
     },
+    "channels": [
+      {
+        "delphichannel": {
+          "peers": [
+            {
+              "containerName": "BUContainerName"
+            },
+            {
+              "containerName": "ENGContainerName"
+            },
+            {
+              "containerName": "PMContainerName"
+            }
+          ]
+        }
+      }
+    ],
     "orgs": {
       "BU": {
         "peers": [
           {
-            "containerName":"BUContainerName",
+            "containerName": "BUContainerName",
             "portMap": [
-              {"host":7051,"container":7051},
-              {"host":7053,"container":7053}
+              {
+                "host": 7051,
+                "container": 7051
+              },
+              {
+                "host": 7053,
+                "container": 7053
+              }
             ]
           }
         ],
         "ca": {
-          "portMap": [{"host":7054,"container":7054}]
+          "portMap": [
+            {
+              "host": 7054,
+              "container": 7054
+            }
+          ]
         },
-        "MSP":{
-          "name":"BUMSPName",
-          "id":"BUMSP"
+        "MSP": {
+          "name": "BUMSPName",
+          "id": "BUMSP"
         }
       },
       "ENG": {
         "peers": [
           {
-            "containerName":"ENGContainerName",
+            "containerName": "ENGContainerName",
             "portMap": [
-              {"host":8051,"container":7051},
-              {"host":8053,"container":7053}
+              {
+                "host": 8051,
+                "container": 7051
+              },
+              {
+                "host": 8053,
+                "container": 7053
+              }
             ]
           }
         ],
         "ca": {
-          "portMap": [{"host":8054,"container":7054}]
+          "portMap": [
+            {
+              "host": 8054,
+              "container": 7054
+            }
+          ]
         },
-        "MSP":{
-          "name":"ENGMSPName",
-          "id":"ENGMSP"
+        "MSP": {
+          "name": "ENGMSPName",
+          "id": "ENGMSP"
         }
       },
       "PM": {
         "peers": [
           {
-            "containerName":"PMContainerName",
+            "containerName": "PMContainerName",
             "portMap": [
-              {"host":9051,"container":7051},
-              {"host":9053,"container":7053}
+              {
+                "host": 9051,
+                "container": 7051
+              },
+              {
+                "host": 9053,
+                "container": 7053
+              }
             ]
           }
         ],
         "ca": {
-          "portMap": [{"host":9054,"container":7054}]
+          "portMap": [
+            {
+              "host": 9054,
+              "container": 7054
+            }
+          ]
         },
-        "MSP":{
-          "name":"PMMSPName",
-          "id":"PMMSP"
+        "MSP": {
+          "name": "PMMSPName",
+          "id": "PMMSP"
         }
       }
     }

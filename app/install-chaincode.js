@@ -21,12 +21,12 @@ var config = require('../config.json');
 var helper = require('./helper.js');
 var logger = helper.getLogger('install-chaincode');
 
-var installChaincode = function(peerURLs, chaincodeName, chaincodePath,
+const installChaincode = function(peerURLs, chaincodeName, chaincodePath,
 																chaincodeVersion, username, org) {
 	logger.debug(
 		'\n============ Install chaincode on organizations ============\n');
 	logger.debug("params",{peerURLs,chaincodeName,chaincodePath,chaincodeVersion,username,org})
-	helper.setupChaincodeDeploy();
+	helper.setGOPATH();
 	var client = helper.getClientForOrg(org);
 
 	return helper.getOrgAdmin(org).then((user) => {

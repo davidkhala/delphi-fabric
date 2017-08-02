@@ -77,7 +77,7 @@ for (let org in orgs) {
 
 }
 
-const output = { 'network-config': networkConfig }
+const output =  networkConfig
 fs.writeFileSync(JSONOUTPUT, JSON.stringify(output), 'utf8')
 
 

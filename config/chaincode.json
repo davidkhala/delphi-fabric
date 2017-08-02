@@ -1,0 +1,25 @@
+{
+  "GOPATH": "/home/david/Documents/delphi-fabric/GOPATH",
+  "chaincodes": {
+    "delphiChaincode": {
+      "orgs": {
+        "BU": {
+          "peers": [
+            {
+              "containerName": "BUContainerName"
+            }
+          ]
+        },
+        "PM": {
+          "peers": [
+            {
+              "containerName": "PMContainerName"
+            }
+          ]
+        }
+      },
+      "path": "github.com/delphi",
+      "version": "v0"
+    }
+  }
+}

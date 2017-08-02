@@ -11,7 +11,7 @@ CONFIG_JSON="$CURRENT/config/orgs.json"
 TLS_ENABLED=true
 COMPANY_DOMAIN=$(jq -r ".$COMPANY.domain" $CONFIG_JSON)
 # TODO join all
-peerContainerNames=$(jq -r ".delphi.orgs[].peers[0].containerName" $CONFIG_JSON)
+peerContainerNames=$(jq -r ".$COMPANY.orgs[].peers[0].containerName" $CONFIG_JSON)
 
 
 function getSampleContainer(){

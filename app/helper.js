@@ -25,15 +25,16 @@ const User = require('fabric-client/lib/User.js')
 const crypto = require('crypto')
 const copService = require('fabric-ca-client')
 const config = require('../config.json')
-const channelConfig = require('../config/channel.json')
+const glocalConfig = require('../config/orgs.json')
+const channelsConfig = glocalConfig.delphi.channels
+const chaincodeConfig=require('../config/chaincode.json')
 const hfc = require('fabric-client')
 
 const testConfig = require('../config/node-sdk/test.json')
-const tempConfig = testConfig['network-config']
 
-const ordererConfig = tempConfig.orderer
-const orgsConfig = tempConfig.organizations
-const clients = {}
+const ordererConfig = testConfig.orderer
+const orgsConfig = testConfig.organizations
+const clients = {} // client is for save CryptoSuite for each org
 const channels = {}
 const caClients = {}
 
@@ -50,7 +51,7 @@ for (let orgName in orgsConfig) {
 	cryptoSuite.setCryptoKeyStore(hfc.newCryptoKeyStore({ path: getKeyStorePath(orgName) }))
 	client.setCryptoSuite(cryptoSuite)
 
-	for (let channelName in channelConfig) {
+	for (let channelName in channelsConfig) {
 
 		let channel = client.newChannel(channelName)
 
@@ -106,7 +107,7 @@ function newRemotes (urls, forPeers, userOrg) {
 				let peerUrl = urls[index]
 
 				let found = false
-				for (let key in tempConfig) {
+				for (let key in testConfig) {
 					if (key.indexOf('org') === 0) {
 						// if looking for event hubs, an app can only connect to
 						// event hubs in its own org
@@ -114,7 +115,7 @@ function newRemotes (urls, forPeers, userOrg) {
 							continue
 						}
 
-						let org = tempConfig[key]
+						let org = testConfig[key]
 						let client = getClientForOrg(key)
 
 						for (let prop in org) {
@@ -191,7 +192,7 @@ var newPeers = function(urls) {
 
 	}
 
-	if(targets.length===0){
+	if (targets.length === 0) {
 		logger.error(`Failed to find any peer for urls ${urls}`)
 	}
 
@@ -349,8 +350,8 @@ var getOrgAdmin = function(userOrg) {
 	})
 }
 
-var setupChaincodeDeploy = function() {
-	process.env.GOPATH = path.join(__dirname, config.GOPATH)
+const setGOPATH = function() {
+	process.env.GOPATH = chaincodeConfig.GOPATH
 }
 
 var getLogger = function(moduleName) {
@@ -360,16 +361,16 @@ var getLogger = function(moduleName) {
 }
 
 var getPeerAddressByName = function(org, peer) {
-	var address = tempConfig[org][peer].requests
+	var address = testConfig[org][peer].requests
 	return address.split('grpcs://')[1]
 }
 
 exports.getChannelForOrg = getChannelForOrg
 exports.getClientForOrg = getClientForOrg
 exports.getLogger = getLogger
-exports.setupChaincodeDeploy = setupChaincodeDeploy
+exports.setGOPATH = setGOPATH
 exports.getMspID = getMspID
-exports.ORGS = tempConfig
+exports.ORGS = testConfig
 exports.newPeers = newPeers
 exports.newEventHubs = newEventHubs
 exports.getPeerAddressByName = getPeerAddressByName
