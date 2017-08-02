@@ -119,6 +119,7 @@
           "id": "PMMSP"
         }
       }
-    }
+    },
+    "CRYPTO_CONFIG_DIR": "/home/david/Documents/delphi-fabric/config/crypto-config/"
   }
 }

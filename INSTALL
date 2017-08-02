@@ -4,3 +4,7 @@ sudo apt-get -qq install -y nodejs
 
 # balance-transfer example dependencies
 sudo apt-get -qq install -y jq
+
+# to use sponge
+sudo apt -qq install -y moreutils
+

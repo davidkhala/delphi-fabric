@@ -25,15 +25,19 @@ const User = require('fabric-client/lib/User.js')
 const crypto = require('crypto')
 const copService = require('fabric-ca-client')
 const config = require('../config.json')
-const glocalConfig = require('../config/orgs.json')
-const channelsConfig = glocalConfig.delphi.channels
-const chaincodeConfig=require('../config/chaincode.json')
+const globalConfig = require('../config/orgs.json')
+const COMPANY="delphi"
+const companyConfig=globalConfig[COMPANY]
+const CRYPTO_CONFIG_DIR=companyConfig.CRYPTO_CONFIG_DIR
+const channelsConfig = companyConfig.channels
+const chaincodeConfig = require('../config/chaincode.json')
 const hfc = require('fabric-client')
 
 const testConfig = require('../config/node-sdk/test.json')
 
 const ordererConfig = testConfig.orderer
 const orgsConfig = testConfig.organizations
+const COMPANY_DOMAIN = companyConfig.domain
 const clients = {} // client is for save CryptoSuite for each org
 const channels = {}
 const caClients = {}
@@ -99,62 +103,6 @@ function getKeyStorePath (org) {
 	return `/tmp/fabric-client-kvs_${org}`
 }
 
-function newRemotes (urls, forPeers, userOrg) {
-	var targets = []
-	// find the peer that match the urls
-	outer:
-			for (let index in urls) {
-				let peerUrl = urls[index]
-
-				let found = false
-				for (let key in testConfig) {
-					if (key.indexOf('org') === 0) {
-						// if looking for event hubs, an app can only connect to
-						// event hubs in its own org
-						if (!forPeers && key !== userOrg) {
-							continue
-						}
-
-						let org = testConfig[key]
-						let client = getClientForOrg(key)
-
-						for (let prop in org) {
-							if (prop.indexOf('peer') === 0) {
-								if (org[prop]['requests'].indexOf(peerUrl) >= 0) {
-									// found a peer matching the subject url
-									if (forPeers) {
-										let data = fs.readFileSync(org[prop].tls_cacerts)
-										targets.push(client.newPeer('grpcs://' + peerUrl, {
-											pem: Buffer.from(data).toString(),
-											'ssl-target-name-override': org[prop].serverHostName,
-										}))
-
-										continue outer
-									} else {
-										let eh = client.newEventHub()
-										let data = fs.readFileSync(org[prop].tls_cacerts)
-										eh.setPeerAddr(org[prop]['events'], {
-											pem: Buffer.from(data).toString(),
-											'ssl-target-name-override': org[prop].serverHostName,
-										})
-										targets.push(eh)
-
-										continue outer
-									}
-								}
-							}
-						}
-					}
-				}
-
-				if (!found) {
-					logger.error(util.format('Failed to find a peer matching the url %s', peerUrl))
-				}
-			}
-
-	return targets
-}
-
 //-------------------------------------//
 // APIs
 //-------------------------------------//
@@ -166,44 +114,106 @@ var getClientForOrg = function(org) {
 	return clients[org]
 }
 
-var newPeers = function(urls) {
-	const targets = []
-	// find the peer that match the urls
-
-	for (let peerUrl of urls) {
-
-		for (let orgName in orgsConfig) {
-			let org = orgsConfig[orgName]
-			let client = getClientForOrg(orgName)
-
-			for (let peer of org.peers) {
-
-				if (peer.requests === peerUrl) {
-					// found a peer matching the subject url
-					let data = fs.readFileSync(peer.tls_cacerts)
-					targets.push(client.newPeer(peerUrl, {
-						pem: Buffer.from(data).toString(),
-						'ssl-target-name-override': peer.serverHostName,
-					}))
-
+const queryOrgName = function(containerName) {
+	//FIXME for loop search
+	const orgsConfig = companyConfig.orgs
+	for (let orgName in orgsConfig) {
+		const orgBody = orgsConfig[orgName]
+		const peers = orgBody.peers
+		for (let index in peers) {
+			const peer = peers[index]
+			if (peer.containerName === containerName) {
+				return {
+					key: orgName, peer: {
+						index: index, value: peer,
+					},
 				}
 			}
 		}
+	}
+}
+const newPeers = function(containerNames) {
+	const targets = []
+	// find the peer that match the urls
 
+	for (let containerName of containerNames) {
+
+		const org = queryOrgName(containerName)
+		if (!org) {
+			logger.warn(`Could not find OrgName for containerName ${containerName}`)
+			continue
+		}
+		const orgName = org.key
+		const peerBody = org.peer.value
+		const index=org.peer.index
+		const client = getClientForOrg(orgName)
+
+		let requests
+		for(let portMapEach of peerBody.portMap){
+			if(portMapEach.container===7051){
+				requests=`grpcs://localhost:${portMapEach.host}`
+			}
+		}
+		if(!requests){
+			logger.warn(`Could not find port mapped to 7051 for containerName ${containerName}`)
+			continue
+		}
+		const org_domain = `${orgName.toLowerCase()}.${COMPANY_DOMAIN}`// bu.delphi.com
+		const peer_hostName_full = `peer${index}.${org_domain}`// FIXME peer0
+		const tls_cacerts=`${CRYPTO_CONFIG_DIR}/peerOrganizations/${org_domain}/peers/${peer_hostName_full}/tls/ca.crt`
+		let data = fs.readFileSync(tls_cacerts)
+		targets.push(client.newPeer(requests, {
+			pem: Buffer.from(data).toString(),
+			'ssl-target-name-override': peer_hostName_full,
+		}))
 	}
 
 	if (targets.length === 0) {
-		logger.error(`Failed to find any peer for urls ${urls}`)
+		logger.error(`Failed to find any peer for containers ${containerNames}`)
 	}
 
 	return targets
 }
 
-var newEventHubs = function(urls, org) {
-	return newRemotes(urls, false, org)
+const newEventHubs = function(urls, userOrg) {
+	const targets = []
+	// find the peer that match the urls
+	if (orgsConfig[userOrg]) {
+		for (let peerUrl of urls) {
+
+			// if looking for event hubs, an app can only connect to
+			// event hubs in its own org
+
+			let org = orgsConfig[orgName] //org json content
+			let client = getClientForOrg(orgName)
+
+			for (let peer in org.peers) {
+				if (peer.requests === peerUrl) {
+					// found a peer matching the subject url
+					let eh = client.newEventHub()
+					let data = fs.readFileSync(peer.tls_cacerts)
+					eh.setPeerAddr(peer.events, {
+						pem: Buffer.from(data).toString(),
+						'ssl-target-name-override': peer.serverHostName,
+					})
+					targets.push(eh)
+
+				}
+			}
+
+		}
+		//logger.error(util.format('Failed to find a peer matching the url %s', peerUrl))
+		if (targets.length === 0) {
+			logger.error(`Failed to find any peer for urls ${urls}`)
+		}
+	} else {
+		logger.error(`userOrg: ${userOrg} not found among config ${Object.keys(orgsConfig)}... return empty`)
+	}
+
+	return targets
 }
 
-var getMspID = function(org) {
+const getMspID = function(org) {
 	const mspid = orgsConfig[org].mspid
 	logger.debug(`Msp ID : ${mspid}`)
 	return mspid

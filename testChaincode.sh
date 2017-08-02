@@ -32,21 +32,26 @@ for orgName in $(jq -r ".chaincodes.${CHAINCODE_NAME}.orgs|keys[]" $CHAINCODE_CO
 
 
     org_json=$(jq -r ".chaincodes.${CHAINCODE_NAME}.orgs.${orgName}" $CHAINCODE_CONFIG)
+# NOTE redundant or for test only
 URLs=[]
+containerNames=[]
 for peerContainerName in $(echo $org_json | jq -r ".peers[].containerName");do
+    # NOTE redundant or for test only
     port=$(jq -r ".$COMPANY.orgs.${orgName}.peers[]|select(.containerName==\"${peerContainerName}\").portMap[]|select(.container==7051).host" $CONFIG_JSON)
-    URLs=$(echo $URLs | jq ". |=.+[\"${GRPC_PROTOCAL}${Localhost}:${port}\"]")
 
+    URLs=$(echo $URLs | jq ". |=.+[\"${GRPC_PROTOCAL}${Localhost}:${port}\"]")
+    containerNames=$(echo $containerNames | jq ". |=.+[\"${peerContainerName}\"]")
     if [ $CleanInstall = true ]; then
         COMPANY_DOMAIN=$(jq -r ".$COMPANY.domain" $CONFIG_JSON)
         ./config/uninstallChaincode.sh $peerContainerName.$COMPANY_DOMAIN $CHAINCODE_NAME $VERSION
     fi
 
 done
-node app/test.js "$URLs" $CHAINCODE_NAME $CHAINCODE_PATH $orgName -v $VERSION
+
+node app/test.js "$containerNames" $CHAINCODE_NAME $CHAINCODE_PATH $orgName -v $VERSION
 
 # NOTE chaincode update is OK
-node app/test.js "$URLs" $CHAINCODE_NAME $CHAINCODE_PATH $orgName -v "v1"
+node app/test.js "$containerNames" $CHAINCODE_NAME $CHAINCODE_PATH $orgName -v "v1"
 
 done
 

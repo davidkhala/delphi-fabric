@@ -10,9 +10,8 @@ CHANNEL_ID="delphiChannel"
 CONFIG_JSON="$CURRENT/config/orgs.json"
 TLS_ENABLED=true
 COMPANY_DOMAIN=$(jq -r ".$COMPANY.domain" $CONFIG_JSON)
-# TODO join all
-peerContainerNames=$(jq -r ".$COMPANY.orgs[].peers[0].containerName" $CONFIG_JSON)
-
+# TODO to test join partially
+peerContainerNames=$(jq -r ".$COMPANY.channels[].${CHANNEL_ID,,}.peers[].containerName" $CONFIG_JSON)
 
 function getSampleContainer(){
     echo "$1".$COMPANY_DOMAIN
