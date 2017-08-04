@@ -22,27 +22,55 @@ const path = require('path')
 const util = require('util')
 const fs = require('fs-extra')
 const User = require('fabric-client/lib/User.js')
-const crypto = require('crypto')
-const copService = require('fabric-ca-client')
+const caService = require('fabric-ca-client')
 const config = require('../config.json')
 const globalConfig = require('../config/orgs.json')
-const COMPANY="delphi"
-const companyConfig=globalConfig[COMPANY]
-const CRYPTO_CONFIG_DIR=companyConfig.CRYPTO_CONFIG_DIR
+const COMPANY = 'delphi'
+const companyConfig = globalConfig[COMPANY]
+const CRYPTO_CONFIG_DIR = companyConfig.CRYPTO_CONFIG_DIR
 const channelsConfig = companyConfig.channels
 const chaincodeConfig = require('../config/chaincode.json')
 const hfc = require('fabric-client')
 
 const testConfig = require('../config/node-sdk/test.json')
 
-const ordererConfig = testConfig.orderer
-const orgsConfig = testConfig.organizations
+const orgsConfig = companyConfig.orgs
 const COMPANY_DOMAIN = companyConfig.domain
 const clients = {} // client is for save CryptoSuite for each org
 const channels = {}
 const caClients = {}
 
 // set up the client and channel objects for each org
+const GPRC_PROTOCAL = 'grpcs://' // FIXME: assume using TLS
+const gen_tls_cacerts = function(orgName, peerIndex) {
+	const org_domain = `${orgName.toLowerCase()}.${COMPANY_DOMAIN}`// bu.delphi.com
+	const peer_hostName_full = `peer${peerIndex}.${org_domain}`
+	const tls_cacerts = `${CRYPTO_CONFIG_DIR}/peerOrganizations/${org_domain}/peers/${peer_hostName_full}/tls/ca.crt`
+	return { org_domain, peer_hostName_full, tls_cacerts }
+}
+const newPeer = function(orgName, peerIndex, peerPortMap, client) {
+	let _client = client ? client : getClientForOrg(orgName)
+	if (!_client) {
+		logger.error(`client for org :${orgName} not found`)
+		return {}
+	}
+	const { peer_hostName_full, tls_cacerts } = gen_tls_cacerts(orgName, peerIndex)
+	let requests
+	for (let portMapEach of peerPortMap) {
+		if (portMapEach.container === 7051) {
+			requests = `${GPRC_PROTOCAL}localhost:${portMapEach.host}`
+		}
+	}
+	if (!requests) {
+		logger.warn(`Could not find port mapped to 7051 for peer host==${peer_hostName_full}`)
+		return {}
+	}
+	let data = fs.readFileSync(tls_cacerts)
+	return _client.newPeer(requests, {
+		pem: Buffer.from(data).toString(),
+		'ssl-target-name-override': peer_hostName_full,
+	})
+}
 
 for (let orgName in orgsConfig) {
 	let client = new hfc()
@@ -55,28 +83,35 @@ for (let orgName in orgsConfig) {
 	cryptoSuite.setCryptoKeyStore(hfc.newCryptoKeyStore({ path: getKeyStorePath(orgName) }))
 	client.setCryptoSuite(cryptoSuite)
 
+	//add orderer
+	const ordererConfig = {}
+	const orderer_hostName = companyConfig.orderer.containerName.toLowerCase()
+	const orderer_hostName_full = `${orderer_hostName}.${COMPANY_DOMAIN}`
+
+	ordererConfig.tls_cacerts = `${CRYPTO_CONFIG_DIR}/ordererOrganizations/${COMPANY_DOMAIN}/orderers/${orderer_hostName_full}/tls/ca.crt`
+
+	for (let portMapEach of companyConfig.orderer.portMap) {
+		if (portMapEach.container === 7050) {
+			ordererConfig.url = `${GPRC_PROTOCAL}localhost:${portMapEach.host}`
+		}
+	}
+
 	for (let channelName in channelsConfig) {
 
-		let channel = client.newChannel(channelName)
+		const channel = client.newChannel(channelName)
 
-		//add orderer
-		const caRootsPath = ordererConfig.tls_cacerts
-		let data = fs.readFileSync(caRootsPath)
+		const data = fs.readFileSync(ordererConfig.tls_cacerts)
 		const orderer = client.newOrderer(ordererConfig.url, {
 			'pem': Buffer.from(data).toString(),
-			'ssl-target-name-override': ordererConfig.serverHostName,
+			'ssl-target-name-override': orderer_hostName_full,
 		})
 
-		channel.addOrderer(orderer)
-		for (let peerContainer of org.peers) {
+		channel.addOrderer(orderer) //FIXME client-side-only operation?
+		for (let peerIndex in org.peers) {
+			const peerConfig = org.peers[peerIndex]
 
-			let data = fs.readFileSync(peerContainer.tls_cacerts)
-			const opts = {
-				pem: Buffer.from(data).toString(),
-				'ssl-target-name-override': peerContainer.serverHostName,
-			}
-			let peer = client.newPeer(peerContainer.requests, opts)
-			channel.addPeer(peer) //FIXME will it work?
+			let peer = newPeer(orgName, peerIndex, peerConfig.portMap, client)
+			channel.addPeer(peer) //FIXME client-side-only operation? Found: without container-side 'peer channel join', install chaincode still OK
 
 		}
 		channels[orgName] = channel//TODO refactor design
@@ -84,8 +119,14 @@ for (let orgName in orgsConfig) {
 
 	clients[orgName] = client
 
-	const caUrl = org.ca
-	caClients[orgName] = new copService(caUrl, null /*defautl TLS opts*/, '' /* default CA */, cryptoSuite)
+	let ca_port
+	for (let portMapEach of org.ca.portMap) {
+		if (portMapEach.container === 7054) {
+			ca_port = portMapEach.host
+		}
+	}
+	const caUrl = `https://localhost:${ca_port}`
+	caClients[orgName] = new caService(caUrl, null /*defautl TLS opts*/, '' /* default CA */, cryptoSuite)
 }
 
 function readAllFiles (dir) {
@@ -132,40 +173,20 @@ const queryOrgName = function(containerName) {
 		}
 	}
 }
+
 const newPeers = function(containerNames) {
 	const targets = []
 	// find the peer that match the urls
 
 	for (let containerName of containerNames) {
 
-		const org = queryOrgName(containerName)
-		if (!org) {
+		const { key: orgName, peer: { index: index, value: peerConfig } } = queryOrgName(containerName)
+		if (!orgName) {
 			logger.warn(`Could not find OrgName for containerName ${containerName}`)
 			continue
 		}
-		const orgName = org.key
-		const peerBody = org.peer.value
-		const index=org.peer.index
-		const client = getClientForOrg(orgName)
-
-		let requests
-		for(let portMapEach of peerBody.portMap){
-			if(portMapEach.container===7051){
-				requests=`grpcs://localhost:${portMapEach.host}`
-			}
-		}
-		if(!requests){
-			logger.warn(`Could not find port mapped to 7051 for containerName ${containerName}`)
-			continue
-		}
-		const org_domain = `${orgName.toLowerCase()}.${COMPANY_DOMAIN}`// bu.delphi.com
-		const peer_hostName_full = `peer${index}.${org_domain}`// FIXME peer0
-		const tls_cacerts=`${CRYPTO_CONFIG_DIR}/peerOrganizations/${org_domain}/peers/${peer_hostName_full}/tls/ca.crt`
-		let data = fs.readFileSync(tls_cacerts)
-		targets.push(client.newPeer(requests, {
-			pem: Buffer.from(data).toString(),
-			'ssl-target-name-override': peer_hostName_full,
-		}))
+		const _newPeer = newPeer(orgName, index, peerConfig.portMap)
+		targets.push(_newPeer)
 	}
 
 	if (targets.length === 0) {
@@ -175,46 +196,59 @@ const newPeers = function(containerNames) {
 	return targets
 }
 
-const newEventHubs = function(urls, userOrg) {
+const newEventHub = function(orgName, peerIndex, peerPortMap, client) {
+	let _client = client ? client : getClientForOrg(orgName)
+	if (!_client) {
+		logger.error(`client for org :${orgName} not found`)
+		return {}
+	}
+
+	const { peer_hostName_full, tls_cacerts } = gen_tls_cacerts(orgName, peerIndex)
+	let events
+	for (let portMapEach of peerPortMap) {
+		if (portMapEach.container === 7053) {
+			events = `${GPRC_PROTOCAL}localhost:${portMapEach.host}`
+		}
+	}
+	if (!events) {
+		logger.warn(`Could not find port mapped to 7053 for peer host==${peer_hostName_full}`)
+		return {}
+	}
+	const eh = _client.newEventHub()
+	let data = fs.readFileSync(tls_cacerts)
+	eh.setPeerAddr(events, {
+		pem: Buffer.from(data).toString(),
+		'ssl-target-name-override': peer_hostName_full,
+	})
+
+}
+//FIXME to test: used in invoke chaincode
+const newEventHubs = function(containerNames) {
 	const targets = []
 	// find the peer that match the urls
-	if (orgsConfig[userOrg]) {
-		for (let peerUrl of urls) {
+	for (let containerName of containerNames) {
 
-			// if looking for event hubs, an app can only connect to
-			// event hubs in its own org
-
-			let org = orgsConfig[orgName] //org json content
-			let client = getClientForOrg(orgName)
-
-			for (let peer in org.peers) {
-				if (peer.requests === peerUrl) {
-					// found a peer matching the subject url
-					let eh = client.newEventHub()
-					let data = fs.readFileSync(peer.tls_cacerts)
-					eh.setPeerAddr(peer.events, {
-						pem: Buffer.from(data).toString(),
-						'ssl-target-name-override': peer.serverHostName,
-					})
-					targets.push(eh)
-
-				}
-			}
-
+		// if looking for event hubs, an app can only connect to
+		// event hubs in its own org
+		const { key: orgName, peer: { index: index, value: peerConfig } } = queryOrgName(containerName)
+		if (!orgName) {
+			logger.warn(`Could not find OrgName for containerName ${containerName}`)
+			continue
 		}
-		//logger.error(util.format('Failed to find a peer matching the url %s', peerUrl))
-		if (targets.length === 0) {
-			logger.error(`Failed to find any peer for urls ${urls}`)
-		}
-	} else {
-		logger.error(`userOrg: ${userOrg} not found among config ${Object.keys(orgsConfig)}... return empty`)
+		const eh = newEventHub(orgName, index, peerConfig.portMap)
+		targets.push(eh)
+
+	}
+
+	if (targets.length === 0) {
+		logger.error(`Failed to find any peer for urls ${urls}`)
 	}
 
 	return targets
 }
 
 const getMspID = function(org) {
-	const mspid = orgsConfig[org].mspid
+	const mspid = orgsConfig[org].MSP.id
 	logger.debug(`Msp ID : ${mspid}`)
 	return mspid
 }
@@ -330,28 +364,30 @@ var getRegisteredUsers = function(username, userOrg, isJson) {
 	})
 }
 
-var getOrgAdmin = function(userOrg) {
-	const admin = orgsConfig[userOrg].admin
-	const keyPath = admin.key
-	var keyPEM = Buffer.from(readAllFiles(keyPath)[0]).toString()
-	const certPath = admin.cert
-	var certPEM = readAllFiles(certPath)[0].toString()
+const getOrgAdmin = function(orgName) {
+	const org_domain = `${orgName.toLowerCase()}.${COMPANY_DOMAIN}`// bu.delphi.com
+	const key = `${CRYPTO_CONFIG_DIR}/peerOrganizations/${org_domain}/users/Admin@${org_domain}/msp/keystore`
+	const cert = `${CRYPTO_CONFIG_DIR}/peerOrganizations/${org_domain}/users/Admin@${org_domain}/msp/signcerts`
 
-	var client = getClientForOrg(userOrg)
+	var keyPEM = Buffer.from(readAllFiles(key)[0]).toString()
+	var certPEM = readAllFiles(cert)[0].toString()
+
+	var client = getClientForOrg(orgName)
 	var cryptoSuite = hfc.newCryptoSuite()
-	if (userOrg) {
-		cryptoSuite.setCryptoKeyStore(hfc.newCryptoKeyStore({ path: getKeyStorePath(userOrg) }))
+	if (orgName) {
+		cryptoSuite.setCryptoKeyStore(hfc.newCryptoKeyStore({ path: getKeyStorePath(orgName) }))
 		client.setCryptoSuite(cryptoSuite)
 	}
 
 	return hfc.newDefaultKeyValueStore({
-		path: getKeyStorePath(userOrg),
+		path: getKeyStorePath(orgName),
 	}).then((store) => {
 		client.setStateStore(store)
 
+		// NOTE:(jsdoc) This allows applications to use pre-existing crypto materials (private keys and certificates) to construct user objects with signing capabilities
 		return client.createUser({
-			username: 'peer' + userOrg + 'Admin',
-			mspid: getMspID(userOrg),
+			username: 'peer' + orgName + 'Admin',
+			mspid: getMspID(orgName),
 			cryptoContent: {
 				privateKeyPEM: keyPEM,
 				signedCertPEM: certPEM,
@@ -371,8 +407,9 @@ var getLogger = function(moduleName) {
 }
 
 var getPeerAddressByName = function(org, peer) {
+	//FIXME remaining rely on testConfig
 	var address = testConfig[org][peer].requests
-	return address.split('grpcs://')[1]
+	return address.split('grpcs://')[1] // localhost:7051
 }
 
 exports.getChannelForOrg = getChannelForOrg
@@ -380,9 +417,12 @@ exports.getClientForOrg = getClientForOrg
 exports.getLogger = getLogger
 exports.setGOPATH = setGOPATH
 exports.getMspID = getMspID
-exports.ORGS = testConfig
+
+exports.ORGS = Object.assign({ COMPANY }, globalConfig)
+exports.queryOrgName = queryOrgName
+exports.gen_tls_cacerts = gen_tls_cacerts
 exports.newPeers = newPeers
 exports.newEventHubs = newEventHubs
-exports.getPeerAddressByName = getPeerAddressByName
-exports.getRegisteredUsers = getRegisteredUsers
+exports.getPeerAddressByName = getPeerAddressByName //see in query
+exports.getRegisteredUsers = getRegisteredUsers //see in invoke
 exports.getOrgAdmin = getOrgAdmin
