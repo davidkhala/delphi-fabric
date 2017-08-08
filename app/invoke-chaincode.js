@@ -36,26 +36,9 @@ const invoke = function(channelName, containerNames, chaincodeName, fcn, args, u
 			args,
 			txId
 		}
-		return new Promise((resolve, reject) => {
-			channel.sendTransactionProposal(request).then(([responses, proposal, header]) => {
-				//data transform
-				resolve({ txId, responses, proposal })
-			}).catch(err => {reject(err)})
-		})
-	}).then(({ txId, responses, proposal }) => {
-		//TODO do this in previsou promise
-		for (let i in responses) {
-			const proposalResponse = responses[i]
-			if (proposalResponse.response &&
-					proposalResponse.response.status === 200) {
-				logger.info(`transaction proposal was good for [${i}]`, proposalResponse)
-			} else {
-				logger.error(`transaction proposal was bad for [${i}]`, proposalResponse)
-				return
-			}
-		}
+		return helper.sendProposalCommonPromise(channel,request,txId,"sendTransactionProposal")
+	}).then(({ txId, nextRequest }) => {
 		logger.debug(`Successfully sent Proposal and received ProposalResponse:`)
-		const request = { proposalResponses: responses, proposal }
 		// set the transaction listener and set a timeout of 30sec
 		// if the transaction did not get committed within the timeout period,
 		// fail the test
@@ -93,7 +76,7 @@ const invoke = function(channelName, containerNames, chaincodeName, fcn, args, u
 			eventPromises.push(txPromise)
 		}
 
-		var sendPromise = channel.sendTransaction(request)
+		var sendPromise = channel.sendTransaction(nextRequest)
 		return Promise.all([sendPromise].concat(eventPromises)).then((results) => {
 					logger.debug(' event promise all complete and testing complete')
 					return results[0] // the first returned value is from the 'sendPromise' which is from the 'sendTransaction()' call

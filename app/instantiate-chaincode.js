@@ -31,8 +31,8 @@ const instantiateChaincode = function(
 		logger.info(`channel.initialize success:`, config_items)
 		//NOTE channel._anchor_peers = undefined here
 		//NOTE channel._peers =[{"_options":{"grpc.ssl_target_name_override":"peer0.pm.delphi.com","grpc.default_authority":"peer0.pm.delphi.com","grpc.primary_user_agent":"grpc-node/1.2.4"},"_url":"grpcs://localhost:9051","_endpoint":{"addr":"localhost:9051","creds":{}},"_request_timeout":45000,"_endorserClient":{"$channel":{}},"_name":null}]
-		logger.debug(`[debug] channel.clientContext.`, channel._clientContext)
-		logger.debug(`[debug] channel._peers${JSON.stringify(channel._peers)}`)
+		// logger.debug(`[debug] channel.clientContext.`, channel._clientContext)
+		// logger.debug(`[debug] channel._peers${JSON.stringify(channel._peers)}`)
 		const txId = client.newTransactionID()
 		// send proposal to endorser
 
@@ -56,33 +56,12 @@ const instantiateChaincode = function(
 			// 		`endorsement-policy` : optional - EndorsementPolicy object for this chaincode. If not specified, a default policy of "a signature by any member from any of the organizations corresponding to the array of member service providers" is used
 		}
 
-		return new Promise((resolve, reject) => {
-			channel.sendInstantiateProposal(request).then(([responses, proposal, header]) => {
-				//data transform
-				resolve({ txId, responses, proposal })
-			}).catch(err => {reject(err)})
-		})
-	}).then(({ txId, responses, proposal }) => {
+		return helper.sendProposalCommonPromise(channel,request,txId,"sendInstantiateProposal")
+		
+	}).then(({ txId, nextRequest}) => {
 				// results exist even proposal error, need to check each entry
 
-				for (let i in responses) {
-					const proposalResponse = responses[i]
-					if (proposalResponse.response &&
-							proposalResponse.response.status === 200) {
-						logger.info(`instantiate proposal was good for [${i}]`, proposalResponse)
-					} else {
-						logger.error(`instantiate proposal was bad for [${i}], Response null or status is not 200. 
-						 exiting...;`, proposalResponse)
-						return
-						//	error symptons:{
-						// Error: premature execution - chaincode (delphiChaincode:v1) is being launched
-						// at /home/david/Documents/delphi-fabric/node_modules/grpc/src/node/src/client.js:434:17 code: 2, metadata: Metadata { _internal_repr: {} }}
-
-					}
-				}
-
 				logger.info(`Successfully sent Proposal and received ProposalResponse`)
-				const request = { proposalResponses: responses, proposal }
 				// set the transaction listener and set a timeout of 30sec
 				// if the transaction did not get committed within the timeout period,
 				// fail the test
@@ -117,7 +96,7 @@ const instantiateChaincode = function(
 					})
 				})
 
-				const sendPromise = channel.sendTransaction(request)
+				const sendPromise = channel.sendTransaction(nextRequest)
 				return Promise.all([sendPromise].concat([txPromise])).then((results) => {
 					logger.debug('Event promise all complete and testing complete')
 					return results[0] // the first returned value is from the 'sendPromise' which is from the 'sendTransaction()' call

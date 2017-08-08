@@ -151,10 +151,10 @@ function getKeyStorePath (org) {
 //-------------------------------------//
 // APIs
 //-------------------------------------//
-const getChannel = function(org,channelName) {
+const getChannel = function(org, channelName) {
 	return getOrgClient(org).getChannel(channelName)
 }
-const getChannels= function(org) {
+const getChannels = function(org) {
 	return getOrgClient(org)._channels
 }
 
@@ -164,7 +164,6 @@ const getOrgClient = function(org) {
 const getCaClient = function(org) {
 	return clients.ca[org]
 }
-
 
 const queryPeer = function(containerName) {
 	//FIXME for loop search
@@ -248,7 +247,7 @@ const newEventHubs = function(containerNames) {
 		}
 		const client = clients.orgs[orgName]
 		const eh = newEventHub(orgName, index, peerConfig.portMap, client)
-		if(eh){
+		if (eh) {
 			targets.push(eh)
 		}
 
@@ -366,7 +365,7 @@ var getRegisteredUsers = function(username, userOrg, isJson) {
 			return response
 		}
 		return user
-	}).catch(err=>{
+	}).catch(err => {
 		logger.error(err)
 		//FIXME: fabric-ca request register failed with errors [[{"code":0,"message":"Failed getting affiliation 'PM.department1': sql: no rows in result set"}]]
 	})
@@ -420,18 +419,49 @@ var getPeerAddressByName = function(org, peer) {
 	return address.split('grpcs://')[1] // localhost:7051
 }
 
+exports.sendProposalCommonPromise = (channel, request, txId, fnName) => {
+	return new Promise((resolve, reject) => {
+		channel[fnName](request).then(([responses, proposal, header]) => {
+			//data transform
+
+			for (let i in responses) {
+				const proposalResponse = responses[i]
+				if (proposalResponse.response &&
+						proposalResponse.response.status === 200) {
+					logger.info(`${fnName} was good for [${i}]`, proposalResponse)
+				} else {
+					logger.error(`${fnName} was bad for [${i}], Response null or status is not 200.`
+							, proposalResponse)
+					reject(responses)
+					return
+					//	error symptons:{
+					// Error: premature execution - chaincode (delphiChaincode:v1) is being launched
+					// at /home/david/Documents/delphi-fabric/node_modules/grpc/src/node/src/client.js:434:17 code: 2, metadata: Metadata { _internal_repr: {} }}
+
+				}
+			}
+			resolve({
+				txId,
+				nextRequest: {
+					proposalResponses: responses, proposal
+				}
+			})
+
+		})
+	})
+}
+
 exports.getChannel = getChannel
 exports.getClientForOrg = getOrgClient
 exports.getLogger = getLogger
 exports.setGOPATH = setGOPATH
-exports.getMspID = getMspID
 
-exports.ORGS = Object.assign({ COMPANY },{ GPRC_protocol }, globalConfig)
+exports.ORGS = Object.assign({ COMPANY }, { GPRC_protocol }, globalConfig)
 exports.queryPeer = queryPeer
 exports.gen_tls_cacerts = gen_tls_cacerts
 exports.newPeers = newPeers
 exports.newEventHubs = newEventHubs
-exports.newEventHub= newEventHub
+exports.newEventHub = newEventHub
 exports.getPeerAddressByName = getPeerAddressByName //see in query
 exports.getRegisteredUsers = getRegisteredUsers //see in invoke
 exports.getOrgAdmin = getOrgAdmin
