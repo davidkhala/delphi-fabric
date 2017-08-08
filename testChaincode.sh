@@ -63,6 +63,7 @@ done
 node app/test.js instantiate "$containerNames" $CHAINCODE_NAME $CHAINCODE_PATH $orgName -v "v1"
 
 
+node app/test.js invoke "$containerNames" $CHAINCODE_NAME $CHAINCODE_PATH $orgName -v "v1"
 
 
 

@@ -24,9 +24,15 @@ const instantiateChaincode = function(
 		// read the config block from the orderer for the channel
 		// and initialize the verify MSPs based on the participating
 		// organizations
+
+		//TODO channel.initialize is time-consuming operation
 		return channel.initialize()
 	}).then((config_items) => {
 		logger.info(`channel.initialize success:`, config_items)
+		//NOTE channel._anchor_peers = undefined here
+		//NOTE channel._peers =[{"_options":{"grpc.ssl_target_name_override":"peer0.pm.delphi.com","grpc.default_authority":"peer0.pm.delphi.com","grpc.primary_user_agent":"grpc-node/1.2.4"},"_url":"grpcs://localhost:9051","_endpoint":{"addr":"localhost:9051","creds":{}},"_request_timeout":45000,"_endorserClient":{"$channel":{}},"_name":null}]
+		logger.debug(`[debug] channel.clientContext.`, channel._clientContext)
+		logger.debug(`[debug] channel._peers${JSON.stringify(channel._peers)}`)
 		const txId = client.newTransactionID()
 		// send proposal to endorser
 
@@ -50,13 +56,13 @@ const instantiateChaincode = function(
 			// 		`endorsement-policy` : optional - EndorsementPolicy object for this chaincode. If not specified, a default policy of "a signature by any member from any of the organizations corresponding to the array of member service providers" is used
 		}
 
-		return new Promise((resolve,reject)=>{
-			channel.sendInstantiateProposal(request).then(([responses, proposal, header])=>{
+		return new Promise((resolve, reject) => {
+			channel.sendInstantiateProposal(request).then(([responses, proposal, header]) => {
 				//data transform
-				resolve({txId,responses,proposal})
-			}).catch((err)=>{reject(err)})
+				resolve({ txId, responses, proposal })
+			}).catch(err => {reject(err)})
 		})
-	}).then(({txId,responses,proposal}) => {
+	}).then(({ txId, responses, proposal }) => {
 				// results exist even proposal error, need to check each entry
 
 				for (let i in responses) {
@@ -82,28 +88,9 @@ const instantiateChaincode = function(
 				// fail the test
 				const deployId = txId.getTransactionID()
 
-				//FIXME: to use newEventHub in helper.js
-				const eh = client.newEventHub()
-
 				const { key: orgName, peer: { index: peerIndex, value: peerConfig } } = queryOrgName(containerName)
 
-				const { peer_hostName_full, tls_cacerts } = gen_tls_cacerts(orgName, peerIndex)
-				const data = fs.readFileSync(tls_cacerts)
-				let events
-				for (let portMapEach of peerConfig.portMap) {
-					if (portMapEach.container === 7053) {
-						events = `${GPRC_protocol}localhost:${portMapEach.host}`
-					}
-				}
-				if (!events) {
-					logger.warn(`Could not find port mapped to 7053 for peer host==${peer_hostName_full}`)
-					return {}//TODO ok??here?
-				}
-
-				eh.setPeerAddr(events, {
-					pem: Buffer.from(data).toString(),
-					'ssl-target-name-override': peer_hostName_full
-				})
+				const eh = helper.newEventHub(orgName, peerIndex, peerConfig.portMap, client)
 				eh.connect()
 
 				let txPromise = new Promise((resolve, reject) => {
@@ -138,8 +125,7 @@ const instantiateChaincode = function(
 
 			}
 	).catch(error => {
-		logger.error('catch error', error)
-		return error
+		logger.error(error)
 	})
 }
 

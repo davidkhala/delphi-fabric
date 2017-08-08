@@ -209,7 +209,7 @@ const newPeers = function(containerNames) {
 
 	return targets
 }
-
+// return undefined when invalid portmap
 const newEventHub = function(orgName, peerIndex, peerPortMap, client) {
 
 	const { peer_hostName_full, tls_cacerts } = gen_tls_cacerts(orgName, peerIndex)
@@ -221,14 +221,15 @@ const newEventHub = function(orgName, peerIndex, peerPortMap, client) {
 	}
 	if (!events) {
 		logger.warn(`Could not find port mapped to 7053 for peer host==${peer_hostName_full}`)
-		return {}
+		return undefined
 	}
-	const eh = client.newEventHub()// NOTE newEventHub binds to clientContext
+	const eventHub = client.newEventHub()// NOTE newEventHub binds to clientContext
 	let data = fs.readFileSync(tls_cacerts)
-	eh.setPeerAddr(events, {
+	eventHub.setPeerAddr(events, {
 		pem: Buffer.from(data).toString(),
 		'ssl-target-name-override': peer_hostName_full
 	})
+	return eventHub
 
 }
 //FIXME to test: used in invoke chaincode
@@ -245,9 +246,11 @@ const newEventHubs = function(containerNames) {
 			logger.warn(`Could not find OrgName for containerName ${containerName}`)
 			continue
 		}
-		const client = clients[orgName]
+		const client = clients.orgs[orgName]
 		const eh = newEventHub(orgName, index, peerConfig.portMap, client)
-		targets.push(eh)
+		if(eh){
+			targets.push(eh)
+		}
 
 	}
 
@@ -305,6 +308,7 @@ var getAdminUser = function(userOrg) {
 	})
 }
 
+//TODO using fabric-ca, skip it first
 var getRegisteredUsers = function(username, userOrg, isJson) {
 	var member
 	var client = getOrgClient(userOrg)
@@ -334,10 +338,6 @@ var getRegisteredUsers = function(username, userOrg, isJson) {
 						enrollmentID: username,
 						enrollmentSecret: secret
 					})
-				}, (err) => {
-					logger.debug(username + ' failed to register')
-					return '' + err
-					//return 'Failed to register '+username+'. Error: ' + err.stack ? err.stack : err;
 				}).then((message) => {
 					if (message && typeof message === 'string' && message.includes(
 									'Error:')) {
@@ -352,9 +352,6 @@ var getRegisteredUsers = function(username, userOrg, isJson) {
 				}).then(() => {
 					client.setUserContext(member)
 					return member
-				}, (err) => {
-					logger.error(util.format('%s enroll failed: %s', username, err.stack ? err.stack : err))
-					return '' + err
 				})
 
 			}
@@ -369,9 +366,9 @@ var getRegisteredUsers = function(username, userOrg, isJson) {
 			return response
 		}
 		return user
-	}, (err) => {
-		logger.error(util.format('Failed to get registered user: %s, error: %s', username, err.stack ? err.stack : err))
-		return '' + err
+	}).catch(err=>{
+		logger.error(err)
+		//FIXME: fabric-ca request register failed with errors [[{"code":0,"message":"Failed getting affiliation 'PM.department1': sql: no rows in result set"}]]
 	})
 }
 
@@ -434,6 +431,7 @@ exports.queryPeer = queryPeer
 exports.gen_tls_cacerts = gen_tls_cacerts
 exports.newPeers = newPeers
 exports.newEventHubs = newEventHubs
+exports.newEventHub= newEventHub
 exports.getPeerAddressByName = getPeerAddressByName //see in query
 exports.getRegisteredUsers = getRegisteredUsers //see in invoke
 exports.getOrgAdmin = getOrgAdmin

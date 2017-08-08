@@ -1,5 +1,6 @@
 const installchaincode = require('./install-chaincode')
 const instantiateChaincode = require('./instantiate-chaincode')
+const invokechaincode=require('./invoke-chaincode')
 const program = require('commander')
 const args = process.argv.slice(2)
 
@@ -22,6 +23,7 @@ program.option('-v, --chaincode-version [type]', 'set chaincode version').
 		parse(process.argv)
 if (program.chaincodeVersion) VERSION = program.chaincodeVersion
 
+let CHANNEL_NAME = 'delphichannel'
 switch (ACTION) {
 	case 'install':
 		installchaincode.installChaincode(containerNames, CHAINCODE_NAME, CHAINCODE_PATH,
@@ -29,7 +31,7 @@ switch (ACTION) {
 				, 'anyone', adminOrg)
 		break
 	case 'instantiate':
-		let CHANNEL_NAME = 'delphichannel'
+
 		const containerName = containerNames[0]
 		const chaincode_args = []
 		instantiateChaincode.resetChaincode(containerName, CHAINCODE_NAME, VERSION).then((data) => {
@@ -40,7 +42,10 @@ switch (ACTION) {
 		})
 		break
 	case 'invoke':
-
+		//todo to test
+		// (channelName, containerNames, chaincodeName, fcn, args, username, org)
+		invokechaincode.invokeChaincode(CHANNEL_NAME,[containerNames[0]],CHAINCODE_NAME,
+				'any',[],'david',adminOrg)
 		break
 }
 
