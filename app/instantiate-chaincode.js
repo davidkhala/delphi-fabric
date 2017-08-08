@@ -1,50 +1,36 @@
-/**
- * Copyright 2017 IBM All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
 'use strict'
-var fs = require('fs')
-var helper = require('./helper.js')
-var logger = helper.getLogger('instantiate-chaincode')
+const fs = require('fs')
+const helper = require('./helper.js')
+const logger = helper.getLogger('instantiate-chaincode')
 const ORGS = helper.ORGS
-const queryOrgName = helper.queryOrgName
+const GPRC_protocol = ORGS.GPRC_protocol
+const _ = require('lodash')
+const queryOrgName = helper.queryPeer
 const gen_tls_cacerts = helper.gen_tls_cacerts
 const COMPANY = ORGS.COMPANY
-const companyConfig = ORGS[COMPANY]
+
+//TODO do not be global
 // "chaincodeName":"mycc",
 // 		"chaincodeVersion":"v0",
 // 		"args":["a","100","b","200"]
-
-const instantiateChaincode = function(containerName, chaincodeName, chaincodeVersion, args, username, org) {
+const instantiateChaincode = function(
+		channelName, containerName, chaincodeName, chaincodeVersion, args, username, org) {
 	logger.debug('\n============ Instantiate chaincode ============\n')
 	logger.debug({ containerName, chaincodeName, chaincodeVersion, args, username, org })
-	var channel = helper.getChannelForOrg(org)
-	var client = helper.getClientForOrg(org)
+	const channel = helper.getChannel(org, channelName)
+	const client = helper.getClientForOrg(org)
 
 	return helper.getOrgAdmin(org).then((user) => {
 		// read the config block from the orderer for the channel
 		// and initialize the verify MSPs based on the participating
 		// organizations
 		return channel.initialize()
-	}, (err) => {
-		logger.error('Failed to enroll user \'' + username + '\'. ' + err)
-		throw new Error('Failed to enroll user \'' + username + '\'. ' + err)
-	}).then((success) => {
+	}).then((config_items) => {
+		logger.info(`channel.initialize success:`, config_items)
 		const txId = client.newTransactionID()
 		// send proposal to endorser
 
-		var request = {
+		const request = {
 			chaincodeId: chaincodeName,
 			chaincodeVersion,
 			args: args,
@@ -64,117 +50,114 @@ const instantiateChaincode = function(containerName, chaincodeName, chaincodeVer
 			// 		`endorsement-policy` : optional - EndorsementPolicy object for this chaincode. If not specified, a default policy of "a signature by any member from any of the organizations corresponding to the array of member service providers" is used
 		}
 
-		return channel.sendInstantiateProposal(request)
-	}, (err) => {
-		logger.error(`Failed to initialize the channel ${err}`)
-		throw new Error(`Failed to initialize the channel ${err}`)
-	}).then((results) => {
-				const proposalResponses = results[0]
-				const proposal = results[1]
-				let all_good = true
+		return new Promise((resolve,reject)=>{
+			channel.sendInstantiateProposal(request).then(([responses, proposal, header])=>{
+				//data transform
+				resolve({txId,responses,proposal})
+			}).catch((err)=>{reject(err)})
+		})
+	}).then(({txId,responses,proposal}) => {
+				// results exist even proposal error, need to check each entry
 
-				for (let proposalResponse of proposalResponses) {
+				for (let i in responses) {
+					const proposalResponse = responses[i]
 					if (proposalResponse.response &&
 							proposalResponse.response.status === 200) {
-						logger.info('instantiate proposal was good')
+						logger.info(`instantiate proposal was good for [${i}]`, proposalResponse)
 					} else {
-						all_good = false
-						logger.error('instantiate proposal was bad')
+						logger.error(`instantiate proposal was bad for [${i}], Response null or status is not 200. 
+						 exiting...;`, proposalResponse)
+						return
+						//	error symptons:{
+						// Error: premature execution - chaincode (delphiChaincode:v1) is being launched
+						// at /home/david/Documents/delphi-fabric/node_modules/grpc/src/node/src/client.js:434:17 code: 2, metadata: Metadata { _internal_repr: {} }}
+
 					}
 				}
-				if (all_good) {
-					logger.info(
-							`Successfully sent Proposal and received ProposalResponse:Status - ${proposalResponses[0].response.status},message - "${proposalResponses[0].response.message}",metadata - "${proposalResponses[0].response.payload}",endorsement signature: ${proposalResponses[0].endorsement.signature}`)
-					const request = { proposalResponses, proposal }
-					logger.debug(request)
-					// set the transaction listener and set a timeout of 30sec
-					// if the transaction did not get committed within the timeout period,
-					// fail the test
-					const deployId = txId.getTransactionID()
 
-					//FIXME: to use newEventHub in helper.js
-					const eh = client.newEventHub()
+				logger.info(`Successfully sent Proposal and received ProposalResponse`)
+				const request = { proposalResponses: responses, proposal }
+				// set the transaction listener and set a timeout of 30sec
+				// if the transaction did not get committed within the timeout period,
+				// fail the test
+				const deployId = txId.getTransactionID()
 
-					const { key: orgName, peer: { index: peerIndex, value: peerConfig } } = queryOrgName(containerName)
+				//FIXME: to use newEventHub in helper.js
+				const eh = client.newEventHub()
 
-					const { peer_hostName_full, tls_cacerts } = gen_tls_cacerts(orgName, peerIndex)
-					const data = fs.readFileSync(tls_cacerts)
-					let events
-					for (let portMapEach of peerConfig.portMap) {
-						if (portMapEach.container === 7053) {
-							events = `${GPRC_PROTOCAL}localhost:${portMapEach.host}`
-						}
+				const { key: orgName, peer: { index: peerIndex, value: peerConfig } } = queryOrgName(containerName)
+
+				const { peer_hostName_full, tls_cacerts } = gen_tls_cacerts(orgName, peerIndex)
+				const data = fs.readFileSync(tls_cacerts)
+				let events
+				for (let portMapEach of peerConfig.portMap) {
+					if (portMapEach.container === 7053) {
+						events = `${GPRC_protocol}localhost:${portMapEach.host}`
 					}
-					if (!events) {
-						logger.warn(`Could not find port mapped to 7053 for peer host==${peer_hostName_full}`)
-						return {}//TODO ok??here?
-					}
+				}
+				if (!events) {
+					logger.warn(`Could not find port mapped to 7053 for peer host==${peer_hostName_full}`)
+					return {}//TODO ok??here?
+				}
 
-					eh.setPeerAddr(events, {
-						pem: Buffer.from(data).toString(),
-						'ssl-target-name-override': peer_hostName_full
-					})
-					eh.connect()
+				eh.setPeerAddr(events, {
+					pem: Buffer.from(data).toString(),
+					'ssl-target-name-override': peer_hostName_full
+				})
+				eh.connect()
 
-					let txPromise = new Promise((resolve, reject) => {
-						let handle = setTimeout(() => {
-							eh.disconnect()
+				let txPromise = new Promise((resolve, reject) => {
+					let handle = setTimeout(() => {
+						eh.disconnect()
+						reject()
+					}, 30000)
+
+					eh.registerTxEvent(deployId, (tx, code) => {
+						logger.info(
+								'The chaincode instantiate transaction has been committed on peer ' +
+								eh._ep._endpoint.addr)
+						clearTimeout(handle)
+						eh.unregisterTxEvent(deployId)
+						eh.disconnect()
+
+						if (code !== 'VALID') {
+							logger.error('The chaincode instantiate transaction was invalid, code = ' + code)
 							reject()
-						}, 30000)
-
-						eh.registerTxEvent(deployId, (tx, code) => {
-							logger.info(
-									'The chaincode instantiate transaction has been committed on peer ' +
-									eh._ep._endpoint.addr)
-							clearTimeout(handle)
-							eh.unregisterTxEvent(deployId)
-							eh.disconnect()
-
-							if (code !== 'VALID') {
-								logger.error('The chaincode instantiate transaction was invalid, code = ' + code)
-								reject()
-							} else {
-								logger.info('The chaincode instantiate transaction was valid.')
-								resolve()
-							}
-						})
+						} else {
+							logger.info('The chaincode instantiate transaction was valid.')
+							resolve()
+						}
 					})
+				})
 
-					var sendPromise = channel.sendTransaction(request)
-					return Promise.all([sendPromise].concat([txPromise])).then((results) => {
-						logger.debug('Event promise all complete and testing complete')
-						return results[0] // the first returned value is from the 'sendPromise' which is from the 'sendTransaction()' call
-					}).catch((err) => {
-						logger.error(
-								`Failed to send instantiate transaction and get notifications within the timeout period. ${err}`
-						)
-						return 'Failed to send instantiate transaction and get notifications within the timeout period.'
-					})
-				}
-				else {
-					logger.error(
-							'Failed to send instantiate Proposal or receive valid response. Response null or status is not 200. exiting...'
-					)
-					return 'Failed to send instantiate Proposal or receive valid response. Response null or status is not 200. exiting...'
-				}
-			},
-			(err) => {
-				logger.error('Failed to send instantiate proposal due to error: ' + err.stack ? err.stack : err)
-				return 'Failed to send instantiate proposal due to error: ' + err.stack ? err.stack : err
+				const sendPromise = channel.sendTransaction(request)
+				return Promise.all([sendPromise].concat([txPromise])).then((results) => {
+					logger.debug('Event promise all complete and testing complete')
+					return results[0] // the first returned value is from the 'sendPromise' which is from the 'sendTransaction()' call
+				})
+
 			}
-	).
-			then((response) => {
-				if (response.status === 'SUCCESS') {
-					logger.info('Successfully sent transaction to the orderer.')
-					return 'Chaincode Instantiateion is SUCCESS'
-				} else {
-					logger.error('Failed to order the transaction. Error code: ' + response.status)
-					return 'Failed to order the transaction. Error code: ' + response.status
-				}
-			}, (err) => {
-				logger.error('Failed to send instantiate due to error: ' + err.stack ? err.stack : err)
-				return 'Failed to send instantiate due to error: ' + err.stack ? err.stack : err
-			})
+	).catch(error => {
+		logger.error('catch error', error)
+		return error
+	})
+}
+
+// to remove container like: dev-peer0.pm.delphi.com-delphichaincode-v1
+// to remove images like: dev-peer0.pm.delphi.com-delphichaincode-v1:latest
+// @param {string} containerName which initial the instantiate action before
+exports.resetChaincode = function(containerName, chaincodeName, chaincodeVersion) {
+	const dockerodeUtil = require('./../common/docker/nodejs/dockerode-util')
+	const { key: orgName, peer: { value: peerConfig, peer_hostName_full } } = queryOrgName(
+			containerName)
+	const ccContainerName = `dev-${peer_hostName_full}-${chaincodeName.toLowerCase()}-${chaincodeVersion}`
+	return dockerodeUtil.deleteContainer(ccContainerName).then(() => {
+		//dev-peer0.pm.delphi.com-delphichaincode-v1:latest
+		return dockerodeUtil.deleteImage(ccContainerName)
+	})
+
+	//TODO besides, core/scc/lscc/lscc.go will also using  stub.GetState(ccname) to check chaincode existence
 }
 
 exports.instantiateChaincode = instantiateChaincode
+

@@ -1,5 +1,5 @@
 {
-  "GOPATH": "/home/david/Documents/delphi-fabric/GOPATH",
+  "GOPATH": "/home/david/Documents/delphi-fabric/GOPATH/",
   "chaincodes": {
     "delphiChaincode": {
       "orgs": {

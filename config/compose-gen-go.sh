@@ -6,6 +6,7 @@ CURRENT="$(dirname $(readlink -f ${BASH_SOURCE}))"
 
 COMPOSE_FILE="$CURRENT/docker-compose.yaml"
 CONFIG_JSON="$CURRENT/orgs.json"
+# TODO if we use cli container to install chaincode, we need to set GOPATH in compose file; here we use node-sdk to do it
 GOPATH="$(dirname $CURRENT)/GOPATH/"
 IMAGE_TAG="x86_64-1.0.0" # latest
 CONTAINER_CONFIGTX_DIR="/etc/hyperledger/configtx"
@@ -76,7 +77,16 @@ ORDERER_CONTAINER_PORT=$(jq -r ".$COMPANY.orderer.portMap[0].container" $CONFIG_
 rm $COMPOSE_FILE
 >"$COMPOSE_FILE"
 
-yaml w -i $COMPOSE_FILE version \"2\" # NOTE it should be a string
+COMPOSE_VERSION=2
+
+yaml w -i $COMPOSE_FILE version \"$COMPOSE_VERSION\" # NOTE it should be a string, only version 3 support network setting
+
+# dockerNetworkName=$(jq -r ".$COMPANY.docker.network" $CONFIG_JSON)
+#if [ $COMPOSE_VERSION = 3 ]; then
+#    # FIXME empty input is not support
+#    yaml w -i $COMPOSE_FILE networks.default.name $dockerNetworkName
+#fi
+
 # ccenv
 yaml w -i $COMPOSE_FILE services.ccenv.image hyperledger/fabric-ccenv:$IMAGE_TAG
 yaml w -i $COMPOSE_FILE services.ccenv.container_name ccenv.$COMPANY_DOMAIN
@@ -149,7 +159,13 @@ for ((i = 0; i < ${#orgs[@]}; i++)); do
 	#common env
 	p=0
 	envPush "$PEERCMD" CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
-	envPush "$PEERCMD" CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=$COMPANY
+#FIXME docker compose network setting has problem: projectname is configured outside docker but in docker-compose cli
+	envPush "$PEERCMD" CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=$(basename $(dirname $COMPOSE_FILE))_default
+#    if [ $COMPOSE_VERSION = 3 ]; then
+#       $PEERCMD.networks[0] $dockerNetworkName
+#       envPush "$PEERCMD" CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=$(basename $(dirname $COMPOSE_FILE))_$dockerNetworkName
+#    fi
+
 	envPush "$PEERCMD" CORE_LOGGING_LEVEL=DEBUG
 	envPush "$PEERCMD" CORE_LEDGER_HISTORY_ENABLEHISTORYDATABASE=true
 

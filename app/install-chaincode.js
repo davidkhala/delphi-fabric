@@ -3,6 +3,10 @@
 const helper = require('./helper.js')
 const logger = helper.getLogger('install-chaincode')
 
+
+//allowedCharsChaincodeName = "[A-Za-z0-9_-]+"
+// allowedCharsVersion       = "[A-Za-z0-9_.-]+"
+//
 const installChaincode = function(containerNames, chaincodeName, chaincodePath,
 																	chaincodeVersion, username, org) {
 	logger.debug(

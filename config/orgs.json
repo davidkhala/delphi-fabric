@@ -1,6 +1,9 @@
 {
   "delphi": {
     "domain": "delphi.com",
+    "docker": {
+      "network": "delphiNetworkNotReady"
+    },
     "orderer": {
       "containerName": "orderContainerName",
       "portMap": [
@@ -14,23 +17,22 @@
         "id": "OrdererMSP"
       }
     },
-    "channels": [
-      {
-        "delphichannel": {
-          "peers": [
-            {
-              "containerName": "BUContainerName"
-            },
-            {
-              "containerName": "ENGContainerName"
-            },
-            {
-              "containerName": "PMContainerName"
-            }
-          ]
+    "channels": {
+      "delphichannel": {
+        "orgs": {
+          "BU": {
+            "peerIndexes": [
+              0
+            ]
+          },
+          "PM": {
+            "peerIndexes": [
+              0
+            ]
+          }
         }
       }
-    ],
+    },
     "orgs": {
       "BU": {
         "peers": [
