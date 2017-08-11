@@ -13,7 +13,7 @@ const installChaincode = function(containerNames, chaincodeName, chaincodePath,
 			'\n============ Install chaincode on organizations ============\n')
 	logger.debug('params', { peerURLs: containerNames, chaincodeName, chaincodePath, chaincodeVersion, username, org })
 	helper.setGOPATH()
-	const client = helper.getClientForOrg(org)
+	const client = helper.getClient(org)
 
 	return helper.getOrgAdmin(org).then((user) => {
 		const request = {

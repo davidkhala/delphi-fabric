@@ -15,11 +15,14 @@
  */
 'use strict'
 const log4js = require('log4js')
-const logger = log4js.getLogger('Helper')
-logger.setLevel('DEBUG')
+const getLogger = function(moduleName) {
+	const logger = log4js.getLogger(moduleName)
+	logger.setLevel('DEBUG')
+	return logger
+}
+const logger = getLogger('Helper')
 
 const path = require('path')
-const util = require('util')
 const fs = require('fs-extra')
 const User = require('fabric-client/lib/User.js')
 const caService = require('fabric-ca-client')
@@ -34,11 +37,9 @@ const Client = require('fabric-client')
 const Orderer = require('fabric-client/lib/Orderer')
 const Peer = require('fabric-client/lib/Peer')
 
-const testConfig = require('../config/node-sdk/test.json')
-
 const orgsConfig = companyConfig.orgs
 const COMPANY_DOMAIN = companyConfig.domain
-const clients = { orderer: {}, ca: {}, orgs: {} } // client is for save CryptoSuite for each org
+const clients = { orderer: {}, ca: {}, orgs: {} } // client is for save CryptoSuite for each org??TODO should we use single client
 
 // set up the client and channel objects for each org
 const GPRC_protocol = 'grpcs://' // FIXME: assume using TLS
@@ -58,7 +59,7 @@ const newPeer = function(orgName, peerIndex, peerPortMap) {
 	}
 	if (!requests) {
 		logger.warn(`Could not find port mapped to 7051 for peer host==${peer_hostName_full}`)
-		return {}
+		throw new Error(`Could not find port mapped to 7051 for peer host==${peer_hostName_full}`)
 	}
 	let data = fs.readFileSync(tls_cacerts)
 	return new Peer(requests, {
@@ -85,43 +86,37 @@ clients.orderer = new Orderer(orderer_url, {
 	'ssl-target-name-override': orderer_hostName_full
 })
 
-for (let orgName in orgsConfig) {
-	let client = new Client()
-	const orgConfig = orgsConfig[orgName]
-	// @param {Object} setting This optional parameter is an object with the following optional properties:
+const client = new Client()
+// @param {Object} setting This optional parameter is an object with the following optional properties:
 // 	- software {boolean}: Whether to load a software-based implementation (true) or HSM implementation (false)
 //		default is true (for software based implementation), specific implementation module is specified
 //		in the setting 'crypto-suite-software'
 //  - keysize {number}: The key size to use for the crypto suite instance. default is value of the setting 'crypto-keysize'
 //  - algorithm {string}: Digital signature algorithm, currently supporting ECDSA only with value "EC"
 //  - hash {string}: 'SHA2' or 'SHA3'
-	let cryptoSuite = Client.newCryptoSuite()
+const cryptoSuite = Client.newCryptoSuite()
+cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({ path: '/tmp/fabric-client-kvs' }))
+// Creating and setting a CryptoSuite is optional because the client will construct an instance based on default configuration settings:
+client.setCryptoSuite(cryptoSuite)
 
-	//NOTE keyStore opts:
-	//		for couchdb: {name:dbname,url:couchdbIPAddr +':'+ couchdbPort }
-	//		for create user: {path: store path}
-	cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({ path: getKeyStorePath(orgName) }))
-	// Creating and setting a CryptoSuite is optional because the client will construct an instance based on default configuration settings:
-	client.setCryptoSuite(cryptoSuite)
-
-	for (let channelName in channelsConfig) {
-
-		const orgConfigInChannel = channelsConfig[channelName].orgs[orgName]
-		//filter if chainnel does not container this org
-		if (!orgConfigInChannel) continue
-		const channel = client.newChannel(channelName)
-
-		channel.addOrderer(clients.orderer) //FIXME client-side-only operation?
+for (let channelName in channelsConfig) {
+	const channelConfig = channelsConfig[channelName]
+	const channel = client.newChannel(channelName)
+	channel.addOrderer(clients.orderer) //FIXME client-side-only operation?
+	for (let orgName in channelConfig.orgs) {
+		const orgConfigInChannel = channelConfig.orgs[orgName]
 		for (let peerIndex of orgConfigInChannel.peerIndexes) {
 			const peerConfig = orgsConfig[orgName].peers[peerIndex]
 
 			let peer = newPeer(orgName, peerIndex, peerConfig.portMap)
 			channel.addPeer(peer) //FIXME client-side-only operation? Found: without container-side 'peer channel join', install chaincode still OK
-
 		}
 	}
 
-	clients.orgs[orgName] = client
+}
+
+for (let orgName in orgsConfig) {
+	const orgConfig = orgsConfig[orgName]
 
 	let ca_port
 	for (let portMapEach of orgConfig.ca.portMap) {
@@ -129,6 +124,7 @@ for (let orgName in orgsConfig) {
 			ca_port = portMapEach.host
 		}
 	}
+	if (!ca_port) continue
 	const caUrl = `https://localhost:${ca_port}`
 	clients.ca[orgName] = new caService(caUrl, null /*defautl TLS opts*/, '' /* default CA */, cryptoSuite)
 }
@@ -151,17 +147,11 @@ function getKeyStorePath (org) {
 //-------------------------------------//
 // APIs
 //-------------------------------------//
-const getChannel = function(org, channelName) {
-	return getOrgClient(org).getChannel(channelName)
-}
-const getChannels = function(org) {
-	return getOrgClient(org)._channels
+const getChannel = function(channelName) {
+	return client.getChannel(channelName)
 }
 
-const getOrgClient = function(org) {
-	return clients.orgs[org]
-}
-const getCaClient = function(org) {
+const getCaService = function(org) {
 	return clients.ca[org]
 }
 
@@ -271,7 +261,6 @@ var getAdminUser = function(userOrg) {
 	var username = users[0].username
 	var password = users[0].secret
 	var member
-	var client = getOrgClient(userOrg)
 
 	return Client.newDefaultKeyValueStore({
 		path: getKeyStorePath(userOrg)
@@ -284,9 +273,9 @@ var getAdminUser = function(userOrg) {
 				logger.info('Successfully loaded member from persistence')
 				return user
 			} else {
-				let caClient = clients.ca[userOrg]
+				const caService = getCaService(userOrg)
 				// need to enroll it with CA server
-				return caClient.enroll({
+				return caService.enroll({
 					enrollmentID: username,
 					enrollmentSecret: password
 				}).then((enrollment) => {
@@ -310,7 +299,6 @@ var getAdminUser = function(userOrg) {
 //TODO using fabric-ca, skip it first
 var getRegisteredUsers = function(username, userOrg, isJson) {
 	var member
-	var client = getOrgClient(userOrg)
 	var enrollmentSecret = null
 	return Client.newDefaultKeyValueStore({
 		path: getKeyStorePath(userOrg)
@@ -323,7 +311,7 @@ var getRegisteredUsers = function(username, userOrg, isJson) {
 				logger.info('Successfully loaded member from persistence')
 				return user
 			} else {
-				let caClient = clients.ca[userOrg]
+				let caClient = getCaService(userOrg)
 				return getAdminUser(userOrg).then(function(adminUserObj) {
 					member = adminUserObj
 					return caClient.register({
@@ -379,7 +367,6 @@ const getOrgAdmin = function(orgName) {
 	var keyPEM = Buffer.from(readAllFiles(key)[0]).toString()
 	var certPEM = readAllFiles(cert)[0].toString()
 
-	var client = getOrgClient(orgName)
 	var cryptoSuite = Client.newCryptoSuite()
 	if (orgName) {
 		cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({ path: getKeyStorePath(orgName) }))
@@ -407,16 +394,13 @@ const setGOPATH = function() {
 	process.env.GOPATH = chaincodeConfig.GOPATH
 }
 
-var getLogger = function(moduleName) {
-	var logger = log4js.getLogger(moduleName)
-	logger.setLevel('DEBUG')
-	return logger
-}
-
-var getPeerAddressByName = function(org, peer) {
-	//FIXME remaining rely on testConfig
-	var address = testConfig[org][peer].requests
-	return address.split('grpcs://')[1] // localhost:7051
+const newPeerByContainer = (containerName) => {
+	const { key: orgName, peer: { index: index, value: peerConfig } } = queryPeer(containerName)
+	if (!orgName) {
+		logger.warn(`Could not find OrgName for containerName ${containerName}`)
+		throw new Error(`Could not find OrgName for containerName ${containerName}`)
+	}
+	return newPeer(orgName, index, peerConfig.portMap)
 }
 
 exports.sendProposalCommonPromise = (channel, request, txId, fnName) => {
@@ -452,7 +436,7 @@ exports.sendProposalCommonPromise = (channel, request, txId, fnName) => {
 }
 
 exports.getChannel = getChannel
-exports.getClientForOrg = getOrgClient
+exports.getClient = ()=>client
 exports.getLogger = getLogger
 exports.setGOPATH = setGOPATH
 
@@ -460,8 +444,8 @@ exports.ORGS = Object.assign({ COMPANY }, { GPRC_protocol }, globalConfig)
 exports.queryPeer = queryPeer
 exports.gen_tls_cacerts = gen_tls_cacerts
 exports.newPeers = newPeers
+exports.newPeerByContainer = newPeerByContainer
 exports.newEventHubs = newEventHubs
 exports.newEventHub = newEventHub
-exports.getPeerAddressByName = getPeerAddressByName //see in query
 exports.getRegisteredUsers = getRegisteredUsers //see in invoke
 exports.getOrgAdmin = getOrgAdmin

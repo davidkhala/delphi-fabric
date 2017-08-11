@@ -5,7 +5,6 @@ CURRENT="$(dirname $(readlink -f ${BASH_SOURCE}))"
 CONFIG_JSON="$CURRENT/config/orgs.json"
 CHAINCODE_CONFIG="$CURRENT/config/chaincode.json"
 CRYPTO_CONFIG_DIR="$CURRENT/config/crypto-config"
-network_config_json_output="$CURRENT/config/node-sdk/test.json"
 
 CleanInstall=true
 TLS_ENABLED=true
@@ -16,7 +15,6 @@ GOPATH="$CURRENT/GOPATH/"
 jq ".GOPATH=\"$GOPATH\"" $CHAINCODE_CONFIG | sponge $CHAINCODE_CONFIG
 sudo chmod -R 777 $CRYPTO_CONFIG_DIR
 cd config/node-sdk
-node network-config-gen.js $COMPANY -c $CRYPTO_CONFIG_DIR -o $network_config_json_output
 
 CHAINCODE_NAME="adminChaincode"
 

@@ -14,8 +14,8 @@ const instantiateChaincode = function(
 		channelName, containerName, chaincodeName, chaincodeVersion, args, username, org) {
 	logger.debug('\n============ Instantiate chaincode ============\n')
 	logger.debug({ containerName, chaincodeName, chaincodeVersion, args, username, org })
-	const channel = helper.getChannel(org, channelName)
-	const client = helper.getClientForOrg(org)
+	const channel = helper.getChannel( channelName)
+	const client = helper.getClient(org)
 
 	return helper.getOrgAdmin(org).then((user) => {
 		// read the config block from the orderer for the channel

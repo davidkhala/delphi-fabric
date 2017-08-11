@@ -21,8 +21,8 @@ const logger = helper.getLogger('invoke-chaincode')
 const invoke = function(channelName, containerNames, chaincodeName, fcn, args, username, org) {
 	logger.debug(`\n============ invoke transaction ============\n`)
 	logger.debug('params:', { channelName, containerNames, chaincodeName, fcn, args, username, org })
-	const client = helper.getClientForOrg(org)
-	const channel = helper.getChannel(org, channelName)
+	const client = helper.getClient(org)
+	const channel = helper.getChannel(channelName)
 
 	return helper.getOrgAdmin(org).then((user) => {
 		const txId = client.newTransactionID()
