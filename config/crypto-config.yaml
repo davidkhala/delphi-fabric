@@ -7,7 +7,7 @@ PeerOrgs:
 - Name: BU
   Domain: bu.delphi.com
   Template:
-    Count: 1
+    Count: 2
     Start: 0
   Users:
     Count: 0

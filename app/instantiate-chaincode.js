@@ -1,13 +1,10 @@
 'use strict'
-const fs = require('fs')
 const helper = require('./helper.js')
 const logger = helper.getLogger('instantiate-chaincode')
 const ORGS = helper.ORGS
-const GPRC_protocol = ORGS.GPRC_protocol
 const _ = require('lodash')
 const queryOrgName = helper.queryPeer
-const gen_tls_cacerts = helper.gen_tls_cacerts
-const COMPANY = ORGS.COMPANY
+const testLevel=require('./testLevel')
 
 //TODO do not be global
 // "chaincodeName":"mycc",
@@ -97,7 +94,7 @@ const instantiateChaincode = function(
 				})
 
 				const sendPromise = channel.sendTransaction(nextRequest)
-				return Promise.all([sendPromise].concat([txPromise])).then((results) => {
+				return Promise.all([sendPromise,txPromise]).then((results) => {
 					logger.debug('Event promise all complete and testing complete')
 					return results[0] // the first returned value is from the 'sendPromise' which is from the 'sendTransaction()' call
 				})
@@ -119,6 +116,10 @@ exports.resetChaincode = function(containerName, chaincodeName, chaincodeVersion
 	return dockerodeUtil.deleteContainer(ccContainerName).then(() => {
 		//dev-peer0.pm.delphi.com-delphichaincode-v1:latest
 		return dockerodeUtil.deleteImage(ccContainerName)
+	}).then(()=>{
+		logger.debug('====ready to operate leveldb')
+		//TODO delete in all containers first
+		return testLevel.deleteChaincode(chaincodeName)
 	})
 
 	//TODO besides, core/scc/lscc/lscc.go will also using  stub.GetState(ccname) to check chaincode existence

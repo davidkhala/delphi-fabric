@@ -82,8 +82,6 @@ const invoke = function(channelName, containerNames, chaincodeName, fcn, args, u
 					return results[0] // the first returned value is from the 'sendPromise' which is from the 'sendTransaction()' call
 				}
 		)
-	}).catch(err => {
-		logger.error(err)
 	})
 }
 

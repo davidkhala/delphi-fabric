@@ -48,6 +48,19 @@
                 "container": 7053
               }
             ]
+          },
+          {
+            "containerName": "BUContainer1",
+            "portMap": [
+              {
+                "host": 7061,
+                "container": 7051
+              },
+              {
+                "host": 7063,
+                "container": 7053
+              }
+            ]
           }
         ],
         "ca": {

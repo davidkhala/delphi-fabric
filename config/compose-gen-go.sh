@@ -2,13 +2,16 @@
 
 sudo apt-get -qq install -y jq
 
-CURRENT="$(dirname $(readlink -f ${BASH_SOURCE}))"
+CURRENT="$(dirname $(readlink -f $BASH_SOURCE))"
 
 COMPOSE_FILE="$CURRENT/docker-compose.yaml"
 CONFIG_JSON="$CURRENT/orgs.json"
 # TODO if we use cli container to install chaincode, we need to set GOPATH in compose file; here we use node-sdk to do it
 GOPATH="$(dirname $CURRENT)/GOPATH/"
 IMAGE_TAG="x86_64-1.0.0" # latest
+
+ledgersData_root="$(dirname $CURRENT)/ledgersData"
+CONTAINER_ledgersData="/var/hyperledger/production/ledgersData"
 CONTAINER_CONFIGTX_DIR="/etc/hyperledger/configtx"
 CONTAINER_CRYPTO_CONFIG_DIR="/etc/hyperledger/crypto-config"
 TLS_ENABLED=true
@@ -16,7 +19,6 @@ TLS_ENABLED=true
 COMPANY=$1
 MSPROOT=$2
 BLOCK_FILE=$3
-orgs=()
 
 if [ -z "$COMPANY" ]; then
 	echo "missing company parameter"
@@ -45,10 +47,10 @@ while getopts "j:s:v:f:g:" shortname $remain_params; do
 		echo "set docker-compose file (default: $COMPOSE_FILE) ==> $OPTARG"
 		COMPOSE_FILE=$OPTARG
 		;;
-    g)
-        echo "set GOPATH on host machine (default: $GOPATH) ==> $OPTARG"
-        GOPATH=$OPTARG
-    ;;
+	g)
+		echo "set GOPATH on host machine (default: $GOPATH) ==> $OPTARG"
+		GOPATH=$OPTARG
+		;;
 	?)
 		echo "unknown argument"
 		exit 1
@@ -57,22 +59,15 @@ while getopts "j:s:v:f:g:" shortname $remain_params; do
 done
 COMPANY_DOMAIN=$(jq -r ".$COMPANY.domain" $CONFIG_JSON)
 
-orderer_container_name=$(jq -r ".$COMPANY.orderer.containerName" $CONFIG_JSON)
+ordererConfig=$(jq -r ".$COMPANY.orderer" $CONFIG_JSON)
+orderer_container_name=$(echo $ordererConfig | jq -r ".containerName")
 ORDERER_CONTAINER=$orderer_container_name.$COMPANY_DOMAIN
 
-p2=$(jq -r ".$COMPANY.orgs|keys[]" $CONFIG_JSON)
-if [ "$?" -eq "0" ]; then
-	for org in $p2; do
-		orgs+=($org)
-	done
-else
-	echo "invalid organization json param:"
-	echo "--company: $COMPANY"
-	exit 1
-fi
+orgsConfig=$(jq -r ".$COMPANY.orgs" $CONFIG_JSON)
+orgNames=$(echo $orgsConfig | jq -r "keys[]")
 
-ORDERER_HOST_PORT=$(jq -r ".$COMPANY.orderer.portMap[0].host" $CONFIG_JSON)
-ORDERER_CONTAINER_PORT=$(jq -r ".$COMPANY.orderer.portMap[0].container" $CONFIG_JSON)
+ORDERER_HOST_PORT=$(echo $ordererConfig | jq -r ".portMap[0].host")
+ORDERER_CONTAINER_PORT=$(echo $ordererConfig | jq -r ".portMap[0].container")
 
 rm $COMPOSE_FILE
 >"$COMPOSE_FILE"
@@ -96,9 +91,9 @@ ORDERER_SERVICE_NAME="OrdererServiceName.$COMPANY_DOMAIN" # orderer service name
 
 p=0
 function envPush() {
-		local CMD="$1"
-		$CMD.environment[$p] "$2"
-		((p++))
+	local CMD="$1"
+	$CMD.environment[$p] "$2"
+	((p++))
 }
 
 yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].container_name $ORDERER_CONTAINER
@@ -106,12 +101,8 @@ yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].image hyperledger/fabr
 CONTAINER_GOPATH="/etc/hyperledger/gopath/"
 yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].working_dir "/opt/gopath/src/github.com/hyperledger/fabric/orderers"
 
-
-
 yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].command "orderer"
 yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].ports[0] $ORDERER_HOST_PORT:$ORDERER_CONTAINER_PORT
-
-
 
 yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].environment[0] ORDERER_GENERAL_LOGLEVEL=debug
 yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].environment[1] ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
@@ -134,79 +125,81 @@ yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].volumes[0] "$(dirname 
 yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].volumes[1] "$MSPROOT:$CONTAINER_CRYPTO_CONFIG_DIR"
 
 rootCAs=$CONTAINER_ORDERER_TLS_DIR/ca.crt
-for ((i = 0; i < ${#orgs[@]}; i++)); do
-	org=${orgs[$i]}
-	PEER_DOMAIN=${org,,}.$COMPANY_DOMAIN
-	PEER_ANCHOR=peer0.$PEER_DOMAIN
+for orgName in $orgNames; do
+	orgConfig=$(echo $orgsConfig | jq -r ".$orgName")
+	PEER_DOMAIN=${orgName,,}.$COMPANY_DOMAIN
 	USER_ADMIN=Admin@$PEER_DOMAIN
-	peerServiceName=$PEER_ANCHOR
-	peerContainer=$(jq -r ".$COMPANY.orgs.$org.peers[0].containerName" $CONFIG_JSON).$COMPANY_DOMAIN
-	PEER_STRUCTURE="peerOrganizations/$PEER_DOMAIN/peers/$PEER_ANCHOR"
-	rootCAs="$rootCAs,$CONTAINER_CRYPTO_CONFIG_DIR/$PEER_STRUCTURE/tls/ca.crt"
+	org_peersConfig=$(echo $orgConfig | jq -r ".peers")
+	ADMIN_STRUCTURE="peerOrganizations/$PEER_DOMAIN/users/$USER_ADMIN"
+	for ((peerIndex = 0; peerIndex < $(echo $org_peersConfig | jq "length"); peerIndex++)); do
+		PEER_ANCHOR=peer$peerIndex.$PEER_DOMAIN # TODO multi peer case, take care of any 'peer[0]' occurrence
+		peerServiceName=$PEER_ANCHOR
+		peerConfig=$(echo $org_peersConfig | jq -r ".[$peerIndex]")
+		peerContainer=$(echo $peerConfig | jq -r ".containerName").$COMPANY_DOMAIN
+		PEER_STRUCTURE="peerOrganizations/$PEER_DOMAIN/peers/$PEER_ANCHOR"
+		rootCAs="$rootCAs,$CONTAINER_CRYPTO_CONFIG_DIR/$PEER_STRUCTURE/tls/ca.crt"
+		# peer container
+		#
+		PEERCMD="yaml w -i $COMPOSE_FILE "services["$peerServiceName"]
+		$PEERCMD.container_name $peerContainer
+		$PEERCMD.depends_on[0] $ORDERER_SERVICE_NAME
+		$PEERCMD.image hyperledger/fabric-peer:$IMAGE_TAG
+		$PEERCMD.working_dir /opt/gopath/src/github.com/hyperledger/fabric/peer
+		# TODO: can working_dir and container_GOPATH be user defined?
+		$PEERCMD.command "peer node start"
+		#common env
+		p=0
+		envPush "$PEERCMD" CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+		#FIXME docker compose network setting has problem: projectname is configured outside docker but in docker-compose cli
+		envPush "$PEERCMD" CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=$(basename $(dirname $COMPOSE_FILE))_default
+		#    if [ $COMPOSE_VERSION = 3 ]; then
+		#       $PEERCMD.networks[0] $dockerNetworkName
+		#       envPush "$PEERCMD" CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=$(basename $(dirname $COMPOSE_FILE))_$dockerNetworkName
+		#    fi
+		envPush "$PEERCMD" CORE_LOGGING_LEVEL=DEBUG
+		envPush "$PEERCMD" CORE_LEDGER_HISTORY_ENABLEHISTORYDATABASE=true
 
-    ADMIN_STRUCTURE="peerOrganizations/$PEER_DOMAIN/users/$USER_ADMIN"
-	# peer container
-	#
-	PEERCMD="yaml w -i $COMPOSE_FILE "services["${peerServiceName}"]
+		### GOSSIP setting
+		envPush "$PEERCMD" CORE_PEER_GOSSIP_USELEADERELECTION=true
+		envPush "$PEERCMD" CORE_PEER_GOSSIP_ORGLEADER=false
+		envPush "$PEERCMD" CORE_PEER_GOSSIP_SKIPHANDSHAKE=true
+		envPush "$PEERCMD" CORE_PEER_GOSSIP_EXTERNALENDPOINT=$peerContainer:7051
+		# CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0:7051
+		# only work when CORE_PEER_GOSSIP_ORGLEADER=true & CORE_PEER_GOSSIP_SKIPHANDSHAKE=false & CORE_PEER_GOSSIP_USELEADERELECTION=false
+		envPush "$PEERCMD" CORE_PEER_LOCALMSPID=${orgName}MSP
+		envPush "$PEERCMD" CORE_PEER_MSPCONFIGPATH=$CONTAINER_CRYPTO_CONFIG_DIR/$ADMIN_STRUCTURE/msp
+		envPush "$PEERCMD" CORE_PEER_TLS_ENABLED=$TLS_ENABLED
+		envPush "$PEERCMD" CORE_PEER_TLS_KEY_FILE=$CONTAINER_CRYPTO_CONFIG_DIR/$PEER_STRUCTURE/tls/server.key
+		envPush "$PEERCMD" CORE_PEER_TLS_CERT_FILE=$CONTAINER_CRYPTO_CONFIG_DIR/$PEER_STRUCTURE/tls/server.crt
+		envPush "$PEERCMD" CORE_PEER_TLS_ROOTCERT_FILE=$CONTAINER_CRYPTO_CONFIG_DIR/$PEER_STRUCTURE/tls/ca.crt
+		#individual env
+		envPush "$PEERCMD" CORE_PEER_ID=$PEER_ANCHOR
+		envPush "$PEERCMD" CORE_PEER_ADDRESS=$PEER_ANCHOR:7051
 
-	$PEERCMD.container_name $peerContainer
-	$PEERCMD.depends_on[0] $ORDERER_SERVICE_NAME
-	$PEERCMD.image hyperledger/fabric-peer:$IMAGE_TAG
-	$PEERCMD.working_dir /opt/gopath/src/github.com/hyperledger/fabric/peer
-	# TODO: can working_dir and container_GOPATH be user defined?
-	$PEERCMD.command "peer node start"
-
-	#common env
-	p=0
-	envPush "$PEERCMD" CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
-#FIXME docker compose network setting has problem: projectname is configured outside docker but in docker-compose cli
-	envPush "$PEERCMD" CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=$(basename $(dirname $COMPOSE_FILE))_default
-#    if [ $COMPOSE_VERSION = 3 ]; then
-#       $PEERCMD.networks[0] $dockerNetworkName
-#       envPush "$PEERCMD" CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=$(basename $(dirname $COMPOSE_FILE))_$dockerNetworkName
-#    fi
-
-	envPush "$PEERCMD" CORE_LOGGING_LEVEL=DEBUG
-	envPush "$PEERCMD" CORE_LEDGER_HISTORY_ENABLEHISTORYDATABASE=true
-
-	### GOSSIP setting
-	envPush "$PEERCMD" CORE_PEER_GOSSIP_USELEADERELECTION=true
-	envPush "$PEERCMD" CORE_PEER_GOSSIP_ORGLEADER=false
-	envPush "$PEERCMD" CORE_PEER_GOSSIP_SKIPHANDSHAKE=true
-	envPush "$PEERCMD" CORE_PEER_GOSSIP_EXTERNALENDPOINT=$peerContainer:7051
-
-	# CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0:7051
-	# only work when CORE_PEER_GOSSIP_ORGLEADER=true & CORE_PEER_GOSSIP_SKIPHANDSHAKE=false & CORE_PEER_GOSSIP_USELEADERELECTION=false
-    envPush "$PEERCMD" CORE_PEER_LOCALMSPID=${org}MSP
-	envPush "$PEERCMD" CORE_PEER_MSPCONFIGPATH=$CONTAINER_CRYPTO_CONFIG_DIR/$ADMIN_STRUCTURE/msp
-	envPush "$PEERCMD" CORE_PEER_TLS_ENABLED=$TLS_ENABLED
-	envPush "$PEERCMD" CORE_PEER_TLS_KEY_FILE=$CONTAINER_CRYPTO_CONFIG_DIR/$PEER_STRUCTURE/tls/server.key
-	envPush "$PEERCMD" CORE_PEER_TLS_CERT_FILE=$CONTAINER_CRYPTO_CONFIG_DIR/$PEER_STRUCTURE/tls/server.crt
-	envPush "$PEERCMD" CORE_PEER_TLS_ROOTCERT_FILE=$CONTAINER_CRYPTO_CONFIG_DIR/$PEER_STRUCTURE/tls/ca.crt
+		peerPortMap=$(echo $peerConfig | jq ".portMap")
 
 
-	#individual env
-	envPush "$PEERCMD" CORE_PEER_ID=$PEER_ANCHOR
-	envPush "$PEERCMD" CORE_PEER_ADDRESS=$PEER_ANCHOR:7051
+		for ((j=0;j<$(echo $peerPortMap| jq "length");j++)) do
+    		entry=$(echo $peerPortMap | jq ".[$j]")
+    		hostPort=$(echo $entry | jq ".host")
+    		containerPort=$(echo $entry | jq ".container")
+			$PEERCMD.ports[$j] $hostPort:$containerPort
+		done
+		$PEERCMD.volumes[0] "/var/run/:/host/var/run/"
+		$PEERCMD.volumes[1] "$MSPROOT:$CONTAINER_CRYPTO_CONFIG_DIR"          # for peer channel --cafile
+		$PEERCMD.volumes[2] "$(dirname $BLOCK_FILE):$CONTAINER_CONFIGTX_DIR" # for later channel create
+		ledgersData="$ledgersData_root/$peerContainer"
+		mkdir -p $ledgersData
+		$PEERCMD.volumes[3] "$ledgersData:$CONTAINER_ledgersData" # TODO sync ledgersData test
 
-	PEER_HOST_PORTS=$(jq ".$COMPANY.orgs.${org}.peers[0].portMap[].host" $CONFIG_JSON)
-	PEER_CONTAINER_PORTS=($(jq ".$COMPANY.orgs.${org}.peers[0].portMap[].container" $CONFIG_JSON))
-	j=0
-	for port in $PEER_HOST_PORTS; do
-		$PEERCMD.ports[$j] $port:${PEER_CONTAINER_PORTS[$j]}
-		((j++))
+		#   TODO GO setup failed on peer container: only fabric-tools has go dependencies
+		#set GOPATH map
+		#
+		#   envPush "$PEERCMD" GOPATH=$CONTAINER_GOPATH
+
+		#GOPATH and working_dir conflict: ERROR: for PMContainerName.delphi.com  Cannot start service peer0.pm.delphi.com: oci runtime error: container_linux.go:262: starting container process caused "chdir to cwd (\"/opt/gopath/src/github.com/hyperledger/fabric/peer\") set in config.json failed: no such file or directory"
+		#   $PEERCMD.volumes[3] "$GOPATH:$CONTAINER_GOPATH"
 	done
-	$PEERCMD.volumes[0] "/var/run/:/host/var/run/"
-	$PEERCMD.volumes[1] "$MSPROOT:$CONTAINER_CRYPTO_CONFIG_DIR" # for peer channel --cafile
-	$PEERCMD.volumes[2] "$(dirname $BLOCK_FILE):$CONTAINER_CONFIGTX_DIR" # for later channel create
-
-    #   TODO GO setup failed on peer container: only fabric-tools has go dependencies
-    #set GOPATH map
-	#
-	#   envPush "$PEERCMD" GOPATH=$CONTAINER_GOPATH
-
-    #GOPATH and working_dir conflict: ERROR: for PMContainerName.delphi.com  Cannot start service peer0.pm.delphi.com: oci runtime error: container_linux.go:262: starting container process caused "chdir to cwd (\"/opt/gopath/src/github.com/hyperledger/fabric/peer\") set in config.json failed: no such file or directory"
-    #   $PEERCMD.volumes[3] "$GOPATH:$CONTAINER_GOPATH"
 
 	# CA
 	p=0
@@ -214,21 +207,21 @@ for ((i = 0; i < ${#orgs[@]}; i++)); do
 	$CACMD.image hyperledger/fabric-ca:$IMAGE_TAG
 	$CACMD.container_name "ca.$PEER_DOMAIN"
 	$CACMD.command "sh -c 'fabric-ca-server start -b admin:adminpw -d'"
-	CONTAINER_CA_VOLUME="$CONTAINER_CRYPTO_CONFIG_DIR/peerOrganizations/$PEER_DOMAIN/ca/"
+	CONTAINER_CA_VOLUME="$CONTAINER_CRYPTO_CONFIG_DIR/peerOrganizations/$PEER_DOMAIN/ca"
 	CA_HOST_VOLUME="${MSPROOT}peerOrganizations/$PEER_DOMAIN/ca/"
 	privkeyFilename=$(basename $(find $CA_HOST_VOLUME -type f \( -name "*_sk" \)))
 	$CACMD.volumes[0] "$CA_HOST_VOLUME:$CONTAINER_CA_VOLUME"
 
 	envPush "$CACMD" "FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server" # align with command
-	envPush "$CACMD" "FABRIC_CA_SERVER_CA_CERTFILE=${CONTAINER_CA_VOLUME}ca.$PEER_DOMAIN-cert.pem"
-	envPush "$CACMD" "FABRIC_CA_SERVER_TLS_CERTFILE=${CONTAINER_CA_VOLUME}ca.$PEER_DOMAIN-cert.pem"
+	envPush "$CACMD" "FABRIC_CA_SERVER_CA_CERTFILE=$CONTAINER_CA_VOLUME/ca.$PEER_DOMAIN-cert.pem"
+	envPush "$CACMD" "FABRIC_CA_SERVER_TLS_CERTFILE=$CONTAINER_CA_VOLUME/ca.$PEER_DOMAIN-cert.pem"
 
-	envPush "$CACMD" "FABRIC_CA_SERVER_TLS_KEYFILE=${CONTAINER_CA_VOLUME}$privkeyFilename"
-	envPush "$CACMD" "FABRIC_CA_SERVER_CA_KEYFILE=${CONTAINER_CA_VOLUME}$privkeyFilename"
+	envPush "$CACMD" "FABRIC_CA_SERVER_TLS_KEYFILE=$CONTAINER_CA_VOLUME/$privkeyFilename"
+	envPush "$CACMD" "FABRIC_CA_SERVER_CA_KEYFILE=$CONTAINER_CA_VOLUME/$privkeyFilename"
 	envPush "$CACMD" "FABRIC_CA_SERVER_TLS_ENABLED=$TLS_ENABLED"
 
-	CA_HOST_PORT=$(jq ".$COMPANY.orgs.${org}.ca.portMap[0].host" $CONFIG_JSON)
-	CA_CONTAINER_PORT=$(jq ".$COMPANY.orgs.${org}.ca.portMap[0].container" $CONFIG_JSON)
+	CA_HOST_PORT=$(echo $orgConfig | jq ".ca.portMap[0].host")
+	CA_CONTAINER_PORT=$(echo $orgConfig | jq ".ca.portMap[0].container")
 	$CACMD.ports[0] $CA_HOST_PORT:$CA_CONTAINER_PORT
 
 done

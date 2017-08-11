@@ -18,8 +18,33 @@
           ]
         }
       },
-      "path": "github.com/delphi",
-      "version": "v0"
+      "path": "github.com/delphi"
+    },
+    "adminChaincode": {
+      "orgs": {
+        "BU": {
+          "peers": [
+            {
+              "containerName": "BUContainerName"
+            }
+          ]
+        },
+        "PM": {
+          "peers": [
+            {
+              "containerName": "PMContainerName"
+            }
+          ]
+        },
+        "ENG": {
+          "peers": [
+            {
+              "containerName": "ENGContainerName"
+            }
+          ]
+        }
+      },
+      "path": "github.com/admin"
     }
   }
 }

@@ -13,7 +13,6 @@ if [ -z "$COMPANY" ]; then
 	echo "missing company param"
 	exit 1
 fi
-orgs=()
 remain_params=""
 for ((i = 2; i <= $#; i++)); do
 	j=${!i}
@@ -37,16 +36,8 @@ while getopts "i:j:" shortname $remain_params; do
 done
 
 # build orgs from config.json
-p2=$(jq -r ".$COMPANY.orgs|keys[]" $CONFIG_JSON)
-if [ "$?" -eq "0" ]; then
-	for org in $p2; do
-		orgs+=($org)
-	done
-else
-	echo "invalid organization json param:"
-	echo "--company: $COMPANY"
-	exit 1
-fi
+orgsConfig=$(jq -r ".$COMPANY.orgs" $CONFIG_JSON)
+orgNames=$(echo $orgsConfig | jq -r "keys")
 COMPANY_DOMAIN=$(jq -r ".$COMPANY.domain" $CONFIG_JSON)
 
 ###################
@@ -63,10 +54,13 @@ yaml w -i $crypto_config_file OrdererOrgs[0].Name OrdererCrytoName
 yaml w -i $crypto_config_file OrdererOrgs[0].Domain $COMPANY_DOMAIN
 yaml w -i $crypto_config_file OrdererOrgs[0].Specs[0].Hostname ${orderer_hostName} # be lower case for identity
 
-for ((i = 0; i < ${#orgs[@]}; i++)); do
-	yaml w -i $crypto_config_file PeerOrgs[$i].Name ${orgs[$i]}
-	yaml w -i $crypto_config_file PeerOrgs[$i].Domain "${orgs[$i],,}.$COMPANY_DOMAIN"
-	yaml w -i $crypto_config_file PeerOrgs[$i].Template.Count 1
+for ((i = 0; i < $(echo $orgsConfig| jq "length" ); i++)); do
+	orgName=$(echo $orgNames| jq -r ".[$i]")
+	yaml w -i $crypto_config_file PeerOrgs[$i].Name $orgName
+	yaml w -i $crypto_config_file PeerOrgs[$i].Domain "${orgName,,}.$COMPANY_DOMAIN"
+
+	peerCount=$(echo $orgsConfig| jq ".$orgName.peers|length")
+	yaml w -i $crypto_config_file PeerOrgs[$i].Template.Count $peerCount
 	yaml w -i $crypto_config_file PeerOrgs[$i].Template.Start 0
 	yaml w -i $crypto_config_file PeerOrgs[$i].Users.Count 0
 done
