@@ -19,10 +19,12 @@
     },
     "channels": {
       "delphichannel": {
+        "eventWaitTime": 30000,
         "orgs": {
           "BU": {
             "peerIndexes": [
-              0
+              0,
+              1
             ]
           },
           "PM": {

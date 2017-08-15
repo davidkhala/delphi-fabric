@@ -13,7 +13,6 @@ COMPANY_DOMAIN=$(jq -r ".$COMPANY.domain" $CONFIG_JSON)
 # join partially tested OK
 
 for peerObj in $(jq -c ".$COMPANY.channels.${CHANNEL_ID,,}.orgs | to_entries[]" $CONFIG_JSON);do
-    echo [debug] peerObj $peerObj
     orgName=$(echo $peerObj | jq -r ".key")
     peerIndexes=$(echo $peerObj | jq -r ".value.peerIndexes[]")
     for peerIndex in $peerIndexes

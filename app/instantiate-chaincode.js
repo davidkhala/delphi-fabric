@@ -1,12 +1,9 @@
 'use strict'
 const helper = require('./helper.js')
 const logger = helper.getLogger('instantiate-chaincode')
-const ORGS = helper.ORGS
-const _ = require('lodash')
-const queryOrgName = helper.queryPeer
-const testLevel=require('./testLevel')
+const queryPeer = helper.queryPeer
+const testLevel = require('./testLevel')
 
-//TODO do not be global
 // "chaincodeName":"mycc",
 // 		"chaincodeVersion":"v0",
 // 		"args":["a","100","b","200"]
@@ -14,8 +11,9 @@ const instantiateChaincode = function(
 		channelName, containerName, chaincodeName, chaincodeVersion, args, username, org) {
 	logger.debug('\n============ Instantiate chaincode ============\n')
 	logger.debug({ containerName, chaincodeName, chaincodeVersion, args, username, org })
-	const channel = helper.getChannel( channelName)
-	const client = helper.getClient(org)
+	const channel = helper.getChannel(channelName)
+	const { eventWaitTime } = channel
+	const client = helper.getClient()
 
 	return helper.getOrgAdmin(org).then((user) => {
 		// read the config block from the orderer for the channel
@@ -53,9 +51,9 @@ const instantiateChaincode = function(
 			// 		`endorsement-policy` : optional - EndorsementPolicy object for this chaincode. If not specified, a default policy of "a signature by any member from any of the organizations corresponding to the array of member service providers" is used
 		}
 
-		return helper.sendProposalCommonPromise(channel,request,txId,"sendInstantiateProposal")
-		
-	}).then(({ txId, nextRequest}) => {
+		return helper.sendProposalCommonPromise(channel, request, txId, 'sendInstantiateProposal')
+
+	}).then(({ txId, nextRequest }) => {
 				// results exist even proposal error, need to check each entry
 
 				logger.info(`Successfully sent Proposal and received ProposalResponse`)
@@ -64,16 +62,16 @@ const instantiateChaincode = function(
 				// fail the test
 				const deployId = txId.getTransactionID()
 
-				const { key: orgName, peer: { index: peerIndex, value: peerConfig } } = queryOrgName(containerName)
+				const { key: orgName, peer: { index: peerIndex, value: peerConfig } } = queryPeer(containerName)
 
 				const eh = helper.newEventHub(orgName, peerIndex, peerConfig.portMap, client)
 				eh.connect()
 
-				let txPromise = new Promise((resolve, reject) => {
+				const txPromise = new Promise((resolve, reject) => {
 					let handle = setTimeout(() => {
 						eh.disconnect()
 						reject()
-					}, 30000)
+					}, eventWaitTime)
 
 					eh.registerTxEvent(deployId, (tx, code) => {
 						logger.info(
@@ -94,15 +92,13 @@ const instantiateChaincode = function(
 				})
 
 				const sendPromise = channel.sendTransaction(nextRequest)
-				return Promise.all([sendPromise,txPromise]).then((results) => {
+				return Promise.all([sendPromise, txPromise]).then((results) => {
 					logger.debug('Event promise all complete and testing complete')
-					return results[0] // the first returned value is from the 'sendPromise' which is from the 'sendTransaction()' call
+					return results // the first returned value is from the 'sendPromise' which is from the 'sendTransaction()' call
 				})
 
 			}
-	).catch(error => {
-		logger.error(error)
-	})
+	)
 }
 
 // to remove container like: dev-peer0.pm.delphi.com-delphichaincode-v1
@@ -110,13 +106,13 @@ const instantiateChaincode = function(
 // @param {string} containerName which initial the instantiate action before
 exports.resetChaincode = function(containerName, chaincodeName, chaincodeVersion) {
 	const dockerodeUtil = require('./../common/docker/nodejs/dockerode-util')
-	const { key: orgName, peer: { value: peerConfig, peer_hostName_full } } = queryOrgName(
+	const { key: orgName, peer: { value: peerConfig, peer_hostName_full } } = queryPeer(
 			containerName)
 	const ccContainerName = `dev-${peer_hostName_full}-${chaincodeName.toLowerCase()}-${chaincodeVersion}`
 	return dockerodeUtil.deleteContainer(ccContainerName).then(() => {
 		//dev-peer0.pm.delphi.com-delphichaincode-v1:latest
 		return dockerodeUtil.deleteImage(ccContainerName)
-	}).then(()=>{
+	}).then(() => {
 		logger.debug('====ready to operate leveldb')
 		//TODO delete in all containers first
 		return testLevel.deleteChaincode(chaincodeName)

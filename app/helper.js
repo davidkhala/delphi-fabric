@@ -39,7 +39,7 @@ const Peer = require('fabric-client/lib/Peer')
 
 const orgsConfig = companyConfig.orgs
 const COMPANY_DOMAIN = companyConfig.domain
-const clients = { orderer: {}, ca: {}, orgs: {} } // client is for save CryptoSuite for each org??TODO should we use single client
+const clients = { orderer: {}, caService: {} } // client is for save CryptoSuite for each org??
 
 // set up the client and channel objects for each org
 const GPRC_protocol = 'grpcs://' // FIXME: assume using TLS
@@ -109,8 +109,11 @@ for (let channelName in channelsConfig) {
 			const peerConfig = orgsConfig[orgName].peers[peerIndex]
 
 			let peer = newPeer(orgName, peerIndex, peerConfig.portMap)
+			//NOTE append more info
+			peer.peerConfig=peerConfig
 			channel.addPeer(peer) //FIXME client-side-only operation? Found: without container-side 'peer channel join', install chaincode still OK
 		}
+		// logger.debug({peers:channel.getPeers()})
 	}
 
 }
@@ -126,7 +129,7 @@ for (let orgName in orgsConfig) {
 	}
 	if (!ca_port) continue
 	const caUrl = `https://localhost:${ca_port}`
-	clients.ca[orgName] = new caService(caUrl, null /*defautl TLS opts*/, '' /* default CA */, cryptoSuite)
+	clients.caService[orgName] = new caService(caUrl, null /*defautl TLS opts*/, '' /* default CA */, cryptoSuite)
 }
 
 function readAllFiles (dir) {
@@ -148,11 +151,13 @@ function getKeyStorePath (org) {
 // APIs
 //-------------------------------------//
 const getChannel = function(channelName) {
-	return client.getChannel(channelName)
+	const channel = client.getChannel(channelName)
+	channel.eventWaitTime=channelsConfig[channelName].eventWaitTime
+	return channel
 }
 
 const getCaService = function(org) {
-	return clients.ca[org]
+	return clients.caService[org]
 }
 
 const queryPeer = function(containerName) {
@@ -209,8 +214,7 @@ const newEventHub = function(orgName, peerIndex, peerPortMap, client) {
 		}
 	}
 	if (!events) {
-		logger.warn(`Could not find port mapped to 7053 for peer host==${peer_hostName_full}`)
-		return undefined
+		throw new Error(`Could not find port mapped to 7053 for peer host==${peer_hostName_full}`)
 	}
 	const eventHub = client.newEventHub()// NOTE newEventHub binds to clientContext
 	let data = fs.readFileSync(tls_cacerts)
@@ -235,7 +239,7 @@ const newEventHubs = function(containerNames) {
 			logger.warn(`Could not find OrgName for containerName ${containerName}`)
 			continue
 		}
-		const client = clients.orgs[orgName]
+
 		const eh = newEventHub(orgName, index, peerConfig.portMap, client)
 		if (eh) {
 			targets.push(eh)
@@ -436,11 +440,11 @@ exports.sendProposalCommonPromise = (channel, request, txId, fnName) => {
 }
 
 exports.getChannel = getChannel
-exports.getClient = ()=>client
+exports.getClient = () => client
 exports.getLogger = getLogger
 exports.setGOPATH = setGOPATH
 
-exports.ORGS = Object.assign({ COMPANY }, { GPRC_protocol }, globalConfig)
+exports.helperConfig = Object.assign({ COMPANY }, { GPRC_protocol }, globalConfig)
 exports.queryPeer = queryPeer
 exports.gen_tls_cacerts = gen_tls_cacerts
 exports.newPeers = newPeers

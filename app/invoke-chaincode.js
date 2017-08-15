@@ -21,9 +21,9 @@ const logger = helper.getLogger('invoke-chaincode')
 const invoke = function(channelName, containerNames, chaincodeName, fcn, args, username, org) {
 	logger.debug(`\n============ invoke transaction ============\n`)
 	logger.debug('params:', { channelName, containerNames, chaincodeName, fcn, args, username, org })
-	const client = helper.getClient(org)
+	const client = helper.getClient()
 	const channel = helper.getChannel(channelName)
-
+	const { eventWaitTime } = channel
 	return helper.getOrgAdmin(org).then((user) => {
 		const txId = client.newTransactionID()
 
@@ -45,16 +45,15 @@ const invoke = function(channelName, containerNames, chaincodeName, fcn, args, u
 		const transactionID = txId.getTransactionID()
 		var eventPromises = []
 
-		var eventhubs = helper.newEventHubs(containerNames, org)
-		for (let key in eventhubs) {
-			let eh = eventhubs[key]
+		var eventhubs = helper.newEventHubs(containerNames)
+		for (let eh of eventhubs) {
 			eh.connect()
 
 			let txPromise = new Promise((resolve, reject) => {
 				let handle = setTimeout(() => {
 					eh.disconnect()
 					reject()
-				}, 30000)
+				}, eventWaitTime)
 
 				eh.registerTxEvent(transactionID, (tx, code) => {
 					clearTimeout(handle)

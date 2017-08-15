@@ -2,47 +2,14 @@
   "GOPATH": "/home/david/Documents/delphi-fabric/GOPATH/",
   "chaincodes": {
     "delphiChaincode": {
-      "orgs": {
-        "BU": {
-          "peers": [
-            {
-              "containerName": "BUContainerName"
-            }
-          ]
-        },
-        "PM": {
-          "peers": [
-            {
-              "containerName": "PMContainerName"
-            }
-          ]
-        }
+      "target_channels": {
+        "delphichannel": {}
       },
       "path": "github.com/delphi"
     },
     "adminChaincode": {
-      "orgs": {
-        "BU": {
-          "peers": [
-            {
-              "containerName": "BUContainerName"
-            }
-          ]
-        },
-        "PM": {
-          "peers": [
-            {
-              "containerName": "PMContainerName"
-            }
-          ]
-        },
-        "ENG": {
-          "peers": [
-            {
-              "containerName": "ENGContainerName"
-            }
-          ]
-        }
+      "target_channels": {
+        "delphichannel": {}
       },
       "path": "github.com/admin"
     }
