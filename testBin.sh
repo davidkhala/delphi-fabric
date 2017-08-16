@@ -26,10 +26,15 @@ CHANNEL_FILE="$CONFIGTX_OUTPUT_DIR/$COMPANY.channel"
 
 PROFILE_BLOCK=${COMPANY}Genesis
 PROFILE_CHANNEL=${COMPANY}Channel
-CHANNEL_ID="delphiChannel"
-IMAGE_TAG="x86_64-1.0.0"
+CHANNEL_NAME="delphiChannel"
+VERSION="1.0.0"
+IMAGE_TAG="x86_64-$VERSION"
 TLS_ENABLED=true
 
+## update bin first
+./common/bin-manage/pullBIN.sh -v $VERSION
+npm install fabric-client@$VERSION --save --save-exact
+npm install fabric-ca-client@$VERSION --save --save-exact
 
 ./config/crypto-config-gen-go.sh $COMPANY -i $CRYPTO_CONFIG_FILE
 ./common/bin-manage/cryptogen/runCryptogen.sh -i "$CRYPTO_CONFIG_FILE" -o "$CRYPTO_CONFIG_DIR"
@@ -40,7 +45,7 @@ TLS_ENABLED=true
 ./common/bin-manage/configtxgen/runConfigtxgen.sh block create $BLOCK_FILE -p $PROFILE_BLOCK -i $config_dir
 ./common/bin-manage/configtxgen/runConfigtxgen.sh block view $BLOCK_FILE -v -p $PROFILE_BLOCK -i $config_dir
 
-./common/bin-manage/configtxgen/runConfigtxgen.sh channel create $CHANNEL_FILE -p $PROFILE_CHANNEL -i $config_dir -c ${CHANNEL_ID,,}
+./common/bin-manage/configtxgen/runConfigtxgen.sh channel create $CHANNEL_FILE -p $PROFILE_CHANNEL -i $config_dir -c ${CHANNEL_NAME,,}
 ./common/bin-manage/configtxgen/runConfigtxgen.sh channel view $CHANNEL_FILE -v -p $PROFILE_CHANNEL -i $config_dir
 
 
@@ -51,7 +56,7 @@ COMPOSE_FILE="$config_dir/docker-compose.yaml"
 if [ -f "$COMPOSE_FILE" ]; then
     docker-compose -f $COMPOSE_FILE down
 fi
-./config/compose-gen-go.sh $COMPANY $CRYPTO_CONFIG_DIR $BLOCK_FILE -f $COMPOSE_FILE -s $TLS_ENABLED
+./config/compose-gen-go.sh $COMPANY $CRYPTO_CONFIG_DIR $BLOCK_FILE -f $COMPOSE_FILE -s $TLS_ENABLED -v $IMAGE_TAG
 
 # docker-compose -f $COMPOSE_FILE up
 

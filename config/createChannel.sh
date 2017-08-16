@@ -17,7 +17,7 @@ BLOCK_FILE_NEW=""
 TLS_ENABLED=true
 
 COMPANY=$1
-CHANNEL_ID=$2
+CHANNEL_NAME=$2
 PEER_CONTAINER=$3 # BUContainerName.delphi.com
 
 remain_params=""
@@ -56,7 +56,7 @@ tls_opts="--tls --cafile $CONTAINER_CRYPTO_CONFIG_DIR/ordererOrganizations/$COMP
 ORDERER_ENDPOINT="$ORDERER_CONTAINER:7050" # Must for channel create or Error: Ordering service endpoint  is not valid or missing
 # orderer endpoint should use container port
 orderer_opts="-o $ORDERER_ENDPOINT"
-CMD="peer channel create -c ${CHANNEL_ID,,} $orderer_opts -f $CONTAINER_CONFIGTX_DIR/$COMPANY.channel"
+CMD="peer channel create -c ${CHANNEL_NAME,,} $orderer_opts -f $CONTAINER_CONFIGTX_DIR/$COMPANY.channel"
 if [ $TLS_ENABLED = true ]; then
 	CMD="$CMD $tls_opts"
 fi
@@ -73,6 +73,6 @@ docker exec -ti $PEER_CONTAINER sh -c "$CMD"
 if [ ! -z "$BLOCK_FILE_NEW" ];then
     # back up new block
     # the new file is created in FIX filename pattern: ${CHANNEL_ID,,}.block
-    docker cp $PEER_CONTAINER:/opt/gopath/src/github.com/hyperledger/fabric/peer/${CHANNEL_ID,,}.block $BLOCK_FILE_NEW
+    docker cp $PEER_CONTAINER:/opt/gopath/src/github.com/hyperledger/fabric/peer/${CHANNEL_NAME,,}.block $BLOCK_FILE_NEW
 fi
 
