@@ -29,6 +29,8 @@
     "jsonwebtoken": "^7.3.0",
     "level": "^1.7.0",
     "lodash": "^4.17.4",
-    "log4js": "^0.6.38"
+    "log4js": "^0.6.38",
+    "superagent": "^3.5.2",
+    "superagent-promise": "^1.1.0"
   }
 }

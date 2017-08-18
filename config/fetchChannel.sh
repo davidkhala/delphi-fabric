@@ -58,7 +58,7 @@ ORDERER_ENDPOINT="$ORDERER_CONTAINER:7050" # Must for channel create or Error: O
 orderer_opts="-o $ORDERER_ENDPOINT"
 
 echo =====$PEER_CONTAINER fetch channel
-fetchCMD="peer channel fetch $FETCH_TARGET $CONTAINER_OUTPUTFILE $tls_opts $orderer_opts -c $CHANNEL_NAME"
+fetchCMD="peer channel fetch $FETCH_TARGET $CONTAINER_OUTPUTFILE $tls_opts $orderer_opts -c ${CHANNEL_NAME,,}"
 echo CMD: $fetchCMD
 docker exec -ti $PEER_CONTAINER sh -c "$fetchCMD"
 
@@ -70,4 +70,3 @@ docker exec -ti $PEER_CONTAINER sh -c "$fetchCMD"
 #   newest|oldest|config|number<block: ...Received block:0
 #   number>block num+1: Error: proto: Marshal called with nil
 #   number>block:hanging
-#FIXME: no actual data yet

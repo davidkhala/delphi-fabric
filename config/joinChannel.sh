@@ -12,7 +12,7 @@ CONTAINER_CRYPTO_CONFIG_DIR="/etc/hyperledger/crypto-config"
 
 COMPANY=$1
 
-CHANNEL_NAME=$2
+CONTAINER_BLOCK_FILE=$2
 
 PEER_CONTAINER=$3 # BUContainerName.delphi.com
 remain_params=""
@@ -37,7 +37,7 @@ echo ====$PEER_CONTAINER join channel
 
 # NOTE do not feed -b with block file created by configtxgen,
 # instead, the new file is created after channel created with FIX filename pattern: ${CHANNEL_ID,,}.block
-joinCMD="peer channel join -b ${CHANNEL_NAME,,}.block"
+joinCMD="peer channel join -b $CONTAINER_BLOCK_FILE"
 echo CMD $joinCMD
 docker exec -it $PEER_CONTAINER sh -c "$joinCMD"
 

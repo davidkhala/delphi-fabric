@@ -99,7 +99,6 @@ function envPush() {
 yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].container_name $ORDERER_CONTAINER
 yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].image hyperledger/fabric-orderer:$IMAGE_TAG
 CONTAINER_GOPATH="/etc/hyperledger/gopath/"
-yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].working_dir "/opt/gopath/src/github.com/hyperledger/fabric/orderers"
 
 yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].command "orderer"
 yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].ports[0] $ORDERER_HOST_PORT:$ORDERER_CONTAINER_PORT
@@ -144,8 +143,7 @@ for orgName in $orgNames; do
 		$PEERCMD.container_name $peerContainer
 		$PEERCMD.depends_on[0] $ORDERER_SERVICE_NAME
 		$PEERCMD.image hyperledger/fabric-peer:$IMAGE_TAG
-		$PEERCMD.working_dir /opt/gopath/src/github.com/hyperledger/fabric/peer
-		# TODO: can working_dir and container_GOPATH be user defined?
+		# NOTE working_dir just setting default commands current path
 		$PEERCMD.command "peer node start"
 		#common env
 		p=0
@@ -178,11 +176,10 @@ for orgName in $orgNames; do
 
 		peerPortMap=$(echo $peerConfig | jq ".portMap")
 
-
-		for ((j=0;j<$(echo $peerPortMap| jq "length");j++)) do
-    		entry=$(echo $peerPortMap | jq ".[$j]")
-    		hostPort=$(echo $entry | jq ".host")
-    		containerPort=$(echo $entry | jq ".container")
+		for ((j = 0; j < $(echo $peerPortMap | jq "length"); j++)); do
+			entry=$(echo $peerPortMap | jq ".[$j]")
+			hostPort=$(echo $entry | jq ".host")
+			containerPort=$(echo $entry | jq ".container")
 			$PEERCMD.ports[$j] $hostPort:$containerPort
 		done
 		$PEERCMD.volumes[0] "/var/run/:/host/var/run/"
@@ -202,7 +199,6 @@ for orgName in $orgNames; do
 	done
 
 	# CA
-	p=0
 	CACMD="yaml w -i $COMPOSE_FILE "services["ca.$PEER_DOMAIN"]
 	$CACMD.image hyperledger/fabric-ca:$IMAGE_TAG
 	$CACMD.container_name "ca.$PEER_DOMAIN"
@@ -212,6 +208,7 @@ for orgName in $orgNames; do
 	privkeyFilename=$(basename $(find $CA_HOST_VOLUME -type f \( -name "*_sk" \)))
 	$CACMD.volumes[0] "$CA_HOST_VOLUME:$CONTAINER_CA_VOLUME"
 
+	p=0
 	envPush "$CACMD" "FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server" # align with command
 	envPush "$CACMD" "FABRIC_CA_SERVER_CA_CERTFILE=$CONTAINER_CA_VOLUME/ca.$PEER_DOMAIN-cert.pem"
 	envPush "$CACMD" "FABRIC_CA_SERVER_TLS_CERTFILE=$CONTAINER_CA_VOLUME/ca.$PEER_DOMAIN-cert.pem"
@@ -228,3 +225,31 @@ done
 yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].environment[9] "ORDERER_GENERAL_TLS_ROOTCAS=[$rootCAs]"
 
 # NOTE: cli container is just a shadow of any existing peer! see the CORE_PEER_ADDRESS & CORE_PEER_MSPCONFIGPATH
+
+
+# FIXME testCode: for peer channel update, seems cli is a good tool
+CLICMD="yaml w -i $COMPOSE_FILE services.cli"
+$CLICMD.container_name cli.$COMPANY_DOMAIN
+$CLICMD.image hyperledger/fabric-tools:$IMAGE_TAG
+
+p=0
+
+envPush "$CLICMD" CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+envPush "$CLICMD" CORE_LOGGING_LEVEL=DEBUG
+envPush "$CLICMD" CORE_PEER_ID=cli.$COMPANY_DOMAIN
+envPush "$CLICMD" CORE_PEER_ADDRESS=$ORDERER_CONTAINER:$ORDERER_CONTAINER_PORT
+envPush "$CLICMD" CORE_PEER_LOCALMSPID=OrdererMSP
+envPush "$CLICMD" CORE_PEER_MSPCONFIGPATH=$CONTAINER_CRYPTO_CONFIG_DIR/ordererOrganizations/$COMPANY_DOMAIN/users/Admin@$COMPANY_DOMAIN/msp
+envPush "$CLICMD" CORE_PEER_TLS_ROOTCERT_FILE=$CONTAINER_CRYPTO_CONFIG_DIR/ordererOrganizations/$COMPANY_DOMAIN/users/Admin@$COMPANY_DOMAIN/tls/ca.crt
+
+envPush "$CLICMD" GOPATH=$CONTAINER_GOPATH
+
+$CLICMD.volumes[0] /var/run/:/host/var/run/
+$CLICMD.volumes[1] "$MSPROOT:$CONTAINER_CRYPTO_CONFIG_DIR"
+$CLICMD.volumes[2] "$GOPATH:$CONTAINER_GOPATH"
+$CLICMD.command "sleep infinity" # NOTE any kind of hanging is required, otherwise container will not be started when docker-compose up
+
+# NOTE In fabric-tools:
+#   cryptogen version: development build
+#   configtxgen version: development build
+# NOTE tty: indicate terminal connection

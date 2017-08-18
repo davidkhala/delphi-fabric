@@ -26,7 +26,6 @@ const path = require('path')
 const fs = require('fs-extra')
 const User = require('fabric-client/lib/User.js')
 const caService = require('fabric-ca-client')
-const config = require('../config.json')
 const globalConfig = require('../config/orgs.json')
 const COMPANY = 'delphi'
 const companyConfig = globalConfig[COMPANY]
@@ -34,6 +33,8 @@ const CRYPTO_CONFIG_DIR = companyConfig.CRYPTO_CONFIG_DIR
 const channelsConfig = companyConfig.channels
 const chaincodeConfig = require('../config/chaincode.json')
 const Client = require('fabric-client')
+const sdkUtils=require('fabric-client/lib/utils')
+const nodeConfig=require('../config.json')
 const Orderer = require('fabric-client/lib/Orderer')
 const Peer = require('fabric-client/lib/Peer')
 
@@ -110,7 +111,7 @@ for (let channelName in channelsConfig) {
 
 			let peer = newPeer(orgName, peerIndex, peerConfig.portMap)
 			//NOTE append more info
-			peer.peerConfig=peerConfig
+			peer.peerConfig = peerConfig
 			channel.addPeer(peer) //FIXME client-side-only operation? Found: without container-side 'peer channel join', install chaincode still OK
 		}
 		// logger.debug({peers:channel.getPeers()})
@@ -132,19 +133,8 @@ for (let orgName in orgsConfig) {
 	clients.caService[orgName] = new caService(caUrl, null /*defautl TLS opts*/, '' /* default CA */, cryptoSuite)
 }
 
-function readAllFiles (dir) {
-	const files = fs.readdirSync(dir)
-	const certs = []
-	files.forEach((file_name) => {
-		let file_path = path.join(dir, file_name)
-		let data = fs.readFileSync(file_path)
-		certs.push(data)
-	})
-	return certs
-}
-
-function getKeyStorePath (org) {
-	return `/tmp/fabric-client-kvs_${org}`
+function getStateDBCachePath (org) {
+	return path.join(nodeConfig.stateDBCacheDir,org)
 }
 
 //-------------------------------------//
@@ -152,7 +142,7 @@ function getKeyStorePath (org) {
 //-------------------------------------//
 const getChannel = function(channelName) {
 	const channel = client.getChannel(channelName)
-	channel.eventWaitTime=channelsConfig[channelName].eventWaitTime
+	channel.eventWaitTime = channelsConfig[channelName].eventWaitTime
 	return channel
 }
 
@@ -261,13 +251,12 @@ const getMspID = function(org) {
 }
 
 var getAdminUser = function(userOrg) {
-	var users = config.users
-	var username = users[0].username
-	var password = users[0].secret
+	const username = 'admin'
+	const password = 'adminpw'
 	var member
 
-	return Client.newDefaultKeyValueStore({
-		path: getKeyStorePath(userOrg)
+	return sdkUtils.newKeyValueStore({
+		path: getStateDBCachePath(userOrg)
 	}).then((store) => {
 		client.setStateStore(store)
 		// clearing the user context before switching
@@ -304,8 +293,8 @@ var getAdminUser = function(userOrg) {
 var getRegisteredUsers = function(username, userOrg, isJson) {
 	var member
 	var enrollmentSecret = null
-	return Client.newDefaultKeyValueStore({
-		path: getKeyStorePath(userOrg)
+	return sdkUtils.newKeyValueStore({
+		path: getStateDBCachePath(userOrg)
 	}).then((store) => {
 		client.setStateStore(store)
 		// clearing the user context before switching
@@ -363,36 +352,47 @@ var getRegisteredUsers = function(username, userOrg, isJson) {
 	})
 }
 
+//NOTE have to do this since filename for private Key file would be liek
+// a4fbafa51de1161a2f82ffa80cf1c34308482c33a9dcd4d150183183d0a3e0c6_sk
+const getKeyFilesInsDir = (dir) => {
+	const files = fs.readdirSync(dir)
+	const keyFiles = []
+	files.forEach((file_name) => {
+		let filePath = path.join(dir, file_name)
+		if (file_name.endsWith('_sk')) {
+			keyFiles.push(filePath)
+		}
+	})
+	return keyFiles
+}
 const getOrgAdmin = function(orgName) {
 	const org_domain = `${orgName.toLowerCase()}.${COMPANY_DOMAIN}`// bu.delphi.com
-	const key = `${CRYPTO_CONFIG_DIR}/peerOrganizations/${org_domain}/users/Admin@${org_domain}/msp/keystore`
-	const cert = `${CRYPTO_CONFIG_DIR}/peerOrganizations/${org_domain}/users/Admin@${org_domain}/msp/signcerts`
+	const keystoreDir = `${CRYPTO_CONFIG_DIR}/peerOrganizations/${org_domain}/users/Admin@${org_domain}/msp/keystore`
 
-	var keyPEM = Buffer.from(readAllFiles(key)[0]).toString()
-	var certPEM = readAllFiles(cert)[0].toString()
+	const keyFile = getKeyFilesInsDir(keystoreDir)[0]
+	const signcertFile = `${CRYPTO_CONFIG_DIR}/peerOrganizations/${org_domain}/users/Admin@${org_domain}/msp/signcerts/ca.${org_domain}-cert.pem`
 
 	var cryptoSuite = Client.newCryptoSuite()
-	if (orgName) {
-		cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({ path: getKeyStorePath(orgName) }))
-		client.setCryptoSuite(cryptoSuite)
-	}
+	cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({ path: getStateDBCachePath(orgName) }))
+	client.setCryptoSuite(cryptoSuite)
 
-	return Client.newDefaultKeyValueStore({
-		path: getKeyStorePath(orgName)
+	return sdkUtils.newKeyValueStore({
+		path: getStateDBCachePath(orgName)
 	}).then((store) => {
 		client.setStateStore(store)
 
 		// NOTE:(jsdoc) This allows applications to use pre-existing crypto materials (private keys and certificates) to construct user objects with signing capabilities
+		// NOTE In client.createUser option, two types of cryptoContent is supported:
+		// 1. cryptoContent: {		privateKey: keyFilePath,signedCert: certFilePath}
+		// 2. cryptoContent: {		privateKeyPEM: keyFileContent,signedCertPEM: certFileContent}
 		return client.createUser({
-			username: 'peer' + orgName + 'Admin',
+			username: formatAdminUserName(orgName),
 			mspid: getMspID(orgName),
-			cryptoContent: {
-				privateKeyPEM: keyPEM,
-				signedCertPEM: certPEM
-			}
+			cryptoContent: { privateKey: keyFile, signedCert: signcertFile }
 		})
 	})
 }
+const formatAdminUserName=(orgname)=>`Admin@${orgname}`
 
 const setGOPATH = function() {
 	process.env.GOPATH = chaincodeConfig.GOPATH

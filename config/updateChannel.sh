@@ -53,9 +53,9 @@ ORDERER_ENDPOINT="$ORDERER_CONTAINER:7050" # Must for channel create or Error: O
 orderer_opts="-o $ORDERER_ENDPOINT"
 
 echo =====$PEER_CONTAINER update channel
-fetchCMD="peer channel update -f $CONTAINER_updateFile $tls_opts $orderer_opts -c $CHANNEL_NAME"
-echo CMD: $fetchCMD
-docker exec -ti $PEER_CONTAINER sh -c "$fetchCMD"
+updateCMD="peer channel update -f $CONTAINER_updateFile $tls_opts $orderer_opts -c ${CHANNEL_NAME,,}"
+echo CMD: $updateCMD
+docker exec -ti $PEER_CONTAINER sh -c "$updateCMD"
 
 
 # TODO peer channel update -f config_update_as_envelope.pb -c testchainid -o 127.0.0.1:7050
