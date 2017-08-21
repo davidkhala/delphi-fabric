@@ -60,7 +60,9 @@ for ((i = 0; i < $(echo $orgsConfig| jq "length" ); i++)); do
 	yaml w -i $crypto_config_file PeerOrgs[$i].Domain "${orgName,,}.$COMPANY_DOMAIN"
 
 	peerCount=$(echo $orgsConfig| jq ".$orgName.peers|length")
+	userCount=$(echo $orgsConfig| jq ".$orgName.users|length")
 	yaml w -i $crypto_config_file PeerOrgs[$i].Template.Count $peerCount
 	yaml w -i $crypto_config_file PeerOrgs[$i].Template.Start 0
-	yaml w -i $crypto_config_file PeerOrgs[$i].Users.Count 0
+	yaml w -i $crypto_config_file PeerOrgs[$i].Users.Count $userCount
+#	${org_domain}/users/User{index}@${org_domain}
 done

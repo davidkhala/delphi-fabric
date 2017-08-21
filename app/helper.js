@@ -31,16 +31,16 @@ const COMPANY = 'delphi'
 const companyConfig = globalConfig[COMPANY]
 const CRYPTO_CONFIG_DIR = companyConfig.CRYPTO_CONFIG_DIR
 const channelsConfig = companyConfig.channels
+const COMPANY_DOMAIN = companyConfig.domain
 const chaincodeConfig = require('../config/chaincode.json')
 const Client = require('fabric-client')
-const sdkUtils=require('fabric-client/lib/utils')
-const nodeConfig=require('../config.json')
+const sdkUtils = require('fabric-client/lib/utils')
+const nodeConfig = require('./config.json')
 const Orderer = require('fabric-client/lib/Orderer')
-const Peer = require('fabric-client/lib/Peer')
 
+const Peer = require('fabric-client/lib/Peer')
 const orgsConfig = companyConfig.orgs
-const COMPANY_DOMAIN = companyConfig.domain
-const clients = { orderer: {}, caService: {} } // client is for save CryptoSuite for each org??
+const objects = { user: {}, orderer: {}, caService: {} } // client is for save CryptoSuite for each org??
 
 // set up the client and channel objects for each org
 const GPRC_protocol = 'grpcs://' // FIXME: assume using TLS
@@ -82,7 +82,7 @@ for (let portMapEach of companyConfig.orderer.portMap) {
 	}
 }
 //NOTE orderer without newCryptoSuite()
-clients.orderer = new Orderer(orderer_url, {
+objects.orderer = new Orderer(orderer_url, {
 	'pem': Buffer.from(fs.readFileSync(orderer_tls_cacerts)).toString(),
 	'ssl-target-name-override': orderer_hostName_full
 })
@@ -95,15 +95,11 @@ const client = new Client()
 //  - keysize {number}: The key size to use for the crypto suite instance. default is value of the setting 'crypto-keysize'
 //  - algorithm {string}: Digital signature algorithm, currently supporting ECDSA only with value "EC"
 //  - hash {string}: 'SHA2' or 'SHA3'
-const cryptoSuite = Client.newCryptoSuite()
-cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({ path: '/tmp/fabric-client-kvs' }))
-// Creating and setting a CryptoSuite is optional because the client will construct an instance based on default configuration settings:
-client.setCryptoSuite(cryptoSuite)
 
 for (let channelName in channelsConfig) {
 	const channelConfig = channelsConfig[channelName]
-	const channel = client.newChannel(channelName)
-	channel.addOrderer(clients.orderer) //FIXME client-side-only operation?
+	const channel = client.newChannel(channelName.toLowerCase())
+	channel.addOrderer(objects.orderer) //FIXME client-side-only operation?
 	for (let orgName in channelConfig.orgs) {
 		const orgConfigInChannel = channelConfig.orgs[orgName]
 		for (let peerIndex of orgConfigInChannel.peerIndexes) {
@@ -130,24 +126,24 @@ for (let orgName in orgsConfig) {
 	}
 	if (!ca_port) continue
 	const caUrl = `https://localhost:${ca_port}`
-	clients.caService[orgName] = new caService(caUrl, null /*defautl TLS opts*/, '' /* default CA */, cryptoSuite)
+	objects.caService[orgName] = new caService(caUrl, null /*defautl TLS opts*/, '' /* default CA */) //TODO default cryptoSuite
 }
 
 function getStateDBCachePath (org) {
-	return path.join(nodeConfig.stateDBCacheDir,org)
+	return path.join(nodeConfig.stateDBCacheDir, org)
 }
 
 //-------------------------------------//
 // APIs
 //-------------------------------------//
 const getChannel = function(channelName) {
-	const channel = client.getChannel(channelName)
+	const channel = client.getChannel(channelName.toLowerCase())
 	channel.eventWaitTime = channelsConfig[channelName].eventWaitTime
 	return channel
 }
 
 const getCaService = function(org) {
-	return clients.caService[org]
+	return objects.caService[org]
 }
 
 const queryPeer = function(containerName) {
@@ -365,16 +361,43 @@ const getKeyFilesInsDir = (dir) => {
 	})
 	return keyFiles
 }
+const clientClearUser = () => {
+	client._userContext = null
+}
+const clientSetUser = (keyFileDir, signcertFile, orgName) => {
+	clientClearUser()
+	const org_domain = `${orgName.toLowerCase()}.${COMPANY_DOMAIN}`// bu.delphi.com
+	const keyFile = getKeyFilesInsDir(keyFileDir)[0]
+	return sdkUtils.newKeyValueStore({
+		path: getStateDBCachePath(orgName)
+	}).then((store) => {
+		client.setStateStore(store)
+
+		let index=1
+		// NOTE:(jsdoc) This allows applications to use pre-existing crypto materials (private keys and certificates) to construct user objects with signing capabilities
+		// NOTE In client.createUser option, two types of cryptoContent is supported:
+		// 1. cryptoContent: {		privateKey: keyFilePath,signedCert: certFilePath}
+		// 2. cryptoContent: {		privateKeyPEM: keyFileContent,signedCertPEM: certFileContent}
+		const createUserOpt = {
+			username: `User${index}@${org_domain}`,
+			mspid: getMspID(orgName),
+			cryptoContent: { privateKey: keyFile, signedCert: signcertFile }
+		}
+		return client.createUser(createUserOpt)
+	})
+
+}
 const getOrgAdmin = function(orgName) {
 	const org_domain = `${orgName.toLowerCase()}.${COMPANY_DOMAIN}`// bu.delphi.com
 	const keystoreDir = `${CRYPTO_CONFIG_DIR}/peerOrganizations/${org_domain}/users/Admin@${org_domain}/msp/keystore`
 
 	const keyFile = getKeyFilesInsDir(keystoreDir)[0]
-	const signcertFile = `${CRYPTO_CONFIG_DIR}/peerOrganizations/${org_domain}/users/Admin@${org_domain}/msp/signcerts/ca.${org_domain}-cert.pem`
+	const signcertFile = `${CRYPTO_CONFIG_DIR}/peerOrganizations/${org_domain}/users/Admin@${org_domain}/msp/signcerts/Admin@${org_domain}-cert.pem`
 
-	var cryptoSuite = Client.newCryptoSuite()
-	cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({ path: getStateDBCachePath(orgName) }))
-	client.setCryptoSuite(cryptoSuite)
+	// TODO to test eject cryptoSuite
+	// var cryptoSuite = sdkUtils.newCryptoSuite()
+	// cryptoSuite.setCryptoKeyStore(sdkUtils.newCryptoKeyStore({ path:path.join(nodeConfig.stateDBCacheDir,formatAdminUserName(orgName)) }))
+	// client.setCryptoSuite(cryptoSuite)
 
 	return sdkUtils.newKeyValueStore({
 		path: getStateDBCachePath(orgName)
@@ -386,13 +409,13 @@ const getOrgAdmin = function(orgName) {
 		// 1. cryptoContent: {		privateKey: keyFilePath,signedCert: certFilePath}
 		// 2. cryptoContent: {		privateKeyPEM: keyFileContent,signedCertPEM: certFileContent}
 		return client.createUser({
-			username: formatAdminUserName(orgName),
+			username: `Admin@${org_domain}`,
 			mspid: getMspID(orgName),
 			cryptoContent: { privateKey: keyFile, signedCert: signcertFile }
 		})
 	})
 }
-const formatAdminUserName=(orgname)=>`Admin@${orgname}`
+const formatAdminUserName = (org_domain) => `Admin@${org_domain}`
 
 const setGOPATH = function() {
 	process.env.GOPATH = chaincodeConfig.GOPATH
@@ -449,6 +472,8 @@ exports.queryPeer = queryPeer
 exports.gen_tls_cacerts = gen_tls_cacerts
 exports.newPeers = newPeers
 exports.newPeerByContainer = newPeerByContainer
+exports.testSetUser = clientSetUser
+exports.testClearUser = clientClearUser
 exports.newEventHubs = newEventHubs
 exports.newEventHub = newEventHub
 exports.getRegisteredUsers = getRegisteredUsers //see in invoke

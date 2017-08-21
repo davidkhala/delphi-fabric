@@ -21,7 +21,7 @@ const logger = helper.getLogger('Create-Channel')
 //"../artifacts/channel/mychannel.tx"
 const createChannel = function(channelName, channelConfigFile, username, orgName) {
 	logger.debug('\n====== Creating Channel \'' + channelName + '\' ======\n')
-	logger.debug(`params: ${{ channelName, channelConfigPath: channelConfigFile, username, orgName }}`)
+	logger.debug({ channelName, channelConfigPath: channelConfigFile, username, orgName })
 
 	const client = helper.getClient()
 	const channel = helper.getChannel(channelName)
@@ -43,20 +43,13 @@ const createChannel = function(channelName, channelConfigFile, username, orgName
 		let request = {
 			config: channelConfig,
 			signatures: [signature],
-			name: channelName,
+			name: channelName.toLowerCase(),
 			orderer: channel.getOrderers()[0],
 			txId: client.newTransactionID()
 		}
 
 		// send to orderer
 		return client.createChannel(request)
-	}).then((response) => {
-		if (response && response.status === 'SUCCESS') {
-			logger.debug(`Successfully created the channel.${{ response }}`)
-			return response
-		} else {
-			throw new Error(`Failed to create the channel`)
-		}
 	})
 }
 

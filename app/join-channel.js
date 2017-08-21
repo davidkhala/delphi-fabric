@@ -10,11 +10,10 @@ const companyConfig = helperConfig[COMPANY]
 //
 const joinChannel = (channelName, containerNames) => {
 
-	logger.debug(`params: ${{ channelName, containerNames }}`)
+	logger.debug('joinChannel', { channelName, containerNames })
 
 	const client = helper.getClient()
 	const channel = helper.getChannel(channelName)
-	logger.debug(channel.getPeers())
 	const { eventWaitTime } = channel
 
 	return channel.getGenesisBlock({ txId: client.newTransactionID() }).
@@ -44,12 +43,12 @@ const joinChannel = (channelName, containerNames) => {
 							if (block.data.data.length === 1) {
 								// Config block must only contain one transaction
 								if (block.data.data[0].payload.header.channel_header.channel_id
-										=== channelName) {
+										=== channel.getName()) {
 									eh.disconnect()
 									resolve()
 								}
 								else {
-									reject()
+									reject({Error:'channelName mismatch',desc:{from_block:block.data.data[0].payload.header.channel_header.channel_id, from_request:channelName}})
 								}
 							}
 						})
