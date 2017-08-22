@@ -18,9 +18,9 @@ const helper = require('./helper.js')
 const logger = helper.getLogger('invoke-chaincode')
 
 //TODO should we just invoke on single container? or each container in channel? or even container outside channel
-const invoke = function(channelName, containerNames, chaincodeName, fcn, args, username, org) {
+const invoke = function(channelName, peerIndexes, chaincodeName, fcn, args,  org) {
 	logger.debug(`\n============ invoke transaction ============\n`)
-	logger.debug('params:', { channelName, containerNames, chaincodeName, fcn, args, username, org })
+	logger.debug({ channelName, peerIndexes, chaincodeName, fcn, args, org })
 	const client = helper.getClient()
 	const channel = helper.getChannel(channelName)
 	const { eventWaitTime } = channel
@@ -36,7 +36,7 @@ const invoke = function(channelName, containerNames, chaincodeName, fcn, args, u
 			args,
 			txId
 		}
-		return helper.sendProposalCommonPromise(channel,request,txId,"sendTransactionProposal")
+		return helper.sendProposalCommonPromise(channel, request, txId, 'sendTransactionProposal')
 	}).then(({ txId, nextRequest }) => {
 		logger.debug(`Successfully sent Proposal and received ProposalResponse:`)
 		// set the transaction listener and set a timeout of 30sec
@@ -45,7 +45,7 @@ const invoke = function(channelName, containerNames, chaincodeName, fcn, args, u
 		const transactionID = txId.getTransactionID()
 		var eventPromises = []
 
-		var eventhubs = helper.newEventHubs(containerNames)
+		var eventhubs = helper.newEventHubs(peerIndexes, org)
 		for (let eh of eventhubs) {
 			eh.connect()
 
@@ -77,7 +77,7 @@ const invoke = function(channelName, containerNames, chaincodeName, fcn, args, u
 
 		var sendPromise = channel.sendTransaction(nextRequest)
 		return Promise.all([sendPromise].concat(eventPromises)).then((results) => {
-					logger.debug(' event promise all complete and testing complete')
+					logger.info(' event promise all complete and testing complete')
 					return results[0] // the first returned value is from the 'sendPromise' which is from the 'sendTransaction()' call
 				}
 		)
@@ -86,6 +86,6 @@ const invoke = function(channelName, containerNames, chaincodeName, fcn, args, u
 
 exports.invokeChaincode = invoke
 //TODO import query.js
-exports.queryChaincode= ()=>{
+exports.queryChaincode = () => {
 
 }

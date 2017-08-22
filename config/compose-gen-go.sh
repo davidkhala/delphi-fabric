@@ -227,27 +227,28 @@ yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].environment[9] "ORDERE
 # NOTE: cli container is just a shadow of any existing peer! see the CORE_PEER_ADDRESS & CORE_PEER_MSPCONFIGPATH
 
 
-# FIXME testCode: for peer channel update, seems cli is a good tool
-CLICMD="yaml w -i $COMPOSE_FILE services.cli"
-$CLICMD.container_name cli.$COMPANY_DOMAIN
-$CLICMD.image hyperledger/fabric-tools:$IMAGE_TAG
-
-p=0
-
-envPush "$CLICMD" CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
-envPush "$CLICMD" CORE_LOGGING_LEVEL=DEBUG
-envPush "$CLICMD" CORE_PEER_ID=cli.$COMPANY_DOMAIN
-envPush "$CLICMD" CORE_PEER_ADDRESS=$ORDERER_CONTAINER:$ORDERER_CONTAINER_PORT
-envPush "$CLICMD" CORE_PEER_LOCALMSPID=OrdererMSP
-envPush "$CLICMD" CORE_PEER_MSPCONFIGPATH=$CONTAINER_CRYPTO_CONFIG_DIR/ordererOrganizations/$COMPANY_DOMAIN/users/Admin@$COMPANY_DOMAIN/msp
-envPush "$CLICMD" CORE_PEER_TLS_ROOTCERT_FILE=$CONTAINER_CRYPTO_CONFIG_DIR/ordererOrganizations/$COMPANY_DOMAIN/users/Admin@$COMPANY_DOMAIN/tls/ca.crt
-
-envPush "$CLICMD" GOPATH=$CONTAINER_GOPATH
-
-$CLICMD.volumes[0] /var/run/:/host/var/run/
-$CLICMD.volumes[1] "$MSPROOT:$CONTAINER_CRYPTO_CONFIG_DIR"
-$CLICMD.volumes[2] "$GOPATH:$CONTAINER_GOPATH"
-$CLICMD.command "sleep infinity" # NOTE any kind of hanging is required, otherwise container will not be started when docker-compose up
+# FIXME testCode to delete: for peer channel update but not working
+#CLICMD="yaml w -i $COMPOSE_FILE services.cli"
+#$CLICMD.container_name cli.$COMPANY_DOMAIN
+#$CLICMD.image hyperledger/fabric-tools:$IMAGE_TAG
+#
+#p=0
+#
+#envPush "$CLICMD" CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+#envPush "$CLICMD" CORE_LOGGING_LEVEL=DEBUG
+#envPush "$CLICMD" CORE_PEER_ID=cli.$COMPANY_DOMAIN
+#envPush "$CLICMD" CORE_PEER_ADDRESS=$ORDERER_CONTAINER:$ORDERER_CONTAINER_PORT
+#envPush "$CLICMD" CORE_PEER_LOCALMSPID=OrdererMSP
+##envPush "$CLICMD" CORE_PEER_MSPCONFIGPATH=$CONTAINER_CRYPTO_CONFIG_DIR/ordererOrganizations/$COMPANY_DOMAIN/users/Admin@$COMPANY_DOMAIN/msp
+#envPush "$CLICMD" CORE_PEER_MSPCONFIGPATH=$CONTAINER_CRYPTO_CONFIG_DIR/$ORDERER_STRUCTURE/msp
+#envPush "$CLICMD" CORE_PEER_TLS_ROOTCERT_FILE=$CONTAINER_ORDERER_TLS_DIR/ca.crt
+#
+#envPush "$CLICMD" GOPATH=$CONTAINER_GOPATH
+#
+#$CLICMD.volumes[0] /var/run/:/host/var/run/
+#$CLICMD.volumes[1] "$MSPROOT:$CONTAINER_CRYPTO_CONFIG_DIR"
+#$CLICMD.volumes[2] "$GOPATH:$CONTAINER_GOPATH"
+#$CLICMD.command "sleep infinity" # NOTE any kind of hanging is required, otherwise container will not be started when docker-compose up
 
 # NOTE In fabric-tools:
 #   cryptogen version: development build

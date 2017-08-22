@@ -8,23 +8,23 @@ const companyConfig = helperConfig[COMPANY]
 //
 //Attempt to send a request to the orderer with the sendCreateChain method
 //
-const joinChannel = (channelName, containerNames) => {
+const joinChannel = (channelName, peerIndexes, org) => {
 
-	logger.debug('joinChannel', { channelName, containerNames })
+	logger.debug({ channelName, peerIndexes, org })
 
 	const client = helper.getClient()
 	const channel = helper.getChannel(channelName)
 	const { eventWaitTime } = channel
 
-	return channel.getGenesisBlock({ txId: client.newTransactionID() }).
+	return helper.getOrgAdmin(org).then(() => channel.getGenesisBlock({ txId: client.newTransactionID() })).
 			then(genesis_block => {
 				const request = {
-					targets: helper.newPeers(containerNames),
+					targets: helper.newPeers(peerIndexes, org),
 					txId: client.newTransactionID(),
 					block: genesis_block
 				}
 
-				const eventhubs = helper.newEventHubs(containerNames)
+				const eventhubs = helper.newEventHubs(peerIndexes, org)
 
 				const promises = [channel.joinChannel(request)]
 				eventhubs.forEach(eh => {
@@ -48,7 +48,13 @@ const joinChannel = (channelName, containerNames) => {
 									resolve()
 								}
 								else {
-									reject({Error:'channelName mismatch',desc:{from_block:block.data.data[0].payload.header.channel_header.channel_id, from_request:channelName}})
+									reject({
+										Error: 'channelName mismatch',
+										desc: {
+											from_block: block.data.data[0].payload.header.channel_header.channel_id,
+											from_request: channelName
+										}
+									})
 								}
 							}
 						})

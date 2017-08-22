@@ -74,7 +74,8 @@ const newPeer = function(orgName, peerIndex, peerPortMap) {
 const ordererConfig = companyConfig.orderer
 const orderer_hostName = ordererConfig.containerName.toLowerCase()
 const orderer_hostName_full = `${orderer_hostName}.${COMPANY_DOMAIN}`
-const orderer_tls_cacerts = `${CRYPTO_CONFIG_DIR}/ordererOrganizations/${COMPANY_DOMAIN}/orderers/${orderer_hostName_full}/tls/ca.crt`
+const orderer_tls_cacerts = path.join(CRYPTO_CONFIG_DIR,
+		`ordererOrganizations/${COMPANY_DOMAIN}/orderers/${orderer_hostName_full}/tls/ca.crt`)
 let orderer_url
 for (let portMapEach of companyConfig.orderer.portMap) {
 	if (portMapEach.container === 7050) {
@@ -110,7 +111,6 @@ for (let channelName in channelsConfig) {
 			peer.peerConfig = peerConfig
 			channel.addPeer(peer) //FIXME client-side-only operation? Found: without container-side 'peer channel join', install chaincode still OK
 		}
-		// logger.debug({peers:channel.getPeers()})
 	}
 
 }
@@ -129,13 +129,13 @@ for (let orgName in orgsConfig) {
 	objects.caService[orgName] = new caService(caUrl, null /*defautl TLS opts*/, '' /* default CA */) //TODO default cryptoSuite
 }
 
-function getStateDBCachePath (org) {
-	return path.join(nodeConfig.stateDBCacheDir, org)
+//state DB is designed for caching heavy-weight User object,
+// client.getUserContext() will first query existence in cache first
+//TODO to test use unified dir
+const getStateDBCachePath = () => {
+	return nodeConfig.stateDBCacheDir
 }
 
-//-------------------------------------//
-// APIs
-//-------------------------------------//
 const getChannel = function(channelName) {
 	const channel = client.getChannel(channelName.toLowerCase())
 	channel.eventWaitTime = channelsConfig[channelName].eventWaitTime
@@ -145,10 +145,9 @@ const getChannel = function(channelName) {
 const getCaService = function(org) {
 	return objects.caService[org]
 }
-
+// a data adapter, containerName=>key: orgName, peer: {index: index, value: peer, peer_hostName_full}
 const queryPeer = function(containerName) {
 	//FIXME for loop search
-	const orgsConfig = companyConfig.orgs
 	for (let orgName in orgsConfig) {
 		const orgBody = orgsConfig[orgName]
 		const peers = orgBody.peers
@@ -168,23 +167,14 @@ const queryPeer = function(containerName) {
 }
 
 // work as a data adapter, containerNames: array --> orgname,peerIndex,peerConfig for each newPeer
-const newPeers = function(containerNames) {
+const newPeers = function(peerIndexes, orgName) {
 	const targets = []
 	// find the peer that match the urls
 
-	for (let containerName of containerNames) {
-
-		const { key: orgName, peer: { index: index, value: peerConfig } } = queryPeer(containerName)
-		if (!orgName) {
-			logger.warn(`Could not find OrgName for containerName ${containerName}`)
-			continue
-		}
-		const _newPeer = newPeer(orgName, index, peerConfig.portMap)
-		targets.push(_newPeer)
-	}
-
-	if (targets.length === 0) {
-		logger.error(`Failed to find any peer for containers ${containerNames}`)
+	for (let index of peerIndexes) {
+		const peerConfig = orgsConfig[orgName].peers[index]
+		if (!peerConfig) continue
+		targets.push(newPeer(orgName, index, peerConfig.portMap))
 	}
 
 	return targets
@@ -211,30 +201,13 @@ const newEventHub = function(orgName, peerIndex, peerPortMap, client) {
 	return eventHub
 
 }
-//FIXME to test: used in invoke chaincode
-// work as a data adapter, containerNames: array --> orgname,peerIndex,peerConfig for each newPeer
-const newEventHubs = function(containerNames) {
+
+const newEventHubs = function(peerIndexes, orgName) {
 	const targets = []
-	// find the peer that match the urls
-	for (let containerName of containerNames) {
-
-		// if looking for event hubs, an app can only connect to
-		// event hubs in its own org
-		const { key: orgName, peer: { index: index, value: peerConfig } } = queryPeer(containerName)
-		if (!orgName) {
-			logger.warn(`Could not find OrgName for containerName ${containerName}`)
-			continue
-		}
-
-		const eh = newEventHub(orgName, index, peerConfig.portMap, client)
-		if (eh) {
-			targets.push(eh)
-		}
-
-	}
-
-	if (targets.length === 0) {
-		logger.error(`Failed to find any peer for ${containerNames}`)
+	for (let index of peerIndexes) {
+		const peerConfig = orgsConfig[orgName].peers[index]
+		if (!peerConfig) continue
+		targets.push(newEventHub(orgName, index, peerConfig.portMap, client))
 	}
 
 	return targets
@@ -361,61 +334,113 @@ const getKeyFilesInsDir = (dir) => {
 	})
 	return keyFiles
 }
-const clientClearUser = () => {
+objects.user.clear = () => {
 	client._userContext = null
+	client.setCryptoSuite(null)
 }
-const clientSetUser = (keyFileDir, signcertFile, orgName) => {
-	clientClearUser()
-	const org_domain = `${orgName.toLowerCase()}.${COMPANY_DOMAIN}`// bu.delphi.com
-	const keyFile = getKeyFilesInsDir(keyFileDir)[0]
-	return sdkUtils.newKeyValueStore({
-		path: getStateDBCachePath(orgName)
-	}).then((store) => {
-		client.setStateStore(store)
-
-		let index=1
-		// NOTE:(jsdoc) This allows applications to use pre-existing crypto materials (private keys and certificates) to construct user objects with signing capabilities
-		// NOTE In client.createUser option, two types of cryptoContent is supported:
-		// 1. cryptoContent: {		privateKey: keyFilePath,signedCert: certFilePath}
-		// 2. cryptoContent: {		privateKeyPEM: keyFileContent,signedCertPEM: certFileContent}
-		const createUserOpt = {
-			username: `User${index}@${org_domain}`,
-			mspid: getMspID(orgName),
-			cryptoContent: { privateKey: keyFile, signedCert: signcertFile }
-		}
-		return client.createUser(createUserOpt)
-	})
-
-}
-const getOrgAdmin = function(orgName) {
-	const org_domain = `${orgName.toLowerCase()}.${COMPANY_DOMAIN}`// bu.delphi.com
-	const keystoreDir = `${CRYPTO_CONFIG_DIR}/peerOrganizations/${org_domain}/users/Admin@${org_domain}/msp/keystore`
-
+const formatUsername = (username, orgName) => `${username}@${orgName.toLowerCase()}.${COMPANY_DOMAIN}`
+//
+objects.user.create = (keystoreDir, signcertFile, username, orgName, persistInCache = true, mspName) => {
 	const keyFile = getKeyFilesInsDir(keystoreDir)[0]
-	const signcertFile = `${CRYPTO_CONFIG_DIR}/peerOrganizations/${org_domain}/users/Admin@${org_domain}/msp/signcerts/Admin@${org_domain}-cert.pem`
+	// NOTE:(jsdoc) This allows applications to use pre-existing crypto materials (private keys and certificates) to construct user objects with signing capabilities
+	// NOTE In client.createUser option, two types of cryptoContent is supported:
+	// 1. cryptoContent: {		privateKey: keyFilePath,signedCert: certFilePath}
+	// 2. cryptoContent: {		privateKeyPEM: keyFileContent,signedCertPEM: certFileContent}
 
-	// TODO to test eject cryptoSuite
-	// var cryptoSuite = sdkUtils.newCryptoSuite()
-	// cryptoSuite.setCryptoKeyStore(sdkUtils.newCryptoKeyStore({ path:path.join(nodeConfig.stateDBCacheDir,formatAdminUserName(orgName)) }))
-	// client.setCryptoSuite(cryptoSuite)
+	const createUserOpt = {
+		username: formatUsername(username, orgName),
+		mspid: mspName ? mspName : getMspID(orgName),
+		cryptoContent: { privateKey: keyFile, signedCert: signcertFile }
+	}
+	if (persistInCache) {
+		return sdkUtils.newKeyValueStore({
+			path: getStateDBCachePath(orgName)
+		}).then((store) => {
+			client.setStateStore(store)
 
-	return sdkUtils.newKeyValueStore({
+			return client.createUser(createUserOpt)
+		})
+	} else {
+		return client.createUser(createUserOpt)
+	}
+}
+/**
+ * search in stateStore first, if not exist, then query state db to get cached user object
+ *
+ * @returns {Promise} A Promise for a {User} object
+ * @param username
+ * @param orgName
+ */
+objects.user.get = (username, orgName) => {
+	const newKVS = () => sdkUtils.newKeyValueStore({
 		path: getStateDBCachePath(orgName)
 	}).then((store) => {
 		client.setStateStore(store)
-
-		// NOTE:(jsdoc) This allows applications to use pre-existing crypto materials (private keys and certificates) to construct user objects with signing capabilities
-		// NOTE In client.createUser option, two types of cryptoContent is supported:
-		// 1. cryptoContent: {		privateKey: keyFilePath,signedCert: certFilePath}
-		// 2. cryptoContent: {		privateKeyPEM: keyFileContent,signedCertPEM: certFileContent}
-		return client.createUser({
-			username: `Admin@${org_domain}`,
-			mspid: getMspID(orgName),
-			cryptoContent: { privateKey: keyFile, signedCert: signcertFile }
+		return client.getUserContext(formatUsername(username, orgName), true)
+	})
+	if (client.getStateStore()) {
+		return client.loadUserFromStateStore(formatUsername(username, orgName)).then(user => {
+			if (user) return user
+			return newKVS()
 		})
+	} else {
+		return newKVS()
+	}
+}
+
+const rawAdminUsername = 'adminName'
+
+objects.user.admin = {}
+objects.user.admin.orderer = {
+	select: (ordererContainerName = 'ordererContainerName') => {
+
+		const rawOrdererUsername = 'ordererAdminName'
+
+		const keystoreDir = path.join(CRYPTO_CONFIG_DIR,
+				`ordererOrganizations/${COMPANY_DOMAIN}/users/Admin@${COMPANY_DOMAIN}/msp/keystore`)
+		const signcertFile = path.join(CRYPTO_CONFIG_DIR,
+				`ordererOrganizations/${COMPANY_DOMAIN}/users/Admin@${COMPANY_DOMAIN}/msp/signcerts/Admin@${COMPANY_DOMAIN}-cert.pem`)
+		const ordererMSPID = ordererConfig.MSP.id
+		objects.user.clear()
+
+		return objects.user.get(rawOrdererUsername, ordererContainerName).then(user => {
+			if (user) return client.setUserContext(user, false)
+			return objects.user.create(keystoreDir, signcertFile, rawOrdererUsername, ordererContainerName, true,
+					ordererMSPID)
+		})
+	}
+}
+objects.user.admin.get = (orgName) => objects.user.get(rawAdminUsername, orgName)
+objects.user.admin.create = (orgName) => {
+
+	const org_domain = `${orgName.toLowerCase()}.${COMPANY_DOMAIN}`// bu.delphi.com
+	const keystoreDir = path.join(CRYPTO_CONFIG_DIR,
+			`peerOrganizations/${org_domain}/users/Admin@${org_domain}/msp/keystore`)
+
+	const signcertFile = path.join(CRYPTO_CONFIG_DIR,
+			`peerOrganizations/${org_domain}/users/Admin@${org_domain}/msp/signcerts/Admin@${org_domain}-cert.pem`)
+
+	return objects.user.create(keystoreDir, signcertFile, rawAdminUsername, orgName)
+}
+//
+objects.user.createIfNotExist = (keystoreDir, signcertFile, username, orgName) => {
+	objects.user.get(username, orgName).then(user => {
+		if (user) return client.setUserContext(user, false)
+		return objects.user.create(keystoreDir, signcertFile, username, orgName)
 	})
 }
-const formatAdminUserName = (org_domain) => `Admin@${org_domain}`
+objects.user.select = (keystoreDir, signcertFile, username, orgName) => {
+	objects.user.clear()
+	return objects.user.createIfNotExist(keystoreDir, signcertFile, username, orgName)
+}
+objects.user.admin.createIfNotExist = (orgName) => objects.user.admin.get(orgName).then(user => {
+	if (user) return client.setUserContext(user, false)
+	return objects.user.admin.create(orgName)
+})
+objects.user.admin.select = (orgName) => {
+	objects.user.clear()
+	return objects.user.admin.createIfNotExist(orgName)
+}
 
 const setGOPATH = function() {
 	process.env.GOPATH = chaincodeConfig.GOPATH
@@ -472,9 +497,8 @@ exports.queryPeer = queryPeer
 exports.gen_tls_cacerts = gen_tls_cacerts
 exports.newPeers = newPeers
 exports.newPeerByContainer = newPeerByContainer
-exports.testSetUser = clientSetUser
-exports.testClearUser = clientClearUser
+exports.userAction = objects.user
 exports.newEventHubs = newEventHubs
 exports.newEventHub = newEventHub
 exports.getRegisteredUsers = getRegisteredUsers //see in invoke
-exports.getOrgAdmin = getOrgAdmin
+exports.getOrgAdmin = objects.user.admin.select

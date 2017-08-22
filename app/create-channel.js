@@ -19,9 +19,9 @@ const helper = require('./helper.js')
 const logger = helper.getLogger('Create-Channel')
 //Attempt to send a request to the orderer with the sendCreateChain method
 //"../artifacts/channel/mychannel.tx"
-const createChannel = function(channelName, channelConfigFile, username, orgName) {
+const createChannel = function(channelName, channelConfigFile, orgName) {
 	logger.debug('\n====== Creating Channel \'' + channelName + '\' ======\n')
-	logger.debug({ channelName, channelConfigPath: channelConfigFile, username, orgName })
+	logger.debug({ channelName, channelConfigPath: channelConfigFile, orgName })
 
 	const client = helper.getClient()
 	const channel = helper.getChannel(channelName)
@@ -54,35 +54,3 @@ const createChannel = function(channelName, channelConfigFile, username, orgName
 }
 
 exports.createChannel = createChannel
-//TODO in development
-exports.updateChannel = (channelName, channelConfigFile, username, orgName) => {
-
-	logger.debug('\n====== update Channel \'' + channelName + '\' ======\n')
-	logger.debug(`params: ${{ channelName, channelConfigPath: channelConfigFile, username, orgName }}`)
-
-	const client = helper.getClient()
-	const channel = helper.getChannel(channelName)
-
-	// read in the envelope for the channel config raw bytes
-	const channelConfig_envelop = fs.readFileSync(channelConfigFile)
-	// extract the channel config bytes from the envelope to be signed
-	const channelConfig = channel.loadConfigUpdateEnvelope(channelConfig_envelop)
-
-	//Acting as a client in the given organization provided with "orgName" param
-	return helper.getOrgAdmin(orgName).then((admin) => {
-		// sign the channel config bytes as "endorsement", this is required by
-		// the orderer's channel creation policy
-		let signature = client.signChannelConfig(channelConfig)
-
-		let request = {
-			config: channelConfig,
-			signatures: [signature],
-			name: channelName,
-			orderer: channel.getOrderers()[0],
-			txId: client.newTransactionID(),
-			envelope: undefined
-		}
-		// send to orderer
-		return client.updateChannel(request)
-	})
-}
