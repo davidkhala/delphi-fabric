@@ -36,7 +36,6 @@ const joinChannel = (channelName, peerIndexes, org) => {
 						}, eventWaitTime)
 						eh.registerBlockEvent((block) => {
 							clearTimeout(handle)
-							logger.debug('blockEvent', block)
 
 							// in real-world situations, a peer may have more than one channels so
 							// we must check that this block came from the channel we asked the peer to join

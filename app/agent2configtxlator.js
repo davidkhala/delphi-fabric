@@ -1,26 +1,42 @@
-const superagent = require('superagent')
-const agent = require('superagent-promise')(superagent, Promise)
+const request = require('request')  // TODO why 2 dependencies
+
+const requestPost = (opt) => new Promise((resolve, reject) => {
+	opt.encoding = null // NOTE config :returning body to be of type Buffer not String
+	request.post(opt, (err, res, body) => {
+		if (err) {
+			reject({ err })
+		} else {
+			resolve({ res, body})
+		}
+	})
+})
 exports.encode = {
-	configUpdate: (jsonString) => agent.post('http://127.0.0.1:7059/protolator/encode/common.ConfigUpdate', jsonString).
-			buffer()
+	configUpdate: (jsonString) =>
+			requestPost({
+				url: 'http://127.0.0.1:7059/protolator/encode/common.ConfigUpdate',
+				body: jsonString
+			})
 	,
-	config: (jsonString) => agent.post('http://127.0.0.1:7059/protolator/encode/common.Config', jsonString).buffer()
+	config: (jsonString) => requestPost(
+			{ url: 'http://127.0.0.1:7059/protolator/encode/common.Config', body: jsonString })
 }
 exports.decode = {
-	config: (data) => agent.post('http://127.0.0.1:7059/protolator/decode/common.Config', data).buffer()
+	config: (data) => requestPost({ url: 'http://127.0.0.1:7059/protolator/decode/common.Config', body: data })
 }
 exports.compute = {
-	updateFromConfigs: (formData) => new Promise((resolve, reject) => {
-		require('request').post({
-			url: 'http://127.0.0.1:7059/configtxlator/compute/update-from-configs',
-			formData
-		}, function optionalCallback (err, res, body) {
-			if (err) {
-				reject(err)
-			} else {
-				resolve({ res, body })
-			}
-		})
-	})
+	updateFromConfigs: (formData) => requestPost({
+		url: 'http://127.0.0.1:7059/configtxlator/compute/update-from-configs',
+		formData
+	}).then((resp) => {
+		const bodyString = resp.body.toString()
+		//Error computing update: no differences detected between original and updated config
+		//NOTE take it as error here
+		const noDiffErr = 'Error computing update: no differences detected between original and updated config'
+		if (bodyString.includes(noDiffErr)) {
 
+			throw new Error(bodyString)
+		}
+		return resp
+
+	})
 }

@@ -44,13 +44,13 @@ const objects = { user: {}, orderer: {}, caService: {} } // client is for save C
 
 // set up the client and channel objects for each org
 const GPRC_protocol = 'grpcs://' // FIXME: assume using TLS
-const gen_tls_cacerts = function(orgName, peerIndex) {
+const gen_tls_cacerts = (orgName, peerIndex) => {
 	const org_domain = `${orgName.toLowerCase()}.${COMPANY_DOMAIN}`// bu.delphi.com
 	const peer_hostName_full = `peer${peerIndex}.${org_domain}`
 	const tls_cacerts = `${CRYPTO_CONFIG_DIR}/peerOrganizations/${org_domain}/peers/${peer_hostName_full}/tls/ca.crt`
 	return { org_domain, peer_hostName_full, tls_cacerts }
 }
-const newPeer = function(orgName, peerIndex, peerPortMap) {
+const newPeer = (orgName, peerIndex, peerPortMap) => {
 	const { peer_hostName_full, tls_cacerts } = gen_tls_cacerts(orgName, peerIndex)
 	let requests
 	for (let portMapEach of peerPortMap) {
@@ -126,7 +126,9 @@ for (let orgName in orgsConfig) {
 	}
 	if (!ca_port) continue
 	const caUrl = `https://localhost:${ca_port}`
-	objects.caService[orgName] = new caService(caUrl, null /*defautl TLS opts*/, '' /* default CA */) //TODO default cryptoSuite
+	objects.caService[orgName] = new caService(caUrl, null /*defautl TLS opts*/, null /* default CA */, null
+			/* default cryptoSuite */)
+
 }
 
 //state DB is designed for caching heavy-weight User object,
@@ -139,6 +141,7 @@ const getStateDBCachePath = () => {
 const getChannel = function(channelName) {
 	const channel = client.getChannel(channelName.toLowerCase())
 	channel.eventWaitTime = channelsConfig[channelName].eventWaitTime
+	channel.orgs=channelsConfig[channelName].orgs
 	return channel
 }
 
@@ -323,7 +326,7 @@ var getRegisteredUsers = function(username, userOrg, isJson) {
 
 //NOTE have to do this since filename for private Key file would be liek
 // a4fbafa51de1161a2f82ffa80cf1c34308482c33a9dcd4d150183183d0a3e0c6_sk
-const getKeyFilesInsDir = (dir) => {
+const getKeyFilesInDir = (dir) => {
 	const files = fs.readdirSync(dir)
 	const keyFiles = []
 	files.forEach((file_name) => {
@@ -341,7 +344,7 @@ objects.user.clear = () => {
 const formatUsername = (username, orgName) => `${username}@${orgName.toLowerCase()}.${COMPANY_DOMAIN}`
 //
 objects.user.create = (keystoreDir, signcertFile, username, orgName, persistInCache = true, mspName) => {
-	const keyFile = getKeyFilesInsDir(keystoreDir)[0]
+	const keyFile = getKeyFilesInDir(keystoreDir)[0]
 	// NOTE:(jsdoc) This allows applications to use pre-existing crypto materials (private keys and certificates) to construct user objects with signing capabilities
 	// NOTE In client.createUser option, two types of cryptoContent is supported:
 	// 1. cryptoContent: {		privateKey: keyFilePath,signedCert: certFilePath}
@@ -390,24 +393,25 @@ objects.user.get = (username, orgName) => {
 
 const rawAdminUsername = 'adminName'
 
-objects.user.admin = {}
-objects.user.admin.orderer = {
-	select: (ordererContainerName = 'ordererContainerName') => {
+objects.user.admin = {
+	orderer: {
+		select: (ordererContainerName = 'ordererContainerName') => {
 
-		const rawOrdererUsername = 'ordererAdminName'
+			const rawOrdererUsername = 'ordererAdminName'
 
-		const keystoreDir = path.join(CRYPTO_CONFIG_DIR,
-				`ordererOrganizations/${COMPANY_DOMAIN}/users/Admin@${COMPANY_DOMAIN}/msp/keystore`)
-		const signcertFile = path.join(CRYPTO_CONFIG_DIR,
-				`ordererOrganizations/${COMPANY_DOMAIN}/users/Admin@${COMPANY_DOMAIN}/msp/signcerts/Admin@${COMPANY_DOMAIN}-cert.pem`)
-		const ordererMSPID = ordererConfig.MSP.id
-		objects.user.clear()
+			const keystoreDir = path.join(CRYPTO_CONFIG_DIR,
+					`ordererOrganizations/${COMPANY_DOMAIN}/users/Admin@${COMPANY_DOMAIN}/msp/keystore`)
+			const signcertFile = path.join(CRYPTO_CONFIG_DIR,
+					`ordererOrganizations/${COMPANY_DOMAIN}/users/Admin@${COMPANY_DOMAIN}/msp/signcerts/Admin@${COMPANY_DOMAIN}-cert.pem`)
+			const ordererMSPID = ordererConfig.MSP.id
+			objects.user.clear()
 
-		return objects.user.get(rawOrdererUsername, ordererContainerName).then(user => {
-			if (user) return client.setUserContext(user, false)
-			return objects.user.create(keystoreDir, signcertFile, rawOrdererUsername, ordererContainerName, true,
-					ordererMSPID)
-		})
+			return objects.user.get(rawOrdererUsername, ordererContainerName).then(user => {
+				if (user) return client.setUserContext(user, false)
+				return objects.user.create(keystoreDir, signcertFile, rawOrdererUsername, ordererContainerName, true,
+						ordererMSPID)
+			})
+		}
 	}
 }
 objects.user.admin.get = (orgName) => objects.user.get(rawAdminUsername, orgName)
@@ -502,3 +506,4 @@ exports.newEventHubs = newEventHubs
 exports.newEventHub = newEventHub
 exports.getRegisteredUsers = getRegisteredUsers //see in invoke
 exports.getOrgAdmin = objects.user.admin.select
+exports.getCaService = getCaService
