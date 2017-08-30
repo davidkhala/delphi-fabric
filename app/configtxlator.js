@@ -6,8 +6,14 @@ const fs = require('fs')
 const agent = require('./agent2configtxlator')
 const client = helper.getClient()
 
-const cloneMSP = (MSPName, MSPID, update_config, templateMSPName, adminMSPDir, org_domain) => {
-// TODO templateJson might differs with different channel profile, take care
+const helperConfig = helper.helperConfig
+const { COMPANY } = helperConfig
+const companyConfig = helperConfig[COMPANY]
+const orgsConfig = companyConfig.orgs
+
+const getMSPName = (orgName) => orgsConfig[orgName].MSP.name
+const cloneMSP = ({ MSPName, MSPID, update_config, templateMSPName, adminMSPDir, org_domain }) => {
+// Note templateJson might differs with different channel profile, take care
 	const templateJson = JSON.stringify(update_config.channel_group.groups.Application.groups[templateMSPName])
 	const templateObj = JSON.parse(templateJson)// copy via json convert
 	templateObj.policies.Admins.policy.value.identities[0].principal.msp_identifier = MSPID
@@ -23,9 +29,10 @@ const cloneMSP = (MSPName, MSPID, update_config, templateMSPName, adminMSPDir, o
 			toString('base64')
 
 	update_config.channel_group.groups.Application.groups[MSPName] = templateObj
+	logger.debug("new MSP",templateObj)
 	return update_config
 }
-const deleteMSP = (MSPName, update_config) => {
+const deleteMSP = ({ MSPName, update_config }) => {
 	delete update_config.channel_group.groups.Application.groups[MSPName]
 	return update_config
 }
@@ -77,7 +84,8 @@ const signChannelConfig = (channel, configUpdate_proto) => {
 	})
 
 }
-exports.channelUpdate = (channelName) => {
+
+const channelUpdate = (channelName, mspCB) => {
 	let o_config_proto
 	let channel = helper.getChannel(channelName)
 	const orderer = channel.getOrderers()[0]
@@ -86,7 +94,7 @@ exports.channelUpdate = (channelName) => {
 		o_config_proto = original_config_proto// FIXME
 		logger.debug(update_config.channel_group.groups.Application.groups)
 		fs.writeFileSync(path.join(__dirname, `${channelName}-txlator.json`), body)// for debug only
-		deleteMSP('PMMSPName', update_config)
+		mspCB({ update_config })
 		//NOTE: after delete MSP, deleted peer retry to connect to previous channel
 		// PMContainerName.delphi.com       | 2017-08-24 03:02:55.815 UTC [blocksProvider] DeliverBlocks -> ERRO 2ea [delphichannel] Got error &{FORBIDDEN}
 		// orderContainerName.delphi.com    | 2017-08-24 03:02:55.814 UTC [cauthdsl] func1 -> DEBU ea5 0xc420028c50 gate 1503543775814648321 evaluation fails
@@ -118,9 +126,9 @@ exports.channelUpdate = (channelName) => {
 			}
 		}
 		return agent.compute.updateFromConfigs(formData)
-	}).then(({ body }) => {
-		return signChannelConfig(channel, body)
-	}).then(({ signatures, proto }) => {
+	}).then(({ body }) =>
+			signChannelConfig(channel, body)
+	).then(({ signatures, proto }) => {
 
 		const request = {
 			config: proto,
@@ -132,9 +140,8 @@ exports.channelUpdate = (channelName) => {
 
 		// this will send the update request to the orderer
 		return client.updateChannel(request)
-	}).then(results => {
-		return results
 	})
 }
+exports.channelUpdate = channelUpdate
 exports.cloneMSP = cloneMSP
 exports.deleteMSP = deleteMSP

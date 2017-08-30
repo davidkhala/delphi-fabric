@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+
+# require channel exist
+# node ./app/testChannel.js
+
 CURRENT="$(dirname $(readlink -f ${BASH_SOURCE}))"
 config_dir="$CURRENT/config"
 CRYPTO_CONFIG_DIR="$config_dir/crypto-config/"
@@ -7,7 +11,8 @@ CONFIG_JSON="$config_dir/orgs.json"
 
 COMPANY="delphi"
 orgName="AM"
-
+MSPName="${orgName}MSPName"
+MSPID="${orgName}MSP"
 peerContainerName="AMContainerName"
 peerPort="" # map for 7051, random assign when empty
 eventHubPort="" # map for 7053, random assign when empty
@@ -37,19 +42,19 @@ IMAGE_TAG="x86_64-$VERSION"
 image=hyperledger/fabric-peer:$IMAGE_TAG
 
 CMD="peer node start"
-rm $CRYPTO_UPDATE_CONFIG
 
-docker rm $peerContainerName # FIXME restart
+docker stop $peerContainerName
+docker rm $peerContainerName # TODO restart
 docker run -d --name $peerContainerName \
     -e CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock \
-	-e CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=config_default \
+	-e CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=config_default \  # TODO
 	-e CORE_LOGGING_LEVEL=DEBUG \
 	-e CORE_LEDGER_HISTORY_ENABLEHISTORYDATABASE=true \
 	-e CORE_PEER_GOSSIP_USELEADERELECTION=true \
 	-e CORE_PEER_GOSSIP_ORGLEADER=false \
 	-e CORE_PEER_GOSSIP_SKIPHANDSHAKE=true \
 	-e CORE_PEER_GOSSIP_EXTERNALENDPOINT=$peerContainerName:7051 \
-	-e CORE_PEER_LOCALMSPID=BUMSP \
+	-e CORE_PEER_LOCALMSPID=$MSPID \
 	-e CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/$org_domain/users/Admin@$org_domain/msp \
     -e CORE_PEER_TLS_ENABLED=true \
 	-e CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/crypto-config/peerOrganizations/$org_domain/peers/$peerDomainName/tls/server.key \
@@ -63,7 +68,13 @@ docker run -d --name $peerContainerName \
     --volume $CRYPTO_CONFIG_DIR:/etc/hyperledger/crypto-config \
 	$image $CMD
 
-# TODO channel update
 
 
-node -e 'require("./app/configtxlator.js").MSPUpdateGen()'
+./common/bin-manage/configtxlator/runConfigtxlator.sh start
+
+adminUserMspDir=${CRYPTO_CONFIG_DIR}peerOrganizations/$org_domain/users/Admin@$org_domain/msp
+node -e "require('./app/testConfigtxlator.js').addOrg('${orgName}', '${MSPName}', '${MSPID}', 'BUMSPName', '${adminUserMspDir}', '${org_domain}')"
+# TODO set peerPort if it is auto-gen
+# TODO save config back to config Files?
+sleep 5
+rm $CRYPTO_UPDATE_CONFIG

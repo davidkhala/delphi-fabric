@@ -29,6 +29,7 @@ const caService = require('fabric-ca-client')
 const globalConfig = require('../config/orgs.json')
 const COMPANY = 'delphi'
 const companyConfig = globalConfig[COMPANY]
+const orgsConfig = companyConfig.orgs
 const CRYPTO_CONFIG_DIR = companyConfig.CRYPTO_CONFIG_DIR
 const channelsConfig = companyConfig.channels
 const COMPANY_DOMAIN = companyConfig.domain
@@ -36,10 +37,9 @@ const chaincodeConfig = require('../config/chaincode.json')
 const Client = require('fabric-client')
 const sdkUtils = require('fabric-client/lib/utils')
 const nodeConfig = require('./config.json')
-const Orderer = require('fabric-client/lib/Orderer')
 
+const Orderer = require('fabric-client/lib/Orderer')
 const Peer = require('fabric-client/lib/Peer')
-const orgsConfig = companyConfig.orgs
 const objects = { user: {}, orderer: {}, caService: {} } // client is for save CryptoSuite for each org??
 
 // set up the client and channel objects for each org
