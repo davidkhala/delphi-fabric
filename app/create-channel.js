@@ -4,7 +4,7 @@ const logger = helper.getLogger('create-Channel')
 //Attempt to send a request to the orderer with the sendCreateChain method
 //"../artifacts/channel/mychannel.tx"
 const createChannel = (channelName, channelConfigFile, orgName) => {
-	logger.debug('\n====== Creating Channel \'' + channelName + '\' ======\n')
+	logger.debug('====== Creating Channel ======')
 	logger.debug({ channelName, channelConfigFile, orgName })
 
 	//Acting as a client in the given organization provided with "orgName" param
@@ -20,6 +20,8 @@ const createChannel = (channelName, channelConfigFile, orgName) => {
 				const channelConfig = client.extractChannelConfig(channelConfig_envelop)
 
 				// sign the channel config bytes as "endorsement", this is required by the orderer's channel creation policy
+				logger.debug('signature identity', client.getUserContext().getName())
+
 				const signature = client.signChannelConfig(channelConfig)
 
 				const request = {

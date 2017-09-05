@@ -45,6 +45,13 @@ fi
 ./config/crypto-config-gen-go.sh $COMPANY -i $CRYPTO_CONFIG_FILE
 ./common/bin-manage/cryptogen/runCryptogen.sh -i "$CRYPTO_CONFIG_FILE" -o "$CRYPTO_CONFIG_DIR"
 
+# NOTE IMPORTANT for node-sdk: clean stateDBcacheDir, otherwise cached crypto material will leads to Bad request:
+# TODO more subtle control to do in nodejs
+nodeAppConfigJson="$CURRENT/app/config.json"
+stateDBCacheDir=$(jq -r '.stateDBCacheDir' $nodeAppConfigJson)
+rm -rf $stateDBCacheDir
+echo clear stateDBCacheDir $stateDBCacheDir
+
 ./config/configtx-gen-go.sh $COMPANY $CRYPTO_CONFIG_DIR -i $configtx_file -b $PROFILE_BLOCK -c $PROFILE_CHANNEL
 
 ./common/bin-manage/configtxgen/runConfigtxgen.sh block create $BLOCK_FILE -p $PROFILE_BLOCK -i $config_dir
@@ -56,7 +63,7 @@ fi
 COMPOSE_FILE="$config_dir/docker-compose.yaml"
 
 if [ -f "$COMPOSE_FILE" ]; then
-	docker-compose -f $COMPOSE_FILE down
+	./docker.sh down
 fi
 ./config/compose-gen-go.sh $COMPANY $CRYPTO_CONFIG_DIR $BLOCK_FILE -f $COMPOSE_FILE -s $TLS_ENABLED -v $IMAGE_TAG
 

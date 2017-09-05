@@ -10,8 +10,9 @@ CONFIG_JSON="$CURRENT/orgs.json"
 GOPATH="$(dirname $CURRENT)/GOPATH/"
 IMAGE_TAG="x86_64-1.0.0" # latest
 
-ledgersData_root="$(dirname $CURRENT)/ledgersData"
-CONTAINER_ledgersData="/var/hyperledger/production/ledgersData"
+
+#TODO ledgersData, for resetChaincode CONTAINER_ledgersData="/var/hyperledger/production/ledgersData"
+
 CONTAINER_CONFIGTX_DIR="/etc/hyperledger/configtx"
 CONTAINER_CRYPTO_CONFIG_DIR="/etc/hyperledger/crypto-config"
 TLS_ENABLED=true
@@ -64,6 +65,7 @@ orderer_container_name=$(echo $ordererConfig | jq -r ".containerName")
 ORDERER_CONTAINER=$orderer_container_name.$COMPANY_DOMAIN
 
 orgsConfig=$(jq -r ".$COMPANY.orgs" $CONFIG_JSON)
+projectName=$(jq -r ".$COMPANY.docker.projectName" $CONFIG_JSON)
 orgNames=$(echo $orgsConfig | jq -r "keys[]")
 
 ORDERER_HOST_PORT=$(echo $ordererConfig | jq -r ".portMap[0].host")
@@ -148,8 +150,8 @@ for orgName in $orgNames; do
 		#common env
 		p=0
 		envPush "$PEERCMD" CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
-		#FIXME docker compose network setting has problem: projectname is configured outside docker but in docker-compose cli
-		envPush "$PEERCMD" CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=$(basename $(dirname $COMPOSE_FILE))_default
+		# NOTE docker compose network setting has problem: projectname is configured outside docker but in docker-compose cli
+		envPush "$PEERCMD" CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=${projectName}_default
 		#    if [ $COMPOSE_VERSION = 3 ]; then
 		#       $PEERCMD.networks[0] $dockerNetworkName
 		#       envPush "$PEERCMD" CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=$(basename $(dirname $COMPOSE_FILE))_$dockerNetworkName
@@ -185,9 +187,6 @@ for orgName in $orgNames; do
 		$PEERCMD.volumes[0] "/var/run/:/host/var/run/"
 		$PEERCMD.volumes[1] "$MSPROOT:$CONTAINER_CRYPTO_CONFIG_DIR"          # for peer channel --cafile
 		$PEERCMD.volumes[2] "$(dirname $BLOCK_FILE):$CONTAINER_CONFIGTX_DIR" # for later channel create
-		ledgersData="$ledgersData_root/$peerContainer"
-		mkdir -p $ledgersData
-		$PEERCMD.volumes[3] "$ledgersData:$CONTAINER_ledgersData" # TODO sync ledgersData test
 
 		#   TODO GO setup failed on peer container: only fabric-tools has go dependencies
 		#set GOPATH map
