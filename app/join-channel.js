@@ -59,7 +59,7 @@ const joinChannel = (channelName, peers, orgName) => {
 
 				return channel.joinChannel(request).then((data) =>{
 					logger.debug(data)
-					//FIXME bug design in hyperledger
+					//FIXME bug design in fabric: error message occurred in Promise.resolve/then
 					return Promise.all(promises)
 				} ).then((data) => {
 

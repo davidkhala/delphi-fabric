@@ -35,6 +35,8 @@ yaml w -i $CRYPTO_UPDATE_CONFIG PeerOrgs[$i].Template.Count $peerCount
 yaml w -i $CRYPTO_UPDATE_CONFIG PeerOrgs[$i].Template.Start 0
 yaml w -i $CRYPTO_UPDATE_CONFIG PeerOrgs[$i].Users.Count $userCount
 
+newDir="${CRYPTO_CONFIG_DIR}peerOrganizations/$org_domain"
+rm -rf $newDir
 ./common/bin-manage/cryptogen/runCryptogen.sh -i $CRYPTO_UPDATE_CONFIG -o $CRYPTO_CONFIG_DIR -a
 
 VERSION="1.0.0"
@@ -72,10 +74,12 @@ docker run -d --name $peerContainerName \
 
 ./common/bin-manage/configtxlator/runConfigtxlator.sh start
 
-adminUserMspDir=${CRYPTO_CONFIG_DIR}peerOrganizations/$org_domain/users/Admin@$org_domain/msp
+# set peerPort if it is auto-gen
+peerPort=$(./common/docker/utils/docker.sh view container port $peerContainerName 7051)
+eventHubPort=$(./common/docker/utils/docker.sh view container port $peerContainerName 7053)
+adminUserMspDir="$newDir/users/Admin@$org_domain/msp"
 node -e "require('./app/testConfigtxlator.js').addOrg('${orgName}', '${MSPName}', '${MSPID}', 'BUMSPName', '${adminUserMspDir}', '${org_domain}','${peerPort}','${eventHubPort}','${peerDomainName}')"
 
-# TODO set peerPort if it is auto-gen
+
 # TODO save config back to config Files?
-sleep 5
 rm $CRYPTO_UPDATE_CONFIG
