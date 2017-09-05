@@ -47,7 +47,7 @@ docker stop $peerContainerName
 docker rm $peerContainerName # TODO restart
 docker run -d --name $peerContainerName \
     -e CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock \
-	-e CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=config_default \  # TODO
+	-e CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=config_default \
 	-e CORE_LOGGING_LEVEL=DEBUG \
 	-e CORE_LEDGER_HISTORY_ENABLEHISTORYDATABASE=true \
 	-e CORE_PEER_GOSSIP_USELEADERELECTION=true \
@@ -73,7 +73,8 @@ docker run -d --name $peerContainerName \
 ./common/bin-manage/configtxlator/runConfigtxlator.sh start
 
 adminUserMspDir=${CRYPTO_CONFIG_DIR}peerOrganizations/$org_domain/users/Admin@$org_domain/msp
-node -e "require('./app/testConfigtxlator.js').addOrg('${orgName}', '${MSPName}', '${MSPID}', 'BUMSPName', '${adminUserMspDir}', '${org_domain}')"
+node -e "require('./app/testConfigtxlator.js').addOrg('${orgName}', '${MSPName}', '${MSPID}', 'BUMSPName', '${adminUserMspDir}', '${org_domain}','${peerPort}','${eventHubPort}','${peerDomainName}')"
+
 # TODO set peerPort if it is auto-gen
 # TODO save config back to config Files?
 sleep 5

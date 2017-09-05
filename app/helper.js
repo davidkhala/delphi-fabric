@@ -50,23 +50,35 @@ const gen_tls_cacerts = (orgName, peerIndex) => {
 	const tls_cacerts = `${CRYPTO_CONFIG_DIR}/peerOrganizations/${org_domain}/peers/${peer_hostName_full}/tls/ca.crt`
 	return { org_domain, peer_hostName_full, tls_cacerts }
 }
-const newPeer = (orgName, peerIndex, peerPortMap) => {
+// peerConfig: "portMap": [{	"host": 8051,		"container": 7051},{	"host": 8053,		"container": 7053}]
+const newPeer = (orgName, peerIndex, peerConfig) => {
 	const { peer_hostName_full, tls_cacerts } = gen_tls_cacerts(orgName, peerIndex)
-	let requests
-	for (let portMapEach of peerPortMap) {
+	let peerUrl
+	let peerEventUrl
+	for (let portMapEach of peerConfig.portMap) {
 		if (portMapEach.container === 7051) {
-			requests = `${GPRC_protocol}localhost:${portMapEach.host}`
+			peerUrl = `${GPRC_protocol}localhost:${portMapEach.host}`
+		}
+		if (portMapEach.container === 7053) {
+			peerEventUrl = `${GPRC_protocol}localhost:${portMapEach.host}`
 		}
 	}
-	if (!requests) {
+	if (!peerUrl) {
 		logger.warn(`Could not find port mapped to 7051 for peer host==${peer_hostName_full}`)
 		throw new Error(`Could not find port mapped to 7051 for peer host==${peer_hostName_full}`)
 	}
-	let data = fs.readFileSync(tls_cacerts)
-	return new Peer(requests, {
-		pem: Buffer.from(data).toString(),
+	const pem = fs.readFileSync(tls_cacerts).toString()
+	const peer = new Peer(peerUrl, {
+		pem,
 		'ssl-target-name-override': peer_hostName_full
 	})
+	//NOTE append more info
+	peer.pem = pem
+	peer.peerConfig = peerConfig
+	peer.peerConfig.peerEventUrl = peerEventUrl
+	peer.peerConfig.orgName = orgName
+	peer.peerConfig.peerIndex = peerIndex
+	return peer
 }
 
 //FIXME assume we have only one orderer
@@ -84,7 +96,7 @@ for (let portMapEach of companyConfig.orderer.portMap) {
 }
 //NOTE orderer without newCryptoSuite()
 objects.orderer = new Orderer(orderer_url, {
-	'pem': Buffer.from(fs.readFileSync(orderer_tls_cacerts)).toString(),
+	pem: fs.readFileSync(orderer_tls_cacerts).toString(),
 	'ssl-target-name-override': orderer_hostName_full
 })
 
@@ -106,9 +118,7 @@ for (let channelName in channelsConfig) {
 		for (let peerIndex of orgConfigInChannel.peerIndexes) {
 			const peerConfig = orgsConfig[orgName].peers[peerIndex]
 
-			let peer = newPeer(orgName, peerIndex, peerConfig.portMap)
-			//NOTE append more info
-			peer.peerConfig = peerConfig
+			const peer = newPeer(orgName, peerIndex, peerConfig)
 			channel.addPeer(peer) //FIXME client-side-only operation? Found: without container-side 'peer channel join', install chaincode still OK
 		}
 	}
@@ -133,23 +143,22 @@ for (let orgName in orgsConfig) {
 
 //state DB is designed for caching heavy-weight User object,
 // client.getUserContext() will first query existence in cache first
-//TODO to test use unified dir
+
 const getStateDBCachePath = () => {
 	return nodeConfig.stateDBCacheDir
 }
+const getChannel = (channelName) => {
 
-const getChannel = function(channelName) {
 	const channel = client.getChannel(channelName.toLowerCase())
 	channel.eventWaitTime = channelsConfig[channelName].eventWaitTime
-	channel.orgs=channelsConfig[channelName].orgs
+	channel.orgs = channelsConfig[channelName].orgs
 	return channel
 }
+const getCaService = (org) => objects.caService[org]
 
-const getCaService = function(org) {
-	return objects.caService[org]
-}
+const queryPeer = (containerName) => {
+
 // a data adapter, containerName=>key: orgName, peer: {index: index, value: peer, peer_hostName_full}
-const queryPeer = function(containerName) {
 	//FIXME for loop search
 	for (let orgName in orgsConfig) {
 		const orgBody = orgsConfig[orgName]
@@ -168,65 +177,68 @@ const queryPeer = function(containerName) {
 		}
 	}
 }
+//
+const newPeers = (peerIndexes, orgName) => {
 
 // work as a data adapter, containerNames: array --> orgname,peerIndex,peerConfig for each newPeer
-const newPeers = function(peerIndexes, orgName) {
 	const targets = []
 	// find the peer that match the urls
-
 	for (let index of peerIndexes) {
+
 		const peerConfig = orgsConfig[orgName].peers[index]
 		if (!peerConfig) continue
-		targets.push(newPeer(orgName, index, peerConfig.portMap))
+		const peer = newPeer(orgName, index, peerConfig)
+		targets.push(peer)
 	}
-
 	return targets
-}
-// return undefined when invalid portmap
-const newEventHub = function(orgName, peerIndex, peerPortMap, client) {
 
-	const { peer_hostName_full, tls_cacerts } = gen_tls_cacerts(orgName, peerIndex)
-	let events
-	for (let portMapEach of peerPortMap) {
-		if (portMapEach.container === 7053) {
-			events = `${GPRC_protocol}localhost:${portMapEach.host}`
-		}
-	}
-	if (!events) {
-		throw new Error(`Could not find port mapped to 7053 for peer host==${peer_hostName_full}`)
-	}
-	const eventHub = client.newEventHub()// NOTE newEventHub binds to clientContext
-	let data = fs.readFileSync(tls_cacerts)
-	eventHub.setPeerAddr(events, {
-		pem: Buffer.from(data).toString(),
-		'ssl-target-name-override': peer_hostName_full
+}
+
+const bindEventHub=(peer)=>{
+	const eventHub = client.newEventHub()
+	// NOTE newEventHub binds to clientContext, eventhub error { Error: event message must be properly signed by an identity from the same organization as the peer: [failed deserializing event creator: [Expected MSP ID PMMSP, received BUMSP]]
+
+	const peerEventUrl = peer.peerConfig.peerEventUrl
+	const pem = peer.pem
+	eventHub.setPeerAddr(peerEventUrl, {
+		pem,
+		'ssl-target-name-override': peer._options['grpc.ssl_target_name_override']
 	})
 	return eventHub
+}
+const bindEventHubSelect = (peer) => {
+	const orgName = peer.peerConfig.orgName
+
+	return objects.user.admin.select(orgName).then(() => bindEventHub(peer))
 
 }
 
-const newEventHubs = function(peerIndexes, orgName) {
+const newEventHub = (orgName, peerIndex, peerConfig) => {
+	return bindEventHubSelect(newPeer(orgName, peerIndex, peerConfig))
+}
+
+const newEventHubs = (peerIndexes, orgName) => {
+
 	const targets = []
 	for (let index of peerIndexes) {
 		const peerConfig = orgsConfig[orgName].peers[index]
 		if (!peerConfig) continue
-		targets.push(newEventHub(orgName, index, peerConfig.portMap, client))
+		targets.push(newEventHub(orgName, index, peerConfig))
 	}
-
 	return targets
-}
 
+}
 const getMspID = function(org) {
+
 	const mspid = orgsConfig[org].MSP.id
 	logger.debug(`Msp ID : ${mspid}`)
 	return mspid
 }
-
 var getAdminUser = function(userOrg) {
+
 	const username = 'admin'
 	const password = 'adminpw'
 	var member
-
 	return sdkUtils.newKeyValueStore({
 		path: getStateDBCachePath(userOrg)
 	}).then((store) => {
@@ -259,10 +271,11 @@ var getAdminUser = function(userOrg) {
 			}
 		})
 	})
+
 }
+var getRegisteredUsers = function(username, userOrg, isJson) {
 
 //TODO using fabric-ca, skip it first
-var getRegisteredUsers = function(username, userOrg, isJson) {
 	var member
 	var enrollmentSecret = null
 	return sdkUtils.newKeyValueStore({
@@ -323,11 +336,12 @@ var getRegisteredUsers = function(username, userOrg, isJson) {
 		//FIXME: fabric-ca request register failed with errors [[{"code":0,"message":"Failed getting affiliation 'PM.department1': sql: no rows in result set"}]]
 	})
 }
-
 //NOTE have to do this since filename for private Key file would be liek
 // a4fbafa51de1161a2f82ffa80cf1c34308482c33a9dcd4d150183183d0a3e0c6_sk
+
 const getKeyFilesInDir = (dir) => {
 	const files = fs.readdirSync(dir)
+
 	const keyFiles = []
 	files.forEach((file_name) => {
 		let filePath = path.join(dir, file_name)
@@ -343,7 +357,7 @@ objects.user.clear = () => {
 }
 const formatUsername = (username, orgName) => `${username}@${orgName.toLowerCase()}.${COMPANY_DOMAIN}`
 //
-objects.user.create = (keystoreDir, signcertFile, username, orgName, persistInCache = true, mspName) => {
+objects.user.create = (keystoreDir, signcertFile, username, orgName, persistInCache = true, mspid) => {
 	const keyFile = getKeyFilesInDir(keystoreDir)[0]
 	// NOTE:(jsdoc) This allows applications to use pre-existing crypto materials (private keys and certificates) to construct user objects with signing capabilities
 	// NOTE In client.createUser option, two types of cryptoContent is supported:
@@ -352,7 +366,7 @@ objects.user.create = (keystoreDir, signcertFile, username, orgName, persistInCa
 
 	const createUserOpt = {
 		username: formatUsername(username, orgName),
-		mspid: mspName ? mspName : getMspID(orgName),
+		mspid: mspid ? mspid : getMspID(orgName),
 		cryptoContent: { privateKey: keyFile, signedCert: signcertFile }
 	}
 	if (persistInCache) {
@@ -444,9 +458,10 @@ objects.user.admin.createIfNotExist = (orgName) => objects.user.admin.get(orgNam
 objects.user.admin.select = (orgName) => {
 	objects.user.clear()
 	return objects.user.admin.createIfNotExist(orgName)
+
 }
 
-const setGOPATH = function() {
+const setGOPATH = () => {
 	process.env.GOPATH = chaincodeConfig.GOPATH
 }
 
@@ -456,7 +471,7 @@ const newPeerByContainer = (containerName) => {
 		logger.warn(`Could not find OrgName for containerName ${containerName}`)
 		throw new Error(`Could not find OrgName for containerName ${containerName}`)
 	}
-	return newPeer(orgName, index, peerConfig.portMap)
+	return newPeer(orgName, index, peerConfig)
 }
 
 exports.sendProposalCommonPromise = (channel, request, txId, fnName) => {
@@ -499,11 +514,14 @@ exports.setGOPATH = setGOPATH
 exports.helperConfig = Object.assign({ COMPANY }, { GPRC_protocol }, globalConfig)
 exports.queryPeer = queryPeer
 exports.gen_tls_cacerts = gen_tls_cacerts
+exports.newPeer=newPeer
 exports.newPeers = newPeers
 exports.newPeerByContainer = newPeerByContainer
 exports.userAction = objects.user
 exports.newEventHubs = newEventHubs
 exports.newEventHub = newEventHub
+exports.selectEventHub = bindEventHubSelect
+exports.bindEventHub=bindEventHub
 exports.getRegisteredUsers = getRegisteredUsers //see in invoke
 exports.getOrgAdmin = objects.user.admin.select
 exports.getCaService = getCaService

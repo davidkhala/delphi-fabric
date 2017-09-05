@@ -12,6 +12,8 @@ const companyConfig = helperConfig[COMPANY]
 const orgsConfig = companyConfig.orgs
 
 const getMSPName = (orgName) => orgsConfig[orgName].MSP.name
+const format_tlscacert=(adminMSPDir,org_domain)=>path.join(adminMSPDir, 'tlscacerts', `tlsca.${org_domain}-cert.pem`)
+exports.format_tlscacert=format_tlscacert
 const cloneMSP = ({ MSPName, MSPID, update_config, templateMSPName, adminMSPDir, org_domain }) => {
 // Note templateJson might differs with different channel profile, take care
 	const templateJson = JSON.stringify(update_config.channel_group.groups.Application.groups[templateMSPName])
@@ -25,7 +27,7 @@ const cloneMSP = ({ MSPName, MSPID, update_config, templateMSPName, adminMSPDir,
 	templateObj.values.MSP.value.config.root_certs[0] = fs.readFileSync(
 			path.join(adminMSPDir, 'cacerts', `ca.${org_domain}-cert.pem`)).toString('base64')
 	templateObj.values.MSP.value.config.tls_root_certs[0] = fs.readFileSync(
-			path.join(adminMSPDir, 'tlscacerts', `tlsca.${org_domain}-cert.pem`)).
+			format_tlscacert(adminMSPDir,org_domain)).
 			toString('base64')
 
 	update_config.channel_group.groups.Application.groups[MSPName] = templateObj
@@ -68,7 +70,7 @@ const signChannelConfig = (channel, configUpdate_proto) => {
 	const proto = new Buffer(configUpdate_proto, 'binary')
 	const signatures = []
 	const signFunc = () => {
-		console.log('signature identity', client.getUserContext().getName())
+		logger.debug('signature identity', client.getUserContext().getName())
 		signatures.push(client.signChannelConfig(proto))
 	}
 	let promise = helper.userAction.admin.orderer.select().then(signFunc)
@@ -140,6 +142,13 @@ const channelUpdate = (channelName, mspCB) => {
 
 		// this will send the update request to the orderer
 		return client.updateChannel(request)
+	}).then((resp)=>{
+		require('sleep').sleep(10)//FIXME rewrite with eventHub
+		return fetchConfigJson(channelName).then(({ resp: { body } })=>{
+			fs.writeFileSync(path.join(__dirname, `${channelName}-txlator.json`), body)// for debug only
+			logger.info(`${channelName}-txlator.json`, "updated")
+			return resp
+		})
 	})
 }
 exports.channelUpdate = channelUpdate

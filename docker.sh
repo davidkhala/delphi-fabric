@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 
-docker-compose  down
 
 CURRENT="$(dirname $(readlink -f ${BASH_SOURCE}))"
+COMPOSE_FILE="$CURRENT/docker-compose.yaml"
+docker-compose -f $COMPOSE_FILE down
+docker container prune --force
 ledgersData_root="$(dirname $CURRENT)/ledgersData"
 
-sudo rm -rf $ledgersData_root
+sudo rm -rf $ledgersData_root # TODO for reset chaincode
+
 
 FILTER="dev"
 echo "=====containers to delete:"
@@ -27,4 +30,4 @@ echo "=====containers to delete:"
         docker rmi -f $DOCKER_IMAGE_IDS
     fi
     echo
-docker-compose up
+docker-compose -f $COMPOSE_FILE up
