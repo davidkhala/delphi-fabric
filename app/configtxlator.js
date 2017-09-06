@@ -89,7 +89,7 @@ const signChannelConfig = (channel, configUpdate_proto) => {
 
 const channelUpdate = (channelName, mspCB) => {
 	let o_config_proto
-	let channel = helper.getChannel(channelName)
+	const channel = helper.getChannel(channelName)
 	const orderer = channel.getOrderers()[0]
 	return fetchConfigJson(channelName).then(({ original_config_proto, resp: { body } }) => {
 		const update_config = JSON.parse(body)

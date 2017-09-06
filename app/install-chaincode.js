@@ -1,50 +1,44 @@
-//install chaincode does not require channel existence
-'use strict'
+//NOTE install chaincode does not require channel existence
 const helper = require('./helper.js')
 const logger = helper.getLogger('install-chaincode')
 
 //allowedCharsChaincodeName = "[A-Za-z0-9_-]+"
 // allowedCharsVersion       = "[A-Za-z0-9_.-]+"
 //
-const installChaincode = function(peerIndexes, chaincodeName, chaincodePath,
-																	chaincodeVersion, org) {
-	logger.debug(
-			'\n============ Install chaincode on organizations ============\n')
-	logger.debug({ peerIndexes, chaincodeName, chaincodePath, chaincodeVersion, org })
+const installChaincode = (peerIndexes, chaincodeName, chaincodePath, chaincodeVersion, orgName) => {
+	logger.debug('============ Install chaincode ============')
+	logger.debug({ peerIndexes, chaincodeName, chaincodePath, chaincodeVersion, orgName })
 	helper.setGOPATH()
 	const client = helper.getClient()
 
-	return helper.getOrgAdmin(org).then((user) => {
+	return helper.getOrgAdmin(orgName).then((user) => {
 		const request = {
-			targets: helper.newPeers(peerIndexes,org),
-			chaincodePath: chaincodePath,
+			targets: helper.newPeers(peerIndexes, orgName),
+			chaincodePath,
 			chaincodeId: chaincodeName,
-			chaincodeVersion: chaincodeVersion
+			chaincodeVersion
 		}
 		return client.installChaincode(request)
-	}).then((results) => {
+	}).then(results => {
 		const proposalResponses = results[0]
-		let all_good = true
+		const errCounter=[] // NOTE logic: reject only when all bad
 		for (let proposalResponse of proposalResponses) {
 			if (proposalResponse.response &&
 					proposalResponse.response.status === 200) {
-				logger.info('install proposal was good')
+				logger.info('install proposal was good', proposalResponse)
 			} else {
-				all_good = false
-				logger.error('install proposal was bad')
+				if (proposalResponse.toString().includes('exists')) {
+					logger.warn('duplicate install proposal', proposalResponse)
+				} else {
+					logger.error('install proposal was bad', proposalResponse)
+					errCounter.push(proposalResponse)
+				}
 			}
 		}
-		if (all_good) {
-			const returnStr = `Successfully Installed chaincode on organization  ${org}`
-			logger.info(
-					`Successfully sent install Proposal and received ProposalResponse: Status - ${proposalResponses[0].response.status}`)
-			logger.debug(returnStr)
-			return returnStr
-		} else {
-			logger.error(
-					'Failed to send install Proposal or receive valid response. Response null or status is not 200. exiting...')
-			return 'Failed to send install Proposal or receive valid response. Response null or status is not 200. exiting...'
+		if(errCounter.length===proposalResponses.length){
+			return Promise.reject(proposalResponses)
 		}
+		return Promise.resolve(proposalResponses)
 	})
 }
 exports.installChaincode = installChaincode

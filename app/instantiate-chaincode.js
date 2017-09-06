@@ -1,104 +1,97 @@
-'use strict'
 const helper = require('./helper.js')
 const logger = helper.getLogger('instantiate-chaincode')
 const queryPeer = helper.queryPeer
 const testLevel = require('./testLevel')
 
+//TODO: projectName has problem with instantiate chaincode
+//FIXME: UTC [endorser] simulateProposal -> ERRO 370 failed to invoke chaincode name:"lscc"  on transaction ec81adb6041b4b71dade56f0e9749e3dd2a2be2a63e0518ed75aa94c94f3d3fe, error: Error starting container: API error (500): {"message":"Could not attach to network delphiProject_default: context deadline exceeded"}
+
 // "chaincodeName":"mycc",
 // 		"chaincodeVersion":"v0",
 // 		"args":["a","100","b","200"]
-const instantiateChaincode = function(
-		channelName, containerName, chaincodeName, chaincodeVersion, args, username, org) {
-	logger.debug('\n============ Instantiate chaincode ============\n')
-	logger.debug({ containerName, chaincodeName, chaincodeVersion, args, username, org })
-	const channel = helper.getChannel(channelName)
-	const { eventWaitTime } = channel
-	const client = helper.getClient()
+const instantiateChaincode = (channelName, peerIndex, peerConfig, chaincodeName, chaincodeVersion, args, orgName) => {
+	logger.debug('============ Instantiate chaincode ============')
+	logger.debug({ peerIndex, peerConfig, chaincodeName, chaincodeVersion, args, orgName })
 
-	return helper.getOrgAdmin(org).then((user) => {
-		// read the config block from the orderer for the channel
-		// and initialize the verify MSPs based on the participating
-		// organizations
+	return helper.getOrgAdmin(orgName).then(() => {
+		const channel = helper.getChannel(channelName)
+		const { eventWaitTime } = channel
+		//Error: Verifying MSPs not found in the channel object, make sure "intialize()" is called first.
+		return channel.initialize().then(() => {
 
-		//TODO channel.initialize is time-consuming operation
-		return channel.initialize()
-	}).then((config_items) => {
-		logger.info(`channel.initialize success:`, config_items)
-		//NOTE channel._anchor_peers = undefined here
-		//NOTE channel._peers =[{"_options":{"grpc.ssl_target_name_override":"peer0.pm.delphi.com","grpc.default_authority":"peer0.pm.delphi.com","grpc.primary_user_agent":"grpc-node/1.2.4"},"_url":"grpcs://localhost:9051","_endpoint":{"addr":"localhost:9051","creds":{}},"_request_timeout":45000,"_endorserClient":{"$channel":{}},"_name":null}]
-		// logger.debug(`[debug] channel.clientContext.`, channel._clientContext)
-		// logger.debug(`[debug] channel._peers${JSON.stringify(channel._peers)}`)
-		const txId = client.newTransactionID()
-		// send proposal to endorser
+			logger.info('channel.initialize() success')
+			//NOTE channel._anchor_peers = undefined here
+			//NOTE channel._peers =[{"_options":{"grpc.ssl_target_name_override":"peer0.pm.delphi.com","grpc.default_authority":"peer0.pm.delphi.com","grpc.primary_user_agent":"grpc-node/1.2.4"},"_url":"grpcs://localhost:9051","_endpoint":{"addr":"localhost:9051","creds":{}},"_request_timeout":45000,"_endorserClient":{"$channel":{}},"_name":null}]
+			const client = helper.getClient()
+			const txId = client.newTransactionID()
+			const peer = helper.newPeer(orgName, peerIndex, peerConfig)
+			const request = {
+				chaincodeId: chaincodeName,
+				chaincodeVersion,
+				args,
+				fcn: 'init',// fcn is 'init' in default: `fcn` : optional - String of the function to be called on the chaincode once instantiated (default 'init')
+				txId,
+				targets: [peer]// optional: if not set, targets will be channel.getPeers
+				// 		`chaincodeType` : optional -- Type of chaincode ['golang', 'car', 'java'] (default 'golang')
+			}
 
-		const request = {
-			chaincodeId: chaincodeName,
-			chaincodeVersion,
-			args: args,
-			fcn: 'init',// fcn is 'init' in default
-			txId
-			// NOTE jsdoc: param: request
-			// An object containing the following fields:
-			// `chaincodePath` : required - String of the path to location of the source code of the chaincode
-			// 		`chaincodeId` : required - String of the name of the chaincode
-			// 		`chaincodeVersion` : required - String of the version of the chaincode
-			// 		`txId` : required - String of the transaction id
-			// 		`targets` : Optional : An array of endorsing Peer objects as the targets of the request. The list of endorsing peers will be used if this parameter is omitted.
-			// 		`chaincodeType` : optional -- Type of chaincode ['golang', 'car', 'java'] (default 'golang')
-			// 		`transientMap` : optional - map that can be used by the chaincode but not saved in the ledger, such as cryptographic information for encryption
-			// 		`fcn` : optional - String of the function to be called on the chaincode once instantiated (default 'init')
-			// `args` : optional - String Array arguments specific to the chaincode being instantiated
-			// 		`endorsement-policy` : optional - EndorsementPolicy object for this chaincode. If not specified, a default policy of "a signature by any member from any of the organizations corresponding to the array of member service providers" is used
-		}
+			return channel.sendInstantiateProposal(request).then(([responses, proposal, header]) => {
 
-		return helper.sendProposalCommonPromise(channel, request, txId, 'sendInstantiateProposal')
+				// TODO when targets.length>0 responses.length>0
+				for (let i in responses) {
+					const proposalResponse = responses[i]
+					if (proposalResponse.response &&
+							proposalResponse.response.status === 200) {
+						logger.info(`instantiate was good for [${i}]`, proposalResponse)
+					} else {
+						logger.error(`instantiate was bad for [${i}], `, proposalResponse)
+						return Promise.reject(responses) //NOTE logic: reject when one bad
+						//	error symptons:{
+						// Error: premature execution - chaincode (delphiChaincode:v1) is being launched
+						// at /home/david/Documents/delphi-fabric/node_modules/grpc/src/node/src/client.js:434:17 code: 2, metadata: Metadata { _internal_repr: {} }}
 
-	}).then(({ txId, nextRequest }) => {
-				// results exist even proposal error, need to check each entry
+					}
+				}
 
-				logger.info(`Successfully sent Proposal and received ProposalResponse`)
-				// set the transaction listener and set a timeout of 30sec
-				// if the transaction did not get committed within the timeout period,
-				// fail the test
+				return Promise.resolve({
+					nextRequest: {
+						proposalResponses: responses, proposal
+					}
+				})
+
+				// helper.sendProposalCommonPromise(channel, request, txId, 'sendInstantiateProposal')
+			}).then(({ nextRequest }) => {
+
 				const deployId = txId.getTransactionID()
 
-				const { key: orgName, peer: { index: peerIndex, value: peerConfig } } = queryPeer(containerName)
-
-				const eh = helper.newEventHub(orgName, peerIndex, peerConfig.portMap, client)
-				eh.connect()
+				const eventHub = helper.bindEventHub(peer)
+				eventHub.connect()
 
 				const txPromise = new Promise((resolve, reject) => {
-					let handle = setTimeout(() => {
-						eh.disconnect()
+					const handle = setTimeout(() => {
+						// if the transaction did not get committed within the timeout period,fail the test
+						eventHub.disconnect()
 						reject()
 					}, eventWaitTime)
 
-					eh.registerTxEvent(deployId, (tx, code) => {
-						logger.info(
-								'The chaincode instantiate transaction has been committed on peer ' +
-								eh._ep._endpoint.addr)
+					eventHub.registerTxEvent(deployId, (tx, code) => {
+						logger.info('txevent ', eventHub._ep)
 						clearTimeout(handle)
-						eh.unregisterTxEvent(deployId)
-						eh.disconnect()
+						eventHub.unregisterTxEvent(deployId)
+						eventHub.disconnect()
 
 						if (code !== 'VALID') {
-							logger.error('The chaincode instantiate transaction was invalid, code = ' + code)
-							reject()
+							reject({ tx, code })
 						} else {
-							logger.info('The chaincode instantiate transaction was valid.')
-							resolve()
+							resolve({ tx, code })
 						}
 					})
 				})
 
-				const sendPromise = channel.sendTransaction(nextRequest)
-				return Promise.all([sendPromise, txPromise]).then((results) => {
-					logger.debug('Event promise all complete and testing complete')
-					return results // the first returned value is from the 'sendPromise' which is from the 'sendTransaction()' call
-				})
-
-			}
-	)
+				return channel.sendTransaction(nextRequest).then(() => txPromise)
+			})
+		})
+	})
 }
 
 // to remove container like: dev-peer0.pm.delphi.com-delphichaincode-v1
