@@ -5,13 +5,13 @@ const testLevel = require('./testLevel')
 
 //FIXED: UTC [endorser] simulateProposal -> ERRO 370 failed to invoke chaincode name:"lscc"  on transaction ec81adb6041b4b71dade56f0e9749e3dd2a2be2a63e0518ed75aa94c94f3d3fe, error: Error starting container: API error (500): {"message":"Could not attach to network delphiProject_default: context deadline exceeded"}: setting docker network instead of docker-compose --project-name
 
-
 // "chaincodeName":"mycc",
 // 		"chaincodeVersion":"v0",
 // 		"args":["a","100","b","200"]
-const instantiateChaincode = (channelName, peerIndex, peerConfig, chaincodeId, chaincodeVersion, args, orgName) => {
+// set peers to 'undefined' to target all peers in channel
+exports.instantiateChaincode = (channelName, peers, chaincodeId, chaincodeVersion, args, orgName) => {
 	logger.debug('============ Instantiate chaincode ============')
-	logger.debug({ peerIndex, peerConfig, chaincodeId, chaincodeVersion, args, orgName })
+	logger.debug({ channelName, peersSize: peers.length, chaincodeId, chaincodeVersion, args, orgName })
 
 	return helper.getOrgAdmin(orgName).then(() => {
 		const channel = helper.getChannel(channelName)
@@ -20,24 +20,21 @@ const instantiateChaincode = (channelName, peerIndex, peerConfig, chaincodeId, c
 		return channel.initialize().then(() => {
 
 			logger.info('channel.initialize() success')
-			//NOTE channel._anchor_peers = undefined here
-			//NOTE channel._peers =[{"_options":{"grpc.ssl_target_name_override":"peer0.pm.delphi.com","grpc.default_authority":"peer0.pm.delphi.com","grpc.primary_user_agent":"grpc-node/1.2.4"},"_url":"grpcs://localhost:9051","_endpoint":{"addr":"localhost:9051","creds":{}},"_request_timeout":45000,"_endorserClient":{"$channel":{}},"_name":null}]
 			const client = helper.getClient()
 			const txId = client.newTransactionID()
-			const peer = helper.preparePeer(orgName, peerIndex, peerConfig)
 			const request = {
 				chaincodeId,
 				chaincodeVersion,
 				args,
 				fcn: 'init',// fcn is 'init' in default: `fcn` : optional - String of the function to be called on the chaincode once instantiated (default 'init')
 				txId,
-				targets: [peer]// optional: if not set, targets will be channel.getPeers
+				targets: peers// optional: if not set, targets will be channel.getPeers
 				// 		`chaincodeType` : optional -- Type of chaincode ['golang', 'car', 'java'] (default 'golang')
 			}
 
 			return channel.sendInstantiateProposal(request).then(([responses, proposal, header]) => {
 
-				// TODO when targets.length>0 responses.length>0
+				const errCounter = [] // NOTE logic: reject only when all bad
 				for (let i in responses) {
 					const proposalResponse = responses[i]
 					if (proposalResponse.response &&
@@ -45,12 +42,11 @@ const instantiateChaincode = (channelName, peerIndex, peerConfig, chaincodeId, c
 						logger.info(`instantiate was good for [${i}]`, proposalResponse)
 					} else {
 						logger.error(`instantiate was bad for [${i}], `, proposalResponse)
-						return Promise.reject(responses) //NOTE logic: reject when one bad
-						//	error symptons:{
-						// Error: premature execution - chaincode (delphiChaincode:v1) is being launched
-						// at /home/david/Documents/delphi-fabric/node_modules/grpc/src/node/src/client.js:434:17 code: 2, metadata: Metadata { _internal_repr: {} }}
-
+						errCounter.push(proposalResponse)
 					}
+				}
+				if (errCounter.length === responses.length) {
+					return Promise.reject(responses)
 				}
 
 				return Promise.resolve({
@@ -59,41 +55,44 @@ const instantiateChaincode = (channelName, peerIndex, peerConfig, chaincodeId, c
 					}
 				})
 
-				// helper.sendProposalCommonPromise(channel, request, txId, 'sendInstantiateProposal')
 			}).then(({ nextRequest }) => {
 
 				const deployId = txId.getTransactionID()
 
-				const eventHub = helper.bindEventHub(peer)
-				eventHub.connect()
+				const promises = []
+				for (let peer of peers) {
+					const eventHub = helper.bindEventHub(peer)
+					eventHub.connect()
+					const txPromise = new Promise((resolve, reject) => {
+						const handle = setTimeout(() => {
+							// if the transaction did not get committed within the timeout period,fail the test
+							eventHub.unregisterTxEvent(deployId)
+							eventHub.disconnect()
+							reject()
+						}, eventWaitTime)
 
-				const txPromise = new Promise((resolve, reject) => {
-					const handle = setTimeout(() => {
-						// if the transaction did not get committed within the timeout period,fail the test
-						eventHub.disconnect()
-						reject()
-					}, eventWaitTime)
+						eventHub.registerTxEvent(deployId, (tx, code) => {
+							logger.info('txevent ', eventHub._ep)
+							clearTimeout(handle)
+							eventHub.unregisterTxEvent(deployId)
+							eventHub.disconnect()
 
-					eventHub.registerTxEvent(deployId, (tx, code) => {
-						logger.info('txevent ', eventHub._ep)
-						clearTimeout(handle)
-						eventHub.unregisterTxEvent(deployId)
-						eventHub.disconnect()
-
-						if (code !== 'VALID') {
-							reject({ tx, code })
-						} else {
-							resolve({ tx, code })
-						}
-					},err=>{
-						logger.error("txevent",err)
+							if (code !== 'VALID') {
+								reject({ tx, code })
+							} else {
+								resolve({ tx, code })
+							}
+						}, err => {
+							logger.error('txevent', err)
+						})
 					})
-				})
+					promises.push(txPromise)
+				}
 
-				return channel.sendTransaction(nextRequest).then(() =>{
-					logger.info("channel.sendTransaction success")
-					return txPromise
-				} )
+				return channel.sendTransaction(nextRequest).then(() => {
+					logger.info('channel.sendTransaction success')
+					return Promise.all(promises)
+				})
 			})
 		})
 	})
@@ -119,5 +118,4 @@ exports.resetChaincode = function(containerName, chaincodeName, chaincodeVersion
 	//TODO besides, core/scc/lscc/lscc.go will also using  stub.GetState(ccname) to check chaincode existence
 }
 
-exports.instantiateChaincode = instantiateChaincode
 
