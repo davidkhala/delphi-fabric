@@ -50,32 +50,38 @@ const gen_tls_cacerts = (orgName, peerIndex) => {
 	const tls_cacerts = `${CRYPTO_CONFIG_DIR}/peerOrganizations/${org_domain}/peers/${peer_hostName_full}/tls/ca.crt`
 	return { org_domain, peer_hostName_full, tls_cacerts }
 }
+const newPeer = ({ peerPort, tls_cacerts, peer_hostName_full }) => {
+	const peerUrl = `${GPRC_protocol}localhost:${peerPort}`
+	return new Peer(peerUrl, {
+		pem: fs.readFileSync(tls_cacerts).toString(),
+		'ssl-target-name-override': peer_hostName_full
+	})
+}
+
+
 // peerConfig: "portMap": [{	"host": 8051,		"container": 7051},{	"host": 8053,		"container": 7053}]
-const newPeer = (orgName, peerIndex, peerConfig) => {
+const preparePeer = (orgName, peerIndex, peerConfig) => {
 	const { peer_hostName_full, tls_cacerts } = gen_tls_cacerts(orgName, peerIndex)
-	let peerUrl
-	let peerEventUrl
+	let peerPort
+	let eventHubPort
 	for (let portMapEach of peerConfig.portMap) {
 		if (portMapEach.container === 7051) {
-			peerUrl = `${GPRC_protocol}localhost:${portMapEach.host}`
+			peerPort = portMapEach.host
 		}
 		if (portMapEach.container === 7053) {
-			peerEventUrl = `${GPRC_protocol}localhost:${portMapEach.host}`
+			eventHubPort= portMapEach.host
 		}
 	}
-	if (!peerUrl) {
+	if (!peerPort) {
 		logger.warn(`Could not find port mapped to 7051 for peer host==${peer_hostName_full}`)
 		throw new Error(`Could not find port mapped to 7051 for peer host==${peer_hostName_full}`)
 	}
 	const pem = fs.readFileSync(tls_cacerts).toString()
-	const peer = new Peer(peerUrl, {
-		pem,
-		'ssl-target-name-override': peer_hostName_full
-	})
+	const peer = newPeer({peerPort,tls_cacerts,peer_hostName_full})
 	//NOTE append more info
 	peer.pem = pem
 	peer.peerConfig = peerConfig
-	peer.peerConfig.peerEventUrl = peerEventUrl
+	peer.peerConfig.peerEventUrl = `${GPRC_protocol}localhost:${eventHubPort}`
 	peer.peerConfig.orgName = orgName
 	peer.peerConfig.peerIndex = peerIndex
 	return peer
@@ -118,7 +124,7 @@ for (let channelName in channelsConfig) {
 		for (let peerIndex of orgConfigInChannel.peerIndexes) {
 			const peerConfig = orgsConfig[orgName].peers[peerIndex]
 
-			const peer = newPeer(orgName, peerIndex, peerConfig)
+			const peer = preparePeer(orgName, peerIndex, peerConfig)
 			channel.addPeer(peer) //FIXME client-side-only operation? Found: without container-side 'peer channel join', install chaincode still OK
 		}
 	}
@@ -178,7 +184,7 @@ const queryPeer = (containerName) => {
 	}
 }
 //
-const newPeers = (peerIndexes, orgName) => {
+const preparePeers = (peerIndexes, orgName) => {
 
 // work as a data adapter, containerNames: array --> orgname,peerIndex,peerConfig for each newPeer
 	const targets = []
@@ -187,13 +193,22 @@ const newPeers = (peerIndexes, orgName) => {
 
 		const peerConfig = orgsConfig[orgName].peers[index]
 		if (!peerConfig) continue
-		const peer = newPeer(orgName, index, peerConfig)
+		const peer = preparePeer(orgName, index, peerConfig)
 		targets.push(peer)
 	}
 	return targets
 
 }
 
+const newEventHub = ({ eventHubPort, tls_cacerts, peer_hostName_full }) => {
+	const eventHubUrl = `${GPRC_protocol}localhost:${eventHubPort}`
+	const eventHub = client.newEventHub()// NOTE newEventHub binds to clientContext
+	eventHub.setPeerAddr(eventHubUrl, {
+		pem: fs.readFileSync(tls_cacerts).toString(),
+		'ssl-target-name-override': peer_hostName_full
+	})
+	return eventHub
+}
 const bindEventHub=(peer)=>{
 	const eventHub = client.newEventHub()
 	// NOTE newEventHub binds to clientContext, eventhub error { Error: event message must be properly signed by an identity from the same organization as the peer: [failed deserializing event creator: [Expected MSP ID PMMSP, received BUMSP]]
@@ -213,17 +228,14 @@ const bindEventHubSelect = (peer) => {
 
 }
 
-const newEventHub = (orgName, peerIndex, peerConfig) => {
-	return bindEventHubSelect(newPeer(orgName, peerIndex, peerConfig))
-}
 
-const newEventHubs = (peerIndexes, orgName) => {
+const bindEventHubs = (peerIndexes, orgName) => {
 
 	const targets = []
 	for (let index of peerIndexes) {
 		const peerConfig = orgsConfig[orgName].peers[index]
 		if (!peerConfig) continue
-		targets.push(newEventHub(orgName, index, peerConfig))
+		targets.push(bindEventHubSelect(preparePeer(orgName, index, peerConfig)))
 	}
 	return targets
 
@@ -460,7 +472,7 @@ objects.user.admin.select = (orgName) => {
 	return objects.user.admin.createIfNotExist(orgName)
 
 }
-
+// To solve: TypeError: Path must be a string. Received undefined
 const setGOPATH = () => {
 	process.env.GOPATH = chaincodeConfig.GOPATH
 }
@@ -471,9 +483,9 @@ const newPeerByContainer = (containerName) => {
 		logger.warn(`Could not find OrgName for containerName ${containerName}`)
 		throw new Error(`Could not find OrgName for containerName ${containerName}`)
 	}
-	return newPeer(orgName, index, peerConfig)
+	return preparePeer(orgName, index, peerConfig)
 }
-
+//TODO to delete: deprecated
 exports.sendProposalCommonPromise = (channel, request, txId, fnName) => {
 	return new Promise((resolve, reject) => {
 		channel[fnName](request).then(([responses, proposal, header]) => {
@@ -485,8 +497,7 @@ exports.sendProposalCommonPromise = (channel, request, txId, fnName) => {
 						proposalResponse.response.status === 200) {
 					logger.info(`${fnName} was good for [${i}]`, proposalResponse)
 				} else {
-					logger.error(`${fnName} was bad for [${i}], Response null or status is not 200.`
-							, proposalResponse)
+					logger.error(`${fnName} was bad for [${i}], `,proposalResponse)
 					reject(responses)
 					return
 					//	error symptons:{
@@ -514,11 +525,12 @@ exports.setGOPATH = setGOPATH
 exports.helperConfig = Object.assign({ COMPANY }, { GPRC_protocol }, globalConfig)
 exports.queryPeer = queryPeer
 exports.gen_tls_cacerts = gen_tls_cacerts
+exports.preparePeer=preparePeer
 exports.newPeer=newPeer
-exports.newPeers = newPeers
+exports.newPeers = preparePeers
 exports.newPeerByContainer = newPeerByContainer
 exports.userAction = objects.user
-exports.newEventHubs = newEventHubs
+exports.bindEventHubs = bindEventHubs
 exports.newEventHub = newEventHub
 exports.selectEventHub = bindEventHubSelect
 exports.bindEventHub=bindEventHub

@@ -80,6 +80,15 @@ eventHubPort=$(./common/docker/utils/docker.sh view container port $peerContaine
 adminUserMspDir="$newDir/users/Admin@$org_domain/msp"
 node -e "require('./app/testConfigtxlator.js').addOrg('${orgName}', '${MSPName}', '${MSPID}', 'BUMSPName', '${adminUserMspDir}', '${org_domain}','${peerPort}','${eventHubPort}','${peerDomainName}')"
 
+chaincode_args=[]
+
+chaincodePath='github.com/delphi'
+chaincodeId='delphiChaincode'
+
+chaincodeVersion='v0'
+
+node -e "require('./app/testConfigtxlator').installChaincode('${orgName}','${adminUserMspDir}','${org_domain}','${peerPort}','${eventHubPort}','${peerDomainName}','${chaincodePath}','${chaincodeId}','${chaincodeVersion}')"
+
 
 # TODO save config back to config Files?
 rm $CRYPTO_UPDATE_CONFIG

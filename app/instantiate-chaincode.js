@@ -3,15 +3,15 @@ const logger = helper.getLogger('instantiate-chaincode')
 const queryPeer = helper.queryPeer
 const testLevel = require('./testLevel')
 
-//TODO: projectName has problem with instantiate chaincode
-//FIXME: UTC [endorser] simulateProposal -> ERRO 370 failed to invoke chaincode name:"lscc"  on transaction ec81adb6041b4b71dade56f0e9749e3dd2a2be2a63e0518ed75aa94c94f3d3fe, error: Error starting container: API error (500): {"message":"Could not attach to network delphiProject_default: context deadline exceeded"}
+//FIXED: UTC [endorser] simulateProposal -> ERRO 370 failed to invoke chaincode name:"lscc"  on transaction ec81adb6041b4b71dade56f0e9749e3dd2a2be2a63e0518ed75aa94c94f3d3fe, error: Error starting container: API error (500): {"message":"Could not attach to network delphiProject_default: context deadline exceeded"}: setting docker network instead of docker-compose --project-name
+
 
 // "chaincodeName":"mycc",
 // 		"chaincodeVersion":"v0",
 // 		"args":["a","100","b","200"]
-const instantiateChaincode = (channelName, peerIndex, peerConfig, chaincodeName, chaincodeVersion, args, orgName) => {
+const instantiateChaincode = (channelName, peerIndex, peerConfig, chaincodeId, chaincodeVersion, args, orgName) => {
 	logger.debug('============ Instantiate chaincode ============')
-	logger.debug({ peerIndex, peerConfig, chaincodeName, chaincodeVersion, args, orgName })
+	logger.debug({ peerIndex, peerConfig, chaincodeId, chaincodeVersion, args, orgName })
 
 	return helper.getOrgAdmin(orgName).then(() => {
 		const channel = helper.getChannel(channelName)
@@ -24,9 +24,9 @@ const instantiateChaincode = (channelName, peerIndex, peerConfig, chaincodeName,
 			//NOTE channel._peers =[{"_options":{"grpc.ssl_target_name_override":"peer0.pm.delphi.com","grpc.default_authority":"peer0.pm.delphi.com","grpc.primary_user_agent":"grpc-node/1.2.4"},"_url":"grpcs://localhost:9051","_endpoint":{"addr":"localhost:9051","creds":{}},"_request_timeout":45000,"_endorserClient":{"$channel":{}},"_name":null}]
 			const client = helper.getClient()
 			const txId = client.newTransactionID()
-			const peer = helper.newPeer(orgName, peerIndex, peerConfig)
+			const peer = helper.preparePeer(orgName, peerIndex, peerConfig)
 			const request = {
-				chaincodeId: chaincodeName,
+				chaincodeId,
 				chaincodeVersion,
 				args,
 				fcn: 'init',// fcn is 'init' in default: `fcn` : optional - String of the function to be called on the chaincode once instantiated (default 'init')
@@ -85,10 +85,15 @@ const instantiateChaincode = (channelName, peerIndex, peerConfig, chaincodeName,
 						} else {
 							resolve({ tx, code })
 						}
+					},err=>{
+						logger.error("txevent",err)
 					})
 				})
 
-				return channel.sendTransaction(nextRequest).then(() => txPromise)
+				return channel.sendTransaction(nextRequest).then(() =>{
+					logger.info("channel.sendTransaction success")
+					return txPromise
+				} )
 			})
 		})
 	})

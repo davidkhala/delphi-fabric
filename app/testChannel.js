@@ -9,9 +9,9 @@ const joinAllfcn = () => {
 
 	const orgName = 'BU'
 	const peers = [
-		helper.newPeer(orgName, 0,
+		helper.preparePeer(orgName, 0,
 				{ 'portMap': [{ 'host': 7051, 'container': 7051 }, { 'host': 7053, 'container': 7053 }] }),
-		helper.newPeer(orgName, 1,
+		helper.preparePeer(orgName, 1,
 				{ 'portMap': [{ 'host': 7061, 'container': 7051 }, { 'host': 7063, 'container': 7053 }] })
 	]
 
@@ -19,7 +19,7 @@ const joinAllfcn = () => {
 
 		const orgName = 'PM'
 		const peers = [
-			helper.newPeer(orgName, 0, {
+			helper.preparePeer(orgName, 0, {
 				'portMap': [
 					{ 'host': 9051, 'container': 7051 },
 					{ 'host': 9053, 'container': 7053 }

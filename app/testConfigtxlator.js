@@ -4,27 +4,76 @@ const logger = helper.getLogger('test-configtxlator')
 
 const channelName = 'delphiChannel'
 const COMPANY = 'delphi'
-const companyConfig = helper.helperConfig[COMPANY]
 const eventHelper = require('./eventHubHelper')
 const Peer = require('fabric-client/lib/Peer')
 
-
 const api = require('./configtxlator')
 const GPRC_protocol = 'grpcs://' // FIXME: assume using TLS
-const joinChannel = (
-		orgName, adminMSPDir, org_domain, peerPort, eventHubPort, peer_hostName_full) => {
-	logger.debug("joinChannel",{orgName, adminMSPDir, org_domain, peerPort, eventHubPort, peer_hostName_full})
+const newEventHub = ({ eventHubPort, tls_cacerts, peer_hostName_full }) => {
+	const eventHubUrl = `${GPRC_protocol}localhost:${eventHubPort}`
+	const eventHub = helper.getClient().newEventHub()// NOTE newEventHub binds to clientContext
+	eventHub.setPeerAddr(eventHubUrl, {
+		pem: fs.readFileSync(tls_cacerts).toString(),
+		'ssl-target-name-override': peer_hostName_full
+	})
+}
+//TODO not ready
+exports.installChaincode = (orgName, adminMSPDir, org_domain, peerPort, eventHubPort, peer_hostName_full, chaincodePath,
+														chaincodeId,
+														chaincodeVersion) => {
+	logger.debug('installChaincode', {
+		orgName,
+		adminMSPDir, org_domain, peerPort, eventHubPort, peer_hostName_full, chaincodePath,
+		chaincodeId,
+		chaincodeVersion
+	})
+	helper.setGOPATH()
+
+	const tls_cacerts = api.format_tlscacert(adminMSPDir, org_domain)
+	return helper.getOrgAdmin(orgName).then(() => {
+
+		const peer = helper.newPeer({ peerPort, tls_cacerts, peer_hostName_full })
+		const request = {
+			targets: [peer],
+			chaincodePath,
+			chaincodeId,
+			chaincodeVersion
+		}
+		return helper.getClient().installChaincode(request)
+	}).then(results => {
+		const proposalResponses = results[0]
+		const errCounter = [] // NOTE logic: reject only when all bad
+		for (let proposalResponse of proposalResponses) {
+			if (proposalResponse.response &&
+					proposalResponse.response.status === 200) {
+				logger.info('install proposal was good', proposalResponse)
+			} else {
+				if (proposalResponse.toString().includes('exists')) {
+					logger.warn('duplicate install proposal', proposalResponse)
+				} else {
+					logger.error('install proposal was bad', proposalResponse)
+					errCounter.push(proposalResponse)
+				}
+			}
+		}
+		if (errCounter.length === proposalResponses.length) {
+			return Promise.reject(proposalResponses)
+		}
+		return Promise.resolve(proposalResponses)
+	}).catch(err => {
+		logger.error('installChaincode', err)
+		return Promise.reject(err)
+	})
+}
+const joinChannel = (orgName, adminMSPDir, org_domain, peerPort, eventHubPort, peer_hostName_full) => {
+	logger.debug('joinChannel', { orgName, adminMSPDir, org_domain, peerPort, eventHubPort, peer_hostName_full })
 	const client = helper.getClient()
 	const channel = helper.getChannel(channelName)
 
 	return helper.getOrgAdmin(orgName).then(() => channel.getGenesisBlock({ txId: client.newTransactionID() })).
 			then(genesis_block => {
 				const tls_cacerts = api.format_tlscacert(adminMSPDir, org_domain)
-				const peerUrl = `${GPRC_protocol}localhost:${peerPort}`
-				const peer = new Peer(peerUrl, {
-					pem: fs.readFileSync(tls_cacerts).toString(),
-					'ssl-target-name-override': peer_hostName_full
-				})
+				const peer = helper.newPeer({ peerPort, tls_cacerts, peer_hostName_full })
 
 				channel.addPeer(peer)
 				const request = {
@@ -34,12 +83,7 @@ const joinChannel = (
 				}
 
 				const { eventWaitTime } = channel
-				const eventHubUrl = `${GPRC_protocol}localhost:${eventHubPort}`
-				const eventHub = client.newEventHub()// NOTE newEventHub binds to clientContext
-				eventHub.setPeerAddr(eventHubUrl, {
-					pem: fs.readFileSync(tls_cacerts).toString(),
-					'ssl-target-name-override': peer_hostName_full
-				})
+				const eventHub = helper.newEventHub({ eventHubPort, tls_cacerts, peer_hostName_full })
 				eventHub.connect()
 				const txPromise = new Promise((resolve, reject) => {
 
@@ -101,11 +145,11 @@ const addOrg = (
 		})
 
 	}).then(resp => {
-		logger.info('success', resp)
-
+		logger.info('addOrg success', resp)
+		return Promise.resolve(resp)
 	}).catch(err => {
-		logger.error(err)
-
+		logger.error('addOrg', err)
+		return Promise.reject(err)
 	})
 
 }

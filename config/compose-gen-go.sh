@@ -65,7 +65,6 @@ orderer_container_name=$(echo $ordererConfig | jq -r ".containerName")
 ORDERER_CONTAINER=$orderer_container_name.$COMPANY_DOMAIN
 
 orgsConfig=$(jq -r ".$COMPANY.orgs" $CONFIG_JSON)
-projectName=$(jq -r ".$COMPANY.docker.projectName" $CONFIG_JSON)
 orgNames=$(echo $orgsConfig | jq -r "keys[]")
 
 ORDERER_HOST_PORT=$(echo $ordererConfig | jq -r ".portMap[0].host")
@@ -74,15 +73,14 @@ ORDERER_CONTAINER_PORT=$(echo $ordererConfig | jq -r ".portMap[0].container")
 rm $COMPOSE_FILE
 >"$COMPOSE_FILE"
 
-COMPOSE_VERSION=2
+COMPOSE_VERSION=3
 
 yaml w -i $COMPOSE_FILE version \"$COMPOSE_VERSION\" # NOTE it should be a string, only version 3 support network setting
 
-# dockerNetworkName=$(jq -r ".$COMPANY.docker.network" $CONFIG_JSON)
-#if [ $COMPOSE_VERSION = 3 ]; then
-#    # FIXME empty input is not support
-#    yaml w -i $COMPOSE_FILE networks.default.name $dockerNetworkName
-#fi
+#TODO set network
+dockerNetworkName=$(jq -r ".$COMPANY.docker.network" $CONFIG_JSON)
+
+yaml w -i $COMPOSE_FILE networks.default.external.name $dockerNetworkName
 
 # ccenv
 yaml w -i $COMPOSE_FILE services.ccenv.image hyperledger/fabric-ccenv:$IMAGE_TAG
@@ -97,6 +95,9 @@ function envPush() {
 	$CMD.environment[$p] "$2"
 	((p++))
 }
+
+
+
 
 yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].container_name $ORDERER_CONTAINER
 yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].image hyperledger/fabric-orderer:$IMAGE_TAG
@@ -151,11 +152,9 @@ for orgName in $orgNames; do
 		p=0
 		envPush "$PEERCMD" CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
 		# NOTE docker compose network setting has problem: projectname is configured outside docker but in docker-compose cli
-		envPush "$PEERCMD" CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=${projectName}_default
-		#    if [ $COMPOSE_VERSION = 3 ]; then
+		envPush "$PEERCMD" CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=$dockerNetworkName
 		#       $PEERCMD.networks[0] $dockerNetworkName
 		#       envPush "$PEERCMD" CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=$(basename $(dirname $COMPOSE_FILE))_$dockerNetworkName
-		#    fi
 		envPush "$PEERCMD" CORE_LOGGING_LEVEL=DEBUG
 		envPush "$PEERCMD" CORE_LEDGER_HISTORY_ENABLEHISTORYDATABASE=true
 

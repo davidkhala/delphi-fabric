@@ -45,7 +45,7 @@ const invoke = function(channelName, peerIndexes, chaincodeName, fcn, args,  org
 		const transactionID = txId.getTransactionID()
 		var eventPromises = []
 
-		var eventhubs = helper.newEventHubs(peerIndexes, org)
+		var eventhubs = helper.bindEventHubs(peerIndexes, org)
 		for (let eh of eventhubs) {
 			eh.connect()
 

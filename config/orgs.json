@@ -2,8 +2,7 @@
   "delphi": {
     "domain": "delphi.com",
     "docker": {
-      "network": "delphiNetwork",
-      "projectName": "delphiProject"
+      "network": "delphiNetwork"
     },
     "orderer": {
       "containerName": "orderContainerName",

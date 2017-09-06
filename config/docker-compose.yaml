@@ -1,4 +1,8 @@
-version: "2"
+version: "3"
+networks:
+  default:
+    external:
+      name: delphiNetwork
 services:
   ccenv:
     image: hyperledger/fabric-ccenv:x86_64-1.0.1
@@ -31,7 +35,7 @@ services:
     command: peer node start
     environment:
     - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
-    - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=config_default
+    - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=delphiNetwork
     - CORE_LOGGING_LEVEL=DEBUG
     - CORE_LEDGER_HISTORY_ENABLEHISTORYDATABASE=true
     - CORE_PEER_GOSSIP_USELEADERELECTION=true
@@ -61,7 +65,7 @@ services:
     command: peer node start
     environment:
     - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
-    - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=config_default
+    - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=delphiNetwork
     - CORE_LOGGING_LEVEL=DEBUG
     - CORE_LEDGER_HISTORY_ENABLEHISTORYDATABASE=true
     - CORE_PEER_GOSSIP_USELEADERELECTION=true
@@ -93,8 +97,8 @@ services:
     - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
     - FABRIC_CA_SERVER_CA_CERTFILE=/etc/hyperledger/crypto-config/peerOrganizations/bu.delphi.com/ca/ca.bu.delphi.com-cert.pem
     - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/crypto-config/peerOrganizations/bu.delphi.com/ca/ca.bu.delphi.com-cert.pem
-    - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/crypto-config/peerOrganizations/bu.delphi.com/ca/e7a002088da0ba1575a1929248a4719734ffb68c008356e9ff9accb09ab65f19_sk
-    - FABRIC_CA_SERVER_CA_KEYFILE=/etc/hyperledger/crypto-config/peerOrganizations/bu.delphi.com/ca/e7a002088da0ba1575a1929248a4719734ffb68c008356e9ff9accb09ab65f19_sk
+    - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/crypto-config/peerOrganizations/bu.delphi.com/ca/6a6cea44c8aeb844e5218d79ca16b64f83cf80b6a8457040ba434facadf562a4_sk
+    - FABRIC_CA_SERVER_CA_KEYFILE=/etc/hyperledger/crypto-config/peerOrganizations/bu.delphi.com/ca/6a6cea44c8aeb844e5218d79ca16b64f83cf80b6a8457040ba434facadf562a4_sk
     - FABRIC_CA_SERVER_TLS_ENABLED=true
     ports:
     - 7054:7054
@@ -106,7 +110,7 @@ services:
     command: peer node start
     environment:
     - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
-    - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=config_default
+    - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=delphiNetwork
     - CORE_LOGGING_LEVEL=DEBUG
     - CORE_LEDGER_HISTORY_ENABLEHISTORYDATABASE=true
     - CORE_PEER_GOSSIP_USELEADERELECTION=true
@@ -138,8 +142,8 @@ services:
     - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
     - FABRIC_CA_SERVER_CA_CERTFILE=/etc/hyperledger/crypto-config/peerOrganizations/eng.delphi.com/ca/ca.eng.delphi.com-cert.pem
     - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/crypto-config/peerOrganizations/eng.delphi.com/ca/ca.eng.delphi.com-cert.pem
-    - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/crypto-config/peerOrganizations/eng.delphi.com/ca/4aea0c10e77aa78603fd8ec6d7df345550b36583c698f89c044de24921375cad_sk
-    - FABRIC_CA_SERVER_CA_KEYFILE=/etc/hyperledger/crypto-config/peerOrganizations/eng.delphi.com/ca/4aea0c10e77aa78603fd8ec6d7df345550b36583c698f89c044de24921375cad_sk
+    - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/crypto-config/peerOrganizations/eng.delphi.com/ca/37b090a844cbf2a9656a234451d99eacb4ce189a05baa2450d2092c3b501a3d3_sk
+    - FABRIC_CA_SERVER_CA_KEYFILE=/etc/hyperledger/crypto-config/peerOrganizations/eng.delphi.com/ca/37b090a844cbf2a9656a234451d99eacb4ce189a05baa2450d2092c3b501a3d3_sk
     - FABRIC_CA_SERVER_TLS_ENABLED=true
     ports:
     - 8054:7054
@@ -151,7 +155,7 @@ services:
     command: peer node start
     environment:
     - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
-    - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=config_default
+    - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=delphiNetwork
     - CORE_LOGGING_LEVEL=DEBUG
     - CORE_LEDGER_HISTORY_ENABLEHISTORYDATABASE=true
     - CORE_PEER_GOSSIP_USELEADERELECTION=true
@@ -183,8 +187,8 @@ services:
     - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
     - FABRIC_CA_SERVER_CA_CERTFILE=/etc/hyperledger/crypto-config/peerOrganizations/pm.delphi.com/ca/ca.pm.delphi.com-cert.pem
     - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/crypto-config/peerOrganizations/pm.delphi.com/ca/ca.pm.delphi.com-cert.pem
-    - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/crypto-config/peerOrganizations/pm.delphi.com/ca/5ebf32f24ece9b087fcf4e4bb7ee306ec6c2c7e16f28b3ef18f65c748c8ec572_sk
-    - FABRIC_CA_SERVER_CA_KEYFILE=/etc/hyperledger/crypto-config/peerOrganizations/pm.delphi.com/ca/5ebf32f24ece9b087fcf4e4bb7ee306ec6c2c7e16f28b3ef18f65c748c8ec572_sk
+    - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/crypto-config/peerOrganizations/pm.delphi.com/ca/55d9fa998d664adc8cb5923758a0bdd20bb7c637363adffc6b4e906bb1bf3c36_sk
+    - FABRIC_CA_SERVER_CA_KEYFILE=/etc/hyperledger/crypto-config/peerOrganizations/pm.delphi.com/ca/55d9fa998d664adc8cb5923758a0bdd20bb7c637363adffc6b4e906bb1bf3c36_sk
     - FABRIC_CA_SERVER_TLS_ENABLED=true
     ports:
     - 9054:7054
