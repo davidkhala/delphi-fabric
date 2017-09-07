@@ -24,18 +24,16 @@ const createChannel = (channelName, channelConfigFile, orgName) => {
 
 				const signature = client.signChannelConfig(channelConfig)
 
+				const txId = client.newTransactionID()
 				const request = {
 					config: channelConfig,
 					signatures: [signature],
 					name: channelName.toLowerCase(),
 					orderer: channel.getOrderers()[0],
-					txId: client.newTransactionID()
+					txId
 				}
 
-				// send to orderer
-				const channelCreatePromise = client.createChannel(request)
-
-				//eventhub mechanism not working: hanging, since no block event caught
+				//NOTE eventhub mechanism not working: hanging, since no blockevent nor txevent caught
 
 				//TODO pull request here, also sleep 5 seconds in test/integration/create-configtx-channel.js
 				const loopGetChannel = () => {
@@ -47,7 +45,7 @@ const createChannel = (channelName, channelConfigFile, orgName) => {
 						return err
 					})
 				}
-				return channelCreatePromise.then((results) => {
+				return client.createChannel(request).then((results) => {
 					logger.debug('channel created', results)
 					return loopGetChannel().then((channelConfig) => {
 						logger.info('channel initialized')
