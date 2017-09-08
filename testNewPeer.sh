@@ -14,13 +14,14 @@ orgName="AM"
 MSPName="${orgName}MSPName"
 MSPID="${orgName}MSP"
 peerContainerName="AMContainerName"
-peerPort="" # map for 7051, random assign when empty
-eventHubPort="" # map for 7053, random assign when empty
+peerPort="7071" # map for 7051, random assign when empty
+eventHubPort="7073" # map for 7053, random assign when empty
 # NOTE docker query port: $ docker container port AMContainerName 7051/tcp | awk '{split($0,a,":"); print a[2]}'
 
 
 
 COMPANY_DOMAIN=$(jq -r ".$COMPANY.domain" $CONFIG_JSON)
+dockerNetworkName=$(jq -r ".$COMPANY.docker.network" $CONFIG_JSON)
 org_domain="${orgName,,}.$COMPANY_DOMAIN"
 
 i=0
@@ -37,9 +38,10 @@ yaml w -i $CRYPTO_UPDATE_CONFIG PeerOrgs[$i].Users.Count $userCount
 
 newDir="${CRYPTO_CONFIG_DIR}peerOrganizations/$org_domain"
 rm -rf $newDir
+# TODO use fabric-ca for key generate
 ./common/bin-manage/cryptogen/runCryptogen.sh -i $CRYPTO_UPDATE_CONFIG -o $CRYPTO_CONFIG_DIR -a
 
-VERSION="1.0.0"
+VERSION=$(jq -r ".$COMPANY.docker.fabricTag" $CONFIG_JSON)
 IMAGE_TAG="x86_64-$VERSION"
 image=hyperledger/fabric-peer:$IMAGE_TAG
 
@@ -49,12 +51,11 @@ docker stop $peerContainerName
 docker rm $peerContainerName # TODO restart
 docker run -d --name $peerContainerName \
     -e CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock \
-	-e CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=config_default \
+	-e CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=$dockerNetworkName \
 	-e CORE_LOGGING_LEVEL=DEBUG \
 	-e CORE_LEDGER_HISTORY_ENABLEHISTORYDATABASE=true \
-	-e CORE_PEER_GOSSIP_USELEADERELECTION=true \
-	-e CORE_PEER_GOSSIP_ORGLEADER=false \
-	-e CORE_PEER_GOSSIP_SKIPHANDSHAKE=true \
+	-e CORE_PEER_GOSSIP_USELEADERELECTION=false \
+	-e CORE_PEER_GOSSIP_ORGLEADER=true \
 	-e CORE_PEER_GOSSIP_EXTERNALENDPOINT=$peerContainerName:7051 \
 	-e CORE_PEER_LOCALMSPID=$MSPID \
 	-e CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/$org_domain/users/Admin@$org_domain/msp \

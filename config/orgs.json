@@ -2,6 +2,7 @@
   "delphi": {
     "domain": "delphi.com",
     "docker": {
+      "fabricTag": "1.0.1",
       "network": "delphiNetwork"
     },
     "orderer": {
@@ -68,6 +69,7 @@
         ],
         "users": [],
         "ca": {
+          "enable": false,
           "portMap": [
             {
               "host": 7054,
@@ -101,6 +103,7 @@
           {}
         ],
         "ca": {
+          "enable": false,
           "portMap": [
             {
               "host": 8054,
@@ -131,6 +134,7 @@
         ],
         "users": [],
         "ca": {
+          "enable": false,
           "portMap": [
             {
               "host": 9054,

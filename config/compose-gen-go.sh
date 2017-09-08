@@ -8,7 +8,7 @@ COMPOSE_FILE="$CURRENT/docker-compose.yaml"
 CONFIG_JSON="$CURRENT/orgs.json"
 # TODO if we use cli container to install chaincode, we need to set GOPATH in compose file; here we use node-sdk to do it
 GOPATH="$(dirname $CURRENT)/GOPATH/"
-IMAGE_TAG="x86_64-1.0.0" # latest
+IMAGE_TAG="x86_64-1.0.0"
 
 
 #TODO ledgersData, for resetChaincode CONTAINER_ledgersData="/var/hyperledger/production/ledgersData"
@@ -162,10 +162,9 @@ for orgName in $orgNames; do
 		### GOSSIP setting
 		envPush "$PEERCMD" CORE_PEER_GOSSIP_USELEADERELECTION=true
 		envPush "$PEERCMD" CORE_PEER_GOSSIP_ORGLEADER=false
-		envPush "$PEERCMD" CORE_PEER_GOSSIP_SKIPHANDSHAKE=true
 		envPush "$PEERCMD" CORE_PEER_GOSSIP_EXTERNALENDPOINT=$peerContainer:7051
 		# CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0:7051
-		# only work when CORE_PEER_GOSSIP_ORGLEADER=true & CORE_PEER_GOSSIP_SKIPHANDSHAKE=false & CORE_PEER_GOSSIP_USELEADERELECTION=false
+		# only work when CORE_PEER_GOSSIP_ORGLEADER=true & CORE_PEER_GOSSIP_USELEADERELECTION=false
 		envPush "$PEERCMD" CORE_PEER_LOCALMSPID=${orgName}MSP
 		envPush "$PEERCMD" CORE_PEER_MSPCONFIGPATH=$CONTAINER_CRYPTO_CONFIG_DIR/$ADMIN_STRUCTURE/msp
 		envPush "$PEERCMD" CORE_PEER_TLS_ENABLED=$TLS_ENABLED
@@ -197,8 +196,10 @@ for orgName in $orgNames; do
 		#   $PEERCMD.volumes[3] "$GOPATH:$CONTAINER_GOPATH"
 	done
 
-	# CA
-	CACMD="yaml w -i $COMPOSE_FILE "services["ca.$PEER_DOMAIN"]
+    # CA
+    CA_enable=$(echo $orgConfig | jq ".ca.enable")
+    if [ "$CA_enable" == "true" ]; then
+    CACMD="yaml w -i $COMPOSE_FILE "services["ca.$PEER_DOMAIN"]
 	$CACMD.image hyperledger/fabric-ca:$IMAGE_TAG
 	$CACMD.container_name "ca.$PEER_DOMAIN"
 	$CACMD.command "sh -c 'fabric-ca-server start -b admin:adminpw -d'"
@@ -219,6 +220,7 @@ for orgName in $orgNames; do
 	CA_HOST_PORT=$(echo $orgConfig | jq ".ca.portMap[0].host")
 	CA_CONTAINER_PORT=$(echo $orgConfig | jq ".ca.portMap[0].container")
 	$CACMD.ports[0] $CA_HOST_PORT:$CA_CONTAINER_PORT
+    fi
 
 done
 
