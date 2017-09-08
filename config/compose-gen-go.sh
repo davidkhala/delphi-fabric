@@ -103,10 +103,11 @@ yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].command "orderer"
 yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].ports[0] $ORDERER_HOST_PORT:$ORDERER_CONTAINER_PORT
 
 ORDERERCMD="yaml w -i $COMPOSE_FILE services[${ORDERER_SERVICE_NAME}]"
+
+
 p=0
 envPush "$ORDERERCMD" ORDERER_GENERAL_LOGLEVEL=debug
 envPush "$ORDERERCMD" ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
-envPush "$ORDERERCMD" ORDERER_GENERAL_GENESISMETHOD=file
 
 orderer_hostName=${orderer_container_name,,}
 orderer_hostName_full=$orderer_hostName.$COMPANY_DOMAIN
@@ -116,6 +117,13 @@ CONTAINER_ORDERER_TLS_DIR="$CONTAINER_CRYPTO_CONFIG_DIR/$ORDERER_STRUCTURE/tls"
 envPush "$ORDERERCMD" ORDERER_GENERAL_TLS_ENABLED="$TLS_ENABLED"
 envPush "$ORDERERCMD" ORDERER_GENERAL_TLS_PRIVATEKEY=$CONTAINER_ORDERER_TLS_DIR/server.key
 envPush "$ORDERERCMD" ORDERER_GENERAL_TLS_CERTIFICATE=$CONTAINER_ORDERER_TLS_DIR/server.crt
+
+# NOTE remove ORDERER_GENERAL_GENESISFILE: panic: Unable to bootstrap orderer. Error reading genesis block file: open /etc/hyperledger/fabric/genesisblock: no such file or directory
+envPush "$ORDERERCMD" ORDERER_GENERAL_GENESISMETHOD=file # file|provisional
+
+#   TODO
+envPush "$ORDERERCMD" ORDERER_GENERAL_GENESISFILE=$CONTAINER_CONFIGTX_DIR/$(basename $BLOCK_FILE)
+
 # MSP
 envPush "$ORDERERCMD" ORDERER_GENERAL_LOCALMSPID=OrdererMSP
 envPush "$ORDERERCMD" ORDERER_GENERAL_LOCALMSPDIR=$CONTAINER_CRYPTO_CONFIG_DIR/$ORDERER_STRUCTURE/msp
@@ -150,7 +158,6 @@ for orgName in $orgNames; do
 		# NOTE docker compose network setting has problem: projectname is configured outside docker but in docker-compose cli
 		envPush "$PEERCMD" CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=$dockerNetworkName
 		#       $PEERCMD.networks[0] $dockerNetworkName
-		#       envPush "$PEERCMD" CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=$(basename $(dirname $COMPOSE_FILE))_$dockerNetworkName
 		envPush "$PEERCMD" CORE_LOGGING_LEVEL=DEBUG
 		envPush "$PEERCMD" CORE_LEDGER_HISTORY_ENABLEHISTORYDATABASE=true
 
