@@ -52,12 +52,14 @@ const gen_tls_cacerts = (orgName, peerIndex) => {
 }
 const newPeer = ({ peerPort, tls_cacerts, peer_hostName_full }) => {
 	const peerUrl = `${GPRC_protocol}localhost:${peerPort}`
-	return new Peer(peerUrl, {
-		pem: fs.readFileSync(tls_cacerts).toString(),
+	const pem = fs.readFileSync(tls_cacerts).toString()
+	const peer = new Peer(peerUrl, {
+		pem,
 		'ssl-target-name-override': peer_hostName_full
 	})
+	peer.pem = pem
+	return peer
 }
-
 
 // peerConfig: "portMap": [{	"host": 8051,		"container": 7051},{	"host": 8053,		"container": 7053}]
 const preparePeer = (orgName, peerIndex, peerConfig) => {
@@ -69,17 +71,15 @@ const preparePeer = (orgName, peerIndex, peerConfig) => {
 			peerPort = portMapEach.host
 		}
 		if (portMapEach.container === 7053) {
-			eventHubPort= portMapEach.host
+			eventHubPort = portMapEach.host
 		}
 	}
 	if (!peerPort) {
 		logger.warn(`Could not find port mapped to 7051 for peer host==${peer_hostName_full}`)
 		throw new Error(`Could not find port mapped to 7051 for peer host==${peer_hostName_full}`)
 	}
-	const pem = fs.readFileSync(tls_cacerts).toString()
-	const peer = newPeer({peerPort,tls_cacerts,peer_hostName_full})
+	const peer = newPeer({ peerPort, tls_cacerts, peer_hostName_full })
 	//NOTE append more info
-	peer.pem = pem
 	peer.peerConfig = peerConfig
 	peer.peerConfig.peerEventUrl = `${GPRC_protocol}localhost:${eventHubPort}`
 	peer.peerConfig.orgName = orgName
@@ -209,7 +209,7 @@ const newEventHub = ({ eventHubPort, tls_cacerts, peer_hostName_full }) => {
 	})
 	return eventHub
 }
-const bindEventHub=(peer)=>{
+const bindEventHub = (peer) => {
 	const eventHub = client.newEventHub()
 	// NOTE newEventHub binds to clientContext, eventhub error { Error: event message must be properly signed by an identity from the same organization as the peer: [failed deserializing event creator: [Expected MSP ID PMMSP, received BUMSP]]
 
@@ -227,7 +227,6 @@ const bindEventHubSelect = (peer) => {
 	return objects.user.admin.select(orgName).then(() => bindEventHub(peer))
 
 }
-
 
 const bindEventHubs = (peerIndexes, orgName) => {
 
@@ -497,7 +496,7 @@ exports.sendProposalCommonPromise = (channel, request, txId, fnName) => {
 						proposalResponse.response.status === 200) {
 					logger.info(`${fnName} was good for [${i}]`, proposalResponse)
 				} else {
-					logger.error(`${fnName} was bad for [${i}], `,proposalResponse)
+					logger.error(`${fnName} was bad for [${i}], `, proposalResponse)
 					reject(responses)
 					return
 					//	error symptons:{
@@ -525,15 +524,15 @@ exports.setGOPATH = setGOPATH
 exports.helperConfig = Object.assign({ COMPANY }, { GPRC_protocol }, globalConfig)
 exports.queryPeer = queryPeer
 exports.gen_tls_cacerts = gen_tls_cacerts
-exports.preparePeer=preparePeer
-exports.newPeer=newPeer
+exports.preparePeer = preparePeer
+exports.newPeer = newPeer
 exports.newPeers = preparePeers
 exports.newPeerByContainer = newPeerByContainer
 exports.userAction = objects.user
 exports.bindEventHubs = bindEventHubs
 exports.newEventHub = newEventHub
 exports.selectEventHub = bindEventHubSelect
-exports.bindEventHub=bindEventHub
+exports.bindEventHub = bindEventHub
 exports.getRegisteredUsers = getRegisteredUsers //see in invoke
 exports.getOrgAdmin = objects.user.admin.select
 exports.getCaService = getCaService

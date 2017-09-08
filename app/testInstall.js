@@ -11,7 +11,8 @@ const chaincode_args = []
 const chaincodeVersion = 'v0'
 const orgName = 'BU'
 const channelName = 'delphiChannel'
-installchaincode(peerIndexes, chaincodeName, CHAINCODE_PATH, chaincodeVersion, orgName).then(() => {
+const peers=helper.newPeers(peerIndexes,orgName)
+installchaincode(peers, chaincodeName, CHAINCODE_PATH, chaincodeVersion, orgName).then(() => {
 
 	const peers=helper.newPeers(peerIndexes,orgName)
 	return instantiateChaincode(channelName,peers,

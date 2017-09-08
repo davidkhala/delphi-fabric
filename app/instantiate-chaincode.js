@@ -9,9 +9,9 @@ const testLevel = require('./testLevel')
 // 		"chaincodeVersion":"v0",
 // 		"args":["a","100","b","200"]
 // set peers to 'undefined' to target all peers in channel
-exports.instantiateChaincode = (channelName, peers, chaincodeId, chaincodeVersion, args, orgName) => {
+exports.instantiateChaincode = (channelName, richPeers, chaincodeId, chaincodeVersion, args, orgName) => {
 	logger.debug('============ Instantiate chaincode ============')
-	logger.debug({ channelName, peersSize: peers.length, chaincodeId, chaincodeVersion, args, orgName })
+	logger.debug({ channelName, peersSize: richPeers.length, chaincodeId, chaincodeVersion, args, orgName })
 
 	return helper.getOrgAdmin(orgName).then(() => {
 		const channel = helper.getChannel(channelName)
@@ -19,7 +19,7 @@ exports.instantiateChaincode = (channelName, peers, chaincodeId, chaincodeVersio
 		//Error: Verifying MSPs not found in the channel object, make sure "intialize()" is called first.
 		return channel.initialize().then(() => {
 
-			logger.info('channel.initialize() success')
+			logger.info('channel.initialize() success',channel.getOrganizations())
 			const client = helper.getClient()
 			const txId = client.newTransactionID()
 			const request = {
@@ -28,7 +28,7 @@ exports.instantiateChaincode = (channelName, peers, chaincodeId, chaincodeVersio
 				args,
 				fcn: 'init',// fcn is 'init' in default: `fcn` : optional - String of the function to be called on the chaincode once instantiated (default 'init')
 				txId,
-				targets: peers// optional: if not set, targets will be channel.getPeers
+				targets: richPeers// optional: if not set, targets will be channel.getPeers
 				// 		`chaincodeType` : optional -- Type of chaincode ['golang', 'car', 'java'] (default 'golang')
 			}
 
@@ -41,7 +41,7 @@ exports.instantiateChaincode = (channelName, peers, chaincodeId, chaincodeVersio
 							proposalResponse.response.status === 200) {
 						logger.info(`instantiate was good for [${i}]`, proposalResponse)
 					} else {
-						logger.error(`instantiate was bad for [${i}], `, proposalResponse)
+						logger.error(`instantiate was bad for [${i}]`, proposalResponse)
 						errCounter.push(proposalResponse)
 					}
 				}
@@ -60,7 +60,7 @@ exports.instantiateChaincode = (channelName, peers, chaincodeId, chaincodeVersio
 				const deployId = txId.getTransactionID()
 
 				const promises = []
-				for (let peer of peers) {
+				for (let peer of richPeers) {
 					const eventHub = helper.bindEventHub(peer)
 					eventHub.connect()
 					const txPromise = new Promise((resolve, reject) => {

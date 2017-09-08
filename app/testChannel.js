@@ -31,7 +31,7 @@ const joinAllfcn = () => {
 }
 //E0905 10:07:20.462272826    7262 ssl_transport_security.c:947] Handshake failed with fatal error SSL_ERROR_SSL: error:14090086:SSL routines:ssl3_get_server_certificate:certificate verify failed.
 
-channel.create(channelName, channelConfigFile, 'BU').then(() => {
+channel.create(channelName, channelConfigFile, ['BU','PM']).then(() => {
 	return joinAllfcn()
 }).catch(err => {
 	logger.error(err)

@@ -5,15 +5,15 @@ const logger = helper.getLogger('install-chaincode')
 //allowedCharsChaincodeName = "[A-Za-z0-9_-]+"
 // allowedCharsVersion       = "[A-Za-z0-9_.-]+"
 //
-const installChaincode = (peerIndexes, chaincodeName, chaincodePath, chaincodeVersion, orgName) => {
+const installChaincode = (peers, chaincodeName, chaincodePath, chaincodeVersion, orgName) => {
 	logger.debug('============ Install chaincode ============')
-	logger.debug({ peerIndexes, chaincodeName, chaincodePath, chaincodeVersion, orgName })
+	logger.debug({ peers_length:peers.length, chaincodeName, chaincodePath, chaincodeVersion, orgName })
 	helper.setGOPATH()
 	const client = helper.getClient()
 
-	return helper.getOrgAdmin(orgName).then((user) => {
+	return helper.getOrgAdmin(orgName).then(() => {
 		const request = {
-			targets: helper.newPeers(peerIndexes, orgName),
+			targets: peers,
 			chaincodePath,
 			chaincodeId: chaincodeName,
 			chaincodeVersion

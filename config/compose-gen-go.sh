@@ -73,7 +73,6 @@ COMPOSE_VERSION=3
 
 yaml w -i $COMPOSE_FILE version \"$COMPOSE_VERSION\" # NOTE it should be a string, only version 3 support network setting
 
-#TODO set network
 dockerNetworkName=$(jq -r ".$COMPANY.docker.network" $CONFIG_JSON)
 
 yaml w -i $COMPOSE_FILE networks.default.external.name $dockerNetworkName
@@ -118,11 +117,10 @@ envPush "$ORDERERCMD" ORDERER_GENERAL_TLS_ENABLED="$TLS_ENABLED"
 envPush "$ORDERERCMD" ORDERER_GENERAL_TLS_PRIVATEKEY=$CONTAINER_ORDERER_TLS_DIR/server.key
 envPush "$ORDERERCMD" ORDERER_GENERAL_TLS_CERTIFICATE=$CONTAINER_ORDERER_TLS_DIR/server.crt
 
-# NOTE remove ORDERER_GENERAL_GENESISFILE: panic: Unable to bootstrap orderer. Error reading genesis block file: open /etc/hyperledger/fabric/genesisblock: no such file or directory
 envPush "$ORDERERCMD" ORDERER_GENERAL_GENESISMETHOD=file # file|provisional
-
-#   TODO
 envPush "$ORDERERCMD" ORDERER_GENERAL_GENESISFILE=$CONTAINER_CONFIGTX_DIR/$(basename $BLOCK_FILE)
+# NOTE remove ORDERER_GENERAL_GENESISFILE: panic: Unable to bootstrap orderer. Error reading genesis block file: open /etc/hyperledger/fabric/genesisblock: no such file or directory
+# NOTE when ORDERER_GENERAL_GENESISMETHOD=provisional  ORDERER_GENERAL_GENESISPROFILE=SampleNoConsortium -> panic: No system chain found.  If bootstrapping, does your system channel contain a consortiums group definition
 
 # MSP
 envPush "$ORDERERCMD" ORDERER_GENERAL_LOCALMSPID=OrdererMSP
@@ -188,7 +186,7 @@ for orgName in $orgNames; do
 		done
 		$PEERCMD.volumes[0] "/var/run/:/host/var/run/"
 		$PEERCMD.volumes[1] "$MSPROOT:$CONTAINER_CRYPTO_CONFIG_DIR"          # for peer channel --cafile
-		$PEERCMD.volumes[2] "$(dirname $BLOCK_FILE):$CONTAINER_CONFIGTX_DIR" # for later channel create
+		$PEERCMD.volumes[2] "$(dirname $BLOCK_FILE):$CONTAINER_CONFIGTX_DIR" # for later channel create TODO is this deprecated
 
 		#   TODO GO setup failed on peer container: only fabric-tools has go dependencies
 		#set GOPATH map
