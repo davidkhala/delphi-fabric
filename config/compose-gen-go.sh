@@ -21,10 +21,6 @@ COMPANY=$1
 MSPROOT=$2
 BLOCK_FILE=$3
 
-if [ -z "$COMPANY" ]; then
-	echo "missing company parameter"
-	exit 1
-fi
 remain_params=""
 for ((i = 4; i <= $#; i++)); do
 	j=${!i}
@@ -106,27 +102,28 @@ CONTAINER_GOPATH="/etc/hyperledger/gopath/"
 yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].command "orderer"
 yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].ports[0] $ORDERER_HOST_PORT:$ORDERER_CONTAINER_PORT
 
-yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].environment[0] ORDERER_GENERAL_LOGLEVEL=debug
-yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].environment[1] ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
-yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].environment[2] ORDERER_GENERAL_GENESISMETHOD=file
+ORDERERCMD="yaml w -i $COMPOSE_FILE services[${ORDERER_SERVICE_NAME}]"
+p=0
+envPush "$ORDERERCMD" ORDERER_GENERAL_LOGLEVEL=debug
+envPush "$ORDERERCMD" ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+envPush "$ORDERERCMD" ORDERER_GENERAL_GENESISMETHOD=file
 
 orderer_hostName=${orderer_container_name,,}
 orderer_hostName_full=$orderer_hostName.$COMPANY_DOMAIN
 ORDERER_STRUCTURE="ordererOrganizations/$COMPANY_DOMAIN/orderers/$orderer_hostName_full"
 CONTAINER_ORDERER_TLS_DIR="$CONTAINER_CRYPTO_CONFIG_DIR/$ORDERER_STRUCTURE/tls"
 
-yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].environment[3] ORDERER_GENERAL_GENESISFILE=$CONTAINER_CONFIGTX_DIR/$(basename $BLOCK_FILE)
-yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].environment[4] ORDERER_GENERAL_TLS_ENABLED="$TLS_ENABLED"
-yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].environment[5] ORDERER_GENERAL_TLS_PRIVATEKEY=$CONTAINER_ORDERER_TLS_DIR/server.key
-yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].environment[6] ORDERER_GENERAL_TLS_CERTIFICATE=$CONTAINER_ORDERER_TLS_DIR/server.crt
+envPush "$ORDERERCMD" ORDERER_GENERAL_TLS_ENABLED="$TLS_ENABLED"
+envPush "$ORDERERCMD" ORDERER_GENERAL_TLS_PRIVATEKEY=$CONTAINER_ORDERER_TLS_DIR/server.key
+envPush "$ORDERERCMD" ORDERER_GENERAL_TLS_CERTIFICATE=$CONTAINER_ORDERER_TLS_DIR/server.crt
 # MSP
-yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].environment[7] ORDERER_GENERAL_LOCALMSPID=OrdererMSP
-yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].environment[8] ORDERER_GENERAL_LOCALMSPDIR=$CONTAINER_CRYPTO_CONFIG_DIR/$ORDERER_STRUCTURE/msp
+envPush "$ORDERERCMD" ORDERER_GENERAL_LOCALMSPID=OrdererMSP
+envPush "$ORDERERCMD" ORDERER_GENERAL_LOCALMSPDIR=$CONTAINER_CRYPTO_CONFIG_DIR/$ORDERER_STRUCTURE/msp
+envPush "$ORDERERCMD" ORDERER_GENERAL_TLS_ROOTCAS="[${CONTAINER_ORDERER_TLS_DIR}/ca.crt]" # TODO test
 
 yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].volumes[0] "$(dirname $BLOCK_FILE):$CONTAINER_CONFIGTX_DIR"
 yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].volumes[1] "$MSPROOT:$CONTAINER_CRYPTO_CONFIG_DIR"
 
-rootCAs=$CONTAINER_ORDERER_TLS_DIR/ca.crt
 for orgName in $orgNames; do
 	orgConfig=$(echo $orgsConfig | jq -r ".$orgName")
 	PEER_DOMAIN=${orgName,,}.$COMPANY_DOMAIN
@@ -139,7 +136,6 @@ for orgName in $orgNames; do
 		peerConfig=$(echo $org_peersConfig | jq -r ".[$peerIndex]")
 		peerContainer=$(echo $peerConfig | jq -r ".containerName").$COMPANY_DOMAIN
 		PEER_STRUCTURE="peerOrganizations/$PEER_DOMAIN/peers/$PEER_ANCHOR"
-		rootCAs="$rootCAs,$CONTAINER_CRYPTO_CONFIG_DIR/$PEER_STRUCTURE/tls/ca.crt"
 		# peer container
 		#
 		PEERCMD="yaml w -i $COMPOSE_FILE "services["$peerServiceName"]
@@ -220,7 +216,6 @@ for orgName in $orgNames; do
 	$CACMD.ports[0] $CA_HOST_PORT:$CA_CONTAINER_PORT
 
 done
-yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].environment[9] "ORDERER_GENERAL_TLS_ROOTCAS=[$rootCAs]"
 
 # NOTE: cli container is just a shadow of any existing peer! see the CORE_PEER_ADDRESS & CORE_PEER_MSPCONFIGPATH
 
