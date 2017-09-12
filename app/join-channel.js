@@ -5,9 +5,8 @@ const eventHelper = require('./eventHubHelper')
 //
 //Attempt to send a request to the orderer with the sendCreateChain method
 //
-const joinChannel = (channelName, peers, orgName) => {
-
-	const channel = helper.getChannel(channelName)
+const joinChannel = (channel, peers, orgName) => {
+	logger.debug({ channelName: channel.getName(), peersSize: peers.length, orgName })
 	const eventhubs = []
 	const client = helper.getClient()
 
@@ -57,11 +56,11 @@ const joinChannel = (channelName, peers, orgName) => {
 
 				}
 
-				return channel.joinChannel(request).then((data) =>{
+				return channel.joinChannel(request).then((data) => {
 					logger.debug(data)
 					//FIXME bug design in fabric: error message occurred in Promise.resolve/then
 					return Promise.all(promises)
-				} ).then((data) => {
+				}).then((data) => {
 
 					eventhubs.forEach(eventhub => {
 						eventhub.disconnect()

@@ -15,7 +15,8 @@ const peers=helper.newPeers(peerIndexes,orgName)
 installchaincode(peers, chaincodeName, CHAINCODE_PATH, chaincodeVersion, orgName).then(() => {
 
 	const peers=helper.newPeers(peerIndexes,orgName)
-	return instantiateChaincode(channelName,peers,
+	const channel=helper.getChannel(channelName)
+	return instantiateChaincode(channel,peers,
 			chaincodeName, chaincodeVersion, chaincode_args, orgName)
 })
 //todo query installed

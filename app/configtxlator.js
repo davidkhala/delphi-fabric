@@ -51,6 +51,7 @@ const fetchConfigJson = (channelName) => {
 //	channel not found:	getChannelConfig - Failed Proposal. Error: Error: Invalid results returned ::NOT_FOUND
 
 		const configEnvelope = channel.getChannelConfig()// NOTE typeof configEnvlope ==="Promise"
+		//TODO avoid too much duplicated channel.getChannelConfig and channel.instantiate
 		return configEnvelope
 	}).then(data => {
 		//NOTE JSON.stringify(data ) :TypeError: Converting circular structure to JSON

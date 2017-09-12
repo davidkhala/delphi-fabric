@@ -9,18 +9,18 @@ const testLevel = require('./testLevel')
 // 		"chaincodeVersion":"v0",
 // 		"args":["a","100","b","200"]
 // set peers to 'undefined' to target all peers in channel
-exports.instantiateChaincode = (channelName, richPeers, chaincodeId, chaincodeVersion, args, orgName) => {
+exports.instantiateChaincode = (channel, richPeers, chaincodeId, chaincodeVersion, args, orgName) => {
 	logger.debug('============ Instantiate chaincode ============')
-	logger.debug({ channelName, peersSize: richPeers.length, chaincodeId, chaincodeVersion, args, orgName })
+	logger.debug(
+			{ channelName: channel.getName(), peersSize: richPeers.length, chaincodeId, chaincodeVersion, args, orgName })
 
 	return helper.getOrgAdmin(orgName).then(() => {
-		const channel = helper.getChannel(channelName)
-		const { eventWaitTime } = channel
 		//Error: Verifying MSPs not found in the channel object, make sure "intialize()" is called first.
-		return channel.initialize().then(() => {
+		const client = helper.getClient()
+		const { eventWaitTime } = channel
 
-			logger.info('channel.initialize() success',channel.getOrganizations())
-			const client = helper.getClient()
+		return channel.initialize().then((config_items) => {
+			logger.info('channel.initialize() success', channel.getOrganizations())
 			const txId = client.newTransactionID()
 			const request = {
 				chaincodeId,

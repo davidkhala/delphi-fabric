@@ -44,12 +44,6 @@ Profiles:
         AnchorPeers:
         - Host: BUContainerName.delphi.com
           Port: 7051
-      - Name: ENGMSPName
-        ID: ENGMSP
-        MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/eng.delphi.com/msp
-        AnchorPeers:
-        - Host: ENGContainerName.delphi.com
-          Port: 7051
       - Name: PMMSPName
         ID: PMMSP
         MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/pm.delphi.com/msp
