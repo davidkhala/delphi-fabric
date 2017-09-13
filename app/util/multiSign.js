@@ -1,4 +1,4 @@
-const helper = require('./helper')
+const helper = require('../helper')
 const logger = helper.getLogger('multi-signature')
 exports.signs = (client, clientSwitchPromises, proto) => {
 	const signatures = []

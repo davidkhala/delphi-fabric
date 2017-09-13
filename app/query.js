@@ -1,63 +1,33 @@
 const helper = require('./helper.js')
-const logger = helper.getLogger('Query')
 
-const getBlockByNumber = function(containerName, channelName, blockNumber, org) {
-	const target = helper.newPeerByContainer(containerName)
-	const channel = helper.getChannel(channelName)
+const getBlockByNumber = (peer, channel, blockNumber, orgName) => helper.getOrgAdmin(orgName).then(() => {
+	return channel.queryBlock(parseInt(blockNumber), peer)
+})
 
-	return helper.getOrgAdmin(org).then((member) => {
-		return channel.queryBlock(parseInt(blockNumber), target)
-	})
-}
-const getTransactionByID = function(peer, txId, org) {
-	const target = helper.newPeerByContainer(containerName)
-	const channel = helper.getChannel(channelName)
-
-	return helper.getOrgAdmin(org).then((member) => {
-		return channel.queryTransaction(txId, target)
-	})
-}
-const getBlockByHash = (containerName, channelName, hash, org) => {
-	const target = helper.newPeerByContainer(containerName)
-	const channel = helper.getChannel(channelName)
-
-	return helper.getOrgAdmin(org).then((member) => {
-		return channel.queryBlockByHash(Buffer.from(hash), target)
-	})
-}
-const getChainInfo = function(containerName, channelName, org) {
-	const target = helper.newPeerByContainer(containerName)
-	const channel = helper.getChannel(channelName)
-	return helper.getOrgAdmin(org).then((member) => {
-		return channel.queryInfo(target)
-	})
-}
-//getInstalledChaincodes
-const getInstalledChaincodes = function(containerName, channelName, type, username, org) {
-	const target = helper.newPeerByContainer(containerName)
-	const channel = helper.getChannel(channelName)
-	const client = helper.getClient()
-
-	return helper.getOrgAdmin(org).then((member) => {
-		if (type === 'installed') {
-			return client.queryInstalledChaincodes(target)
-		} else {
-			return channel.queryInstantiatedChaincodes(target)
-		}
-	})
-}
-const getChannels = function(containerName, org) {
-	const target = helper.newPeerByContainer(containerName)
-	const client = helper.getClient()
-	return helper.getOrgAdmin(username, org).then((member) => {
-		//channel.setPrimaryPeer(targets[0]);
-		return client.queryChannels(target)
-	})
-}
+const getTransactionByID = (peer, channel, txId, orgName) => helper.getOrgAdmin(orgName).then(() => {
+	return channel.queryTransaction(txId, peer)
+})
+const getBlockByHash = (peer, channel, hash, orgName) => helper.getOrgAdmin(orgName).then(() => {
+	return channel.queryBlockByHash(Buffer.from(hash), peer)
+})
+const getChainInfo = (peer, channel, orgName) => helper.getOrgAdmin(orgName).then(() => {
+	return channel.queryInfo(peer)
+})
+const getInstalled = (peer, client, orgName) => helper.getOrgAdmin(orgName).then(() => {
+	return client.queryInstalledChaincodes(peer)
+})
+const getInstantiated = (peer, channel, orgName) =>
+		helper.getOrgAdmin(orgName).then(() => {
+			return channel.queryInstantiatedChaincodes(peer)
+		})
+const getChannels = (peer, client, orgName) => helper.getOrgAdmin(username, orgName).then(() => {
+	//channel.setPrimaryPeer(targets[0]);
+	return client.queryChannels(peer)
+})
 
 exports.getBlockByNumber = getBlockByNumber
 exports.getTransactionByID = getTransactionByID
 exports.getBlockByHash = getBlockByHash
 exports.getChainInfo = getChainInfo
-exports.getInstalledChaincodes = getInstalledChaincodes
+exports.chaincodes = { getInstalled, getInstantiated }
 exports.getChannels = getChannels

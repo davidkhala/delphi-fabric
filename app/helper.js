@@ -39,7 +39,6 @@ const sdkUtils = require('fabric-client/lib/utils')
 const nodeConfig = require('./config.json')
 
 const Orderer = require('fabric-client/lib/Orderer')
-const Peer = require('fabric-client/lib/Peer')
 const objects = { user: {}, orderer: {}, caService: {} } // client is for save CryptoSuite for each org??
 
 // set up the client and channel objects for each org
@@ -51,14 +50,7 @@ const gen_tls_cacerts = (orgName, peerIndex) => {
 	return { org_domain, peer_hostName_full, tls_cacerts }
 }
 const newPeer = ({ peerPort, tls_cacerts, peer_hostName_full }) => {
-	const peerUrl = `${GPRC_protocol}localhost:${peerPort}`
-	const pem = fs.readFileSync(tls_cacerts).toString()
-	const peer = new Peer(peerUrl, {
-		pem,
-		'ssl-target-name-override': peer_hostName_full
-	})
-	peer.pem = pem
-	return peer
+	return require('./util/peer').new({peerPort,tls_cacerts,peer_hostName_full})
 }
 
 // peerConfig: "portMap": [{	"host": 8051,		"container": 7051},{	"host": 8053,		"container": 7053}]
@@ -200,43 +192,35 @@ const preparePeers = (peerIndexes, orgName) => {
 
 }
 
-const newEventHub = ({ eventHubPort, tls_cacerts, peer_hostName_full }) => {
-	const eventHubUrl = `${GPRC_protocol}localhost:${eventHubPort}`
-	const eventHub = client.newEventHub()// NOTE newEventHub binds to clientContext
-	eventHub.setPeerAddr(eventHubUrl, {
-		pem: fs.readFileSync(tls_cacerts).toString(),
-		'ssl-target-name-override': peer_hostName_full
-	})
-	return eventHub
-}
-const bindEventHub = (peer) => {
+const newEventHub = ({ eventHubPort, tls_cacerts, peer_hostName_full }) =>
+		require('./util/eventHub').new(client, { eventHubPort, tls_cacerts, peer_hostName_full })
+const bindEventHub = (richPeer) => {
 	const eventHub = client.newEventHub()
 	// NOTE newEventHub binds to clientContext, eventhub error { Error: event message must be properly signed by an identity from the same organization as the peer: [failed deserializing event creator: [Expected MSP ID PMMSP, received BUMSP]]
 
-	const peerEventUrl = peer.peerConfig.peerEventUrl
-	const pem = peer.pem
+	const peerEventUrl = richPeer.peerConfig.peerEventUrl
+	const pem = richPeer.pem
 	eventHub.setPeerAddr(peerEventUrl, {
 		pem,
-		'ssl-target-name-override': peer._options['grpc.ssl_target_name_override']
+		'ssl-target-name-override': richPeer._options['grpc.ssl_target_name_override']
 	})
 	return eventHub
 }
-const bindEventHubSelect = (peer) => {
-	const orgName = peer.peerConfig.orgName
+const selectEventHubs = (peerIndexes, orgName) => {
 
-	return objects.user.admin.select(orgName).then(() => bindEventHub(peer))
+	return objects.user.admin.select(orgName).then(() => {
 
-}
-
-const bindEventHubs = (peerIndexes, orgName) => {
-
-	const targets = []
-	for (let index of peerIndexes) {
-		const peerConfig = orgsConfig[orgName].peers[index]
-		if (!peerConfig) continue
-		targets.push(bindEventHubSelect(preparePeer(orgName, index, peerConfig)))
-	}
-	return targets
+		const targets = []
+		for (let index of peerIndexes) {
+			const peerConfig = orgsConfig[orgName].peers[index]
+			if (!peerConfig) continue
+			//FIXME bindEventHubSelect is a promise
+			const peer = preparePeer(orgName, index, peerConfig)
+			const eventHub = bindEventHub(peer)
+			targets.push(eventHub)
+		}
+		return Promise.resolve(targets)
+	})
 
 }
 const getMspID = function(org) {
@@ -484,36 +468,31 @@ const newPeerByContainer = (containerName) => {
 	}
 	return preparePeer(orgName, index, peerConfig)
 }
-//TODO to delete: deprecated
-exports.sendProposalCommonPromise = (channel, request, txId, fnName) => {
-	return new Promise((resolve, reject) => {
-		channel[fnName](request).then(([responses, proposal, header]) => {
-			//data transform
+exports.chaincodeProposalAdapter = (actionString) => {
+	return ([responses, proposal, header]) => {
 
-			for (let i in responses) {
-				const proposalResponse = responses[i]
-				if (proposalResponse.response &&
-						proposalResponse.response.status === 200) {
-					logger.info(`${fnName} was good for [${i}]`, proposalResponse)
-				} else {
-					logger.error(`${fnName} was bad for [${i}], `, proposalResponse)
-					reject(responses)
-					return
-					//	error symptons:{
-					// Error: premature execution - chaincode (delphiChaincode:v1) is being launched
-					// at /home/david/Documents/delphi-fabric/node_modules/grpc/src/node/src/client.js:434:17 code: 2, metadata: Metadata { _internal_repr: {} }}
-
-				}
+		const errCounter = [] // NOTE logic: reject only when all bad
+		for (let i in responses) {
+			const proposalResponse = responses[i]
+			if (proposalResponse.response &&
+					proposalResponse.response.status === 200) {
+				logger.info(`${actionString} was good for [${i}]`, proposalResponse)
+			} else {
+				logger.error(`${actionString} was bad for [${i}]`, proposalResponse)
+				errCounter.push(proposalResponse)
 			}
-			resolve({
-				txId,
-				nextRequest: {
-					proposalResponses: responses, proposal
-				}
-			})
+		}
+		if (errCounter.length === responses.length) {
+			return Promise.reject(responses)
+		}
 
+		return Promise.resolve({
+			nextRequest: {
+				proposalResponses: responses, proposal
+			}
 		})
-	})
+
+	}
 }
 
 exports.getChannel = getChannel
@@ -529,9 +508,8 @@ exports.newPeer = newPeer
 exports.newPeers = preparePeers
 exports.newPeerByContainer = newPeerByContainer
 exports.userAction = objects.user
-exports.bindEventHubs = bindEventHubs
+exports.eventHubsPromise = selectEventHubs
 exports.newEventHub = newEventHub
-exports.selectEventHub = bindEventHubSelect
 exports.bindEventHub = bindEventHub
 exports.getRegisteredUsers = getRegisteredUsers //see in invoke
 exports.getOrgAdmin = objects.user.admin.select

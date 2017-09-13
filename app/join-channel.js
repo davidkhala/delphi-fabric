@@ -1,6 +1,6 @@
 const helper = require('./helper.js')
 const logger = helper.getLogger('Join-Channel')
-const eventHelper = require('./eventHubHelper')
+const eventHelper = require('./util/eventHub')
 
 //
 //Attempt to send a request to the orderer with the sendCreateChain method

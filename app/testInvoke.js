@@ -1,31 +1,29 @@
-const invokechaincode = require('./invoke-chaincode')
-const program = require('commander')
-const args = process.argv.slice(2)
+const invoke = require('./invoke-chaincode').invokeChaincode
+const helper = require('./helper')
 
-let adminOrg = 'BU'
-let containerName = 'BUContainerName'
-let CHAINCODE_NAME = 'adminChaincode'
+const invoke_fcn = ''
+const invoke_args = []
 
-let VERSION = 'v0'
+const chaincodeName = 'delphiChaincode'
+const peerIndexes = [0]
+const orgName = 'AM'
+const channelName = 'delphiChannel'
 
-let fcn = 'chaincode'
-let chaincode_args = ['reset', CHAINCODE_NAME]
+const { peer_hostName_full, tls_cacerts } = helper.gen_tls_cacerts(orgName, 0)
+const peerPort = 7071
+const eventHubPort = 7073
+const AMPeer = helper.newPeer({ peerPort, peer_hostName_full, tls_cacerts })
+const peers = [AMPeer]//helper.newPeers(peerIndexes, orgName)
 
-if (args[0]) CHAINCODE_NAME = args[0]
-if (args[1]) adminOrg = args[1]
-if (args[2]) containerName = args[2]
-if (args[3]) fcn = args[3]
-if (args[4]) chaincode_args = JSON.parse(args[4])
-
-program.option('-v, --chaincode-version [type]', 'set chaincode version').
-		parse(process.argv)
-if (program.chaincodeVersion) VERSION = program.chaincodeVersion
-
-let CHANNEL_NAME = 'delphichannel'
-
+const GPRC_protocol = 'grpcs://' // FIXME: assume using TLS
+AMPeer.peerConfig = {
+	peerEventUrl: `${GPRC_protocol}localhost:${eventHubPort}`
+}
 //todo to test
-// (channelName, containerNames, chaincodeName, fcn, args, username, org)
-invokechaincode.invokeChaincode(CHANNEL_NAME, [containerName], CHAINCODE_NAME, fcn,
-		['list'], 'david', adminOrg)
+helper.getOrgAdmin(orgName).then(() => {
 
-//todo query installed
+	const channel = helper.getChannel(channelName)
+	return invoke(channel, peers, chaincodeName, invoke_fcn, invoke_args, orgName)
+
+})
+

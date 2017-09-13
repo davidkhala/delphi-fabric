@@ -3,7 +3,7 @@ const logger = helper.getLogger('configtxlator')
 
 const path = require('path')
 const fs = require('fs')
-const agent = require('./agent2configtxlator')
+const agent = require('./util/agent2configtxlator')
 const client = helper.getClient()
 
 const format_tlscacert = (adminMSPDir, org_domain) => path.join(adminMSPDir, 'tlscacerts',

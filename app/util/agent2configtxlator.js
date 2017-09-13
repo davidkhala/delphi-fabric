@@ -1,4 +1,4 @@
-const request = require('request')  // TODO why 2 dependencies
+const request = require('request')
 
 const requestPost = (opt) => new Promise((resolve, reject) => {
 	opt.encoding = null // NOTE config :returning body to be of type Buffer not String
@@ -6,7 +6,7 @@ const requestPost = (opt) => new Promise((resolve, reject) => {
 		if (err) {
 			reject({ err })
 		} else {
-			resolve({ res, body})
+			resolve({ res, body })
 		}
 	})
 })

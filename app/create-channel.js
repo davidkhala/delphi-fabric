@@ -1,7 +1,7 @@
 const fs = require('fs')
 const helper = require('./helper.js')
 const logger = helper.getLogger('create-Channel')
-const multiSign = require('./multiSign').signs
+const multiSign = require('./util/multiSign').signs
 //Attempt to send a request to the orderer with the sendCreateChain method
 //"../artifacts/channel/mychannel.tx"
 const createChannel = (channelName, channelConfigFile, orgNames) => {
