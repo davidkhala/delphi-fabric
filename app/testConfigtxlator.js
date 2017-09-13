@@ -28,7 +28,7 @@ const addOrg = (
 				if (channel.getOrganizations().find((entry) => {
 							return entry.id === MSPID
 						})) {
-					logger.warn(MSPID,'msp exist in channel',channel.getName() )
+					logger.warn(MSPID, 'msp exist in channel', channel.getName())
 					process.exit(0)
 				} else {
 

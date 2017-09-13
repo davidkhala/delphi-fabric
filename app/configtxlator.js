@@ -6,9 +6,6 @@ const fs = require('fs')
 const agent = require('./agent2configtxlator')
 const client = helper.getClient()
 
-const helperConfig = helper.helperConfig
-const { COMPANY } = helperConfig
-
 const format_tlscacert = (adminMSPDir, org_domain) => path.join(adminMSPDir, 'tlscacerts',
 		`tlsca.${org_domain}-cert.pem`)
 exports.format_tlscacert = format_tlscacert
@@ -125,10 +122,10 @@ const channelUpdate = (channelName, mspCB) => {
 					})
 			)
 		})
-	}).then((resp) => {
+	}).then(resp => {
 		logger.debug('[old]channel.getOrg', channel.getOrganizations())
 		const orgs_old = channel.getOrganizations()
-		//fixme: try eventhub?
+		//NOTE evenHub method not good for addOrg because event is signed by old org: event message must be properly signed by an identity from the same organization as the peer: [failed deserializing event creator: [Expected MSP ID AMMSP, received PMMSP]
 		const loopGetChannel = () => {
 			return channel.initialize().then(() => {
 				const orgs_new = channel.getOrganizations()

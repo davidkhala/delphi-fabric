@@ -48,6 +48,9 @@ const joinChannel = (channel, peers, orgName) => {
 							//	TODO otherwise: wait and keep eventhub connected
 						}, (err) => {
 							logger.error('eventhub err', err)
+							eventHelper.unRegisterAllEvents(eventHub)
+							eventHub.disconnect()
+							return reject(err)
 						})
 
 					})
