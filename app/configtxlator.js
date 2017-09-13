@@ -8,12 +8,10 @@ const client = helper.getClient()
 
 const helperConfig = helper.helperConfig
 const { COMPANY } = helperConfig
-const companyConfig = helperConfig[COMPANY]
-const orgsConfig = companyConfig.orgs
 
-const getMSPName = (orgName) => orgsConfig[orgName].MSP.name
-const format_tlscacert=(adminMSPDir,org_domain)=>path.join(adminMSPDir, 'tlscacerts', `tlsca.${org_domain}-cert.pem`)
-exports.format_tlscacert=format_tlscacert
+const format_tlscacert = (adminMSPDir, org_domain) => path.join(adminMSPDir, 'tlscacerts',
+		`tlsca.${org_domain}-cert.pem`)
+exports.format_tlscacert = format_tlscacert
 const cloneMSP = ({ MSPName, MSPID, update_config, templateMSPName, adminMSPDir, org_domain }) => {
 // Note templateJson might differs with different channel profile, take care
 	const templateJson = JSON.stringify(update_config.channel_group.groups.Application.groups[templateMSPName])
@@ -27,11 +25,11 @@ const cloneMSP = ({ MSPName, MSPID, update_config, templateMSPName, adminMSPDir,
 	templateObj.values.MSP.value.config.root_certs[0] = fs.readFileSync(
 			path.join(adminMSPDir, 'cacerts', `ca.${org_domain}-cert.pem`)).toString('base64')
 	templateObj.values.MSP.value.config.tls_root_certs[0] = fs.readFileSync(
-			format_tlscacert(adminMSPDir,org_domain)).
+			format_tlscacert(adminMSPDir, org_domain)).
 			toString('base64')
 
 	update_config.channel_group.groups.Application.groups[MSPName] = templateObj
-	logger.debug("new MSP",templateObj)
+	logger.debug('new MSP', templateObj)
 	return update_config
 }
 const deleteMSP = ({ MSPName, update_config }) => {
@@ -41,31 +39,6 @@ const deleteMSP = ({ MSPName, update_config }) => {
 
 // This test case requires that the 'configtxlator' tool be running locally and on port 7059
 // fixme :run configtxlator.server with nodejs child_process, program will hang and no callback or stdout
-//FIXME:agent buffer has problem with promise
-const fetchConfigJson = (channelName) => {
-	let original_config_proto
-	const channel = helper.getChannel(channelName)
-
-	return helper.userAction.admin.orderer.select().then(() => {
-//	container not found:	getChannelConfig - Failed Proposal. Error: Error: SERVICE_UNAVAILABLE
-//	channel not found:	getChannelConfig - Failed Proposal. Error: Error: Invalid results returned ::NOT_FOUND
-
-		const configEnvelope = channel.getChannelConfig()// NOTE typeof configEnvlope ==="Promise"
-		//TODO avoid too much duplicated channel.getChannelConfig and channel.instantiate
-		return configEnvelope
-	}).then(data => {
-		//NOTE JSON.stringify(data ) :TypeError: Converting circular structure to JSON
-		original_config_proto = data.config.toBuffer()
-
-		// lets get the config converted into JSON, so we can edit JSON to
-		// make our changes
-		return agent.decode.config(original_config_proto)
-	}).then(resp => {
-		return {
-			original_config_proto, resp, channel
-		}
-	})
-}
 const signChannelConfig = (channel, configUpdate_proto) => {
 
 	const proto = new Buffer(configUpdate_proto, 'binary')
@@ -89,65 +62,86 @@ const signChannelConfig = (channel, configUpdate_proto) => {
 }
 
 const channelUpdate = (channelName, mspCB) => {
-	let o_config_proto
 	const channel = helper.getChannel(channelName)
 	const orderer = channel.getOrderers()[0]
-	return fetchConfigJson(channelName).then(({ original_config_proto, resp: { body } }) => {
-		const update_config = JSON.parse(body)
-		o_config_proto = original_config_proto// FIXME
-		logger.debug(update_config.channel_group.groups.Application.groups)
-		fs.writeFileSync(path.join(__dirname, `${channelName}-txlator.json`), body)// for debug only
-		mspCB({ update_config })
-		//NOTE: after delete MSP, deleted peer retry to connect to previous channel
-		// PMContainerName.delphi.com       | 2017-08-24 03:02:55.815 UTC [blocksProvider] DeliverBlocks -> ERRO 2ea [delphichannel] Got error &{FORBIDDEN}
-		// orderContainerName.delphi.com    | 2017-08-24 03:02:55.814 UTC [cauthdsl] func1 -> DEBU ea5 0xc420028c50 gate 1503543775814648321 evaluation fails
-		// orderContainerName.delphi.com    | 2017-08-24 03:02:55.814 UTC [orderer/common/deliver] Handle -> WARN ea6 [channel: delphichannel] Received unauthorized deliver request
-		// orderContainerName.delphi.com    | 2017-08-24 03:02:55.814 UTC [cauthdsl] func2 -> ERRO e9d Principal deserialization failure (MSP PMMSP is unknown)
 
-		// PMContainerName.delphi.com       | 2017-08-24 03:03:15.823 UTC [deliveryClient] RequestBlocks -> DEBU 2ed Starting deliver with block [1] for channel delphichannel
-		// PMContainerName.delphi.com       | 2017-08-24 03:03:15.824 UTC [blocksProvider] DeliverBlocks -> ERRO 2ee [delphichannel] Got error &{FORBIDDEN}
-		// PMContainerName.delphi.com       | 2017-08-24 03:03:15.824 UTC [blocksProvider] DeliverBlocks -> CRIT 2ef [delphichannel] Wrong statuses threshold passed, stopping block provider
+	return helper.userAction.admin.orderer.select().then(() => {
+//	container not found:	getChannelConfig - Failed Proposal. Error: Error: SERVICE_UNAVAILABLE
+//	channel not found:	getChannelConfig - Failed Proposal. Error: Error: Invalid results returned ::NOT_FOUND
 
-		return agent.encode.config(JSON.stringify(update_config))
-	}).then(({ body }) => {
-		const update_config_proto = body
-		const formData = {
-			channel: channel.getName(),
-			original: {
-				value: o_config_proto,
-				options: {
-					filename: 'original.proto',
-					contentType: 'application/octet-stream'
+		// NOTE typeof channel.getChannelConfig() ==="Promise"
+		return channel.getChannelConfig().then(configEnvelope => {
+			//NOTE JSON.stringify(data ) :TypeError: Converting circular structure to JSON
+			const original_config_proto = configEnvelope.config.toBuffer()
+			const config_items = channel.loadConfigEnvelope(configEnvelope)
+			fs.writeFileSync(path.join(__dirname, `debug-${channelName}-config_items.json`), JSON.stringify(config_items))// for debug only
+
+			// lets get the config converted into JSON, so we can edit JSON to
+			// make our changes
+			return agent.decode.config(original_config_proto).then(({ body }) => {
+				const update_config = JSON.parse(body)
+				logger.debug(update_config.channel_group.groups.Application.groups)
+				fs.writeFileSync(path.join(__dirname, `${channelName}-txlator.json`), body)// for debug only
+				return Promise.resolve(mspCB({ update_config })).then(() => agent.encode.config(JSON.stringify(update_config)))
+				//NOTE: after delete MSP, deleted peer retry to connect to previous channel
+				// PMContainerName.delphi.com       | 2017-08-24 03:02:55.815 UTC [blocksProvider] DeliverBlocks -> ERRO 2ea [delphichannel] Got error &{FORBIDDEN}
+				// orderContainerName.delphi.com    | 2017-08-24 03:02:55.814 UTC [cauthdsl] func1 -> DEBU ea5 0xc420028c50 gate 1503543775814648321 evaluation fails
+				// orderContainerName.delphi.com    | 2017-08-24 03:02:55.814 UTC [orderer/common/deliver] Handle -> WARN ea6 [channel: delphichannel] Received unauthorized deliver request
+				// orderContainerName.delphi.com    | 2017-08-24 03:02:55.814 UTC [cauthdsl] func2 -> ERRO e9d Principal deserialization failure (MSP PMMSP is unknown)
+
+				// PMContainerName.delphi.com       | 2017-08-24 03:03:15.823 UTC [deliveryClient] RequestBlocks -> DEBU 2ed Starting deliver with block [1] for channel delphichannel
+				// PMContainerName.delphi.com       | 2017-08-24 03:03:15.824 UTC [blocksProvider] DeliverBlocks -> ERRO 2ee [delphichannel] Got error &{FORBIDDEN}
+				// PMContainerName.delphi.com       | 2017-08-24 03:03:15.824 UTC [blocksProvider] DeliverBlocks -> CRIT 2ef [delphichannel] Wrong statuses threshold passed, stopping block provider
+			}).then(({ body }) => {
+				const formData = {
+					channel: channel.getName(),
+					original: {
+						value: original_config_proto,
+						options: {
+							filename: 'original.proto',
+							contentType: 'application/octet-stream'
+						}
+					},
+					updated: {
+						value: body,
+						options: {
+							filename: 'updated.proto',
+							contentType: 'application/octet-stream'
+						}
+					}
 				}
-			},
-			updated: {
-				value: update_config_proto,
-				options: {
-					filename: 'updated.proto',
-					contentType: 'application/octet-stream'
+				return agent.compute.updateFromConfigs(formData)
+			}).then(({ body }) => signChannelConfig(channel, body).then(({ signatures, proto }) => {
+
+						const request = {
+							config: proto,
+							signatures,
+							name: channel.getName(),
+							orderer,
+							txId: client.newTransactionID()
+						}
+
+						return client.updateChannel(request)
+					})
+			)
+		})
+	}).then((resp) => {
+		logger.debug('[old]channel.getOrg', channel.getOrganizations())
+		const orgs_old = channel.getOrganizations()
+		//fixme: try eventhub?
+		const loopGetChannel = () => {
+			return channel.initialize().then(() => {
+				const orgs_new = channel.getOrganizations()
+				//TODO to generify update checking logic
+				if (orgs_new.length === orgs_old.length) {
+					logger.warn('loopGetChannel', 'try...')
+					return loopGetChannel()
 				}
-			}
+				return Promise.resolve()
+			})
 		}
-		return agent.compute.updateFromConfigs(formData)
-	}).then(({ body }) =>
-			signChannelConfig(channel, body)
-	).then(({ signatures, proto }) => {
-
-		const request = {
-			config: proto,
-			signatures,
-			name: channel.getName(),
-			orderer,
-			txId: client.newTransactionID()
-		}
-
-		// this will send the update request to the orderer
-		return client.updateChannel(request)
-	}).then((resp)=>{
-		require('sleep').sleep(10)//FIXME rewrite with eventHub
-		return fetchConfigJson(channelName).then(({ resp: { body } })=>{
-			fs.writeFileSync(path.join(__dirname, `${channelName}-txlator.json`), body)// for debug only
-			logger.info(`${channelName}-txlator.json`, "updated")
+		return loopGetChannel().then(() => {
+			logger.debug('[new]channel.getOrg', channel.getOrganizations())
 			return resp
 		})
 	})

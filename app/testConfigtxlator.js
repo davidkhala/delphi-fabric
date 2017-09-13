@@ -22,13 +22,22 @@ const deleteOrg = (MSPName) => {
 const addOrg = (
 		orgName, MSPName, MSPID, templateMSPName, adminMSPDir, org_domain, peerPort, eventHubPort, peer_hostName_full
 		, chaincodePath, chaincodeId, chaincodeVersion, args) => {
-
+	const channel = helper.getChannel(channelName)
 	return api.channelUpdate(channelName,
-			({ update_config }) => api.cloneMSP({ MSPName, MSPID, update_config, templateMSPName, adminMSPDir, org_domain })
+			({ update_config }) => {
+				if (channel.getOrganizations().find((entry) => {
+							return entry.id === MSPID
+						})) {
+					logger.warn(MSPID,'msp exist in channel',channel.getName() )
+					process.exit(0)
+				} else {
+
+					return api.cloneMSP({ MSPName, MSPID, update_config, templateMSPName, adminMSPDir, org_domain })
+				}
+			}
 	).then(() => {
-		const channel = helper.getChannel(channelName)
 		return channel.initialize().then((config_items) => {
-			logger.debug('after update', { config_items, orgs: channel.getOrganizations() })
+			logger.debug('after update', { orgs: channel.getOrganizations() })
 			helper.userAction.clear()
 			const keystoreDir = path.join(adminMSPDir, 'keystore')
 
@@ -47,15 +56,11 @@ const addOrg = (
 
 				return join(channel, [peer], orgName).then(() => {
 					helper.setGOPATH()
-					logger.debug('channel.getOrganizations()', channel.getOrganizations())
-					//FIXME logger.debug("install chaincode",channel.getOrganizations())  return []
 					return installChaincode([peer], chaincodeId, chaincodePath, chaincodeVersion, orgName).then(() => {
 						return instantiate(channel, [peer], chaincodeId, chaincodeVersion, JSON.parse(args), orgName)
 
-						// https://github.com/hyperledger/fabric/blob/d9c320297bd2a4eff2eb253ce84dc431ef860972/msp/mspmgrimpl.go#L98
 					})
 				})
-				// return joinChannel(orgName, adminMSPDir, org_domain, peerPort, eventHubPort, peer_hostName_full)
 				// TODO rethink helper.getClient()
 			})
 		})
