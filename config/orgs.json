@@ -21,7 +21,6 @@
     "channels": {
       "delphiChannel": {
         "eventWaitTime": 30000,
-        "containerPath_createChannel_Dir": "/",
         "orgs": {
           "BU": {
             "peerIndexes": [

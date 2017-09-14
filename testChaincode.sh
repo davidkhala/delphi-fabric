@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+# TODO deprecated
 CURRENT="$(dirname $(readlink -f ${BASH_SOURCE}))"
 CONFIG_JSON="$CURRENT/config/orgs.json"
 CHAINCODE_CONFIG_FILE="$CURRENT/config/chaincode.json"
