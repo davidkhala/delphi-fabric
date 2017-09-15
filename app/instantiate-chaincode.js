@@ -19,7 +19,7 @@ exports.instantiateChaincode = (channel, richPeers, chaincodeId, chaincodeVersio
 		const client = helper.getClient()
 		const { eventWaitTime } = channel
 
-		return channel.initialize().then((config_items) => {
+		return channel.initialize().then(() => {
 			logger.info('channel.initialize() success', channel.getOrganizations())
 			const txId = client.newTransactionID()
 			const request = {
@@ -29,6 +29,7 @@ exports.instantiateChaincode = (channel, richPeers, chaincodeId, chaincodeVersio
 				fcn: 'init',// fcn is 'init' in default: `fcn` : optional - String of the function to be called on the chaincode once instantiated (default 'init')
 				txId,
 				targets: richPeers// optional: if not set, targets will be channel.getPeers
+				// ,'endorsement-policy':{}
 				// 		`chaincodeType` : optional -- Type of chaincode ['golang', 'car', 'java'] (default 'golang')
 			}
 			const existSymptom = '(status: 500, message: chaincode exists'

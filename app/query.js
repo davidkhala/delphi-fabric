@@ -20,7 +20,7 @@ const getInstantiated = (peer, channel, orgName) =>
 		helper.getOrgAdmin(orgName).then(() => {
 			return channel.queryInstantiatedChaincodes(peer)
 		})
-const getChannels = (peer, client, orgName) => helper.getOrgAdmin(username, orgName).then(() => {
+const getChannels = (peer, client, orgName) => helper.getOrgAdmin(orgName).then(() => {
 	//channel.setPrimaryPeer(targets[0]);
 	return client.queryChannels(peer)
 })

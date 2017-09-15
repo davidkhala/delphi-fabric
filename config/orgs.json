@@ -3,7 +3,12 @@
     "domain": "delphi.com",
     "docker": {
       "fabricTag": "1.0.1",
-      "network": "delphiNetwork"
+      "network": "delphiNetwork",
+      "volumes": {
+        "CONFIGTX": "CONFIGTX_DIR",
+        "VM_ENDPOINT": "VM_ENDPOINT",
+        "MSPROOT": "MSPROOT"
+      }
     },
     "orderer": {
       "containerName": "orderContainerName",

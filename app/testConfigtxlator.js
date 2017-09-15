@@ -35,8 +35,8 @@ const addOrg = (
 				}
 			}
 	).then(() => {
-		return channel.initialize().then((config_items) => {
-			logger.debug('after update', { orgs: channel.getOrganizations() })
+		return channel.initialize().then(() => {
+			logger.debug('after update', channel.getOrganizations())
 			helper.userAction.clear()
 			const keystoreDir = path.join(adminMSPDir, 'keystore')
 

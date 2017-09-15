@@ -1,4 +1,11 @@
 version: "3"
+volumes:
+  MSPROOT:
+    external: true
+  CONFIGTX_DIR:
+    external: true
+  VM_ENDPOINT:
+    external: true
 networks:
   default:
     external:
@@ -25,8 +32,10 @@ services:
     - ORDERER_GENERAL_LOCALMSPDIR=/etc/hyperledger/crypto-config/ordererOrganizations/delphi.com/orderers/ordercontainername.delphi.com/msp
     - ORDERER_GENERAL_TLS_ROOTCAS=[/etc/hyperledger/crypto-config/ordererOrganizations/delphi.com/orderers/ordercontainername.delphi.com/tls/ca.crt]
     volumes:
-    - /home/david/Documents/delphi-fabric/config/configtx:/etc/hyperledger/configtx
-    - /home/david/Documents/delphi-fabric/config/crypto-config/:/etc/hyperledger/crypto-config
+    - CONFIGTX_DIR:/etc/hyperledger/configtx
+    - MSPROOT:/etc/hyperledger/crypto-config
+    networks:
+    - default
   peer0.bu.delphi.com:
     container_name: BUContainerName.delphi.com
     depends_on:
@@ -53,9 +62,10 @@ services:
     - 7051:7051
     - 7053:7053
     volumes:
-    - /var/run/:/host/var/run/
-    - /home/david/Documents/delphi-fabric/config/crypto-config/:/etc/hyperledger/crypto-config
-    - /home/david/Documents/delphi-fabric/config/configtx:/etc/hyperledger/configtx
+    - VM_ENDPOINT:/host/var/run/
+    - MSPROOT:/etc/hyperledger/crypto-config
+    networks:
+    - default
   peer1.bu.delphi.com:
     container_name: BUContainer1.delphi.com
     depends_on:
@@ -82,9 +92,10 @@ services:
     - 7061:7051
     - 7063:7053
     volumes:
-    - /var/run/:/host/var/run/
-    - /home/david/Documents/delphi-fabric/config/crypto-config/:/etc/hyperledger/crypto-config
-    - /home/david/Documents/delphi-fabric/config/configtx:/etc/hyperledger/configtx
+    - VM_ENDPOINT:/host/var/run/
+    - MSPROOT:/etc/hyperledger/crypto-config
+    networks:
+    - default
   peer0.eng.delphi.com:
     container_name: ENGContainerName.delphi.com
     depends_on:
@@ -111,9 +122,10 @@ services:
     - 8051:7051
     - 8053:7053
     volumes:
-    - /var/run/:/host/var/run/
-    - /home/david/Documents/delphi-fabric/config/crypto-config/:/etc/hyperledger/crypto-config
-    - /home/david/Documents/delphi-fabric/config/configtx:/etc/hyperledger/configtx
+    - VM_ENDPOINT:/host/var/run/
+    - MSPROOT:/etc/hyperledger/crypto-config
+    networks:
+    - default
   peer0.pm.delphi.com:
     container_name: PMContainerName.delphi.com
     depends_on:
@@ -140,6 +152,7 @@ services:
     - 9051:7051
     - 9053:7053
     volumes:
-    - /var/run/:/host/var/run/
-    - /home/david/Documents/delphi-fabric/config/crypto-config/:/etc/hyperledger/crypto-config
-    - /home/david/Documents/delphi-fabric/config/configtx:/etc/hyperledger/configtx
+    - VM_ENDPOINT:/host/var/run/
+    - MSPROOT:/etc/hyperledger/crypto-config
+    networks:
+    - default

@@ -70,8 +70,7 @@ const channelUpdate = (channelName, mspCB) => {
 		return channel.getChannelConfig().then(configEnvelope => {
 			//NOTE JSON.stringify(data ) :TypeError: Converting circular structure to JSON
 			const original_config_proto = configEnvelope.config.toBuffer()
-			const config_items = channel.loadConfigEnvelope(configEnvelope)
-			fs.writeFileSync(path.join(__dirname, `debug-${channelName}-config_items.json`), JSON.stringify(config_items))// for debug only
+			channel.loadConfigEnvelope(configEnvelope)
 
 			// lets get the config converted into JSON, so we can edit JSON to
 			// make our changes

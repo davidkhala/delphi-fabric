@@ -32,13 +32,13 @@ function down() {
 	if [ -z "$DOCKER_IMAGE_IDS" -o "$DOCKER_IMAGE_IDS" = " " ]; then
 		echo "========== No images available for deletion ==========="
 	else
-		docker rmi -f $DOCKER_IMAGE_IDS
+		docker image rm --force $DOCKER_IMAGE_IDS
 	fi
-	echo
+
 
 }
 function up() {
-    docker network create delphiNetwork
+    docker network create $dockerNetworkName
 	docker-compose -f $COMPOSE_FILE up
 }
 

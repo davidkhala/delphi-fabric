@@ -22,3 +22,9 @@
 5. `$ node app/testInvoke.js` to invoke chaincode
 
 
+## TODO
+- ca-service in node-sdk
+- TLS disabled testing
+- docker swarm for multi-machine deploy
+- endorsement policy config
+
