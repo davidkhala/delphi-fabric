@@ -1,4 +1,5 @@
 const helper = require('./helper.js')
+const eventHelper = require('./util/eventHub')
 const logger = helper.getLogger('instantiate-chaincode')
 const queryPeer = helper.queryPeer
 const testLevel = require('./testLevel')
@@ -10,7 +11,6 @@ const testLevel = require('./testLevel')
 // 		"args":["a","100","b","200"]
 // set peers to 'undefined' to target all peers in channel
 exports.instantiateChaincode = (channel, richPeers, chaincodeId, chaincodeVersion, args, orgName) => {
-	logger.debug('============ Instantiate chaincode ============')
 	logger.debug(
 			{ channelName: channel.getName(), peersSize: richPeers.length, chaincodeId, chaincodeVersion, args, orgName })
 
@@ -31,69 +31,42 @@ exports.instantiateChaincode = (channel, richPeers, chaincodeId, chaincodeVersio
 				targets: richPeers// optional: if not set, targets will be channel.getPeers
 				// 		`chaincodeType` : optional -- Type of chaincode ['golang', 'car', 'java'] (default 'golang')
 			}
-
-			return channel.sendInstantiateProposal(request).then(([responses, proposal, header]) => {
-
-				const errCounter = [] // NOTE logic: reject only when all bad
-				for (let i in responses) {
-					const proposalResponse = responses[i]
-					if (proposalResponse.response &&
-							proposalResponse.response.status === 200) {
-						logger.info(`instantiate was good for [${i}]`, proposalResponse)
-					} else {
-						logger.error(`instantiate was bad for [${i}]`, proposalResponse)
-						errCounter.push(proposalResponse)
-					}
-				}
-				if (errCounter.length === responses.length) {
-					return Promise.reject(responses)
-				}
-
-				return Promise.resolve({
-					nextRequest: {
-						proposalResponses: responses, proposal
-					}
-				})
-
-			}).then(({ nextRequest }) => {
-
-				const deployId = txId.getTransactionID()
-
-				const promises = []
-				for (let peer of richPeers) {
-					const eventHub = helper.bindEventHub(peer)
-					eventHub.connect()
-					const txPromise = new Promise((resolve, reject) => {
-						const handle = setTimeout(() => {
-							// if the transaction did not get committed within the timeout period,fail the test
-							eventHub.unregisterTxEvent(deployId)
-							eventHub.disconnect()
-							reject()
-						}, eventWaitTime)
-
-						eventHub.registerTxEvent(deployId, (tx, code) => {
-							logger.info('txevent ', eventHub._ep)
-							clearTimeout(handle)
-							eventHub.unregisterTxEvent(deployId)
-							eventHub.disconnect()
-
-							if (code !== 'VALID') {
-								reject({ tx, code })
-							} else {
-								resolve({ tx, code })
+			const existSymptom = '(status: 500, message: chaincode exists'
+			return channel.sendInstantiateProposal(request).
+					then(helper.chaincodeProposalAdapter('instantiate', proposalResponse => {
+						const { response } = proposalResponse
+						if (response && response.status === 200) return true
+						if (proposalResponse instanceof Error && proposalResponse.toString().includes(existSymptom)) {
+							logger.warn('swallow when existence')
+							return true
+						}
+						return false
+					})).
+					then(({ nextRequest }) => {
+						//ehhhh... duplicated check for skipping
+						const { proposalResponses } = nextRequest
+						const existCounter=[]
+						for(let proposalResponse of proposalResponses){
+							if (proposalResponse instanceof Error && proposalResponse.toString().includes(existSymptom)) {
+								existCounter.push(proposalResponse)
 							}
-						}, err => {
-							logger.error('txevent', err)
+						}
+						if(existCounter.length===proposalResponses.length){
+							return Promise.resolve(proposalResponses)
+						}
+
+						const promises = []
+						for (let peer of richPeers) {
+							const eventHub = helper.bindEventHub(peer)
+							const txPromise = eventHelper.txEventPromise(eventHub, { txId, eventWaitTime })
+							promises.push(txPromise)
+						}
+
+						return channel.sendTransaction(nextRequest).then(() => {
+							logger.info('channel.sendTransaction success')
+							return Promise.all(promises)
 						})
 					})
-					promises.push(txPromise)
-				}
-
-				return channel.sendTransaction(nextRequest).then(() => {
-					logger.info('channel.sendTransaction success')
-					return Promise.all(promises)
-				})
-			})
 		})
 	})
 }
@@ -101,6 +74,7 @@ exports.instantiateChaincode = (channel, richPeers, chaincodeId, chaincodeVersio
 // to remove container like: dev-peer0.pm.delphi.com-delphichaincode-v1
 // to remove images like: dev-peer0.pm.delphi.com-delphichaincode-v1:latest
 // @param {string} containerName which initial the instantiate action before
+//TODO
 exports.resetChaincode = function(containerName, chaincodeName, chaincodeVersion) {
 	const dockerodeUtil = require('./../common/docker/nodejs/dockerode-util')
 	const { key: orgName, peer: { value: peerConfig, peer_hostName_full } } = queryPeer(

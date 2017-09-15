@@ -5,9 +5,9 @@ const logger = helper.getLogger('install-chaincode')
 //allowedCharsChaincodeName = "[A-Za-z0-9_-]+"
 // allowedCharsVersion       = "[A-Za-z0-9_.-]+"
 //
-const installChaincode = (peers, chaincodeName, chaincodePath, chaincodeVersion, orgName) => {
+const installChaincode = (peers, chaincodeId, chaincodePath, chaincodeVersion, orgName) => {
 	logger.debug('============ Install chaincode ============')
-	logger.debug({ peers_length:peers.length, chaincodeName, chaincodePath, chaincodeVersion, orgName })
+	logger.debug({ peers_length: peers.length, chaincodeId, chaincodePath, chaincodeVersion, orgName })
 	helper.setGOPATH()
 	const client = helper.getClient()
 
@@ -15,30 +15,17 @@ const installChaincode = (peers, chaincodeName, chaincodePath, chaincodeVersion,
 		const request = {
 			targets: peers,
 			chaincodePath,
-			chaincodeId: chaincodeName,
+			chaincodeId,
 			chaincodeVersion
 		}
 		return client.installChaincode(request)
-	}).then(results => {
-		const proposalResponses = results[0]
-		const errCounter=[] // NOTE logic: reject only when all bad
-		for (let proposalResponse of proposalResponses) {
-			if (proposalResponse.response &&
-					proposalResponse.response.status === 200) {
-				logger.info('install proposal was good', proposalResponse)
-			} else {
-				if (proposalResponse.toString().includes('exists')) {
-					logger.warn('duplicate install proposal', proposalResponse)
-				} else {
-					logger.error('install proposal was bad', proposalResponse)
-					errCounter.push(proposalResponse)
-				}
-			}
+	}).then(helper.chaincodeProposalAdapter('install', (proposalResponse) => {
+		if (proposalResponse.response && proposalResponse.response.status === 200) return true
+		if (proposalResponse instanceof Error && proposalResponse.toString().includes('exists')) {
+			logger.warn('swallow when exsitence')
+			return true
 		}
-		if(errCounter.length===proposalResponses.length){
-			return Promise.reject(proposalResponses)
-		}
-		return Promise.resolve(proposalResponses)
-	})
+		return false
+	}))
 }
 exports.installChaincode = installChaincode

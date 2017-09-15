@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 sudo apt -qq install -y moreutils
+sudo apt-get -qq install -y jq
 # run cryptogen
 CURRENT="$(dirname $(readlink -f ${BASH_SOURCE}))"
 remain_params=""

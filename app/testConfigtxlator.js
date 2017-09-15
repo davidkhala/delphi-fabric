@@ -10,7 +10,6 @@ const instantiate = require('./instantiate-chaincode').instantiateChaincode
 const installChaincode = require('./install-chaincode').installChaincode
 
 const api = require('./configtxlator')
-//TODO not ready
 
 const deleteOrg = (MSPName) => {
 

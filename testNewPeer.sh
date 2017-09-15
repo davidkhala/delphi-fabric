@@ -8,6 +8,7 @@ config_dir="$CURRENT/config"
 CRYPTO_CONFIG_DIR="$config_dir/crypto-config/"
 CRYPTO_UPDATE_CONFIG="$config_dir/crypto-config-update.yaml"
 CONFIG_JSON="$config_dir/orgs.json"
+CONFIG_chaincode="$config_dir/chaincode.json"
 
 COMPANY="delphi"
 orgName="AM"
@@ -34,8 +35,9 @@ adminUserMspDir="$newDir/users/Admin@$org_domain/msp"
 
 chaincode_args="[]"
 
-chaincodePath='github.com/delphi'
 chaincodeId='delphiChaincode'
+
+chaincodePath=$(jq -r ".chaincodes.${chaincodeId}.path" $CONFIG_chaincode)
 
 chaincodeVersion='v0'
 #NOTE docker will auto prune dead chaincode container: timeout setting in CORE_CHAINCODE_DEPLOYTIMEOUT

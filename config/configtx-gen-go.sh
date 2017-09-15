@@ -65,7 +65,7 @@ yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Orderer.Addresses[0] $ORDERER_C
 # containerFullName:container port, see in marbles
 yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Orderer.BatchTimeout '2s'
 
-yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Orderer.BatchSize.MaxMessageCount 10
+yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Orderer.BatchSize.MaxMessageCount 10 # mining rate
 yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Orderer.BatchSize.AbsoluteMaxBytes '99 MB'
 yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Orderer.BatchSize.PreferredMaxBytes '512 KB'
 # TODO: MSP name here is using assumption here, make sure it align with other modules

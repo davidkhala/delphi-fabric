@@ -26,9 +26,7 @@ const invoke = (channel, richPeers, chaincodeId, fcn, args, orgName) => {
 
 					for (let peer of richPeers) {
 						const eventhub = helper.bindEventHub(peer)
-						const txPromise = eventHelper.txEventPromise(eventhub, { txId,eventWaitTime }, ({ tx, code }) => {
-							return code === 'VALID'
-						})
+						const txPromise = eventHelper.txEventPromise(eventhub, { txId, eventWaitTime })
 						promises.push(txPromise)
 					}
 
