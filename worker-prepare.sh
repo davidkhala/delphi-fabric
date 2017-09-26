@@ -9,6 +9,7 @@ MSPROOT_nfs="/home/david/Documents/nfs/MSPROOT"
 CONFIGTX_DIR=$(./common/docker/utils/swarm.sh getNodeLabels| jq -r ".CONFIGTX")
 
 MSPROOT_DIR=$(./common/docker/utils/swarm.sh getNodeLabels| jq -r ".MSPROOT")
-./common/docker/utils/nfs.sh udpate $thisIP $MSPROOT_DIR $MSPROOT_nfs
-./common/docker/utils/nfs.sh udpate $thisIP $CONFIGTX_DIR $CONFIGTX_nfs
+set -x
+./common/docker/utils/nfs.sh add $thisIP $MSPROOT_DIR $MSPROOT_nfs
+./common/docker/utils/nfs.sh add $thisIP $CONFIGTX_DIR $CONFIGTX_nfs
 
