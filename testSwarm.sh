@@ -3,8 +3,10 @@
 
 CURRENT="$(dirname $(readlink -f ${BASH_SOURCE}))"
 
+GOPATH_SYS="/home/david/go"
 config_dir="$CURRENT/config"
 CONFIG_JSON="$config_dir/orgs.json"
+SWARM_CONFIG="$config_dir/swarm.json"
 CRYPTO_CONFIG_FILE="$config_dir/crypto-config.yaml"
 configtx_file="$config_dir/configtx.yaml"
 CRYPTO_CONFIG_DIR="$config_dir/crypto-config/"
@@ -16,32 +18,62 @@ IMAGE_TAG="x86_64-$VERSION"
 
 TLS_ENABLED=true
 COMPOSE_FILE="$config_dir/docker-swarm.yaml"
+volumesConfig=$(jq -r ".$COMPANY.docker.volumes" $CONFIG_JSON)
+CONFIGTXVolume=$(echo $volumesConfig | jq -r ".CONFIGTX.gluster")
+CONFIGTXDir=$(echo $volumesConfig | jq -r ".CONFIGTX.dir")
+MSPROOTVolume=$(echo $volumesConfig | jq -r ".MSPROOT.gluster")
+MSPROOTDir=$(echo $volumesConfig | jq -r ".MSPROOT.dir")
 
-
-function viewService(){
-    docker node ps "$1" # default to view current node
+function _changeHostName() {
+	sudo gedit /etc/hostname /etc/hosts
 }
-function viewInfo(){
-    if [ -z "$1" ]; then
-    docker node inspect self --pretty
-    else
-    docker node inspect "$1" --pretty
-    fi
-}
-function getNodeID(){
-    local hostName="$1"
-    viewInfo "$hostName" | grep "ID"| awk '{print $2}'
-
-}
-function _changeHostName(){
-    sudo gedit /etc/hostname /etc/hosts
-}
-function viewSwarm(){
-    docker node ls
+function createSwarm() {
+	ip="$1"
+	docker swarm init --advertise-addr=${ip}
 }
 
-node_self=$(getNodeID "ubuntu")
-node_fabricManager=$(getNodeID "fabric-swarm-manager")
 
 
-./config/swarm-gen-go.sh $COMPANY $CRYPTO_CONFIG_DIR $BLOCK_FILE -s $TLS_ENABLED -v $IMAGE_TAG
+thisHost=$(jq ".$COMPANY.thisHost" $SWARM_CONFIG)
+thisHostName=$(echo $thisHost | jq -r ".hostname" )
+otherHostConfig=$(jq ".$COMPANY.otherHost" $SWARM_CONFIG)
+manager0Config=$(echo $otherHostConfig | jq ".manager0" )
+manager0_hostname=$(echo $manager0Config | jq -r ".hostname")
+
+this_ip=$(./common/docker/utils/swarm.sh getNodeIP)
+manager0_ip=$(./common/docker/utils/swarm.sh getNodeIP $manager0_hostname)
+manager0_glusterRoot="/home/david/Documents/gluster"
+
+gluster peer probe $this_ip
+gluster peer probe $manager0_ip
+gluster peer status
+echo
+
+./common/docker/utils/swarm.sh addNodeLabels $thisHostName CONFIGTX=$CONFIGTXDir
+./common/docker/utils/swarm.sh addNodeLabels $thisHostName MSPROOT=$MSPROOTDir
+./common/docker/utils/swarm.sh getNodeLabels
+
+
+
+#mountBase="/var/lib/docker-volumes/_glusterfs"
+#CONFIGTXMount="$mountBase/configtxMount"
+#MSPROOTMount="$mountBase/mspRootMount"
+#mount $CONFIGTXDir $CONFIGTXMount
+#echo "$CONFIGTXDir $CONFIGTXMount xfs defaults 0 0" >> /etc/fstab
+#mount $MSPROOTDir $MSPROOTMount
+
+# self is not in Peer, use self_ip instead :Error: Host ubuntu is not in 'Peer in Cluster' state
+#./config/gluster.sh createVolume $CONFIGTXVolume "$this_ip:$CONFIGTXDir" "$manager0_ip:$manager0_glusterRoot/CONFIGTX"
+#./config/gluster.sh createVolume $MSPROOTVolume "$this_ip:$MSPROOTDir" "$manager0_ip:$manager0_glusterRoot/MSPROOT"
+## TODO provide an api to generate folder in other host machine
+## TODO need $GOPATH/bin/docker-volume-glusterfs
+#servers="$this_ip:$manager0_ip"
+
+#docker volume create --driver=hjdr4plugins/docker-volume-glusterfs $MSPROOTVolume
+#docker volume create --driver=hjdr4plugins/docker-volume-glusterfs $CONFIGTXVolume
+#echo
+#docker volume ls
+
+
+
+#./config/swarm-gen-go.sh $COMPANY $CRYPTO_CONFIG_DIR $BLOCK_FILE -s $TLS_ENABLED -v $IMAGE_TAG
