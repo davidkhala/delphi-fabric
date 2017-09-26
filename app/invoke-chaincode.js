@@ -20,7 +20,6 @@ const invoke = (channel, richPeers, chaincodeId, fcn, args, orgName) => {
 		return channel.sendTransactionProposal(request).
 				then(helper.chaincodeProposalAdapter('invoke')).
 				then(({ nextRequest }) => {
-					const transactionID = txId.getTransactionID()
 
 					const promises = []
 

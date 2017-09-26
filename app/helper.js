@@ -50,7 +50,7 @@ const gen_tls_cacerts = (orgName, peerIndex) => {
 	return { org_domain, peer_hostName_full, tls_cacerts }
 }
 const newPeer = ({ peerPort, tls_cacerts, peer_hostName_full }) => {
-	return require('./util/peer').new({peerPort,tls_cacerts,peer_hostName_full})
+	return require('./util/peer').new({ peerPort, tls_cacerts, peer_hostName_full })
 }
 
 // peerConfig: "portMap": [{	"host": 8051,		"container": 7051},{	"host": 8053,		"container": 7053}]
@@ -468,14 +468,16 @@ const newPeerByContainer = (containerName) => {
 	}
 	return preparePeer(orgName, index, peerConfig)
 }
-exports.chaincodeProposalAdapter = (actionString) => {
+exports.chaincodeProposalAdapter = (actionString, validator) => {
+	const _validator = validator ? validator : ({ response }) => {
+		return response && response.status === 200
+	}
 	return ([responses, proposal, header]) => {
 
 		const errCounter = [] // NOTE logic: reject only when all bad
 		for (let i in responses) {
 			const proposalResponse = responses[i]
-			if (proposalResponse.response &&
-					proposalResponse.response.status === 200) {
+			if (_validator(proposalResponse)) {
 				logger.info(`${actionString} was good for [${i}]`, proposalResponse)
 			} else {
 				logger.error(`${actionString} was bad for [${i}]`, proposalResponse)

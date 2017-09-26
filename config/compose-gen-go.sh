@@ -75,16 +75,16 @@ yaml w -i $COMPOSE_FILE version \"$COMPOSE_VERSION\" # NOTE it should be a strin
 # volumes
 docker volume prune --force
 volumesConfig=$(jq -r ".$COMPANY.docker.volumes" $CONFIG_JSON)
-CONFIGTXVolume=$(echo $volumesConfig | jq -r ".CONFIGTX")
-VM_ENDPOINTVolume=$(echo $volumesConfig | jq -r ".VM_ENDPOINT")
-MSPROOTVolume=$(echo $volumesConfig | jq -r ".MSPROOT")
+CONFIGTXVolume=$(echo $volumesConfig | jq -r ".CONFIGTX.local")
+MSPROOTVolume=$(echo $volumesConfig | jq -r ".MSPROOT.local")
 
 docker volume create --name $MSPROOTVolume --opt o=bind --opt device=$MSPROOT --opt type=none
-docker volume create --name $CONFIGTXVolume --opt o=bind --opt device="$(dirname $BLOCK_FILE)" --opt type=none
-docker volume create --name $VM_ENDPOINTVolume --opt o=bind --opt device=/var/run/ --opt type=none
+jq ".$COMPANY.docker.volumes.MSPROOT.dir=\"$MSPROOT\"" $CONFIG_JSON | sponge $CONFIG_JSON
+CONFIGTX_DIR=$(dirname $BLOCK_FILE)
+docker volume create --name $CONFIGTXVolume --opt o=bind --opt device="$CONFIGTX_DIR" --opt type=none
+jq ".$COMPANY.docker.volumes.CONFIGTX.dir=\"$CONFIGTX_DIR\"" $CONFIG_JSON | sponge $CONFIG_JSON
 yaml w -i $COMPOSE_FILE volumes["$MSPROOTVolume"].external true
 yaml w -i $COMPOSE_FILE volumes["$CONFIGTXVolume"].external true
-yaml w -i $COMPOSE_FILE volumes["$VM_ENDPOINTVolume"].external true
 
 networksName="default" # TODO
 dockerNetworkName=$(jq -r ".$COMPANY.docker.network" $CONFIG_JSON)
@@ -192,7 +192,7 @@ for orgName in $orgNames; do
 			containerPort=$(echo $entry | jq ".container")
 			$PEERCMD.ports[$j] $hostPort:$containerPort
 		done
-		$PEERCMD.volumes[0] "$VM_ENDPOINTVolume:/host/var/run/"
+		$PEERCMD.volumes[0] "/run/docker.sock:/host/var/run/docker.sock"
 		$PEERCMD.volumes[1] "$MSPROOTVolume:$CONTAINER_CRYPTO_CONFIG_DIR" # for peer channel --cafile
 
 		$PEERCMD.networks[0] $networksName

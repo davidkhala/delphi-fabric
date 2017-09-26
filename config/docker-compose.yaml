@@ -4,8 +4,6 @@ volumes:
     external: true
   CONFIGTX_DIR:
     external: true
-  VM_ENDPOINT:
-    external: true
 networks:
   default:
     external:
@@ -62,7 +60,7 @@ services:
     - 7051:7051
     - 7053:7053
     volumes:
-    - VM_ENDPOINT:/host/var/run/
+    - /run/docker.sock:/host/var/run/docker.sock
     - MSPROOT:/etc/hyperledger/crypto-config
     networks:
     - default
@@ -92,7 +90,7 @@ services:
     - 7061:7051
     - 7063:7053
     volumes:
-    - VM_ENDPOINT:/host/var/run/
+    - /run/docker.sock:/host/var/run/docker.sock
     - MSPROOT:/etc/hyperledger/crypto-config
     networks:
     - default
@@ -122,7 +120,7 @@ services:
     - 8051:7051
     - 8053:7053
     volumes:
-    - VM_ENDPOINT:/host/var/run/
+    - /run/docker.sock:/host/var/run/docker.sock
     - MSPROOT:/etc/hyperledger/crypto-config
     networks:
     - default
@@ -152,7 +150,7 @@ services:
     - 9051:7051
     - 9053:7053
     volumes:
-    - VM_ENDPOINT:/host/var/run/
+    - /run/docker.sock:/host/var/run/docker.sock
     - MSPROOT:/etc/hyperledger/crypto-config
     networks:
     - default
