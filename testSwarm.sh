@@ -19,9 +19,7 @@ IMAGE_TAG="x86_64-$VERSION"
 TLS_ENABLED=true
 COMPOSE_FILE="$config_dir/docker-swarm.yaml"
 volumesConfig=$(jq -r ".$COMPANY.docker.volumes" $CONFIG_JSON)
-CONFIGTXVolume=$(echo $volumesConfig | jq -r ".CONFIGTX.swarm")
 CONFIGTXDir=$(echo $volumesConfig | jq -r ".CONFIGTX.dir")
-MSPROOTVolume=$(echo $volumesConfig | jq -r ".MSPROOT.swarm")
 MSPROOTDir=$(echo $volumesConfig | jq -r ".MSPROOT.dir")
 
 function _changeHostName() {
@@ -31,8 +29,15 @@ function createSwarm() {
 	ip="$1"
 	docker swarm init --advertise-addr=${ip}
 }
+function _gluster(){
+# TODO not ready
+manager0_glusterRoot="/home/david/Documents/gluster"
+gluster peer probe $this_ip
+gluster peer probe $manager0_ip
+gluster peer status
+echo
 
-
+}
 
 thisHost=$(jq ".$COMPANY.thisHost" $SWARM_CONFIG)
 thisHostName=$(echo $thisHost | jq -r ".hostname" )
@@ -42,17 +47,13 @@ manager0_hostname=$(echo $manager0Config | jq -r ".hostname")
 
 this_ip=$(./common/docker/utils/swarm.sh getNodeIP)
 manager0_ip=$(./common/docker/utils/swarm.sh getNodeIP $manager0_hostname)
-manager0_glusterRoot="/home/david/Documents/gluster"
 
-gluster peer probe $this_ip
-gluster peer probe $manager0_ip
-gluster peer status
-echo
+CONFIGTXVolume=$(echo $volumesConfig | jq -r ".CONFIGTX.swarm")
+MSPROOTVolume=$(echo $volumesConfig | jq -r ".MSPROOT.swarm")
 
-./common/docker/utils/swarm.sh addNodeLabels $thisHostName CONFIGTX=$CONFIGTXDir
-./common/docker/utils/swarm.sh addNodeLabels $thisHostName MSPROOT=$MSPROOTDir
-./common/docker/utils/swarm.sh getNodeLabels
-
+function createVolume(){
+./common/docker/utils/volume.sh createLocal $MSPROOTVolume $MSPROOTDir
+./common/docker/utils/volume.sh createLocal $CONFIGTXVolume $CONFIGTXDir
 
 
 #mountBase="/var/lib/docker-volumes/_glusterfs"
@@ -71,9 +72,12 @@ echo
 
 #docker volume create --driver=hjdr4plugins/docker-volume-glusterfs $MSPROOTVolume
 #docker volume create --driver=hjdr4plugins/docker-volume-glusterfs $CONFIGTXVolume
-#echo
-#docker volume ls
 
 
+}
+./common/docker/utils/swarm.sh addNodeLabels $thisHostName CONFIGTX=$CONFIGTXDir
+./common/docker/utils/swarm.sh addNodeLabels $thisHostName MSPROOT=$MSPROOTDir
+./common/docker/utils/swarm.sh getNodeLabels
 
-#./config/swarm-gen-go.sh $COMPANY $CRYPTO_CONFIG_DIR $BLOCK_FILE -s $TLS_ENABLED -v $IMAGE_TAG
+./config/swarm-gen-go.sh $COMPANY $CRYPTO_CONFIG_DIR $BLOCK_FILE -s $TLS_ENABLED -v $IMAGE_TAG
+createVolume

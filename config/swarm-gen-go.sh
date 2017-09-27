@@ -2,18 +2,16 @@
 
 sudo apt-get -qq install -y jq
 
-nodeid0="j8rlwbtdksxzjzbx03fmmjeb6"
-
 CURRENT="$(dirname $(readlink -f $BASH_SOURCE))"
 
-COMPOSE_FILE="$CURRENT/docker-compose.yaml"
+COMPOSE_FILE="$CURRENT/docker-swarm.yaml"
 CONFIG_JSON="$CURRENT/orgs.json"
 # TODO if we use cli container to install chaincode, we need to set GOPATH in compose file; here we use node-sdk to do it
 GOPATH="$(dirname $CURRENT)/GOPATH/"
-IMAGE_TAG="x86_64-1.0.0" # latest
+IMAGE_TAG="x86_64-1.0.0"
 
-ledgersData_root="$(dirname $CURRENT)/ledgersData"
-CONTAINER_ledgersData="/var/hyperledger/production/ledgersData"
+#TODO ledgersData, for resetChaincode CONTAINER_ledgersData="/var/hyperledger/production/ledgersData"
+
 CONTAINER_CONFIGTX_DIR="/etc/hyperledger/configtx"
 CONTAINER_CRYPTO_CONFIG_DIR="/etc/hyperledger/crypto-config"
 TLS_ENABLED=true
@@ -22,10 +20,6 @@ COMPANY=$1
 MSPROOT=$2
 BLOCK_FILE=$3
 
-if [ -z "$COMPANY" ]; then
-	echo "missing company parameter"
-	exit 1
-fi
 remain_params=""
 for ((i = 4; i <= $#; i++)); do
 	j=${!i}
@@ -78,26 +72,30 @@ COMPOSE_VERSION=3
 
 yaml w -i $COMPOSE_FILE version \"$COMPOSE_VERSION\" # NOTE it should be a string, only version 3 support network setting
 
-# dockerNetworkName=$(jq -r ".$COMPANY.docker.network" $CONFIG_JSON)
-#if [ $COMPOSE_VERSION = 3 ]; then
-#    # FIXME empty input is not support
-#    yaml w -i $COMPOSE_FILE networks.default.name $dockerNetworkName
-#fi
+# volumes
+docker volume prune --force
+volumesConfig=$(jq -r ".$COMPANY.docker.volumes" $CONFIG_JSON)
+CONFIGTX_swarm=$(echo $volumesConfig | jq -r ".CONFIGTX.swarm")
+MSPROOT_swarm=$(echo $volumesConfig | jq -r ".MSPROOT.swarm")
 
-# NOTE for docker stack deploy in version 3
+yaml w -i $COMPOSE_FILE volumes["$MSPROOT_swarm"].external true
+yaml w -i $COMPOSE_FILE volumes["$CONFIGTX_swarm"].external true
+
+networksName="default" # TODO
+dockerNetworkName=$(jq -r ".$COMPANY.docker.network" $CONFIG_JSON)
+yaml w -i $COMPOSE_FILE networks["$networksName"].external.name $dockerNetworkName
 
 function serviceNameConvert(){
+    # NOTE to fix Error response from daemon: rpc error: code = 3 desc = name must be valid as a DNS name component
     echo $(echo $1| sed 's/\./\-/g')
 }
-
-# ccenv
-yaml w -i $COMPOSE_FILE services.ccenv.image hyperledger/fabric-ccenv:$IMAGE_TAG
-yaml w -i $COMPOSE_FILE services.ccenv.container_name ccenv.$COMPANY_DOMAIN
+# ccenv: no network is OK;
+# NOTE delete ccenv container:swarm will keep restarting dead container
+docker pull hyperledger/fabric-ccenv:$IMAGE_TAG
 
 # orderer
 ORDERER_SERVICE_NAME="OrdererServiceName.$COMPANY_DOMAIN" # orderer service name will linked to depends_on
 ORDERER_SERVICE_NAME=$(serviceNameConvert $ORDERER_SERVICE_NAME)
-
 p=0
 function envPush() {
 	local CMD="$1"
@@ -105,35 +103,40 @@ function envPush() {
 	((p++))
 }
 
-yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].container_name $ORDERER_CONTAINER # NOTE docker stack deploy (version 3): Ignoring deprecated options:container_name: Setting the container name is not supported.
-
-yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].image hyperledger/fabric-orderer:$IMAGE_TAG
+ORDERERCMD="yaml w -i $COMPOSE_FILE services[${ORDERER_SERVICE_NAME}]"
+$ORDERERCMD.image hyperledger/fabric-orderer:$IMAGE_TAG
 CONTAINER_GOPATH="/etc/hyperledger/gopath/"
 
-yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].command "orderer"
-yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].ports[0] $ORDERER_HOST_PORT:$ORDERER_CONTAINER_PORT
+$ORDERERCMD.command "orderer"
+$ORDERERCMD.ports[0] $ORDERER_HOST_PORT:$ORDERER_CONTAINER_PORT
 
-yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].environment[0] ORDERER_GENERAL_LOGLEVEL=debug
-yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].environment[1] ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
-yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].environment[2] ORDERER_GENERAL_GENESISMETHOD=file
+p=0
+envPush "$ORDERERCMD" ORDERER_GENERAL_LOGLEVEL=debug
+envPush "$ORDERERCMD" ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
 
 orderer_hostName=${orderer_container_name,,}
 orderer_hostName_full=$orderer_hostName.$COMPANY_DOMAIN
 ORDERER_STRUCTURE="ordererOrganizations/$COMPANY_DOMAIN/orderers/$orderer_hostName_full"
 CONTAINER_ORDERER_TLS_DIR="$CONTAINER_CRYPTO_CONFIG_DIR/$ORDERER_STRUCTURE/tls"
 
-yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].environment[3] ORDERER_GENERAL_GENESISFILE=$CONTAINER_CONFIGTX_DIR/$(basename $BLOCK_FILE)
-yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].environment[4] ORDERER_GENERAL_TLS_ENABLED="$TLS_ENABLED"
-yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].environment[5] ORDERER_GENERAL_TLS_PRIVATEKEY=$CONTAINER_ORDERER_TLS_DIR/server.key
-yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].environment[6] ORDERER_GENERAL_TLS_CERTIFICATE=$CONTAINER_ORDERER_TLS_DIR/server.crt
+envPush "$ORDERERCMD" ORDERER_GENERAL_TLS_ENABLED="$TLS_ENABLED"
+envPush "$ORDERERCMD" ORDERER_GENERAL_TLS_PRIVATEKEY=$CONTAINER_ORDERER_TLS_DIR/server.key
+envPush "$ORDERERCMD" ORDERER_GENERAL_TLS_CERTIFICATE=$CONTAINER_ORDERER_TLS_DIR/server.crt
+
+envPush "$ORDERERCMD" ORDERER_GENERAL_GENESISMETHOD=file # file|provisional
+envPush "$ORDERERCMD" ORDERER_GENERAL_GENESISFILE=$CONTAINER_CONFIGTX_DIR/$(basename $BLOCK_FILE)
+# NOTE remove ORDERER_GENERAL_GENESISFILE: panic: Unable to bootstrap orderer. Error reading genesis block file: open /etc/hyperledger/fabric/genesisblock: no such file or directory
+# NOTE when ORDERER_GENERAL_GENESISMETHOD=provisional  ORDERER_GENERAL_GENESISPROFILE=SampleNoConsortium -> panic: No system chain found.  If bootstrapping, does your system channel contain a consortiums group definition
+
 # MSP
-yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].environment[7] ORDERER_GENERAL_LOCALMSPID=OrdererMSP
-yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].environment[8] ORDERER_GENERAL_LOCALMSPDIR=$CONTAINER_CRYPTO_CONFIG_DIR/$ORDERER_STRUCTURE/msp
+envPush "$ORDERERCMD" ORDERER_GENERAL_LOCALMSPID=OrdererMSP
+envPush "$ORDERERCMD" ORDERER_GENERAL_LOCALMSPDIR=$CONTAINER_CRYPTO_CONFIG_DIR/$ORDERER_STRUCTURE/msp
+envPush "$ORDERERCMD" ORDERER_GENERAL_TLS_ROOTCAS="[${CONTAINER_ORDERER_TLS_DIR}/ca.crt]" # TODO test
 
-yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].volumes[0] "$(dirname $BLOCK_FILE):$CONTAINER_CONFIGTX_DIR"
-yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].volumes[1] "$MSPROOT:$CONTAINER_CRYPTO_CONFIG_DIR"
+$ORDERERCMD.volumes[0] "$CONFIGTX_swarm:$CONTAINER_CONFIGTX_DIR"
+$ORDERERCMD.volumes[1] "$MSPROOT_swarm:$CONTAINER_CRYPTO_CONFIG_DIR"
+$ORDERERCMD.networks[0] $networksName
 
-rootCAs=$CONTAINER_ORDERER_TLS_DIR/ca.crt
 for orgName in $orgNames; do
 	orgConfig=$(echo $orgsConfig | jq -r ".$orgName")
 	PEER_DOMAIN=${orgName,,}.$COMPANY_DOMAIN
@@ -146,11 +149,9 @@ for orgName in $orgNames; do
 		peerConfig=$(echo $org_peersConfig | jq -r ".[$peerIndex]")
 		peerContainer=$(echo $peerConfig | jq -r ".containerName").$COMPANY_DOMAIN
 		PEER_STRUCTURE="peerOrganizations/$PEER_DOMAIN/peers/$PEER_ANCHOR"
-		rootCAs="$rootCAs,$CONTAINER_CRYPTO_CONFIG_DIR/$PEER_STRUCTURE/tls/ca.crt"
 		# peer container
 		#
 		PEERCMD="yaml w -i $COMPOSE_FILE "services["$peerServiceName"]
-		$PEERCMD.container_name $peerContainer
 		$PEERCMD.depends_on[0] $ORDERER_SERVICE_NAME
 		$PEERCMD.image hyperledger/fabric-peer:$IMAGE_TAG
 		# NOTE working_dir just setting default commands current path
@@ -158,22 +159,18 @@ for orgName in $orgNames; do
 		#common env
 		p=0
 		envPush "$PEERCMD" CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
-		#FIXME docker compose network setting has problem: projectname is configured outside docker but in docker-compose cli
-		envPush "$PEERCMD" CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=$(basename $(dirname $COMPOSE_FILE))_default
-		#    if [ $COMPOSE_VERSION = 3 ]; then
+		# NOTE docker compose network setting has problem: projectname is configured outside docker but in docker-compose cli
+		envPush "$PEERCMD" CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=$dockerNetworkName
 		#       $PEERCMD.networks[0] $dockerNetworkName
-		#       envPush "$PEERCMD" CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=$(basename $(dirname $COMPOSE_FILE))_$dockerNetworkName
-		#    fi
 		envPush "$PEERCMD" CORE_LOGGING_LEVEL=DEBUG
 		envPush "$PEERCMD" CORE_LEDGER_HISTORY_ENABLEHISTORYDATABASE=true
 
 		### GOSSIP setting
 		envPush "$PEERCMD" CORE_PEER_GOSSIP_USELEADERELECTION=true
 		envPush "$PEERCMD" CORE_PEER_GOSSIP_ORGLEADER=false
-		envPush "$PEERCMD" CORE_PEER_GOSSIP_SKIPHANDSHAKE=true
 		envPush "$PEERCMD" CORE_PEER_GOSSIP_EXTERNALENDPOINT=$peerContainer:7051
 		# CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0:7051
-		# only work when CORE_PEER_GOSSIP_ORGLEADER=true & CORE_PEER_GOSSIP_SKIPHANDSHAKE=false & CORE_PEER_GOSSIP_USELEADERELECTION=false
+		# only work when CORE_PEER_GOSSIP_ORGLEADER=true & CORE_PEER_GOSSIP_USELEADERELECTION=false
 		envPush "$PEERCMD" CORE_PEER_LOCALMSPID=${orgName}MSP
 		envPush "$PEERCMD" CORE_PEER_MSPCONFIGPATH=$CONTAINER_CRYPTO_CONFIG_DIR/$ADMIN_STRUCTURE/msp
 		envPush "$PEERCMD" CORE_PEER_TLS_ENABLED=$TLS_ENABLED
@@ -192,13 +189,10 @@ for orgName in $orgNames; do
 			containerPort=$(echo $entry | jq ".container")
 			$PEERCMD.ports[$j] $hostPort:$containerPort
 		done
-		$PEERCMD.volumes[0] "/var/run/:/host/var/run/"
-		$PEERCMD.volumes[1] "$MSPROOT:$CONTAINER_CRYPTO_CONFIG_DIR"          # for peer channel --cafile
-		$PEERCMD.volumes[2] "$(dirname $BLOCK_FILE):$CONTAINER_CONFIGTX_DIR" # for later channel create
-		ledgersData="$ledgersData_root/$peerContainer"
-		mkdir -p $ledgersData
-		$PEERCMD.volumes[3] "$ledgersData:$CONTAINER_ledgersData" # TODO sync ledgersData test
+		$PEERCMD.volumes[0] "/run/:/host/var/run/"
+		$PEERCMD.volumes[1] "$MSPROOT_swarm:$CONTAINER_CRYPTO_CONFIG_DIR" # for peer channel --cafile
 
+		$PEERCMD.networks[0] $networksName
 		#   TODO GO setup failed on peer container: only fabric-tools has go dependencies
 		#set GOPATH map
 		#
@@ -209,38 +203,35 @@ for orgName in $orgNames; do
 	done
 
 	# CA
-	caServiceName="ca.$PEER_DOMAIN"
-	caServiceName=$(serviceNameConvert $caServiceName)
-	CACMD="yaml w -i $COMPOSE_FILE "services[$caServiceName]
-	$CACMD.image hyperledger/fabric-ca:$IMAGE_TAG
-	$CACMD.container_name "ca.$PEER_DOMAIN"
-	$CACMD.command "sh -c 'fabric-ca-server start -b admin:adminpw -d'"
-	CONTAINER_CA_VOLUME="$CONTAINER_CRYPTO_CONFIG_DIR/peerOrganizations/$PEER_DOMAIN/ca"
-	CA_HOST_VOLUME="${MSPROOT}peerOrganizations/$PEER_DOMAIN/ca/"
-	privkeyFilename=$(basename $(find $CA_HOST_VOLUME -type f \( -name "*_sk" \)))
-	$CACMD.volumes[0] "$CA_HOST_VOLUME:$CONTAINER_CA_VOLUME"
+	CA_enable=$(echo $orgConfig | jq ".ca.enable")
+	if [ "$CA_enable" == "true" ]; then
+	    caServiceName=$(serviceNameConvert "ca.$PEER_DOMAIN")
+		CACMD="yaml w -i $COMPOSE_FILE "services[${caServiceName}]
+		$CACMD.image hyperledger/fabric-ca:$IMAGE_TAG
+		$CACMD.command "sh -c 'fabric-ca-server start -b admin:adminpw -d'"
+		CONTAINER_CA_VOLUME="$CONTAINER_CRYPTO_CONFIG_DIR/peerOrganizations/$PEER_DOMAIN/ca"
+		CA_HOST_VOLUME="${MSPROOT}peerOrganizations/$PEER_DOMAIN/ca/" # FIXME not shared volume
+		privkeyFilename=$(basename $(find $CA_HOST_VOLUME -type f \( -name "*_sk" \)))
+		$CACMD.volumes[0] "$CA_HOST_VOLUME:$CONTAINER_CA_VOLUME"
 
-    $CACMD.deploy.placement.constraints[0] "node.id == $nodeid0"
-#    $CACMD.deploy.placement.constraints[0] "node.hostname == david-VirtualBox"
-    $CACMD.deploy.placement.constraints[1] "node.role == manager"
-	p=0
-	envPush "$CACMD" "FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server" # align with command
-	envPush "$CACMD" "FABRIC_CA_SERVER_CA_CERTFILE=$CONTAINER_CA_VOLUME/ca.$PEER_DOMAIN-cert.pem"
-	envPush "$CACMD" "FABRIC_CA_SERVER_TLS_CERTFILE=$CONTAINER_CA_VOLUME/ca.$PEER_DOMAIN-cert.pem"
+		p=0
+		envPush "$CACMD" "FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server" # align with command
+		envPush "$CACMD" "FABRIC_CA_SERVER_CA_CERTFILE=$CONTAINER_CA_VOLUME/ca.$PEER_DOMAIN-cert.pem"
+		envPush "$CACMD" "FABRIC_CA_SERVER_TLS_CERTFILE=$CONTAINER_CA_VOLUME/ca.$PEER_DOMAIN-cert.pem"
 
-	envPush "$CACMD" "FABRIC_CA_SERVER_TLS_KEYFILE=$CONTAINER_CA_VOLUME/$privkeyFilename"
-	envPush "$CACMD" "FABRIC_CA_SERVER_CA_KEYFILE=$CONTAINER_CA_VOLUME/$privkeyFilename"
-	envPush "$CACMD" "FABRIC_CA_SERVER_TLS_ENABLED=$TLS_ENABLED"
+		envPush "$CACMD" "FABRIC_CA_SERVER_TLS_KEYFILE=$CONTAINER_CA_VOLUME/$privkeyFilename"
+		envPush "$CACMD" "FABRIC_CA_SERVER_CA_KEYFILE=$CONTAINER_CA_VOLUME/$privkeyFilename"
+		envPush "$CACMD" "FABRIC_CA_SERVER_TLS_ENABLED=$TLS_ENABLED"
 
-	CA_HOST_PORT=$(echo $orgConfig | jq ".ca.portMap[0].host")
-	CA_CONTAINER_PORT=$(echo $orgConfig | jq ".ca.portMap[0].container")
-	$CACMD.ports[0] $CA_HOST_PORT:$CA_CONTAINER_PORT
+		CA_HOST_PORT=$(echo $orgConfig | jq ".ca.portMap[0].host")
+		CA_CONTAINER_PORT=$(echo $orgConfig | jq ".ca.portMap[0].container")
+		$CACMD.ports[0] $CA_HOST_PORT:$CA_CONTAINER_PORT
+		$CACMD.networks[0] $networksName
+	fi
 
 done
-yaml w -i $COMPOSE_FILE services["$ORDERER_SERVICE_NAME"].environment[9] "ORDERER_GENERAL_TLS_ROOTCAS=[$rootCAs]"
 
 # NOTE: cli container is just a shadow of any existing peer! see the CORE_PEER_ADDRESS & CORE_PEER_MSPCONFIGPATH
-
 
 # FIXME testCode to delete: for peer channel update but not working
 #CLICMD="yaml w -i $COMPOSE_FILE services.cli"
