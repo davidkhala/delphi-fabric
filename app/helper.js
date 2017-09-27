@@ -331,9 +331,7 @@ var getRegisteredUsers = function(username, userOrg, isJson) {
 		//FIXME: fabric-ca request register failed with errors [[{"code":0,"message":"Failed getting affiliation 'PM.department1': sql: no rows in result set"}]]
 	})
 }
-//NOTE have to do this since filename for private Key file would be liek
-// a4fbafa51de1161a2f82ffa80cf1c34308482c33a9dcd4d150183183d0a3e0c6_sk
-
+//NOTE have to do this since filename for private Key file would be as : a4fbafa51de1161a2f82ffa80cf1c34308482c33a9dcd4d150183183d0a3e0c6_sk
 const getKeyFilesInDir = (dir) => {
 	const files = fs.readdirSync(dir)
 

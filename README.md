@@ -1,6 +1,9 @@
 # delphi-fabric
 
+_after first time clone this repository, run   
+```$ git submodule update --init --recursive```_
 ### test work flow:
+
 
 1. run `$ ./testBin.sh`
     - it includes

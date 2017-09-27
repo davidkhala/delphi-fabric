@@ -1,0 +1,12 @@
+{
+  "delphi":{
+    "thisHost":{
+      "hostname":"ubuntu"
+    },
+    "otherHost":{
+      "manager0":{
+        "hostname": "fabric-swarm-manager"
+      }
+    }
+  }
+}

@@ -19,9 +19,9 @@ IMAGE_TAG="x86_64-$VERSION"
 TLS_ENABLED=true
 COMPOSE_FILE="$config_dir/docker-swarm.yaml"
 volumesConfig=$(jq -r ".$COMPANY.docker.volumes" $CONFIG_JSON)
-CONFIGTXVolume=$(echo $volumesConfig | jq -r ".CONFIGTX.gluster")
+CONFIGTXVolume=$(echo $volumesConfig | jq -r ".CONFIGTX.swarm")
 CONFIGTXDir=$(echo $volumesConfig | jq -r ".CONFIGTX.dir")
-MSPROOTVolume=$(echo $volumesConfig | jq -r ".MSPROOT.gluster")
+MSPROOTVolume=$(echo $volumesConfig | jq -r ".MSPROOT.swarm")
 MSPROOTDir=$(echo $volumesConfig | jq -r ".MSPROOT.dir")
 
 function _changeHostName() {
