@@ -9,9 +9,9 @@ MSPROOT_nfs="/home/david/Documents/nfs/MSPROOT"
 CONFIGTX_DIR=$(./common/docker/utils/swarm.sh getNodeLabels $mainNodeID | jq -r ".CONFIGTX")
 
 MSPROOT_DIR=$(./common/docker/utils/swarm.sh getNodeLabels $mainNodeID | jq -r ".MSPROOT")
-if [ ! "$MSPROOT_DIR"=="null" ]; then
+if [ ! "$MSPROOT_DIR" == "null" ]; then
 	./common/docker/utils/nfs.sh add $thisIP $MSPROOT_DIR $MSPROOT_nfs
 fi
-if [ ! "$CONFIGTX_DIR"=="null" ]; then
+if [ ! "$CONFIGTX_DIR" == "null" ]; then
 	./common/docker/utils/nfs.sh add $thisIP $CONFIGTX_DIR $CONFIGTX_nfs
 fi
