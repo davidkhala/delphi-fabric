@@ -29,7 +29,9 @@ services:
     - CONFIGTX_swarm:/etc/hyperledger/configtx
     - MSPROOT_swarm:/etc/hyperledger/crypto-config
     networks:
-    - default
+      default:
+        aliases:
+        - orderContainerName.delphi.com
   peer0-bu-delphi-com:
     depends_on:
     - OrdererServiceName-delphi-com
@@ -42,7 +44,7 @@ services:
     - CORE_LEDGER_HISTORY_ENABLEHISTORYDATABASE=true
     - CORE_PEER_GOSSIP_USELEADERELECTION=true
     - CORE_PEER_GOSSIP_ORGLEADER=false
-    - CORE_PEER_GOSSIP_EXTERNALENDPOINT=BUContainerName.delphi.com:7051
+    - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.bu.delphi.com:7051
     - CORE_PEER_LOCALMSPID=BUMSP
     - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/bu.delphi.com/users/Admin@bu.delphi.com/msp
     - CORE_PEER_TLS_ENABLED=true
@@ -58,7 +60,9 @@ services:
     - /run/:/host/var/run/
     - MSPROOT_swarm:/etc/hyperledger/crypto-config
     networks:
-    - default
+      default:
+        aliases:
+        - peer0.bu.delphi.com
   peer1-bu-delphi-com:
     depends_on:
     - OrdererServiceName-delphi-com
@@ -71,7 +75,7 @@ services:
     - CORE_LEDGER_HISTORY_ENABLEHISTORYDATABASE=true
     - CORE_PEER_GOSSIP_USELEADERELECTION=true
     - CORE_PEER_GOSSIP_ORGLEADER=false
-    - CORE_PEER_GOSSIP_EXTERNALENDPOINT=BUContainer1.delphi.com:7051
+    - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.bu.delphi.com:7051
     - CORE_PEER_LOCALMSPID=BUMSP
     - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/bu.delphi.com/users/Admin@bu.delphi.com/msp
     - CORE_PEER_TLS_ENABLED=true
@@ -87,7 +91,9 @@ services:
     - /run/:/host/var/run/
     - MSPROOT_swarm:/etc/hyperledger/crypto-config
     networks:
-    - default
+      default:
+        aliases:
+        - peer1.bu.delphi.com
   peer0-eng-delphi-com:
     depends_on:
     - OrdererServiceName-delphi-com
@@ -100,7 +106,7 @@ services:
     - CORE_LEDGER_HISTORY_ENABLEHISTORYDATABASE=true
     - CORE_PEER_GOSSIP_USELEADERELECTION=true
     - CORE_PEER_GOSSIP_ORGLEADER=false
-    - CORE_PEER_GOSSIP_EXTERNALENDPOINT=ENGContainerName.delphi.com:7051
+    - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.eng.delphi.com:7051
     - CORE_PEER_LOCALMSPID=ENGMSP
     - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/eng.delphi.com/users/Admin@eng.delphi.com/msp
     - CORE_PEER_TLS_ENABLED=true
@@ -116,7 +122,9 @@ services:
     - /run/:/host/var/run/
     - MSPROOT_swarm:/etc/hyperledger/crypto-config
     networks:
-    - default
+      default:
+        aliases:
+        - peer0.eng.delphi.com
   peer0-pm-delphi-com:
     depends_on:
     - OrdererServiceName-delphi-com
@@ -129,7 +137,7 @@ services:
     - CORE_LEDGER_HISTORY_ENABLEHISTORYDATABASE=true
     - CORE_PEER_GOSSIP_USELEADERELECTION=true
     - CORE_PEER_GOSSIP_ORGLEADER=false
-    - CORE_PEER_GOSSIP_EXTERNALENDPOINT=PMContainerName.delphi.com:7051
+    - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.pm.delphi.com:7051
     - CORE_PEER_LOCALMSPID=PMMSP
     - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/pm.delphi.com/users/Admin@pm.delphi.com/msp
     - CORE_PEER_TLS_ENABLED=true
@@ -145,4 +153,6 @@ services:
     - /run/:/host/var/run/
     - MSPROOT_swarm:/etc/hyperledger/crypto-config
     networks:
-    - default
+      default:
+        aliases:
+        - peer0.pm.delphi.com

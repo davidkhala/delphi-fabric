@@ -81,7 +81,8 @@ MSPROOT_swarm=$(echo $volumesConfig | jq -r ".MSPROOT.swarm")
 yaml w -i $COMPOSE_FILE volumes["$MSPROOT_swarm"].external true
 yaml w -i $COMPOSE_FILE volumes["$CONFIGTX_swarm"].external true
 
-networksName="default" # TODO
+networksName="default"
+
 dockerNetworkName=$(jq -r ".$COMPANY.docker.network" $CONFIG_JSON)
 yaml w -i $COMPOSE_FILE networks["$networksName"].external.name $dockerNetworkName
 
@@ -96,7 +97,6 @@ docker pull hyperledger/fabric-ccenv:$IMAGE_TAG
 # orderer
 ORDERER_SERVICE_NAME="OrdererServiceName.$COMPANY_DOMAIN" # orderer service name will linked to depends_on
 ORDERER_SERVICE_NAME=$(serviceNameConvert $ORDERER_SERVICE_NAME)
-p=0
 function envPush() {
 	local CMD="$1"
 	$CMD.environment[$p] "$2"
@@ -114,9 +114,8 @@ p=0
 envPush "$ORDERERCMD" ORDERER_GENERAL_LOGLEVEL=debug
 envPush "$ORDERERCMD" ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
 
-orderer_hostName=${orderer_container_name,,}
-orderer_hostName_full=$orderer_hostName.$COMPANY_DOMAIN
-ORDERER_STRUCTURE="ordererOrganizations/$COMPANY_DOMAIN/orderers/$orderer_hostName_full"
+orderer_hostName_full=$orderer_container_name.$COMPANY_DOMAIN
+ORDERER_STRUCTURE="ordererOrganizations/$COMPANY_DOMAIN/orderers/${orderer_hostName_full}"
 CONTAINER_ORDERER_TLS_DIR="$CONTAINER_CRYPTO_CONFIG_DIR/$ORDERER_STRUCTURE/tls"
 
 envPush "$ORDERERCMD" ORDERER_GENERAL_TLS_ENABLED="$TLS_ENABLED"
@@ -135,7 +134,7 @@ envPush "$ORDERERCMD" ORDERER_GENERAL_TLS_ROOTCAS="[${CONTAINER_ORDERER_TLS_DIR}
 
 $ORDERERCMD.volumes[0] "$CONFIGTX_swarm:$CONTAINER_CONFIGTX_DIR"
 $ORDERERCMD.volumes[1] "$MSPROOT_swarm:$CONTAINER_CRYPTO_CONFIG_DIR"
-$ORDERERCMD.networks[0] $networksName
+$ORDERERCMD.networks.$networksName.aliases[0] $orderer_hostName_full
 
 for orgName in $orgNames; do
 	orgConfig=$(echo $orgsConfig | jq -r ".$orgName")
@@ -161,14 +160,13 @@ for orgName in $orgNames; do
 		envPush "$PEERCMD" CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
 		# NOTE docker compose network setting has problem: projectname is configured outside docker but in docker-compose cli
 		envPush "$PEERCMD" CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=$dockerNetworkName
-		#       $PEERCMD.networks[0] $dockerNetworkName
 		envPush "$PEERCMD" CORE_LOGGING_LEVEL=DEBUG
 		envPush "$PEERCMD" CORE_LEDGER_HISTORY_ENABLEHISTORYDATABASE=true
 
 		### GOSSIP setting
 		envPush "$PEERCMD" CORE_PEER_GOSSIP_USELEADERELECTION=true
 		envPush "$PEERCMD" CORE_PEER_GOSSIP_ORGLEADER=false
-		envPush "$PEERCMD" CORE_PEER_GOSSIP_EXTERNALENDPOINT=$peerContainer:7051
+		envPush "$PEERCMD" CORE_PEER_GOSSIP_EXTERNALENDPOINT=$PEER_ANCHOR:7051 # NOTE swarm only
 		# CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0:7051
 		# only work when CORE_PEER_GOSSIP_ORGLEADER=true & CORE_PEER_GOSSIP_USELEADERELECTION=false
 		envPush "$PEERCMD" CORE_PEER_LOCALMSPID=${orgName}MSP
@@ -192,7 +190,7 @@ for orgName in $orgNames; do
 		$PEERCMD.volumes[0] "/run/:/host/var/run/"
 		$PEERCMD.volumes[1] "$MSPROOT_swarm:$CONTAINER_CRYPTO_CONFIG_DIR" # for peer channel --cafile
 
-		$PEERCMD.networks[0] $networksName
+		$PEERCMD.networks.$networksName.aliases[0] $PEER_ANCHOR
 		#   TODO GO setup failed on peer container: only fabric-tools has go dependencies
 		#set GOPATH map
 		#

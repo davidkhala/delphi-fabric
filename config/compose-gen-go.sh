@@ -3,6 +3,7 @@
 sudo apt-get -qq install -y jq
 
 CURRENT="$(dirname $(readlink -f $BASH_SOURCE))"
+utilsDIR="$(dirname $CURRENT)/common/docker/utils"
 
 COMPOSE_FILE="$CURRENT/docker-compose.yaml"
 CONFIG_JSON="$CURRENT/orgs.json"
@@ -72,17 +73,18 @@ COMPOSE_VERSION=3
 
 yaml w -i $COMPOSE_FILE version \"$COMPOSE_VERSION\" # NOTE it should be a string, only version 3 support network setting
 
-# volumes
-docker volume prune --force
 volumesConfig=$(jq -r ".$COMPANY.docker.volumes" $CONFIG_JSON)
 CONFIGTXVolume=$(echo $volumesConfig | jq -r ".CONFIGTX.local")
 MSPROOTVolume=$(echo $volumesConfig | jq -r ".MSPROOT.local")
 
-docker volume create --name $MSPROOTVolume --opt o=bind --opt device=$MSPROOT --opt type=none
-jq ".$COMPANY.docker.volumes.MSPROOT.dir=\"$MSPROOT\"" $CONFIG_JSON | sponge $CONFIG_JSON
+# volumes TODO in future we might move process in lifecycle
+docker volume prune --force
+$utilsDIR/volume.sh createLocal $MSPROOTVolume $MSPROOT
 CONFIGTX_DIR=$(dirname $BLOCK_FILE)
-docker volume create --name $CONFIGTXVolume --opt o=bind --opt device="$CONFIGTX_DIR" --opt type=none
+$utilsDIR/volume.sh createLocal $CONFIGTXVolume $CONFIGTX_DIR
+jq ".$COMPANY.docker.volumes.MSPROOT.dir=\"$MSPROOT\"" $CONFIG_JSON | sponge $CONFIG_JSON
 jq ".$COMPANY.docker.volumes.CONFIGTX.dir=\"$CONFIGTX_DIR\"" $CONFIG_JSON | sponge $CONFIG_JSON
+
 yaml w -i $COMPOSE_FILE volumes["$MSPROOTVolume"].external true
 yaml w -i $COMPOSE_FILE volumes["$CONFIGTXVolume"].external true
 
