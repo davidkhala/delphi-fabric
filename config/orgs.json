@@ -1,6 +1,6 @@
 {
   "delphi": {
-    "domain": "delphi.com",
+    "domain": "Delphi.com",
     "docker": {
       "fabricTag": "1.0.1",
       "network": "delphiNetwork",

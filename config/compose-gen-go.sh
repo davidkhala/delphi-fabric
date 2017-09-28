@@ -116,8 +116,7 @@ p=0
 envPush "$ORDERERCMD" ORDERER_GENERAL_LOGLEVEL=debug
 envPush "$ORDERERCMD" ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
 
-orderer_hostName=${orderer_container_name,,}
-orderer_hostName_full=$orderer_hostName.$COMPANY_DOMAIN
+orderer_hostName_full=$orderer_container_name.$COMPANY_DOMAIN # TODO should company domain must be lower-case
 ORDERER_STRUCTURE="ordererOrganizations/$COMPANY_DOMAIN/orderers/$orderer_hostName_full"
 CONTAINER_ORDERER_TLS_DIR="$CONTAINER_CRYPTO_CONFIG_DIR/$ORDERER_STRUCTURE/tls"
 

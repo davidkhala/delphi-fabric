@@ -3,7 +3,7 @@ Profiles:
     Orderer:
       OrdererType: solo
       Addresses:
-      - orderContainerName.delphi.com:7050
+      - orderContainerName.Delphi.com:7050
       BatchTimeout: 2s
       BatchSize:
         MaxMessageCount: 10
@@ -12,27 +12,27 @@ Profiles:
       Organizations:
       - Name: OrdererMSPName
         ID: OrdererMSP
-        MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/ordererOrganizations/delphi.com/msp
+        MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/ordererOrganizations/Delphi.com/msp
     Consortiums:
       SampleConsortium:
         Organizations:
         - Name: BUMSPName
           ID: BUMSP
-          MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/bu.delphi.com/msp
+          MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/bu.Delphi.com/msp
           AnchorPeers:
-          - Host: BUContainerName.delphi.com
+          - Host: BUContainerName.Delphi.com
             Port: 7051
         - Name: ENGMSPName
           ID: ENGMSP
-          MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/eng.delphi.com/msp
+          MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/eng.Delphi.com/msp
           AnchorPeers:
-          - Host: ENGContainerName.delphi.com
+          - Host: ENGContainerName.Delphi.com
             Port: 7051
         - Name: PMMSPName
           ID: PMMSP
-          MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/pm.delphi.com/msp
+          MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/pm.Delphi.com/msp
           AnchorPeers:
-          - Host: PMContainerName.delphi.com
+          - Host: PMContainerName.Delphi.com
             Port: 7051
   delphiChannel:
     Consortium: SampleConsortium
@@ -40,13 +40,13 @@ Profiles:
       Organizations:
       - Name: BUMSPName
         ID: BUMSP
-        MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/bu.delphi.com/msp
+        MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/bu.Delphi.com/msp
         AnchorPeers:
-        - Host: BUContainerName.delphi.com
+        - Host: BUContainerName.Delphi.com
           Port: 7051
       - Name: PMMSPName
         ID: PMMSP
-        MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/pm.delphi.com/msp
+        MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/pm.Delphi.com/msp
         AnchorPeers:
-        - Host: PMContainerName.delphi.com
+        - Host: PMContainerName.Delphi.com
           Port: 7051

@@ -82,8 +82,7 @@ const preparePeer = (orgName, peerIndex, peerConfig) => {
 //FIXME assume we have only one orderer
 
 const ordererConfig = companyConfig.orderer
-const orderer_hostName = ordererConfig.containerName.toLowerCase()
-const orderer_hostName_full = `${orderer_hostName}.${COMPANY_DOMAIN}`
+const orderer_hostName_full = `${ordererConfig.containerName}.${COMPANY_DOMAIN}`
 const orderer_tls_cacerts = path.join(CRYPTO_CONFIG_DIR,
 		`ordererOrganizations/${COMPANY_DOMAIN}/orderers/${orderer_hostName_full}/tls/ca.crt`)
 let orderer_url

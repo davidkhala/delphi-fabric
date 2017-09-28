@@ -71,7 +71,7 @@ exports.txEventPromise = (eventHub, { txId, eventWaitTime, timeOutErr }, validat
 		const timerID = setTimeout(() => {
 			eventHub.unregisterTxEvent(transactionID)
 			eventHub.disconnect()
-			reject(timeOutErr)
+			reject(timeOutErr?timeOutErr:"txEventTimeout")
 		}, eventWaitTime)
 
 		eventHub.registerTxEvent(transactionID, (tx, code) => {

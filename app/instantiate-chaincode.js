@@ -59,7 +59,10 @@ exports.instantiateChaincode = (channel, richPeers, chaincodeId, chaincodeVersio
 						const promises = []
 						for (let peer of richPeers) {
 							const eventHub = helper.bindEventHub(peer)
-							const txPromise = eventHelper.txEventPromise(eventHub, { txId, eventWaitTime })
+							const txPromise = eventHelper.txEventPromise(eventHub, { txId, eventWaitTime },({ tx, code }) => {
+								logger.debug("newTxEvent",{tx,code})
+								return { valid: code === 'VALID', interrupt: true }
+							})
 							promises.push(txPromise)
 						}
 

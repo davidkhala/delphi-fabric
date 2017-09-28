@@ -6,7 +6,6 @@ CURRENT="$(dirname $(readlink -f ${BASH_SOURCE}))"
 
 crypto_config_file="$CURRENT/crypto-config.yaml"
 
-################### company, orgs setting
 CONFIG_JSON="$CURRENT/orgs.json"
 COMPANY=$1
 if [ -z "$COMPANY" ]; then
@@ -35,15 +34,12 @@ while getopts "i:j:" shortname $remain_params; do
 	esac
 done
 
-# build orgs from config.json
 orgsConfig=$(jq -r ".$COMPANY.orgs" $CONFIG_JSON)
 orgNames=$(echo $orgsConfig | jq -r "keys")
 COMPANY_DOMAIN=$(jq -r ".$COMPANY.domain" $CONFIG_JSON)
 
 ###################
 orderer_container_name=$(jq -r ".$COMPANY.orderer.containerName" $CONFIG_JSON)
-orderer_hostName=${orderer_container_name,,}
-# SHOULD be the same with containerName or its lowercase, otherwize transport: authentication handshake failed: x509: certificate is valid for Order0.delphi.com, Order0, not orderContainerName.delphi.com"
 
 
 
@@ -52,7 +48,7 @@ rm $crypto_config_file
 >$crypto_config_file
 yaml w -i $crypto_config_file OrdererOrgs[0].Name OrdererCrytoName
 yaml w -i $crypto_config_file OrdererOrgs[0].Domain $COMPANY_DOMAIN
-yaml w -i $crypto_config_file OrdererOrgs[0].Specs[0].Hostname ${orderer_hostName} # be lower case for identity
+yaml w -i $crypto_config_file OrdererOrgs[0].Specs[0].Hostname ${orderer_container_name}
 
 for ((i = 0; i < $(echo $orgsConfig| jq "length" ); i++)); do
 	orgName=$(echo $orgNames| jq -r ".[$i]")
