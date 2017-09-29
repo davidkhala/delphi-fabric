@@ -27,7 +27,7 @@ _after first time clone this repository, run
 
 ## TODO
 - ca-service in node-sdk
-- TLS disabled testing
-- docker swarm for multi-machine deploy
+- TLS disabled, toggle testing
+- docker swarm for multi-machine deploy(primitive ready)
 - endorsement policy config
 

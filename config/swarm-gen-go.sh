@@ -86,9 +86,9 @@ networksName="default"
 dockerNetworkName=$(jq -r ".$COMPANY.docker.network" $CONFIG_JSON)
 yaml w -i $COMPOSE_FILE networks["$networksName"].external.name $dockerNetworkName
 
-function serviceNameConvert(){
-    # NOTE to fix Error response from daemon: rpc error: code = 3 desc = name must be valid as a DNS name component
-    echo $(echo $1| sed 's/\./\-/g')
+function serviceNameConvert() {
+	# NOTE to fix Error response from daemon: rpc error: code = 3 desc = name must be valid as a DNS name component
+	echo $(echo $1 | sed 's/\./\-/g')
 }
 # ccenv: no network is OK;
 # NOTE delete ccenv container:swarm will keep restarting dead container
@@ -146,7 +146,6 @@ for orgName in $orgNames; do
 		PEER_ANCHOR=peer$peerIndex.$PEER_DOMAIN # TODO multi peer case, take care of any 'peer[0]' occurrence
 		peerServiceName=$(serviceNameConvert $PEER_ANCHOR)
 		peerConfig=$(echo $org_peersConfig | jq -r ".[$peerIndex]")
-		peerContainer=$(echo $peerConfig | jq -r ".containerName").$COMPANY_DOMAIN
 		PEER_STRUCTURE="peerOrganizations/$PEER_DOMAIN/peers/$PEER_ANCHOR"
 		# peer container
 		#
@@ -156,9 +155,11 @@ for orgName in $orgNames; do
 		# NOTE working_dir just setting default commands current path
 		$PEERCMD.command "peer node start"
 
-        # swarm constraint
-        $PEERCMD.deploy.placement.constraints[0] "node.hostname == fabric-swarm-manager"
-
+		# swarm constraint TODO to enhance config?
+		constraints=$(echo $peerConfig | jq ".swarm.constraints")
+		for ((constraintIndex = 0; constraintIndex < $(echo $constraints | jq "length"); constraintIndex++)); do
+			$PEERCMD.deploy.placement.constraints[$constraintIndex] "$(echo $constraints | jq -r ".[$constraintIndex]")"
+		done
 
 		#common env
 		p=0
@@ -208,7 +209,7 @@ for orgName in $orgNames; do
 	# CA
 	CA_enable=$(echo $orgConfig | jq ".ca.enable")
 	if [ "$CA_enable" == "true" ]; then
-	    caServiceName=$(serviceNameConvert "ca.$PEER_DOMAIN")
+		caServiceName=$(serviceNameConvert "ca.$PEER_DOMAIN")
 		CACMD="yaml w -i $COMPOSE_FILE "services[${caServiceName}]
 		$CACMD.image hyperledger/fabric-ca:$IMAGE_TAG
 		$CACMD.command "sh -c 'fabric-ca-server start -b admin:adminpw -d'"
