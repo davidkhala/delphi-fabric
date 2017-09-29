@@ -142,7 +142,7 @@ $ORDERERCMD.networks[0] $networksName
 
 for orgName in $orgNames; do
 	orgConfig=$(echo $orgsConfig | jq -r ".$orgName")
-	PEER_DOMAIN=${orgName,,}.$COMPANY_DOMAIN
+	PEER_DOMAIN=$orgName.$COMPANY_DOMAIN
 	USER_ADMIN=Admin@$PEER_DOMAIN
 	org_peersConfig=$(echo $orgConfig | jq -r ".peers")
 	ADMIN_STRUCTURE="peerOrganizations/$PEER_DOMAIN/users/$USER_ADMIN"

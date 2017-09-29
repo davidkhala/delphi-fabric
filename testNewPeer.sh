@@ -21,7 +21,7 @@ eventHubPort="7073" # map for 7053, random assign when empty
 
 COMPANY_DOMAIN=$(jq -r ".$COMPANY.domain" $CONFIG_JSON)
 dockerNetworkName=$(jq -r ".$COMPANY.docker.network" $CONFIG_JSON)
-org_domain="${orgName,,}.$COMPANY_DOMAIN"
+org_domain="$orgName.$COMPANY_DOMAIN"
 newDir="${CRYPTO_CONFIG_DIR}peerOrganizations/$org_domain"
 peerCount=1
 userCount=0
@@ -61,7 +61,7 @@ function down() {
 function up() {
 	>$CRYPTO_UPDATE_CONFIG
 	yaml w -i $CRYPTO_UPDATE_CONFIG PeerOrgs[$i].Name $orgName
-	yaml w -i $CRYPTO_UPDATE_CONFIG PeerOrgs[$i].Domain "${orgName,,}.$COMPANY_DOMAIN"
+	yaml w -i $CRYPTO_UPDATE_CONFIG PeerOrgs[$i].Domain "$orgName.$COMPANY_DOMAIN"
 
 	yaml w -i $CRYPTO_UPDATE_CONFIG PeerOrgs[$i].Template.Count $peerCount
 	yaml w -i $CRYPTO_UPDATE_CONFIG PeerOrgs[$i].Template.Start 0

@@ -53,7 +53,7 @@ yaml w -i $crypto_config_file OrdererOrgs[0].Specs[0].Hostname ${orderer_contain
 for ((i = 0; i < $(echo $orgsConfig| jq "length" ); i++)); do
 	orgName=$(echo $orgNames| jq -r ".[$i]")
 	yaml w -i $crypto_config_file PeerOrgs[$i].Name $orgName
-	yaml w -i $crypto_config_file PeerOrgs[$i].Domain "${orgName,,}.$COMPANY_DOMAIN"
+	yaml w -i $crypto_config_file PeerOrgs[$i].Domain "$orgName.$COMPANY_DOMAIN"
 
 	peerCount=$(echo $orgsConfig| jq ".$orgName.peers|length")
 	userCount=$(echo $orgsConfig| jq ".$orgName.users|length")

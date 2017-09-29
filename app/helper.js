@@ -44,7 +44,7 @@ const objects = { user: {}, orderer: {}, caService: {} } // client is for save C
 // set up the client and channel objects for each org
 const GPRC_protocol = 'grpcs://' // FIXME: assume using TLS
 const gen_tls_cacerts = (orgName, peerIndex) => {
-	const org_domain = `${orgName.toLowerCase()}.${COMPANY_DOMAIN}`// bu.delphi.com
+	const org_domain = `${orgName}.${COMPANY_DOMAIN}`// bu.delphi.com
 	const peer_hostName_full = `peer${peerIndex}.${org_domain}`
 	const tls_cacerts = `${CRYPTO_CONFIG_DIR}/peerOrganizations/${org_domain}/peers/${peer_hostName_full}/tls/ca.crt`
 	return { org_domain, peer_hostName_full, tls_cacerts }
@@ -163,7 +163,7 @@ const queryPeer = (containerName) => {
 		for (let index in peers) {
 			const peer = peers[index]
 			if (peer.containerName === containerName) {
-				const org_domain = `${orgName.toLowerCase()}.${COMPANY_DOMAIN}`
+				const org_domain = `${orgName}.${COMPANY_DOMAIN}`
 				const peer_hostName_full = `peer${index}.${org_domain}`
 				return {
 					key: orgName, peer: {
@@ -347,7 +347,7 @@ objects.user.clear = () => {
 	client._userContext = null
 	client.setCryptoSuite(null)
 }
-const formatUsername = (username, orgName) => `${username}@${orgName.toLowerCase()}.${COMPANY_DOMAIN}`
+const formatUsername = (username, orgName) => `${username}@${orgName}.${COMPANY_DOMAIN}`
 //
 objects.user.create = (keystoreDir, signcertFile, username, orgName, persistInCache = true, mspid) => {
 	const keyFile = getKeyFilesInDir(keystoreDir)[0]
@@ -423,7 +423,7 @@ objects.user.admin = {
 objects.user.admin.get = (orgName) => objects.user.get(rawAdminUsername, orgName)
 objects.user.admin.create = (orgName) => {
 
-	const org_domain = `${orgName.toLowerCase()}.${COMPANY_DOMAIN}`// bu.delphi.com
+	const org_domain = `${orgName}.${COMPANY_DOMAIN}`// bu.delphi.com
 	const keystoreDir = path.join(CRYPTO_CONFIG_DIR,
 			`peerOrganizations/${org_domain}/users/Admin@${org_domain}/msp/keystore`)
 

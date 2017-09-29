@@ -82,7 +82,7 @@ for orgName in $blockOrgs; do
 	yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Consortiums.SampleConsortium.Organizations[$i].Name ${orgName}MSPName
 	yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Consortiums.SampleConsortium.Organizations[$i].ID ${orgName}MSP
 	yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Consortiums.SampleConsortium.Organizations[$i].MSPDir \
-		"${MSPROOT}peerOrganizations/${orgName,,}.$COMPANY_DOMAIN/msp"
+		"${MSPROOT}peerOrganizations/$orgName.$COMPANY_DOMAIN/msp"
 
 	peerContainer=$(echo $orgConfig |jq -r ".peers[0].containerName" ).$COMPANY_DOMAIN
 
@@ -105,7 +105,7 @@ for orgName in $channelOrgs; do
 	yaml w -i $configtx_file Profiles.$PROFILE_CHANNEL.Application.Organizations[$i].Name $(echo $orgConfig | jq -r ".MSP.name")
 
 	yaml w -i $configtx_file Profiles.$PROFILE_CHANNEL.Application.Organizations[$i].ID $(echo $orgConfig | jq -r ".MSP.id")
-	yaml w -i $configtx_file Profiles.$PROFILE_CHANNEL.Application.Organizations[$i].MSPDir "${MSPROOT}peerOrganizations/${orgName,,}.$COMPANY_DOMAIN/msp"
+	yaml w -i $configtx_file Profiles.$PROFILE_CHANNEL.Application.Organizations[$i].MSPDir "${MSPROOT}peerOrganizations/$orgName.$COMPANY_DOMAIN/msp"
 
 	peerContainer=$(echo $orgConfig | jq -r ".peers[0].containerName").$COMPANY_DOMAIN
 	yaml w -i $configtx_file Profiles.$PROFILE_CHANNEL.Application.Organizations[$i].AnchorPeers[0].Host $peerContainer

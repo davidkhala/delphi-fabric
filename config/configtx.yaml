@@ -18,19 +18,19 @@ Profiles:
         Organizations:
         - Name: BUMSPName
           ID: BUMSP
-          MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/bu.Delphi.com/msp
+          MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/BU.Delphi.com/msp
           AnchorPeers:
           - Host: BUContainerName.Delphi.com
             Port: 7051
         - Name: ENGMSPName
           ID: ENGMSP
-          MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/eng.Delphi.com/msp
+          MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/ENG.Delphi.com/msp
           AnchorPeers:
           - Host: ENGContainerName.Delphi.com
             Port: 7051
         - Name: PMMSPName
           ID: PMMSP
-          MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/pm.Delphi.com/msp
+          MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/PM.Delphi.com/msp
           AnchorPeers:
           - Host: PMContainerName.Delphi.com
             Port: 7051
@@ -40,13 +40,13 @@ Profiles:
       Organizations:
       - Name: BUMSPName
         ID: BUMSP
-        MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/bu.Delphi.com/msp
+        MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/BU.Delphi.com/msp
         AnchorPeers:
         - Host: BUContainerName.Delphi.com
           Port: 7051
       - Name: PMMSPName
         ID: PMMSP
-        MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/pm.Delphi.com/msp
+        MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/PM.Delphi.com/msp
         AnchorPeers:
         - Host: PMContainerName.Delphi.com
           Port: 7051
