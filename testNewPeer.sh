@@ -103,8 +103,8 @@ function up() {
 	docker network connect --alias $peerDomainName $dockerNetworkName $peerContainerName
 	./common/bin-manage/configtxlator/runConfigtxlator.sh start
 	# set peerPort if it is auto-gen
-	peerPort=$(./common/docker/utils/docker.sh view container port $peerContainerName 7051)
-	eventHubPort=$(./common/docker/utils/docker.sh view container port $peerContainerName 7053)
+	peerPort=$(./common/docker/utils/docker.sh viewContainerPort $peerContainerName 7051)
+	eventHubPort=$(./common/docker/utils/docker.sh viewContainerPort $peerContainerName 7053)
 	node -e "require('./app/testConfigtxlator.js').addOrg('${orgName}', '${MSPName}', '${MSPID}', 'BUMSPName', '${adminUserMspDir}', '${org_domain}','${peerPort}','${eventHubPort}','${peerDomainName}'
     ,'${chaincodePath}','${chaincodeId}','${chaincodeVersion}','${chaincode_args}')"
 }

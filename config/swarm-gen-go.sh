@@ -6,8 +6,8 @@ CURRENT="$(dirname $(readlink -f $BASH_SOURCE))"
 
 COMPOSE_FILE="$CURRENT/docker-swarm.yaml"
 CONFIG_JSON="$CURRENT/orgs.json"
-# TODO if we use cli container to install chaincode, we need to set GOPATH in compose file; here we use node-sdk to do it
 GOPATH="$(dirname $CURRENT)/GOPATH/"
+utilsDir="$(dirname $CURRENT)/common/docker/utils"
 IMAGE_TAG="x86_64-1.0.0"
 
 #TODO ledgersData, for resetChaincode CONTAINER_ledgersData="/var/hyperledger/production/ledgersData"
@@ -92,7 +92,7 @@ function serviceNameConvert(){
 }
 # ccenv: no network is OK;
 # NOTE delete ccenv container:swarm will keep restarting dead container
-docker pull hyperledger/fabric-ccenv:$IMAGE_TAG
+$utilsDir/docker.sh pullIfNotExist hyperledger/fabric-ccenv:$IMAGE_TAG
 
 # orderer
 ORDERER_SERVICE_NAME="OrdererServiceName.$COMPANY_DOMAIN" # orderer service name will linked to depends_on
@@ -155,6 +155,11 @@ for orgName in $orgNames; do
 		$PEERCMD.image hyperledger/fabric-peer:$IMAGE_TAG
 		# NOTE working_dir just setting default commands current path
 		$PEERCMD.command "peer node start"
+
+        # swarm constraint
+        $PEERCMD.deploy.placement.constraints[0] "node.hostname == fabric-swarm-manager"
+
+
 		#common env
 		p=0
 		envPush "$PEERCMD" CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock

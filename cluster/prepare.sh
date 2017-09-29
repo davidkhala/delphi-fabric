@@ -11,19 +11,29 @@ thisIP=$($utilsDir/swarm.sh getNodeIP $mainNodeID)
 
 CONFIGTX_nfs="/home/david/Documents/nfs/CONFIGTX"
 MSPROOT_nfs="/home/david/Documents/nfs/MSPROOT"
+# NOTE using node labels to fetch directory information
 CONFIGTX_DIR=$($utilsDir/swarm.sh getNodeLabels $mainNodeID | jq -r ".CONFIGTX")
 
 MSPROOT_DIR=$($utilsDir/swarm.sh getNodeLabels $mainNodeID | jq -r ".MSPROOT")
 if [ ! "$MSPROOT_DIR" == "null" ]; then
-	$utilsDir/nfs.sh add $thisIP $MSPROOT_DIR $MSPROOT_nfs
+	$utilsDir/nfs.sh mount $MSPROOT_nfs $thisIP $MSPROOT_DIR
 else
 	exit 1
 fi
 if [ ! "$CONFIGTX_DIR" == "null" ]; then
-	$utilsDir/nfs.sh add $thisIP $CONFIGTX_DIR $CONFIGTX_nfs
+	$utilsDir/nfs.sh mount $CONFIGTX_nfs $thisIP $CONFIGTX_DIR
 else
 	exit 1
 fi
+function pullImages(){
+#   please tracing https://github.com/moby/moby/issues/30951
+    VERSION=$(jq -r ".${COMPANY}.docker.fabricTag" $CONFIG_JSON)
+    IMAGE_TAG="x86_64-$VERSION"
+    $utilsDir/docker.sh pullIfNotExist hyperledger/fabric-ccenv:$IMAGE_TAG
+    $utilsDir/docker.sh pullIfNotExist hyperledger/fabric-orderer:$IMAGE_TAG
+    $utilsDir/docker.sh pullIfNotExist hyperledger/fabric-peer:$IMAGE_TAG
+}
+pullImages
 CONFIGTX_swarm=$(echo $volumesConfig | jq -r ".CONFIGTX.swarm")
 MSPROOT_swarm=$(echo $volumesConfig | jq -r ".MSPROOT.swarm")
 $utilsDir/volume.sh createLocal $CONFIGTX_swarm $CONFIGTX_DIR

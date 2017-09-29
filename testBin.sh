@@ -18,7 +18,6 @@ CRYPTO_CONFIG_DIR="$config_dir/crypto-config/"
 
 COMPANY='delphi' # must match to config_json
 # write to config: jq do not support in-place editing, use moreutils:sponge
-jq ".$COMPANY.CRYPTO_CONFIG_DIR=\"$CRYPTO_CONFIG_DIR\"" $CONFIG_JSON | sponge $CONFIG_JSON
 CONFIGTX_OUTPUT_DIR="$config_dir/configtx"
 mkdir -p $CONFIGTX_OUTPUT_DIR
 
