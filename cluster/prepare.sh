@@ -18,11 +18,13 @@ MSPROOT_DIR=$($utilsDir/swarm.sh getNodeLabels $mainNodeID | jq -r ".MSPROOT")
 if [ ! "$MSPROOT_DIR" == "null" ]; then
 	$utilsDir/nfs.sh mount $MSPROOT_nfs $thisIP $MSPROOT_DIR
 else
+    echo label MSPROOT_DIR not exist in node $mainNodeID . exit
 	exit 1
 fi
 if [ ! "$CONFIGTX_DIR" == "null" ]; then
 	$utilsDir/nfs.sh mount $CONFIGTX_nfs $thisIP $CONFIGTX_DIR
 else
+    echo label  CONFIGTX_DIR not exist in node $mainNodeID . exit
 	exit 1
 fi
 function pullImages(){
@@ -36,5 +38,7 @@ function pullImages(){
 pullImages
 CONFIGTX_swarm=$(echo $volumesConfig | jq -r ".CONFIGTX.swarm")
 MSPROOT_swarm=$(echo $volumesConfig | jq -r ".MSPROOT.swarm")
-$utilsDir/volume.sh createLocal $CONFIGTX_swarm $CONFIGTX_DIR
-$utilsDir/volume.sh createLocal $MSPROOT_swarm $MSPROOT_DIR
+docker container prune --force
+docker volume prune --force # TODO
+$utilsDir/volume.sh createLocal $CONFIGTX_swarm $CONFIGTX_nfs
+$utilsDir/volume.sh createLocal $MSPROOT_swarm $MSPROOT_nfs
