@@ -1,10 +1,15 @@
 {
-  "delphi":{
-    "thisHost":{
-      "hostname":"ubuntu"
+  "delphi": {
+    "thisHost": {
+      "hostname": "ubuntu"
     },
-    "otherHost":{
-      "fabric-swarm-manager":{}
+    "otherHost": {
+      "fabric-swarm-manager": {
+        "nfs": {
+          "CONFIGTX": "/home/david/Documents/nfs/CONFIGTX",
+          "MSPROOT": "/home/david/Documents/nfs/MSPROOT"
+        }
+      }
     }
   }
 }

@@ -4,27 +4,24 @@
 CURRENT="$(dirname $(readlink -f ${BASH_SOURCE}))"
 
 GOPATH_SYS="/home/david/go"
-config_dir="$CURRENT/config"
-CONFIG_JSON="$config_dir/orgs.json"
-SWARM_CONFIG="$config_dir/swarm.json"
-CRYPTO_CONFIG_FILE="$config_dir/crypto-config.yaml"
-configtx_file="$config_dir/configtx.yaml"
-CRYPTO_CONFIG_DIR="$config_dir/crypto-config/"
+CONFIG_DIR="$CURRENT/config"
+CONFIG_JSON="$CONFIG_DIR/orgs.json"
+SWARM_CONFIG="$CONFIG_DIR/swarm.json"
+CRYPTO_CONFIG_FILE="$CONFIG_DIR/crypto-config.yaml"
+configtx_file="$CONFIG_DIR/configtx.yaml"
+CRYPTO_CONFIG_DIR="$CONFIG_DIR/crypto-config/"
 COMPANY='delphi' # must match to config_json
-CONFIGTX_OUTPUT_DIR="$config_dir/configtx"
+CONFIGTX_OUTPUT_DIR="$CONFIG_DIR/configtx"
 BLOCK_FILE="$CONFIGTX_OUTPUT_DIR/$COMPANY.block"
 VERSION=$(jq -r ".${COMPANY}.docker.fabricTag" $CONFIG_JSON)
 IMAGE_TAG="x86_64-$VERSION"
 
 TLS_ENABLED=true
-COMPOSE_FILE="$config_dir/docker-swarm.yaml"
+COMPOSE_FILE="$CONFIG_DIR/docker-swarm.yaml"
 volumesConfig=$(jq -r ".$COMPANY.docker.volumes" $CONFIG_JSON)
 CONFIGTXDir=$(echo $volumesConfig | jq -r ".CONFIGTX.dir")
 MSPROOTDir=$(echo $volumesConfig | jq -r ".MSPROOT.dir")
 
-function _changeHostName() {
-	sudo gedit /etc/hostname /etc/hosts
-}
 function createSwarm() {
 	ip="$1"
 	docker swarm init --advertise-addr=${ip}
