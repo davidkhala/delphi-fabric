@@ -39,9 +39,7 @@ function createVolume() {
 
 function down() {
 	docker stack rm $swarmNetwork
-	FILTER="dev" # TODO how to remove chaincodeContainer on otherhost, move this to clean.sh
-    ./common/rmChaincodeContainer.sh container $FILTER
-	./common/rmChaincodeContainer.sh image $FILTER
+	./cluster/clean.sh
 	docker network prune --force
 	docker volume prune --force
 }

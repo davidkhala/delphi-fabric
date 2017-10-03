@@ -12,10 +12,7 @@ dockerNetworkName=$(jq -r ".$COMPANY.docker.network" $CONFIG_JSON)
 function down() {
     # NOTE deprecated: docker-compose -f $COMPOSE_FILE --project-name $projectName [action] :projectName is useless when setting network
 	docker-compose -f $COMPOSE_FILE down
-	FILTER="dev"
-    ./common/rmChaincodeContainer.sh container $FILTER
-	./common/rmChaincodeContainer.sh image $FILTER
-	docker container prune --force
+	./cluster/clean.sh
 	docker network prune --force
 
 }

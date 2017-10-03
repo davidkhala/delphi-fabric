@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# TODO not ready
 
 CURRENT="$(dirname $(readlink -f ${BASH_SOURCE}))"
 
@@ -52,5 +51,3 @@ MSPROOTVolume=$(echo $volumesConfig | jq -r ".MSPROOT.swarm")
 ./common/docker/utils/swarm.sh getNodeLabels
 
 ./config/swarm-gen-go.sh $COMPANY $CRYPTO_CONFIG_DIR $BLOCK_FILE -s $TLS_ENABLED -v $IMAGE_TAG
-
-# TODO instantiate chaincode: {"message":"Could not attach to network delphiNetwork: rpc error: code = 7 desc = network delphiNetwork not manually attachable"}
