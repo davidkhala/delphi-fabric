@@ -2,7 +2,7 @@ const install = require('./install-chaincode').installChaincode
 const instantiate = require('./instantiate-chaincode').instantiateChaincode
 const helper = require('./helper')
 const chaincodeConfig=require('../config/chaincode.json')
-const chaincodeId = 'delphiChaincode'
+const chaincodeId = 'adminChaincode'
 
 const chaincodePath = chaincodeConfig.chaincodes[chaincodeId].path
 

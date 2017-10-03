@@ -14,6 +14,7 @@ MSPROOTDir=$(echo $volumesConfig | jq -r ".MSPROOT.dir")
 CONFIGTXVolume=$(echo $volumesConfig | jq -r ".CONFIGTX.swarm")
 MSPROOTVolume=$(echo $volumesConfig | jq -r ".MSPROOT.swarm")
 function createVolume() {
+#     TODO move this out
 	./common/docker/utils/volume.sh createLocal $MSPROOTVolume $MSPROOTDir
 	./common/docker/utils/volume.sh createLocal $CONFIGTXVolume $CONFIGTXDir
 
@@ -38,7 +39,7 @@ function createVolume() {
 
 function down() {
 	docker stack rm $swarmNetwork
-	FILTER="dev"
+	FILTER="dev" # TODO how to remove chaincodeContainer on otherhost, move this to clean.sh
     ./common/rmChaincodeContainer.sh container $FILTER
 	./common/rmChaincodeContainer.sh image $FILTER
 	docker network prune --force

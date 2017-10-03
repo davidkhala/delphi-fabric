@@ -165,7 +165,6 @@ for orgName in $orgNames; do
 		envPush "$PEERCMD" CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
 		# NOTE docker compose network setting has problem: projectname is configured outside docker but in docker-compose cli
 		envPush "$PEERCMD" CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=$dockerNetworkName
-		#       $PEERCMD.networks[0] $dockerNetworkName
 		envPush "$PEERCMD" CORE_LOGGING_LEVEL=DEBUG
 		envPush "$PEERCMD" CORE_LEDGER_HISTORY_ENABLEHISTORYDATABASE=true
 
