@@ -19,14 +19,13 @@ helper.getOrgAdmin(orgName).then(() => {
 })
 const _testInvokeOnNewPeer = () => {
 	const orgName = 'AM'
-	const GPRC_protocol = 'grpcs://' // FIXME: assume using TLS
 	const { peer_hostName_full, tls_cacerts } = helper.gen_tls_cacerts(orgName, 0)
 	const peerPort = 7071
 	const eventHubPort = 7073
 	const AMPeer = helper.newPeer({ peerPort, peer_hostName_full, tls_cacerts })
 	const peers = [AMPeer]//helper.newPeers(peerIndexes, orgName)
 	AMPeer.peerConfig = {
-		peerEventUrl: `${GPRC_protocol}localhost:${eventHubPort}`
+		eventHubPort
 	}
 	helper.getOrgAdmin(orgName).then(() => {
 

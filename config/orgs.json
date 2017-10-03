@@ -1,6 +1,7 @@
 {
   "delphi": {
     "domain": "Delphi.com",
+    "TLS": false,
     "docker": {
       "fabricTag": "1.0.1",
       "network": "delphiNetwork",
@@ -52,7 +53,11 @@
       "BU": {
         "peers": [
           {
-            "swarm":{"constraints":["node.hostname == ubuntu"]},
+            "swarm": {
+              "constraints": [
+                "node.hostname == ubuntu"
+              ]
+            },
             "containerName": "BUContainerName",
             "portMap": [
               {
@@ -66,7 +71,11 @@
             ]
           },
           {
-            "swarm":{"constraints":["node.hostname == fabric-swarm-manager"]},
+            "swarm": {
+              "constraints": [
+                "node.hostname == fabric-swarm-manager"
+              ]
+            },
             "containerName": "BUContainer1",
             "portMap": [
               {
@@ -98,7 +107,11 @@
       "ENG": {
         "peers": [
           {
-            "swarm":{"constraints":["node.hostname == fabric-swarm-manager"]},
+            "swarm": {
+              "constraints": [
+                "node.hostname == fabric-swarm-manager"
+              ]
+            },
             "containerName": "ENGContainerName",
             "portMap": [
               {
@@ -133,7 +146,11 @@
       "PM": {
         "peers": [
           {
-            "swarm":{"constraints":["node.hostname == ubuntu"]},
+            "swarm": {
+              "constraints": [
+                "node.hostname == ubuntu"
+              ]
+            },
             "containerName": "PMContainerName",
             "portMap": [
               {

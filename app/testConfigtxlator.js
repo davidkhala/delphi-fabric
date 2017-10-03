@@ -3,7 +3,6 @@ const helper = require('./helper')
 const logger = helper.getLogger('test-configtxlator')
 
 const channelName = 'delphiChannel'
-const GPRC_protocol = 'grpcs://' // FIXME: assume using TLS
 
 const join = require('./join-channel').joinChannel
 const instantiate = require('./instantiate-chaincode').instantiateChaincode
@@ -48,7 +47,7 @@ const addOrg = (
 				const peer = helper.newPeer({ peerPort, tls_cacerts, peer_hostName_full })
 
 				peer.peerConfig = {
-					peerEventUrl: `${GPRC_protocol}localhost:${eventHubPort}`
+					eventHubPort
 				}
 
 				channel.addPeer(peer)

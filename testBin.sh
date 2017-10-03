@@ -27,10 +27,9 @@ CHANNEL_FILE="$CONFIGTX_OUTPUT_DIR/$COMPANY.channel"
 PROFILE_BLOCK=${COMPANY}Genesis
 PROFILE_CHANNEL=${COMPANY}Channel
 CHANNEL_NAME="delphiChannel"
-VERSION="1.0.1"
-jq ".$COMPANY.docker.fabricTag=\"$VERSION\"" $CONFIG_JSON | sponge $CONFIG_JSON
+VERSION=$(jq -r ".$COMPANY.docker.fabricTag" $CONFIG_JSON)
 IMAGE_TAG="x86_64-$VERSION"
-TLS_ENABLED=true
+TLS_ENABLED=$(jq ".$COMPANY.TLS" $CONFIG_JSON)
 
 ## update bin first
 ./common/bin-manage/pullBIN.sh -v $VERSION
@@ -68,4 +67,3 @@ if [ -f "$COMPOSE_FILE" ]; then
 fi
 ./config/compose-gen-go.sh $COMPANY $CRYPTO_CONFIG_DIR $BLOCK_FILE -f $COMPOSE_FILE -s $TLS_ENABLED -v $IMAGE_TAG
 
-# docker-compose -f $COMPOSE_FILE up

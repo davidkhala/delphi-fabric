@@ -20,6 +20,7 @@ eventHubPort="7073" # map for 7053, random assign when empty
 # NOTE docker query port: $ docker container port AMContainerName 7051/tcp | awk '{split($0,a,":"); print a[2]}'
 
 COMPANY_DOMAIN=$(jq -r ".$COMPANY.domain" $CONFIG_JSON)
+TLS_ENABLED=$(jq ".$COMPANY.TLS" $CONFIG_JSON)
 dockerNetworkName=$(jq -r ".$COMPANY.docker.network" $CONFIG_JSON)
 org_domain="$orgName.$COMPANY_DOMAIN"
 newDir="${CRYPTO_CONFIG_DIR}peerOrganizations/$org_domain"
@@ -73,11 +74,17 @@ function up() {
 
 	CMD="peer node start"
 
+	CRYPTO_CONFIG_CONTAINER_DIR="/etc/hyperledger/crypto-config"
+	TLS_ENV=""
+	if [ "$TLS_ENABLED" == "true" ]; then
+		TLS_ENV="-e CORE_PEER_TLS_KEY_FILE=$CRYPTO_CONFIG_CONTAINER_DIR/peerOrganizations/$org_domain/peers/$peerDomainName/tls/server.key
+		 -e CORE_PEER_TLS_CERT_FILE=$CRYPTO_CONFIG_CONTAINER_DIR/peerOrganizations/$org_domain/peers/$peerDomainName/tls/server.crt
+		 -e CORE_PEER_TLS_ROOTCERT_FILE=$CRYPTO_CONFIG_CONTAINER_DIR/peerOrganizations/$org_domain/peers/$peerDomainName/tls/ca.crt "
+	fi
 	# NOTE CORE_PEER_GOSSIP_ORGLEADER=false => err MSP AMMSP is unknown
 	# CORE_PEER_GOSSIP_USELEADERELECTION=true => Error: Endpoint read failed
 	# -e CORE_PEER_NETWORKID=$corePeerNetworkId: take care image "dev" cleaning
 
-	CRYPTO_CONFIG_CONTAINER_DIR="/etc/hyperledger/crypto-config"
 	docker run -d --name $peerContainerName \
 		-e CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock \
 		-e CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=$dockerNetworkName \
@@ -88,15 +95,13 @@ function up() {
 		-e CORE_PEER_GOSSIP_EXTERNALENDPOINT=$peerContainerName:7051 \
 		-e CORE_PEER_LOCALMSPID=$MSPID \
 		-e CORE_PEER_MSPCONFIGPATH=$CRYPTO_CONFIG_CONTAINER_DIR/peerOrganizations/$org_domain/users/Admin@$org_domain/msp \
-		-e CORE_PEER_TLS_ENABLED=true \
-		-e CORE_PEER_TLS_KEY_FILE=$CRYPTO_CONFIG_CONTAINER_DIR/peerOrganizations/$org_domain/peers/$peerDomainName/tls/server.key \
-		-e CORE_PEER_TLS_CERT_FILE=$CRYPTO_CONFIG_CONTAINER_DIR/peerOrganizations/$org_domain/peers/$peerDomainName/tls/server.crt \
-		-e CORE_PEER_TLS_ROOTCERT_FILE=$CRYPTO_CONFIG_CONTAINER_DIR/peerOrganizations/$org_domain/peers/$peerDomainName/tls/ca.crt \
+		-e CORE_PEER_TLS_ENABLED=$TLS_ENABLED \
+		$TLS_ENV \
 		-e CORE_PEER_ID=$peerDomainName \
 		-e CORE_PEER_ADDRESS=$peerDomainName:7051 \
 		-p $peerPort:7051 \
 		-p $eventHubPort:7053 \
-		--volume /var/run/:/host/var/run/ \
+		--volume /run/docker.sock:/host/var/run/docker.sock \
 		--volume $CRYPTO_CONFIG_DIR:$CRYPTO_CONFIG_CONTAINER_DIR \
 		$image $CMD
 	#NOTE docker network connect --alias => to fix: Error trying to connect to local peer: context deadline exceeded

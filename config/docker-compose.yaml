@@ -21,14 +21,11 @@ services:
     environment:
     - ORDERER_GENERAL_LOGLEVEL=debug
     - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
-    - ORDERER_GENERAL_TLS_ENABLED=true
-    - ORDERER_GENERAL_TLS_PRIVATEKEY=/etc/hyperledger/crypto-config/ordererOrganizations/Delphi.com/orderers/orderContainerName.Delphi.com/tls/server.key
-    - ORDERER_GENERAL_TLS_CERTIFICATE=/etc/hyperledger/crypto-config/ordererOrganizations/Delphi.com/orderers/orderContainerName.Delphi.com/tls/server.crt
+    - ORDERER_GENERAL_TLS_ENABLED=false
     - ORDERER_GENERAL_GENESISMETHOD=file
     - ORDERER_GENERAL_GENESISFILE=/etc/hyperledger/configtx/delphi.block
     - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
     - ORDERER_GENERAL_LOCALMSPDIR=/etc/hyperledger/crypto-config/ordererOrganizations/Delphi.com/orderers/orderContainerName.Delphi.com/msp
-    - ORDERER_GENERAL_TLS_ROOTCAS=[/etc/hyperledger/crypto-config/ordererOrganizations/Delphi.com/orderers/orderContainerName.Delphi.com/tls/ca.crt]
     volumes:
     - CONFIGTX_DIR:/etc/hyperledger/configtx
     - MSPROOT:/etc/hyperledger/crypto-config
@@ -50,10 +47,7 @@ services:
     - CORE_PEER_GOSSIP_EXTERNALENDPOINT=BUContainerName.Delphi.com:7051
     - CORE_PEER_LOCALMSPID=BUMSP
     - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/BU.Delphi.com/users/Admin@BU.Delphi.com/msp
-    - CORE_PEER_TLS_ENABLED=true
-    - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/crypto-config/peerOrganizations/BU.Delphi.com/peers/peer0.BU.Delphi.com/tls/server.key
-    - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/crypto-config/peerOrganizations/BU.Delphi.com/peers/peer0.BU.Delphi.com/tls/server.crt
-    - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/crypto-config/peerOrganizations/BU.Delphi.com/peers/peer0.BU.Delphi.com/tls/ca.crt
+    - CORE_PEER_TLS_ENABLED=false
     - CORE_PEER_ID=peer0.BU.Delphi.com
     - CORE_PEER_ADDRESS=peer0.BU.Delphi.com:7051
     ports:
@@ -80,10 +74,7 @@ services:
     - CORE_PEER_GOSSIP_EXTERNALENDPOINT=BUContainer1.Delphi.com:7051
     - CORE_PEER_LOCALMSPID=BUMSP
     - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/BU.Delphi.com/users/Admin@BU.Delphi.com/msp
-    - CORE_PEER_TLS_ENABLED=true
-    - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/crypto-config/peerOrganizations/BU.Delphi.com/peers/peer1.BU.Delphi.com/tls/server.key
-    - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/crypto-config/peerOrganizations/BU.Delphi.com/peers/peer1.BU.Delphi.com/tls/server.crt
-    - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/crypto-config/peerOrganizations/BU.Delphi.com/peers/peer1.BU.Delphi.com/tls/ca.crt
+    - CORE_PEER_TLS_ENABLED=false
     - CORE_PEER_ID=peer1.BU.Delphi.com
     - CORE_PEER_ADDRESS=peer1.BU.Delphi.com:7051
     ports:
@@ -110,10 +101,7 @@ services:
     - CORE_PEER_GOSSIP_EXTERNALENDPOINT=ENGContainerName.Delphi.com:7051
     - CORE_PEER_LOCALMSPID=ENGMSP
     - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/ENG.Delphi.com/users/Admin@ENG.Delphi.com/msp
-    - CORE_PEER_TLS_ENABLED=true
-    - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/crypto-config/peerOrganizations/ENG.Delphi.com/peers/peer0.ENG.Delphi.com/tls/server.key
-    - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/crypto-config/peerOrganizations/ENG.Delphi.com/peers/peer0.ENG.Delphi.com/tls/server.crt
-    - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/crypto-config/peerOrganizations/ENG.Delphi.com/peers/peer0.ENG.Delphi.com/tls/ca.crt
+    - CORE_PEER_TLS_ENABLED=false
     - CORE_PEER_ID=peer0.ENG.Delphi.com
     - CORE_PEER_ADDRESS=peer0.ENG.Delphi.com:7051
     ports:
@@ -140,10 +128,7 @@ services:
     - CORE_PEER_GOSSIP_EXTERNALENDPOINT=PMContainerName.Delphi.com:7051
     - CORE_PEER_LOCALMSPID=PMMSP
     - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/PM.Delphi.com/users/Admin@PM.Delphi.com/msp
-    - CORE_PEER_TLS_ENABLED=true
-    - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/crypto-config/peerOrganizations/PM.Delphi.com/peers/peer0.PM.Delphi.com/tls/server.key
-    - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/crypto-config/peerOrganizations/PM.Delphi.com/peers/peer0.PM.Delphi.com/tls/server.crt
-    - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/crypto-config/peerOrganizations/PM.Delphi.com/peers/peer0.PM.Delphi.com/tls/ca.crt
+    - CORE_PEER_TLS_ENABLED=false
     - CORE_PEER_ID=peer0.PM.Delphi.com
     - CORE_PEER_ADDRESS=peer0.PM.Delphi.com:7051
     ports:

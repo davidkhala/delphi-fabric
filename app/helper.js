@@ -42,7 +42,7 @@ const Orderer = require('fabric-client/lib/Orderer')
 const objects = { user: {}, orderer: {}, caService: {} } // client is for save CryptoSuite for each org??
 
 // set up the client and channel objects for each org
-const GPRC_protocol = 'grpcs://' // FIXME: assume using TLS
+const GPRC_protocol = companyConfig.TLS ? 'grpcs://' : 'grpc://'  // FIXME: assume using TLS
 const gen_tls_cacerts = (orgName, peerIndex) => {
 	const org_domain = `${orgName}.${COMPANY_DOMAIN}`// bu.delphi.com
 	const peer_hostName_full = `peer${peerIndex}.${org_domain}`
@@ -50,7 +50,11 @@ const gen_tls_cacerts = (orgName, peerIndex) => {
 	return { org_domain, peer_hostName_full, tls_cacerts }
 }
 const newPeer = ({ peerPort, tls_cacerts, peer_hostName_full }) => {
-	return require('./util/peer').new({ peerPort, tls_cacerts, peer_hostName_full })
+	if (companyConfig.TLS) {
+		return require('./util/peer').new({ peerPort, tls_cacerts, peer_hostName_full })
+	} else {
+		return require('./util/peer').new({ peerPort, peer_hostName_full })
+	}
 }
 
 // peerConfig: "portMap": [{	"host": 8051,		"container": 7051},{	"host": 8053,		"container": 7053}]
@@ -73,7 +77,7 @@ const preparePeer = (orgName, peerIndex, peerConfig) => {
 	const peer = newPeer({ peerPort, tls_cacerts, peer_hostName_full })
 	//NOTE append more info
 	peer.peerConfig = peerConfig
-	peer.peerConfig.peerEventUrl = `${GPRC_protocol}localhost:${eventHubPort}`
+	peer.peerConfig.eventHubPort = eventHubPort
 	peer.peerConfig.orgName = orgName
 	peer.peerConfig.peerIndex = peerIndex
 	return peer
@@ -191,19 +195,14 @@ const preparePeers = (peerIndexes, orgName) => {
 
 }
 
-const newEventHub = ({ eventHubPort, tls_cacerts, peer_hostName_full }) =>
-		require('./util/eventHub').new(client, { eventHubPort, tls_cacerts, peer_hostName_full })
 const bindEventHub = (richPeer) => {
-	const eventHub = client.newEventHub()
 	// NOTE newEventHub binds to clientContext, eventhub error { Error: event message must be properly signed by an identity from the same organization as the peer: [failed deserializing event creator: [Expected MSP ID PMMSP, received BUMSP]]
 
-	const peerEventUrl = richPeer.peerConfig.peerEventUrl
+	const eventHubPort = richPeer.peerConfig.eventHubPort
 	const pem = richPeer.pem
-	eventHub.setPeerAddr(peerEventUrl, {
-		pem,
-		'ssl-target-name-override': richPeer._options['grpc.ssl_target_name_override']
-	})
-	return eventHub
+	const peer_hostName_full = richPeer._options['grpc.ssl_target_name_override']
+	return require('./util/eventHub').new(client, { eventHubPort, pem, peer_hostName_full })
+
 }
 const selectEventHubs = (peerIndexes, orgName) => {
 
@@ -508,8 +507,7 @@ exports.newPeers = preparePeers
 exports.newPeerByContainer = newPeerByContainer
 exports.userAction = objects.user
 exports.eventHubsPromise = selectEventHubs
-exports.newEventHub = newEventHub
 exports.bindEventHub = bindEventHub
-exports.getRegisteredUsers = getRegisteredUsers //see in invoke
+exports.getRegisteredUsers = getRegisteredUsers
 exports.getOrgAdmin = objects.user.admin.select
 exports.getCaService = getCaService
