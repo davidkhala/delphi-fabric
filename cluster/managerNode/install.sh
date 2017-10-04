@@ -5,4 +5,8 @@ root=$(dirname $(dirname $CURRENT))
 
 $root/install.sh
 
-$root/common/ubuntu/nfs.sh installHost
+$root/common/ubuntu/nfs.sh installClient
+
+# finally
+apt upgrade -y
+apt autoremove

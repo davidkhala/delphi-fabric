@@ -1,14 +1,6 @@
 #!/usr/bin/env bash
 
-sudo apt -qq install -y moreutils
-sudo apt-get -qq install -y jq
-# run cryptogen
 CURRENT="$(dirname $(readlink -f ${BASH_SOURCE}))"
-remain_params=""
-for ((i = 1; i <= $#; i++)); do
-	j=${!i}
-	remain_params="$remain_params $j"
-done
 
 config_dir="$CURRENT/config"
 CONFIG_JSON=$config_dir/orgs.json
@@ -17,7 +9,7 @@ configtx_file="$config_dir/configtx.yaml"
 CRYPTO_CONFIG_DIR="$config_dir/crypto-config/"
 
 COMPANY='delphi' # must match to config_json
-# write to config: jq do not support in-place editing, use moreutils:sponge
+
 CONFIGTX_OUTPUT_DIR="$config_dir/configtx"
 mkdir -p $CONFIGTX_OUTPUT_DIR
 
@@ -59,11 +51,4 @@ echo clear stateDBCacheDir $stateDBCacheDir
 
 ./common/bin-manage/configtxgen/runConfigtxgen.sh channel create $CHANNEL_FILE -p $PROFILE_CHANNEL -i $config_dir -c ${CHANNEL_NAME,,}
 ./common/bin-manage/configtxgen/runConfigtxgen.sh channel view $CHANNEL_FILE -v -p $PROFILE_CHANNEL -i $config_dir
-
-COMPOSE_FILE="$config_dir/docker-compose.yaml"
-
-if [ -f "$COMPOSE_FILE" ]; then
-	./docker.sh down
-fi
-./config/compose-gen-go.sh $COMPANY $CRYPTO_CONFIG_DIR $BLOCK_FILE -f $COMPOSE_FILE -s $TLS_ENABLED -v $IMAGE_TAG
 

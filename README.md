@@ -5,15 +5,15 @@ _after first time clone this repository, run
 ### test on single host:
 
 
-1. run `$ ./testBin.sh`
+1. run `$ ./testLocal.sh`
     - it includes
-        1. set some config in codes, mostly about file and directory path
-        2. load others config from orgs.json
-        3. npm fabric-* updating
-        4. generate crypto-config file(default crypto-config.yaml)
-        5. run 'cryptogen' binary to generate crypto-materials
-        6. generate channel, block config file (default configtx.yaml)
-        7. run 'configtxgen' to generate channel, block file
+        1. load others config from orgs.json
+        2. npm fabric-* updating
+        3. generate crypto-config file(default crypto-config.yaml)
+        4. run 'cryptogen' binary to generate crypto-materials
+        5. generate channel, block config file (default configtx.yaml)
+        6. run 'configtxgen' to generate channel, block file
+        7. generate docker-compose.yaml
 
 2. in another terminal, run `$ ./docker.sh` to clean and restart network      
  
@@ -26,7 +26,10 @@ _after first time clone this repository, run
 
 ### test Swarm mode()
 assume we have two physical machine,with main hostName 'ubuntu' with ip `192.168.0.167`,'fabric-swarm-manager' with ip `192.168.0.144`  
-0. if you have run through above 'single host test', you should clean your environment before start. For example, run `$ ./docker.sh down`
+0. Prepare:  
+    1. if you have run through above 'single host test', you should clean your environment before start. For example, run `$ ./docker.sh down`
+    2. on 'ubuntu', run `$ cluster/leaderNode/install.sh` and then `$ cluster/leaderNode/prepare.sh`
+    3. on 'fabric-swarm-manager', run `$ cluster/managerNode/install.sh` and then `$ cluster/managerNode/prepare.sh`
 1. build up swarm across nodes(1 node means 1 physical machine),   
     my solution is
     
