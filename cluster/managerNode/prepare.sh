@@ -5,7 +5,7 @@ CURRENT="$(dirname $(readlink -f $BASH_SOURCE))"
 root="$(dirname $(dirname $CURRENT))"
 ubuntuDir="$root/common/ubuntu"
 utilsDir="$root/common/docker/utils"
-CONFIG_DIR="$root/config/"
+CONFIG_DIR="$root/config"
 CONFIG_JSON="$CONFIG_DIR/orgs.json"
 SWARM_CONFIG="$CONFIG_DIR/swarm.json"
 COMPANY="delphi"
@@ -21,7 +21,7 @@ CONFIGTX_nfs="/home/david/Documents/nfs/CONFIGTX"
 MSPROOT_nfs="/home/david/Documents/nfs/MSPROOT"
 
 
-mainNodeID=$(jq -r ".$COMPANY.leaderNode.hostname" | $SWARM_CONFIG)
+mainNodeID=$(jq -r ".$COMPANY.leaderNode.hostname" $SWARM_CONFIG)
 
 # NOTE using node labels to fetch directory information
 CONFIGTX_DIR=$($utilsDir/swarm.sh getNodeLabels $mainNodeID | jq -r ".CONFIGTX")
