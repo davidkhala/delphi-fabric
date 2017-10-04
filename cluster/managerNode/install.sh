@@ -3,7 +3,7 @@
 CURRENT="$(dirname $(readlink -f ${BASH_SOURCE}))"
 root=$(dirname $(dirname $CURRENT))
 
-$root/install.sh
+$root/common/install.sh
 
 $root/common/ubuntu/nfs.sh installClient
 
