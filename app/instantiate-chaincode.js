@@ -1,8 +1,6 @@
 const helper = require('./helper.js')
 const eventHelper = require('./util/eventHub')
 const logger = helper.getLogger('instantiate-chaincode')
-const queryPeer = helper.queryPeer
-const testLevel = require('./testLevel')
 
 //FIXED: UTC [endorser] simulateProposal -> ERRO 370 failed to invoke chaincode name:"lscc"  on transaction ec81adb6041b4b71dade56f0e9749e3dd2a2be2a63e0518ed75aa94c94f3d3fe, error: Error starting container: API error (500): {"message":"Could not attach to network delphiProject_default: context deadline exceeded"}: setting docker network instead of docker-compose --project-name
 
@@ -75,25 +73,5 @@ exports.instantiateChaincode = (channel, richPeers, chaincodeId, chaincodeVersio
 	})
 }
 
-// to remove container like: dev-peer0.pm.delphi.com-delphichaincode-v1
-// to remove images like: dev-peer0.pm.delphi.com-delphichaincode-v1:latest
-// @param {string} containerName which initial the instantiate action before
-//TODO
-exports.resetChaincode = function(containerName, chaincodeName, chaincodeVersion) {
-	const dockerodeUtil = require('./../common/docker/nodejs/dockerode-util')
-	const { key: orgName, peer: { value: peerConfig, peer_hostName_full } } = queryPeer(
-			containerName)
-	const ccContainerName = `dev-${peer_hostName_full}-${chaincodeName.toLowerCase()}-${chaincodeVersion}`
-	return dockerodeUtil.deleteContainer(ccContainerName).then(() => {
-		//dev-peer0.pm.delphi.com-delphichaincode-v1:latest
-		return dockerodeUtil.deleteImage(ccContainerName)
-	}).then(() => {
-		logger.debug('====ready to operate leveldb')
-		//TODO delete in all containers first
-		return testLevel.deleteChaincode(chaincodeName)
-	})
-
-	//TODO besides, core/scc/lscc/lscc.go will also using  stub.GetState(ccname) to check chaincode existence
-}
 
 

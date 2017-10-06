@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-sudo apt-get -qq install -y jq
-
 CURRENT="$(dirname $(readlink -f $BASH_SOURCE))"
 
 COMPOSE_FILE="$CURRENT/docker-swarm.yaml"

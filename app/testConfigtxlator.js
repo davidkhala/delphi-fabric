@@ -1,4 +1,4 @@
-//NOTE This test case requires that the 'configtxlator' tool be running locally and on port 7059
+//TODO This test case requires that the 'configtxlator' tool be running locally and on port 7059
 const helper = require('./helper')
 const logger = helper.getLogger('test-configtxlator')
 

@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-sudo apt-get -qq install -y jq
-
 CURRENT="$(dirname $(readlink -f ${BASH_SOURCE}))"
 
 crypto_config_file="$CURRENT/crypto-config.yaml"

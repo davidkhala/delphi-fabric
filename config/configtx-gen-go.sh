@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-sudo apt-get -qq install -y jq
-
 CURRENT="$(dirname $(readlink -f ${BASH_SOURCE}))"
 
 configtx_file="$CURRENT/configtx.yaml"
