@@ -3,7 +3,7 @@
 CURRENT="$(dirname $(readlink -f ${BASH_SOURCE}))"
 root=$(dirname $(dirname $CURRENT))
 
-if [ -n "$(ls -A $root/common)" ];then
+if [ -z "$(ls -A $root/common)" ];then
     git submodule update --init --recursive
 fi
 
