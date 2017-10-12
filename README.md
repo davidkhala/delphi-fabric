@@ -24,6 +24,31 @@ _after first time clone this repository, run
 4. `$ node app/testInstall.js` to install chaincode and instantiate chaincode
 5. `$ node app/testInvoke.js` to invoke chaincode
 
+### channel update (single host mode)
+
+__Description:__  
+- assume we have already channel named 'delphiChannel' with 2 orgs 'BU', 'PM'  
+- we want to create a new docker container named 'AMContainerName' belonging to a new org 'AM'
+- the new peer should work as other existing peers, supporting all chaincode action like instantiate, invoke, etc.
+- org 'AM' should be added to 'delphiChannel' config as a 'online update'(not to re-create current channel).
+
+__Steps:__
+
+
+1. run first 3 steps of `testing on single host'
+    ```
+    terminal 1:$ ./testLocal.sh
+    ...
+    terminal 2:$ ./docker.sh
+    ...
+    terminal 1:$ node app/testChannel.js
+        
+    ```
+2. run:  
+    ```
+    terminal 1 $ ./testNewOrg.sh
+    ```     
+
 ### test Swarm mode()
 assume we have two physical machine,with main hostName 'ubuntu' with ip `192.168.0.167`,'fabric-swarm-manager' with ip `192.168.0.144`  
 0. Prepare:  
