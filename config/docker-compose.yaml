@@ -49,7 +49,7 @@ services:
     - CORE_PEER_GOSSIP_ORGLEADER=false
     - CORE_PEER_GOSSIP_EXTERNALENDPOINT=BUContainerName:7051
     - CORE_PEER_LOCALMSPID=BUMSP
-    - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/BU.Delphi.com/users/Admin@BU.Delphi.com/msp
+    - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/BU.Delphi.com/peers/peer0.BU.Delphi.com/msp
     - CORE_PEER_TLS_ENABLED=true
     - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/crypto-config/peerOrganizations/BU.Delphi.com/peers/peer0.BU.Delphi.com/tls/server.key
     - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/crypto-config/peerOrganizations/BU.Delphi.com/peers/peer0.BU.Delphi.com/tls/server.crt
@@ -79,7 +79,7 @@ services:
     - CORE_PEER_GOSSIP_ORGLEADER=false
     - CORE_PEER_GOSSIP_EXTERNALENDPOINT=BUContainer1:7051
     - CORE_PEER_LOCALMSPID=BUMSP
-    - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/BU.Delphi.com/users/Admin@BU.Delphi.com/msp
+    - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/BU.Delphi.com/peers/peer1.BU.Delphi.com/msp
     - CORE_PEER_TLS_ENABLED=true
     - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/crypto-config/peerOrganizations/BU.Delphi.com/peers/peer1.BU.Delphi.com/tls/server.key
     - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/crypto-config/peerOrganizations/BU.Delphi.com/peers/peer1.BU.Delphi.com/tls/server.crt
@@ -94,16 +94,28 @@ services:
     - MSPROOT:/etc/hyperledger/crypto-config
     networks:
     - default
-  tlsca.BU.Delphi.com:
-    image: hyperledger/fabric-ca:x86_64-1.0.1
+  ca.BU.Delphi.com:
     container_name: BUCA
+    image: hyperledger/fabric-ca:x86_64-1.0.1
+    command: sh -c 'fabric-ca-server start -d'
+    volumes:
+    - /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/BU.Delphi.com/ca/:/etc/hyperledger/fabric-ca-server/BU.Delphi.com/ca
+    environment:
+    - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server/BU.Delphi.com/ca
+    ports:
+    - 7054:7054
+    networks:
+    - default
+  tlsca.BU.Delphi.com:
+    container_name: BUTLSCA
+    image: hyperledger/fabric-ca:x86_64-1.0.1
     command: sh -c 'fabric-ca-server start -d'
     volumes:
     - /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/BU.Delphi.com/tlsca/:/etc/hyperledger/fabric-ca-server/BU.Delphi.com/ca
     environment:
     - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server/BU.Delphi.com/ca
     ports:
-    - 7054:7054
+    - 7055:7054
     networks:
     - default
   peer0.ENG.Delphi.com:
@@ -121,7 +133,7 @@ services:
     - CORE_PEER_GOSSIP_ORGLEADER=false
     - CORE_PEER_GOSSIP_EXTERNALENDPOINT=ENGContainerName:7051
     - CORE_PEER_LOCALMSPID=ENGMSP
-    - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/ENG.Delphi.com/users/Admin@ENG.Delphi.com/msp
+    - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/ENG.Delphi.com/peers/peer0.ENG.Delphi.com/msp
     - CORE_PEER_TLS_ENABLED=true
     - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/crypto-config/peerOrganizations/ENG.Delphi.com/peers/peer0.ENG.Delphi.com/tls/server.key
     - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/crypto-config/peerOrganizations/ENG.Delphi.com/peers/peer0.ENG.Delphi.com/tls/server.crt
@@ -151,7 +163,7 @@ services:
     - CORE_PEER_GOSSIP_ORGLEADER=false
     - CORE_PEER_GOSSIP_EXTERNALENDPOINT=PMContainerName:7051
     - CORE_PEER_LOCALMSPID=PMMSP
-    - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/PM.Delphi.com/users/Admin@PM.Delphi.com/msp
+    - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/PM.Delphi.com/peers/peer0.PM.Delphi.com/msp
     - CORE_PEER_TLS_ENABLED=true
     - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/crypto-config/peerOrganizations/PM.Delphi.com/peers/peer0.PM.Delphi.com/tls/server.key
     - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/crypto-config/peerOrganizations/PM.Delphi.com/peers/peer0.PM.Delphi.com/tls/server.crt

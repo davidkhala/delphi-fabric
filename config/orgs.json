@@ -97,12 +97,11 @@
             "name": "CAadmin",
             "pass": "passwd"
           },
-          "portMap": [
-            {
-              "host": 7054,
-              "container": 7054
-            }
-          ]
+          "portHost": 7054,
+          "tlsca": {
+            "containerName": "BUTLSCA",
+            "portHost": 7055
+          }
         },
         "MSP": {
           "name": "BUMSPName",
@@ -135,15 +134,14 @@
           "enable": false,
           "containerName": "ENGCA",
           "admin": {
-            "name": "admin",
+            "name": "CAadmin",
             "pass": "passwd"
           },
-          "portMap": [
-            {
-              "host": 8054,
-              "container": 7054
-            }
-          ]
+          "portHost": 8054,
+          "tlsca": {
+            "containerName": "ENGTLSCA",
+            "portHost": 8055
+          }
         },
         "MSP": {
           "name": "ENGMSPName",
@@ -176,15 +174,14 @@
           "containerName": "PMCA",
           "enable": false,
           "admin": {
-            "name": "admin",
+            "name": "CAadmin",
             "pass": "passwd"
           },
-          "portMap": [
-            {
-              "host": 9054,
-              "container": 7054
-            }
-          ]
+          "portHost": 9054,
+          "tlsca": {
+            "containerName": "PMTLSCA",
+            "portHost": 9055
+          }
         },
         "MSP": {
           "name": "PMMSPName",

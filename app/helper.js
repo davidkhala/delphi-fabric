@@ -25,7 +25,7 @@ const logger = getLogger('Helper')
 const path = require('path')
 const fs = require('fs-extra')
 const User = require('fabric-client/lib/User.js')
-const caService = require('fabric-ca-client')
+const caService = require('fabric-ca-client/lib/FabricCAClientImpl')
 const globalConfig = require('../config/orgs.json')
 const COMPANY = 'delphi'
 const companyConfig = globalConfig[COMPANY]
@@ -37,9 +37,10 @@ const chaincodeConfig = require('../config/chaincode.json')
 const Client = require('fabric-client')
 const sdkUtils = require('fabric-client/lib/utils')
 const nodeConfig = require('./config.json')
+const clientUtil = require('./util/client')
 
 const Orderer = require('fabric-client/lib/Orderer')
-const objects = { user: {}, orderer: {}, caService: {} } // client is for save CryptoSuite for each org??
+const objects = { user: {}, orderer: {}, caService: {}, tlscaService: {} } // client is for save CryptoSuite for each org??
 
 // set up the client and channel objects for each org
 const GPRC_protocol = companyConfig.TLS ? 'grpcs://' : 'grpc://'  // FIXME: assume using TLS
@@ -129,23 +130,32 @@ for (let channelName in channelsConfig) {
 for (let orgName in orgsConfig) {
 	const orgConfig = orgsConfig[orgName]
 
-	let ca_port
-	for (let portMapEach of orgConfig.ca.portMap) {
-		if (portMapEach.container === 7054) {
-			ca_port = portMapEach.host
-		}
-	}
-	if (!ca_port) continue
+	const ca_port = orgConfig.ca.portHost
 	const caHost = 'localhost'
-	const caProtocol = companyConfig.TLS ? 'https://' : 'http://'
+	const caProtocol = 'http://'
 
 	const caUrl = `${caProtocol}${caHost}:${ca_port}`
 	const tlsOptions = {
 		trustedRoots: [],
 		verify: false
 	}
-	objects.caService[orgName] = new caService(caUrl, tlsOptions, null /* default CA */, null
-			/* default cryptoSuite */)
+	objects.caService[orgName] = new caService(caUrl, tlsOptions)
+	if (companyConfig.TLS) {
+
+		const ca_port = orgConfig.ca.tlsca.portHost
+		const caProtocol = 'https://'
+
+		const caUrl = `${caProtocol}${caHost}:${ca_port}`
+		// const org_domain=`${orgName}.${COMPANY_DOMAIN}`
+		// const tlscaCert=path.join(CRYPTO_CONFIG_DIR,'peerOrganizations',org_domain,'tlsca',`tlsca.${org_domain}-cert.pem`)
+		// const trustedRoots=[fs.readFileSync(tlscaCert).toString()] //fixme  Error: Calling register endpoint failed with error [Error: Hostname/IP doesn't match certificate's altnames: "Host: localhost. is not cert's CN: tlsca.BU.Delphi.com"]
+
+		const tlsOptions = {
+			trustedRoots: [],
+			verify: false
+		}
+		objects.tlscaService[orgName] = new caService(caUrl, tlsOptions)
+	}
 
 }
 
@@ -162,8 +172,8 @@ const getChannel = (channelName) => {
 	channel.orgs = channelsConfig[channelName].orgs
 	return channel
 }
-const getCaService = (org) => objects.caService[org]
-
+exports.getCaService = (orgName) => objects.caService[orgName]
+exports.getTLSCAService = (orgName) => objects.tlscaService[orgName]
 const queryPeer = (containerName) => {
 
 // a data adapter, containerName=>key: orgName, peer: {index: index, value: peer, peer_hostName_full}
@@ -250,10 +260,34 @@ objects.user.clear = () => {
 	client._userContext = null
 	client.setCryptoSuite(null)
 }
-exports.formatPeerName=(peerName,orgName)=>`${peerName}.${orgName}.${COMPANY_DOMAIN}`
+exports.formatPeerName = (peerName, orgName) => `${peerName}.${orgName}.${COMPANY_DOMAIN}`
 const formatUsername = (username, orgName) => `${username}@${orgName}.${COMPANY_DOMAIN}`
-//
-objects.user.create = (keystoreDir, signcertFile, username, orgName, persistInCache = true, mspid) => {
+
+objects.user.tlsCreate = (tlsDir, username, orgName, mspid = getMspID(orgName), persistInCache = true) => {
+	const privateKey = path.join(tlsDir, 'server.key')
+	const signedCert = path.join(tlsDir, 'server.crt')
+	const createUserOpt = {
+		username: formatUsername(username, orgName),
+		mspid,
+		cryptoContent: { privateKey, signedCert },
+		skipPersistence: !persistInCache
+	}
+	if (persistInCache) {
+
+		return sdkUtils.newKeyValueStore({
+			path: getStateDBCachePath(orgName)
+		}).then((store) => {
+			client.setStateStore(store)
+			//fixme: self.setUserContext(member) do not support persist flag => setUserContext(user, skipPersistence)
+			return clientUtil.createUser(client, createUserOpt)
+		})
+	} else {
+		//fixme: self.setUserContext(member) do not support persist flag => setUserContext(user, skipPersistence)
+		return clientUtil.createUser(client, createUserOpt)
+	}
+}
+objects.user.mspCreate = (
+		keystoreDir, signcertFile, username, orgName, mspid = getMspID(orgName), persistInCache = true) => {
 	const keyFile = getKeyFilesInDir(keystoreDir)[0]
 	// NOTE:(jsdoc) This allows applications to use pre-existing crypto materials (private keys and certificates) to construct user objects with signing capabilities
 	// NOTE In client.createUser option, two types of cryptoContent is supported:
@@ -262,11 +296,10 @@ objects.user.create = (keystoreDir, signcertFile, username, orgName, persistInCa
 
 	const createUserOpt = {
 		username: formatUsername(username, orgName),
-		mspid: mspid ? mspid : getMspID(orgName),
+		mspid,
 		cryptoContent: { privateKey: keyFile, signedCert: signcertFile },
 		skipPersistence: !persistInCache
 	}
-	const clientUtil = require('./util/client')
 	if (persistInCache) {
 
 		return sdkUtils.newKeyValueStore({
@@ -322,8 +355,8 @@ objects.user.admin = {
 
 			return objects.user.get(rawOrdererUsername, ordererContainerName).then(user => {
 				if (user) return client.setUserContext(user, false)
-				return objects.user.create(keystoreDir, signcertFile, rawOrdererUsername, ordererContainerName, true,
-						ordererMSPID)
+				return objects.user.mspCreate(keystoreDir, signcertFile, rawOrdererUsername, ordererContainerName, ordererMSPID,
+						true)
 			})
 		}
 	}
@@ -332,19 +365,20 @@ objects.user.admin.get = (orgName) => objects.user.get(rawAdminUsername, orgName
 objects.user.admin.create = (orgName) => {
 
 	const org_domain = `${orgName}.${COMPANY_DOMAIN}`// BU.Delphi.com
-	const keystoreDir = path.join(CRYPTO_CONFIG_DIR,
-			`peerOrganizations/${org_domain}/users/Admin@${org_domain}/msp/keystore`)
+	const keystoreDir = path.join(CRYPTO_CONFIG_DIR, 'peerOrganizations', 'org_domain', 'users', `Admin@${org_domain}`,
+			'msp', 'keystore')
 
 	const signcertFile = path.join(CRYPTO_CONFIG_DIR,
-			`peerOrganizations/${org_domain}/users/Admin@${org_domain}/msp/signcerts/Admin@${org_domain}-cert.pem`)
+			'peerOrganizations', org_domain, 'users', `Admin@${org_domain}`, 'msp', 'signcerts',
+			`Admin@${org_domain}-cert.pem`)
 
-	return objects.user.create(keystoreDir, signcertFile, rawAdminUsername, orgName)
+	return objects.user.mspCreate(keystoreDir, signcertFile, rawAdminUsername, orgName)
 }
 //
 objects.user.createIfNotExist = (keystoreDir, signcertFile, username, orgName) => {
 	objects.user.get(username, orgName).then(user => {
 		if (user) return client.setUserContext(user, false)
-		return objects.user.create(keystoreDir, signcertFile, username, orgName)
+		return objects.user.mspCreate(keystoreDir, signcertFile, username, orgName)
 	})
 }
 objects.user.select = (keystoreDir, signcertFile, username, orgName) => {
@@ -418,5 +452,4 @@ exports.userAction = objects.user
 exports.eventHubsPromise = selectEventHubs
 exports.bindEventHub = bindEventHub
 exports.getOrgAdmin = objects.user.admin.select
-exports.getCaService = getCaService
 exports.formatUsername = formatUsername

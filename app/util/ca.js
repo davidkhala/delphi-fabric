@@ -1,9 +1,9 @@
 const fs = require('fs')
 const path = require('path')
 const User = require('fabric-client/lib/User.js')
-const fsExtra=require('fs-extra')
-const logger= require('../helper').getLogger('ca-core')
-exports.user = {
+const fsExtra = require('fs-extra')
+const logger = require('../helper').getLogger('ca-core')
+const user = {
 	// @return promise()
 	build: (username, { key, certificate }, MSPID) => {
 		const user = new User(username)
@@ -14,7 +14,16 @@ exports.user = {
 			register(caService, { enrollmentID: username, affiliation, role: 'user' }, adminUser)
 	,
 	toMSP: ({ key, certificate, rootCertificate }, mspDir, { username, domain }) => {
-		toMSP({ key, certificate, rootCertificate }, mspDir, { name:username, delimiter: '@', domain })
+		toMSP({ key, certificate, rootCertificate }, mspDir, { name: username, delimiter: '@', domain })
+	}
+}
+exports.user = user
+exports.admin = {
+	toMSP: ({ key, certificate, rootCertificate }, mspDir, { adminName, domain }) => {
+		const admincerts = path.join(mspDir, 'admincerts')
+		fsExtra.ensureDirSync(admincerts)
+		fs.writeFileSync(path.join(admincerts, `${adminName}@${domain}-cert.pem`), certificate)
+		user.toMSP({ key, certificate, rootCertificate }, mspDir, { username: adminName, domain })
 	}
 }
 
@@ -26,7 +35,7 @@ const register = (caService, { enrollmentID, affiliation, role }, adminUser) => 
 		enrollmentID,
 		affiliation: affiliation.toLowerCase(),
 		role,
-		maxEnrollments:-1
+		maxEnrollments: -1
 	}, adminUser)
 }
 const revoke = (caService, { enrollmentID }, adminUser) => {
@@ -49,7 +58,7 @@ const pkcs11_key = {
 		fs.writeFileSync(absolutePath, pkcs11_key.toBytes())
 		return absolutePath
 	},
-	toServerKey:(pkcs11_key, dirName) => {
+	toServerKey: (pkcs11_key, dirName) => {
 		const filename = 'server.key'
 		const absolutePath = path.join(dirName, filename)
 		fs.writeFileSync(absolutePath, pkcs11_key.toBytes())
@@ -58,8 +67,8 @@ const pkcs11_key = {
 
 }
 const peer = {
-	revoke:(caService, { peerName}, adminUser)=>{
-		return revoke(caService,{enrollmentID:peerName},adminUser)
+	revoke: (caService, { peerName }, adminUser) => {
+		return revoke(caService, { enrollmentID: peerName }, adminUser)
 	},
 	/**
 	 *
@@ -74,13 +83,13 @@ const peer = {
 			register(caService, { enrollmentID: peerName, affiliation, role: 'peer' }, adminUser)
 	,
 	toMSP: ({ key, certificate, rootCertificate }, mspDirName, { peerName, org_domain }) => {
-		toMSP({ key, certificate, rootCertificate }, mspDirName, { name:peerName, delimiter: '.', domain:org_domain })
+		toMSP({ key, certificate, rootCertificate }, mspDirName, { name: peerName, delimiter: '.', domain: org_domain })
 	},
-	enroll:(caService,{peerName,password})=>
-		caService.enroll({
-			enrollmentID: peerName,
-			enrollmentSecret: password
-		})
+	enroll: (caService, { peerName, password }) =>
+			caService.enroll({
+				enrollmentID: peerName,
+				enrollmentSecret: password
+			})
 
 }
 const toMSP = ({ key, certificate, rootCertificate }, mspDirName, { name, delimiter, domain }) => {
@@ -95,11 +104,11 @@ const toMSP = ({ key, certificate, rootCertificate }, mspDirName, { name, delimi
 	fs.writeFileSync(path.join(signcertsDir, `${name}${delimiter}${domain}-cert.pem`), certificate)
 
 }
-const toTLS=({ key, certificate, rootCertificate }, tlsDirName)=>{
-	fsExtra.ensureDirSync(tlsDirName)
-	pkcs11_key.toServerKey(key,tlsDirName)
-	fs.writeFileSync(path.join(tlsDirName,'server.crt'),certificate)
-	fs.writeFileSync(path.join(tlsDirName,'ca.crt'),rootCertificate)
+const toTLS = ({ key, certificate, rootCertificate }, tlsDir) => {
+	fsExtra.ensureDirSync(tlsDir)
+	pkcs11_key.toServerKey(key, tlsDir)
+	fs.writeFileSync(path.join(tlsDir, 'server.crt'), certificate)
+	fs.writeFileSync(path.join(tlsDir, 'ca.crt'), rootCertificate)
 }
 /**
  *
@@ -118,10 +127,8 @@ const enroll = (caService, { enrollmentID, password }) =>
 			enrollmentID,
 			enrollmentSecret: password
 		})
-const renew=(caService,user)=>{
-	return caService.reenroll(user)
-}
+
 exports.register = register
-exports.toMSP = toMSP
+exports.toTLS = toTLS
 exports.enroll = enroll
-exports.peer =peer
+exports.peer = peer

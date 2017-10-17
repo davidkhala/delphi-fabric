@@ -41,7 +41,7 @@ const addOrg = (
 
 			const signcertFile = path.join(adminMSPDir, 'signcerts', `Admin@${org_domain}-cert.pem`)
 			logger.debug({ keystoreDir, signcertFile })
-			return helper.userAction.create(keystoreDir, signcertFile, 'adminName', orgName, true, MSPID).then(() => {
+			return helper.userAction.mspCreate(keystoreDir, signcertFile, 'adminName', orgName, MSPID, true).then(() => {
 
 				const tls_cacerts = api.format_tlscacert(adminMSPDir, org_domain)
 				const peer = helper.newPeer({ peerPort, tls_cacerts, peer_hostName_full })

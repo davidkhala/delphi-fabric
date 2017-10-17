@@ -174,7 +174,7 @@ for orgName in $orgNames; do
 		# CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0:7051
 		# only work when CORE_PEER_GOSSIP_ORGLEADER=true & CORE_PEER_GOSSIP_USELEADERELECTION=false
 		envPush "$PEERCMD" CORE_PEER_LOCALMSPID=${orgName}MSP
-		envPush "$PEERCMD" CORE_PEER_MSPCONFIGPATH=$CONTAINER_CRYPTO_CONFIG_DIR/$ADMIN_STRUCTURE/msp
+		envPush "$PEERCMD" CORE_PEER_MSPCONFIGPATH=$CONTAINER_CRYPTO_CONFIG_DIR/$PEER_STRUCTURE/msp
 
 		envPush "$PEERCMD" CORE_PEER_TLS_ENABLED=$TLS_ENABLED
 		if [ "$TLS_ENABLED" == "true" ]; then
@@ -214,66 +214,78 @@ for orgName in $orgNames; do
 	CA_enable=$(echo $caConfig | jq ".enable")
 	if [ "$CA_enable" == "true" ]; then
 
-		#	Config setting: https://hyperledger-fabric-ca.readthedocs.io/en/latest/serverconfig.html
-		CONTAINER_CA_HOME="/etc/hyperledger/fabric-ca-server"
-		CONTAINER_CA_VOLUME="$CONTAINER_CA_HOME/$PEER_DOMAIN/ca"
+		function caGen() {
+			local TLS_ENABLED=$1
+			#	Config setting: https://hyperledger-fabric-ca.readthedocs.io/en/latest/serverconfig.html
+			CONTAINER_CA_HOME="/etc/hyperledger/fabric-ca-server"
+			CONTAINER_CA_VOLUME="$CONTAINER_CA_HOME/$PEER_DOMAIN/ca"
+			if [ "$TLS_ENABLED" == "true" ]; then
+				tlsPrefix="tlsca"
+			else
+				tlsPrefix="ca"
+			fi
+
+			CA_HOST_VOLUME="${MSPROOT}peerOrganizations/$PEER_DOMAIN/${tlsPrefix}/"
+			caServerConfig="${CA_HOST_VOLUME}fabric-ca-server-config.yaml"
+
+			if [ -f "$caServerConfig" ]; then
+				rm $caServerConfig
+			fi
+			>$caServerConfig
+			privkeyFilename=$(basename $(find $CA_HOST_VOLUME -type f \( -name "*_sk" \)))
+			CACMD="yaml w -i $COMPOSE_FILE "services["$tlsPrefix.$PEER_DOMAIN"]
+
+			if [ "$TLS_ENABLED" == "true" ]; then
+
+				yaml w -i $caServerConfig tls.certfile "$CONTAINER_CA_VOLUME/$tlsPrefix.$PEER_DOMAIN-cert.pem"
+				yaml w -i $caServerConfig tls.keyfile "$CONTAINER_CA_VOLUME/$privkeyFilename"
+				caContainerName=$(echo $caConfig | jq ".tlsca.containerName")
+				CA_HOST_PORT=$(echo $caConfig| jq ".tlsca.portHost")
+			else
+                caContainerName=$(echo $caConfig | jq ".containerName")
+				CA_HOST_PORT=$(echo $caConfig | jq ".portHost")
+			fi
+
+			$CACMD.container_name $caContainerName # TODO containerName testing
+			yaml w -i $caServerConfig ca.certfile "$CONTAINER_CA_VOLUME/$tlsPrefix.$PEER_DOMAIN-cert.pem"
+			yaml w -i $caServerConfig ca.keyfile "$CONTAINER_CA_VOLUME/$privkeyFilename"
+
+			$CACMD.image hyperledger/fabric-ca:$IMAGE_TAG
+
+			$CACMD.command "sh -c 'fabric-ca-server start -d'"
+
+			# affiliations must be a map with 2-depth
+			yaml w -i $caServerConfig affiliations.$orgName[0] client
+			yaml w -i $caServerConfig affiliations.$orgName[1] user
+			yaml w -i $caServerConfig affiliations.$orgName[2] peer
+
+			yaml w -i $caServerConfig tls.enabled $TLS_ENABLED
+
+			adminName=$(echo $caConfig | jq ".admin.name")
+			adminPass=$(echo $caConfig | jq ".admin.pass")
+			yaml w -i $caServerConfig registry.identities[0].name $adminName
+			yaml w -i $caServerConfig registry.identities[0].pass $adminPass
+			yaml w -i $caServerConfig registry.identities[0].type "client"
+			yaml w -i $caServerConfig -- registry.identities[0].maxenrollments -1 # see in mikefarah/yaml issues #10
+			yaml w -i $caServerConfig registry.identities[0].attrs["hf.Registrar.Roles"] "client,user,peer"
+			yaml w -i $caServerConfig registry.identities[0].attrs["hf.Revoker"] true
+			yaml w -i $caServerConfig registry.identities[0].attrs["hf.Registrar.DelegateRoles"] "client,user"
+
+			$CACMD.volumes[0] "$CA_HOST_VOLUME:$CONTAINER_CA_VOLUME"
+
+			p=0
+			envPush "$CACMD" "FABRIC_CA_HOME=$CONTAINER_CA_VOLUME" # align with command
+
+
+			$CACMD.ports[0] $CA_HOST_PORT:7054
+			$CACMD.networks[0] $networksName
+
+		}
+
+		caGen false
 		if [ "$TLS_ENABLED" == "true" ]; then
-			tlsPrefix="tlsca"
-		else
-			tlsPrefix="ca"
+			caGen $TLS_ENABLED
 		fi
-
-		CA_HOST_VOLUME="${MSPROOT}peerOrganizations/$PEER_DOMAIN/${tlsPrefix}/"
-		caServerConfig="${CA_HOST_VOLUME}fabric-ca-server-config.yaml"
-
-		if [ -f "$caServerConfig" ]; then
-			rm $caServerConfig
-		fi
-		>$caServerConfig
-		privkeyFilename=$(basename $(find $CA_HOST_VOLUME -type f \( -name "*_sk" \)))
-		CACMD="yaml w -i $COMPOSE_FILE "services["$tlsPrefix.$PEER_DOMAIN"]
-		if [ "$TLS_ENABLED" == "true" ]; then
-
-			yaml w -i $caServerConfig tls.certfile "$CONTAINER_CA_VOLUME/$tlsPrefix.$PEER_DOMAIN-cert.pem"
-			yaml w -i $caServerConfig tls.keyfile "$CONTAINER_CA_VOLUME/$privkeyFilename"
-
-		fi
-
-		yaml w -i $caServerConfig ca.certfile "$CONTAINER_CA_VOLUME/$tlsPrefix.$PEER_DOMAIN-cert.pem"
-		yaml w -i $caServerConfig ca.keyfile "$CONTAINER_CA_VOLUME/$privkeyFilename"
-
-		$CACMD.image hyperledger/fabric-ca:$IMAGE_TAG
-
-		caContainerName=$(echo $caConfig | jq ".containerName")
-		$CACMD.container_name $caContainerName # TODO containerName testing
-		$CACMD.command "sh -c 'fabric-ca-server start -d'"
-
-		# affiliations must be a map with 2-depth
-		yaml w -i $caServerConfig affiliations.$orgName[0] client
-		yaml w -i $caServerConfig affiliations.$orgName[1] user
-		yaml w -i $caServerConfig affiliations.$orgName[2] peer
-
-		yaml w -i $caServerConfig tls.enabled $TLS_ENABLED
-
-		adminName=$(echo $caConfig | jq ".admin.name")
-		adminPass=$(echo $caConfig | jq ".admin.pass")
-		yaml w -i $caServerConfig registry.identities[0].name $adminName
-		yaml w -i $caServerConfig registry.identities[0].pass $adminPass
-		yaml w -i $caServerConfig registry.identities[0].type "client"
-		yaml w -i $caServerConfig -- registry.identities[0].maxenrollments -1 # see in mikefarah/yaml issues #10
-		yaml w -i $caServerConfig registry.identities[0].attrs["hf.Registrar.Roles"] "client,user,peer"
-		yaml w -i $caServerConfig registry.identities[0].attrs["hf.Revoker"] true
-		yaml w -i $caServerConfig registry.identities[0].attrs["hf.Registrar.DelegateRoles"] "client,user"
-
-		$CACMD.volumes[0] "$CA_HOST_VOLUME:$CONTAINER_CA_VOLUME"
-
-		p=0
-		envPush "$CACMD" "FABRIC_CA_HOME=$CONTAINER_CA_VOLUME" # align with command
-
-		CA_HOST_PORT=$(echo $orgConfig | jq ".ca.portMap[0].host")
-		CA_CONTAINER_PORT=$(echo $orgConfig | jq ".ca.portMap[0].container")
-		$CACMD.ports[0] $CA_HOST_PORT:$CA_CONTAINER_PORT
-		$CACMD.networks[0] $networksName
 	fi
 
 done

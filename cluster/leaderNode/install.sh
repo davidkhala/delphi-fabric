@@ -3,10 +3,7 @@
 CURRENT="$(dirname $(readlink -f ${BASH_SOURCE}))"
 root=$(dirname $(dirname $CURRENT))
 
-$root/common/install.sh
-
-# write to config: jq do not support in-place editing, use moreutils:sponge
-apt -qq install -y moreutils
+$root/install.sh
 
 $root/common/ubuntu/nfs.sh installHost
 
