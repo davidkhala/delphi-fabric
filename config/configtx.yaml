@@ -3,7 +3,7 @@ Profiles:
     Orderer:
       OrdererType: solo
       Addresses:
-      - orderContainerName.Delphi.com:7050
+      - orderContainerName:7050
       BatchTimeout: 2s
       BatchSize:
         MaxMessageCount: 10
@@ -20,19 +20,19 @@ Profiles:
           ID: BUMSP
           MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/BU.Delphi.com/msp
           AnchorPeers:
-          - Host: BUContainerName.Delphi.com
+          - Host: BUContainerName
             Port: 7051
         - Name: ENGMSPName
           ID: ENGMSP
           MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/ENG.Delphi.com/msp
           AnchorPeers:
-          - Host: ENGContainerName.Delphi.com
+          - Host: ENGContainerName
             Port: 7051
         - Name: PMMSPName
           ID: PMMSP
           MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/PM.Delphi.com/msp
           AnchorPeers:
-          - Host: PMContainerName.Delphi.com
+          - Host: PMContainerName
             Port: 7051
   delphiChannel:
     Consortium: SampleConsortium
@@ -42,11 +42,11 @@ Profiles:
         ID: BUMSP
         MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/BU.Delphi.com/msp
         AnchorPeers:
-        - Host: BUContainerName.Delphi.com
+        - Host: BUContainerName
           Port: 7051
       - Name: PMMSPName
         ID: PMMSP
         MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/PM.Delphi.com/msp
         AnchorPeers:
-        - Host: PMContainerName.Delphi.com
+        - Host: PMContainerName
           Port: 7051

@@ -56,7 +56,6 @@ COMPANY_DOMAIN=$(jq -r ".$COMPANY.domain" $CONFIG_JSON)
 
 ordererConfig=$(jq -r ".$COMPANY.orderer" $CONFIG_JSON)
 orderer_container_name=$(echo $ordererConfig | jq -r ".containerName")
-ORDERER_CONTAINER=$orderer_container_name.$COMPANY_DOMAIN
 
 orgsConfig=$(jq -r ".$COMPANY.orgs" $CONFIG_JSON)
 orgNames=$(echo $orgsConfig | jq -r "keys[]")
@@ -105,7 +104,7 @@ function envPush() {
 }
 
 ORDERERCMD="yaml w -i $COMPOSE_FILE services[${ORDERER_SERVICE_NAME}]"
-$ORDERERCMD.container_name $ORDERER_CONTAINER
+$ORDERERCMD.container_name $orderer_container_name
 $ORDERERCMD.image hyperledger/fabric-orderer:$IMAGE_TAG
 CONTAINER_GOPATH="/etc/hyperledger/gopath/"
 
@@ -116,7 +115,7 @@ p=0
 envPush "$ORDERERCMD" ORDERER_GENERAL_LOGLEVEL=debug
 envPush "$ORDERERCMD" ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
 
-orderer_hostName_full=$orderer_container_name.$COMPANY_DOMAIN # TODO should company domain must be lower-case
+orderer_hostName_full=$orderer_container_name.$COMPANY_DOMAIN
 ORDERER_STRUCTURE="ordererOrganizations/$COMPANY_DOMAIN/orderers/$orderer_hostName_full"
 CONTAINER_ORDERER_TLS_DIR="$CONTAINER_CRYPTO_CONFIG_DIR/$ORDERER_STRUCTURE/tls"
 
@@ -150,7 +149,7 @@ for orgName in $orgNames; do
 		PEER_ANCHOR=peer$peerIndex.$PEER_DOMAIN # TODO multi peer case, take care of any 'peer[0]' occurrence
 		peerServiceName=$PEER_ANCHOR
 		peerConfig=$(echo $org_peersConfig | jq -r ".[$peerIndex]")
-		peerContainer=$(echo $peerConfig | jq -r ".containerName").$COMPANY_DOMAIN
+		peerContainer=$(echo $peerConfig | jq -r ".containerName")
 		PEER_STRUCTURE="peerOrganizations/$PEER_DOMAIN/peers/$PEER_ANCHOR"
 		# peer container
 		#
@@ -205,32 +204,71 @@ for orgName in $orgNames; do
 		#
 		#   envPush "$PEERCMD" GOPATH=$CONTAINER_GOPATH
 
-		#GOPATH and working_dir conflict: ERROR: for PMContainerName.delphi.com  Cannot start service peer0.pm.delphi.com: oci runtime error: container_linux.go:262: starting container process caused "chdir to cwd (\"/opt/gopath/src/github.com/hyperledger/fabric/peer\") set in config.json failed: no such file or directory"
+		#GOPATH and working_dir conflict: ERROR: for PMContainerName  Cannot start service peer0.pm.delphi.com: oci runtime error: container_linux.go:262: starting container process caused "chdir to cwd (\"/opt/gopath/src/github.com/hyperledger/fabric/peer\") set in config.json failed: no such file or directory"
 		#   $PEERCMD.volumes[3] "$GOPATH:$CONTAINER_GOPATH"
 	done
 
 	# CA
-	CA_enable=$(echo $orgConfig | jq ".ca.enable")
+	caConfig=$(echo $orgConfig | jq ".ca")
+
+	CA_enable=$(echo $caConfig | jq ".enable")
 	if [ "$CA_enable" == "true" ]; then
-		CACMD="yaml w -i $COMPOSE_FILE "services["ca.$PEER_DOMAIN"]
-		$CACMD.image hyperledger/fabric-ca:$IMAGE_TAG
-		$CACMD.container_name "ca.$PEER_DOMAIN"
-		$CACMD.command "sh -c 'fabric-ca-server start -b admin:adminpw -d'"
-		CONTAINER_CA_VOLUME="$CONTAINER_CRYPTO_CONFIG_DIR/peerOrganizations/$PEER_DOMAIN/ca"
-		CA_HOST_VOLUME="${MSPROOT}peerOrganizations/$PEER_DOMAIN/ca/" # FIXME not shared volume
+
+		#	Config setting: https://hyperledger-fabric-ca.readthedocs.io/en/latest/serverconfig.html
+		CONTAINER_CA_HOME="/etc/hyperledger/fabric-ca-server"
+		CONTAINER_CA_VOLUME="$CONTAINER_CA_HOME/$PEER_DOMAIN/ca"
+		if [ "$TLS_ENABLED" == "true" ]; then
+			tlsPrefix="tlsca"
+		else
+			tlsPrefix="ca"
+		fi
+
+		CA_HOST_VOLUME="${MSPROOT}peerOrganizations/$PEER_DOMAIN/${tlsPrefix}/"
+		caServerConfig="${CA_HOST_VOLUME}fabric-ca-server-config.yaml"
+
+		if [ -f "$caServerConfig" ]; then
+			rm $caServerConfig
+		fi
+		>$caServerConfig
 		privkeyFilename=$(basename $(find $CA_HOST_VOLUME -type f \( -name "*_sk" \)))
+		CACMD="yaml w -i $COMPOSE_FILE "services["$tlsPrefix.$PEER_DOMAIN"]
+		if [ "$TLS_ENABLED" == "true" ]; then
+
+			yaml w -i $caServerConfig tls.certfile "$CONTAINER_CA_VOLUME/$tlsPrefix.$PEER_DOMAIN-cert.pem"
+			yaml w -i $caServerConfig tls.keyfile "$CONTAINER_CA_VOLUME/$privkeyFilename"
+
+		fi
+
+		yaml w -i $caServerConfig ca.certfile "$CONTAINER_CA_VOLUME/$tlsPrefix.$PEER_DOMAIN-cert.pem"
+		yaml w -i $caServerConfig ca.keyfile "$CONTAINER_CA_VOLUME/$privkeyFilename"
+
+		$CACMD.image hyperledger/fabric-ca:$IMAGE_TAG
+
+		caContainerName=$(echo $caConfig | jq ".containerName")
+		$CACMD.container_name $caContainerName # TODO containerName testing
+		$CACMD.command "sh -c 'fabric-ca-server start -d'"
+
+		# affiliations must be a map with 2-depth
+		yaml w -i $caServerConfig affiliations.$orgName[0] client
+		yaml w -i $caServerConfig affiliations.$orgName[1] user
+		yaml w -i $caServerConfig affiliations.$orgName[2] peer
+
+		yaml w -i $caServerConfig tls.enabled $TLS_ENABLED
+
+		adminName=$(echo $caConfig | jq ".admin.name")
+		adminPass=$(echo $caConfig | jq ".admin.pass")
+		yaml w -i $caServerConfig registry.identities[0].name $adminName
+		yaml w -i $caServerConfig registry.identities[0].pass $adminPass
+		yaml w -i $caServerConfig registry.identities[0].type "client"
+		yaml w -i $caServerConfig -- registry.identities[0].maxenrollments -1 # see in mikefarah/yaml issues #10
+		yaml w -i $caServerConfig registry.identities[0].attrs["hf.Registrar.Roles"] "client,user,peer"
+		yaml w -i $caServerConfig registry.identities[0].attrs["hf.Revoker"] true
+		yaml w -i $caServerConfig registry.identities[0].attrs["hf.Registrar.DelegateRoles"] "client,user"
+
 		$CACMD.volumes[0] "$CA_HOST_VOLUME:$CONTAINER_CA_VOLUME"
 
 		p=0
-		envPush "$CACMD" "FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server" # align with command
-		envPush "$CACMD" "FABRIC_CA_SERVER_CA_CERTFILE=$CONTAINER_CA_VOLUME/ca.$PEER_DOMAIN-cert.pem"
-		envPush "$CACMD" "FABRIC_CA_SERVER_TLS_ENABLED=$TLS_ENABLED"
-		if [ "$TLS_ENABLED" == "true" ]; then
-#		    TODO to test
-			envPush "$CACMD" "FABRIC_CA_SERVER_TLS_CERTFILE=$CONTAINER_CA_VOLUME/ca.$PEER_DOMAIN-cert.pem"
-			envPush "$CACMD" "FABRIC_CA_SERVER_TLS_KEYFILE=$CONTAINER_CA_VOLUME/$privkeyFilename"
-		fi
-		envPush "$CACMD" "FABRIC_CA_SERVER_CA_KEYFILE=$CONTAINER_CA_VOLUME/$privkeyFilename"
+		envPush "$CACMD" "FABRIC_CA_HOME=$CONTAINER_CA_VOLUME" # align with command
 
 		CA_HOST_PORT=$(echo $orgConfig | jq ".ca.portMap[0].host")
 		CA_CONTAINER_PORT=$(echo $orgConfig | jq ".ca.portMap[0].container")

@@ -136,8 +136,15 @@ for (let orgName in orgsConfig) {
 		}
 	}
 	if (!ca_port) continue
-	const caUrl = `https://localhost:${ca_port}`
-	objects.caService[orgName] = new caService(caUrl, null /*defautl TLS opts*/, null /* default CA */, null
+	const caHost = 'localhost'
+	const caProtocol = companyConfig.TLS ? 'https://' : 'http://'
+
+	const caUrl = `${caProtocol}${caHost}:${ca_port}`
+	const tlsOptions = {
+		trustedRoots: [],
+		verify: false
+	}
+	objects.caService[orgName] = new caService(caUrl, tlsOptions, null /* default CA */, null
 			/* default cryptoSuite */)
 
 }
@@ -224,110 +231,7 @@ const selectEventHubs = (peerIndexes, orgName) => {
 const getMspID = function(org) {
 
 	const mspid = orgsConfig[org].MSP.id
-	logger.debug(`Msp ID : ${mspid}`)
 	return mspid
-}
-var getAdminUser = function(userOrg) {
-
-	const username = 'admin'
-	const password = 'adminpw'
-	var member
-	return sdkUtils.newKeyValueStore({
-		path: getStateDBCachePath(userOrg)
-	}).then((store) => {
-		client.setStateStore(store)
-		// clearing the user context before switching
-		client._userContext = null
-		return client.getUserContext(username, true).then((user) => {
-			if (user && user.isEnrolled()) {
-				logger.info('Successfully loaded member from persistence')
-				return user
-			} else {
-				const caService = getCaService(userOrg)
-				// need to enroll it with CA server
-				return caService.enroll({
-					enrollmentID: username,
-					enrollmentSecret: password
-				}).then((enrollment) => {
-					logger.info('Successfully enrolled user \'' + username + '\'')
-					member = new User(username)
-					member.setCryptoSuite(client.getCryptoSuite())
-					return member.setEnrollment(enrollment.key, enrollment.certificate, getMspID(userOrg))
-				}).then(() => {
-					return client.setUserContext(member)
-				}).then(() => {
-					return member
-				}).catch((err) => {
-					logger.error('Failed to enroll and persist user. Error: ' + err.stack ? err.stack : err)
-					return null
-				})
-			}
-		})
-	})
-
-}
-var getRegisteredUsers = function(username, userOrg, isJson) {
-
-//TODO using fabric-ca, skip it first
-	var member
-	var enrollmentSecret = null
-	return sdkUtils.newKeyValueStore({
-		path: getStateDBCachePath(userOrg)
-	}).then((store) => {
-		client.setStateStore(store)
-		// clearing the user context before switching
-		client._userContext = null
-		return client.getUserContext(username, true).then((user) => {
-			if (user && user.isEnrolled()) {
-				logger.info('Successfully loaded member from persistence')
-				return user
-			} else {
-				let caClient = getCaService(userOrg)
-				return getAdminUser(userOrg).then(function(adminUserObj) {
-					member = adminUserObj
-					return caClient.register({
-						enrollmentID: username,
-						affiliation: userOrg + '.department1'
-					}, member)
-				}).then((secret) => {
-					enrollmentSecret = secret
-					logger.debug(username + ' registered successfully')
-					return caClient.enroll({
-						enrollmentID: username,
-						enrollmentSecret: secret
-					})
-				}).then((message) => {
-					if (message && typeof message === 'string' && message.includes(
-									'Error:')) {
-						logger.error(username + ' enrollment failed')
-						return message
-					}
-					logger.debug(username + ' enrolled successfully')
-
-					member = new User(username)
-					member._enrollmentSecret = enrollmentSecret
-					return member.setEnrollment(message.key, message.certificate, getMspID(userOrg))
-				}).then(() => {
-					client.setUserContext(member)
-					return member
-				})
-
-			}
-		})
-	}).then((user) => {
-		if (isJson && isJson === true) {
-			var response = {
-				success: true,
-				secret: user._enrollmentSecret,
-				message: username + ' enrolled Successfully'
-			}
-			return response
-		}
-		return user
-	}).catch(err => {
-		logger.error(err)
-		//FIXME: fabric-ca request register failed with errors [[{"code":0,"message":"Failed getting affiliation 'PM.department1': sql: no rows in result set"}]]
-	})
 }
 //NOTE have to do this since filename for private Key file would be as : a4fbafa51de1161a2f82ffa80cf1c34308482c33a9dcd4d150183183d0a3e0c6_sk
 const getKeyFilesInDir = (dir) => {
@@ -346,6 +250,7 @@ objects.user.clear = () => {
 	client._userContext = null
 	client.setCryptoSuite(null)
 }
+exports.formatPeerName=(peerName,orgName)=>`${peerName}.${orgName}.${COMPANY_DOMAIN}`
 const formatUsername = (username, orgName) => `${username}@${orgName}.${COMPANY_DOMAIN}`
 //
 objects.user.create = (keystoreDir, signcertFile, username, orgName, persistInCache = true, mspid) => {
@@ -358,18 +263,22 @@ objects.user.create = (keystoreDir, signcertFile, username, orgName, persistInCa
 	const createUserOpt = {
 		username: formatUsername(username, orgName),
 		mspid: mspid ? mspid : getMspID(orgName),
-		cryptoContent: { privateKey: keyFile, signedCert: signcertFile }
+		cryptoContent: { privateKey: keyFile, signedCert: signcertFile },
+		skipPersistence: !persistInCache
 	}
+	const clientUtil = require('./util/client')
 	if (persistInCache) {
+
 		return sdkUtils.newKeyValueStore({
 			path: getStateDBCachePath(orgName)
 		}).then((store) => {
 			client.setStateStore(store)
-
-			return client.createUser(createUserOpt)
+			//fixme: self.setUserContext(member) do not support persist flag => setUserContext(user, skipPersistence)
+			return clientUtil.createUser(client, createUserOpt)
 		})
 	} else {
-		return client.createUser(createUserOpt)
+		//fixme: self.setUserContext(member) do not support persist flag => setUserContext(user, skipPersistence)
+		return clientUtil.createUser(client, createUserOpt)
 	}
 }
 /**
@@ -422,7 +331,7 @@ objects.user.admin = {
 objects.user.admin.get = (orgName) => objects.user.get(rawAdminUsername, orgName)
 objects.user.admin.create = (orgName) => {
 
-	const org_domain = `${orgName}.${COMPANY_DOMAIN}`// bu.delphi.com
+	const org_domain = `${orgName}.${COMPANY_DOMAIN}`// BU.Delphi.com
 	const keystoreDir = path.join(CRYPTO_CONFIG_DIR,
 			`peerOrganizations/${org_domain}/users/Admin@${org_domain}/msp/keystore`)
 
@@ -508,6 +417,6 @@ exports.newPeerByContainer = newPeerByContainer
 exports.userAction = objects.user
 exports.eventHubsPromise = selectEventHubs
 exports.bindEventHub = bindEventHub
-exports.getRegisteredUsers = getRegisteredUsers
 exports.getOrgAdmin = objects.user.admin.select
 exports.getCaService = getCaService
+exports.formatUsername = formatUsername

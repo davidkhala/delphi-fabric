@@ -52,7 +52,7 @@ ordererConfig=$(echo $companyConfig | jq ".orderer")
 ORDERER_CONTAINER_PORT=$(echo $ordererConfig | jq -r ".portMap[0].container")
 ANCHOR_PEER_CONTAINER_PORT=7051
 
-ORDERER_CONTAINER=$(echo $ordererConfig | jq -r ".containerName").$COMPANY_DOMAIN
+ORDERER_CONTAINER=$(echo $ordererConfig | jq -r ".containerName")
 
 rm $configtx_file
 >$configtx_file
@@ -82,7 +82,7 @@ for orgName in $blockOrgs; do
 	yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Consortiums.SampleConsortium.Organizations[$i].MSPDir \
 		"${MSPROOT}peerOrganizations/$orgName.$COMPANY_DOMAIN/msp"
 
-	peerContainer=$(echo $orgConfig |jq -r ".peers[0].containerName" ).$COMPANY_DOMAIN
+	peerContainer=$(echo $orgConfig |jq -r ".peers[0].containerName" )
 
 	yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Consortiums.SampleConsortium.Organizations[$i].AnchorPeers[0].Host \
 		$peerContainer
@@ -105,7 +105,7 @@ for orgName in $channelOrgs; do
 	yaml w -i $configtx_file Profiles.$PROFILE_CHANNEL.Application.Organizations[$i].ID $(echo $orgConfig | jq -r ".MSP.id")
 	yaml w -i $configtx_file Profiles.$PROFILE_CHANNEL.Application.Organizations[$i].MSPDir "${MSPROOT}peerOrganizations/$orgName.$COMPANY_DOMAIN/msp"
 
-	peerContainer=$(echo $orgConfig | jq -r ".peers[0].containerName").$COMPANY_DOMAIN
+	peerContainer=$(echo $orgConfig | jq -r ".peers[0].containerName")
 	yaml w -i $configtx_file Profiles.$PROFILE_CHANNEL.Application.Organizations[$i].AnchorPeers[0].Host $peerContainer
 	yaml w -i $configtx_file Profiles.$PROFILE_CHANNEL.Application.Organizations[$i].AnchorPeers[0].Port $ANCHOR_PEER_CONTAINER_PORT
 	((i++))

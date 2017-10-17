@@ -17,7 +17,7 @@ PeerOrgs:
     Count: 1
     Start: 0
   Users:
-    Count: 2
+    Count: 0
 - Name: PM
   Domain: PM.Delphi.com
   Template:
