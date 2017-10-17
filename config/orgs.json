@@ -1,7 +1,7 @@
 {
   "delphi": {
     "domain": "Delphi.com",
-    "TLS": false,
+    "TLS": true,
     "docker": {
       "fabricTag": "1.0.1",
       "network": "delphiNetwork",
@@ -89,9 +89,14 @@
             ]
           }
         ],
-        "users": [],
+        "userCount": 0,
         "ca": {
-          "enable": false,
+          "enable": true,
+          "containerName": "BUCA",
+          "admin": {
+            "name": "CAadmin",
+            "pass": "passwd"
+          },
           "portMap": [
             {
               "host": 7054,
@@ -125,12 +130,14 @@
             ]
           }
         ],
-        "users": [
-          {},
-          {}
-        ],
+        "userCount": 0,
         "ca": {
           "enable": false,
+          "containerName": "ENGCA",
+          "admin": {
+            "name": "admin",
+            "pass": "passwd"
+          },
           "portMap": [
             {
               "host": 8054,
@@ -164,9 +171,14 @@
             ]
           }
         ],
-        "users": [],
+        "userCount": 0,
         "ca": {
+          "containerName": "PMCA",
           "enable": false,
+          "admin": {
+            "name": "admin",
+            "pass": "passwd"
+          },
           "portMap": [
             {
               "host": 9054,

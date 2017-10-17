@@ -82,7 +82,6 @@ assume we have two physical machine,with main hostName 'ubuntu' with ip `192.168
  
     
 ## TODO
-- ca-service in node-sdk
-- TLS disabled, toggle testing
+- ca-service in node-sdk (in progress)
 - endorsement policy config
 
