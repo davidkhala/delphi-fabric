@@ -365,7 +365,7 @@ objects.user.admin.get = (orgName) => objects.user.get(rawAdminUsername, orgName
 objects.user.admin.create = (orgName) => {
 
 	const org_domain = `${orgName}.${COMPANY_DOMAIN}`// BU.Delphi.com
-	const keystoreDir = path.join(CRYPTO_CONFIG_DIR, 'peerOrganizations', 'org_domain', 'users', `Admin@${org_domain}`,
+	const keystoreDir = path.join(CRYPTO_CONFIG_DIR, 'peerOrganizations', org_domain, 'users', `Admin@${org_domain}`,
 			'msp', 'keystore')
 
 	const signcertFile = path.join(CRYPTO_CONFIG_DIR,

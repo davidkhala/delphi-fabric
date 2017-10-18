@@ -66,6 +66,44 @@ const pkcs11_key = {
 	}
 
 }
+/**
+ *
+ * enroll
+ * 1. generate a new privateKey
+ * 2. generate csr from the privateKey
+ * 3. fabricCAClient.enroll(id, secret, scr)
+ * @return {Object} {key,certificate,rootCertificate}
+ * rootCertificate: root cert of CA
+ * @param caService
+ * @param {Object} { enrollmentID:name, password }
+ *
+ */
+const enroll = (caService, { enrollmentID, enrollmentSecret }) => {
+	//generate enrollment certificate pair for signing
+	let opts
+	if (caService.getCryptoSuite()._cryptoKeyStore) {
+		opts = { ephemeral: false }
+	} else {
+		opts = { ephemeral: true }
+	}
+	return caService.getCryptoSuite().generateKey(opts).then(
+			(privateKey) => {
+				//generate CSR using enrollmentID for the subject
+				//fixme pull request for fabric-node-sdk
+				const csr = privateKey.generateCSR(`CN=${enrollmentID},L=San Francisco,ST=California,C=US`)
+				return caService._fabricCAClient.enroll(enrollmentID, enrollmentSecret, csr).then(
+						(enrollResponse) => Promise.resolve({
+							key: privateKey,
+							certificate: enrollResponse.enrollmentCert,
+							rootCertificate: enrollResponse.caCertChain
+						})
+				)
+
+			}
+	)
+
+}
+
 const peer = {
 	revoke: (caService, { peerName }, adminUser) => {
 		return revoke(caService, { enrollmentID: peerName }, adminUser)
@@ -86,7 +124,7 @@ const peer = {
 		toMSP({ key, certificate, rootCertificate }, mspDirName, { name: peerName, delimiter: '.', domain: org_domain })
 	},
 	enroll: (caService, { peerName, password }) =>
-			caService.enroll({
+			enroll(caService, {
 				enrollmentID: peerName,
 				enrollmentSecret: password
 			})
@@ -110,23 +148,6 @@ const toTLS = ({ key, certificate, rootCertificate }, tlsDir) => {
 	fs.writeFileSync(path.join(tlsDir, 'server.crt'), certificate)
 	fs.writeFileSync(path.join(tlsDir, 'ca.crt'), rootCertificate)
 }
-/**
- *
- * enroll
- * 1. generate a new privateKey
- * 2. generate csr from the privateKey
- * 3. fabricCAClient.enroll(id, secret, scr)
- * @return {Object} {key,certificate,rootCertificate}
- * rootCertificate: root cert of CA
- * @param caService
- * @param {Object} { enrollmentID:name, password }
- *
- */
-const enroll = (caService, { enrollmentID, password }) =>
-		caService.enroll({
-			enrollmentID,
-			enrollmentSecret: password
-		})
 
 exports.register = register
 exports.toTLS = toTLS
