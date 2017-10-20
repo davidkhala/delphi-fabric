@@ -16,7 +16,7 @@ const joinAllfcn = () => {
 	]
 
 	const channel = helper.getChannel(channelName)
-	return joinChannel(channel, peers, orgName).then(() => {
+	return helper.getOrgAdmin(orgName).then(()=>joinChannel(channel, peers).then(() => {
 
 		const orgName = 'PM'
 		const peers = [
@@ -27,8 +27,8 @@ const joinAllfcn = () => {
 				]
 			})
 		]
-		return joinChannel(channel, peers, orgName)
-	})
+		return helper.getOrgAdmin(orgName).then(()=>joinChannel(channel, peers))
+	}))
 }
 //E0905 10:07:20.462272826    7262 ssl_transport_security.c:947] Handshake failed with fatal error SSL_ERROR_SSL: error:14090086:SSL routines:ssl3_get_server_certificate:certificate verify failed.
 
