@@ -38,7 +38,7 @@ func (t *AdminChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	stateInt++
 	state=strconv.Itoa(stateInt)
 	stub.PutState(counterKey,[]byte(state))
-	return shim.Success(nil)
+	return shim.Success([]byte(state))
 }
 
 func logQueryIterrator(iterator shim.StateQueryIteratorInterface) {

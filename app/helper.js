@@ -374,6 +374,13 @@ objects.user.admin.create = (orgName) => {
 
 	return objects.user.mspCreate(keystoreDir, signcertFile, rawAdminUsername, orgName)
 }
+objects.user.admin.tlsCreate = (orgName) => {
+	const org_domain = `${orgName}.${COMPANY_DOMAIN}`// BU.Delphi.com
+	const adminRoot = path.join(CRYPTO_CONFIG_DIR, 'peerOrganizations', org_domain, 'users', `Admin@${org_domain}`)
+	const tlsDir= path.join(adminRoot, 'tls')
+	//NOTE TODO:TLS will not be saved to cache to avoid override
+	return objects.user.tlsCreate(tlsDir, `tls.${rawAdminUsername}`, orgName,undefined,false)
+}
 //
 objects.user.createIfNotExist = (keystoreDir, signcertFile, username, orgName) => {
 	objects.user.get(username, orgName).then(user => {

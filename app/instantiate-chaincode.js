@@ -8,68 +8,66 @@ const logger = helper.getLogger('instantiate-chaincode')
 // 		"chaincodeVersion":"v0",
 // 		"args":["a","100","b","200"]
 // set peers to 'undefined' to target all peers in channel
-exports.instantiateChaincode = (channel, richPeers, chaincodeId, chaincodeVersion, args, orgName) => {
+exports.instantiateChaincode = (
+		channel, richPeers, chaincodeId, chaincodeVersion, args, client = channel._clientContext) => {
 	logger.debug(
-			{ channelName: channel.getName(), peersSize: richPeers.length, chaincodeId, chaincodeVersion, args, orgName })
+			{ channelName: channel.getName(), peersSize: richPeers.length, chaincodeId, chaincodeVersion, args })
 
-	return helper.getOrgAdmin(orgName).then(() => {
-		//Error: Verifying MSPs not found in the channel object, make sure "intialize()" is called first.
-		const client = helper.getClient()
-		const { eventWaitTime } = channel
+	//Error: Verifying MSPs not found in the channel object, make sure "intialize()" is called first.
+	const { eventWaitTime } = channel
 
-		return channel.initialize().then(() => {
-			logger.info('channel.initialize() success', channel.getOrganizations())
-			const txId = client.newTransactionID()
-			const request = {
-				chaincodeId,
-				chaincodeVersion,
-				args,
-				fcn: 'init',// fcn is 'init' in default: `fcn` : optional - String of the function to be called on the chaincode once instantiated (default 'init')
-				txId,
-				targets: richPeers// optional: if not set, targets will be channel.getPeers
-				// ,'endorsement-policy':{}
-				// 		`chaincodeType` : optional -- Type of chaincode ['golang', 'car', 'java'] (default 'golang')
-			}
-			const existSymptom = '(status: 500, message: chaincode exists'
-			return channel.sendInstantiateProposal(request).
-					then(helper.chaincodeProposalAdapter('instantiate', proposalResponse => {
-						const { response } = proposalResponse
-						if (response && response.status === 200) return true
+	return channel.initialize().then(() => {
+		logger.info('channel.initialize() success', channel.getOrganizations())
+		const txId = client.newTransactionID()
+		const request = {
+			chaincodeId,
+			chaincodeVersion,
+			args,
+			fcn: 'init',// fcn is 'init' in default: `fcn` : optional - String of the function to be called on the chaincode once instantiated (default 'init')
+			txId,
+			targets: richPeers// optional: if not set, targets will be channel.getPeers
+			// ,'endorsement-policy':{}
+			// 		`chaincodeType` : optional -- Type of chaincode ['golang', 'car', 'java'] (default 'golang')
+		}
+		const existSymptom = '(status: 500, message: chaincode exists'
+		return channel.sendInstantiateProposal(request).
+				then(helper.chaincodeProposalAdapter('instantiate', proposalResponse => {
+					const { response } = proposalResponse
+					if (response && response.status === 200) return true
+					if (proposalResponse instanceof Error && proposalResponse.toString().includes(existSymptom)) {
+						logger.warn('swallow when existence')
+						return true
+					}
+					return false
+				})).
+				then(({ nextRequest }) => {
+					//ehhhh... duplicated check for skipping
+					const { proposalResponses } = nextRequest
+					const existCounter = []
+					for (let proposalResponse of proposalResponses) {
 						if (proposalResponse instanceof Error && proposalResponse.toString().includes(existSymptom)) {
-							logger.warn('swallow when existence')
-							return true
+							existCounter.push(proposalResponse)
 						}
-						return false
-					})).
-					then(({ nextRequest }) => {
-						//ehhhh... duplicated check for skipping
-						const { proposalResponses } = nextRequest
-						const existCounter=[]
-						for(let proposalResponse of proposalResponses){
-							if (proposalResponse instanceof Error && proposalResponse.toString().includes(existSymptom)) {
-								existCounter.push(proposalResponse)
-							}
-						}
-						if(existCounter.length===proposalResponses.length){
-							return Promise.resolve(proposalResponses)
-						}
+					}
+					if (existCounter.length === proposalResponses.length) {
+						return Promise.resolve(proposalResponses)
+					}
 
-						const promises = []
-						for (let peer of richPeers) {
-							const eventHub = helper.bindEventHub(peer)
-							const txPromise = eventHelper.txEventPromise(eventHub, { txId, eventWaitTime },({ tx, code }) => {
-								logger.debug("newTxEvent",{tx,code})
-								return { valid: code === 'VALID', interrupt: true }
-							})
-							promises.push(txPromise)
-						}
-
-						return channel.sendTransaction(nextRequest).then(() => {
-							logger.info('channel.sendTransaction success')
-							return Promise.all(promises)
+					const promises = []
+					for (let peer of richPeers) {
+						const eventHub = helper.bindEventHub(peer)
+						const txPromise = eventHelper.txEventPromise(eventHub, { txId, eventWaitTime }, ({ tx, code }) => {
+							logger.debug('newTxEvent', { tx, code })
+							return { valid: code === 'VALID', interrupt: true }
 						})
+						promises.push(txPromise)
+					}
+
+					return channel.sendTransaction(nextRequest).then(() => {
+						logger.info('channel.sendTransaction success')
+						return Promise.all(promises)
 					})
-		})
+				})
 	})
 }
 

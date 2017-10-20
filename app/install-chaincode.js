@@ -5,21 +5,18 @@ const logger = helper.getLogger('install-chaincode')
 //allowedCharsChaincodeName = "[A-Za-z0-9_-]+"
 // allowedCharsVersion       = "[A-Za-z0-9_.-]+"
 //
-const installChaincode = (peers, chaincodeId, chaincodePath, chaincodeVersion, orgName) => {
+const installChaincode = (peers, chaincodeId, chaincodePath, chaincodeVersion, client) => {
 	logger.debug('============ Install chaincode ============')
-	logger.debug({ peers_length: peers.length, chaincodeId, chaincodePath, chaincodeVersion, orgName })
+	logger.debug({ peers_length: peers.length, chaincodeId, chaincodePath, chaincodeVersion})
 	helper.setGOPATH()
-	const client = helper.getClient()
 
-	return helper.getOrgAdmin(orgName).then(() => {
-		const request = {
-			targets: peers,
-			chaincodePath,
-			chaincodeId,
-			chaincodeVersion
-		}
-		return client.installChaincode(request)
-	}).then(helper.chaincodeProposalAdapter('install', (proposalResponse) => {
+	const request = {
+		targets: peers,
+		chaincodePath,
+		chaincodeId,
+		chaincodeVersion
+	}
+	return client.installChaincode(request).then(helper.chaincodeProposalAdapter('install', (proposalResponse) => {
 		if (proposalResponse.response && proposalResponse.response.status === 200) return true
 		if (proposalResponse instanceof Error && proposalResponse.toString().includes('exists')) {
 			logger.warn('swallow when exsitence')

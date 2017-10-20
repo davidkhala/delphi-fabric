@@ -54,8 +54,9 @@ const addOrg = (
 
 				return join(channel, [peer], orgName).then(() => {
 					helper.setGOPATH()
-					return installChaincode([peer], chaincodeId, chaincodePath, chaincodeVersion, orgName).then(() => {
-						return instantiate(channel, [peer], chaincodeId, chaincodeVersion, JSON.parse(args), orgName)
+					const client=helper.getClient()
+					return installChaincode([peer], chaincodeId, chaincodePath, chaincodeVersion, client).then(() => {
+						return instantiate(channel, [peer], chaincodeId, chaincodeVersion, JSON.parse(args), client)
 
 					})
 				})

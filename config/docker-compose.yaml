@@ -10,35 +10,35 @@ networks:
       name: delphiNetwork
 services:
   ccenv:
-    image: hyperledger/fabric-ccenv:x86_64-1.0.1
+    image: hyperledger/fabric-ccenv:x86_64-1.0.2
     container_name: ccenv.Delphi.com
   OrdererServiceName.Delphi.com:
     container_name: orderContainerName
-    image: hyperledger/fabric-orderer:x86_64-1.0.1
+    image: hyperledger/fabric-orderer:x86_64-1.0.2
     command: orderer
     ports:
     - 7250:7050
+    volumes:
+    - CONFIGTX_DIR:/etc/hyperledger/configtx
+    - MSPROOT:/etc/hyperledger/crypto-config
+    networks:
+    - default
     environment:
     - ORDERER_GENERAL_LOGLEVEL=debug
     - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
     - ORDERER_GENERAL_TLS_ENABLED=true
     - ORDERER_GENERAL_TLS_PRIVATEKEY=/etc/hyperledger/crypto-config/ordererOrganizations/Delphi.com/orderers/orderContainerName.Delphi.com/tls/server.key
     - ORDERER_GENERAL_TLS_CERTIFICATE=/etc/hyperledger/crypto-config/ordererOrganizations/Delphi.com/orderers/orderContainerName.Delphi.com/tls/server.crt
-    - ORDERER_GENERAL_TLS_ROOTCAS=[/etc/hyperledger/crypto-config/ordererOrganizations/Delphi.com/orderers/orderContainerName.Delphi.com/tls/ca.crt]
+    - ORDERER_GENERAL_TLS_ROOTCAS=[/etc/hyperledger/crypto-config/ordererOrganizations/Delphi.com/orderers/orderContainerName.Delphi.com/tls/ca.crt,/etc/hyperledger/crypto-config/peerOrganizations/BU.Delphi.com/tlsca/tlsca.BU.Delphi.com-cert.pem,/etc/hyperledger/crypto-config/peerOrganizations/PM.Delphi.com/tlsca/tlsca.PM.Delphi.com-cert.pem]
     - ORDERER_GENERAL_GENESISMETHOD=file
     - ORDERER_GENERAL_GENESISFILE=/etc/hyperledger/configtx/delphi.block
     - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
     - ORDERER_GENERAL_LOCALMSPDIR=/etc/hyperledger/crypto-config/ordererOrganizations/Delphi.com/orderers/orderContainerName.Delphi.com/msp
-    volumes:
-    - CONFIGTX_DIR:/etc/hyperledger/configtx
-    - MSPROOT:/etc/hyperledger/crypto-config
-    networks:
-    - default
   peer0.BU.Delphi.com:
     container_name: BUContainerName
     depends_on:
     - OrdererServiceName.Delphi.com
-    image: hyperledger/fabric-peer:x86_64-1.0.1
+    image: hyperledger/fabric-peer:x86_64-1.0.2
     command: peer node start
     environment:
     - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
@@ -68,7 +68,7 @@ services:
     container_name: BUContainer1
     depends_on:
     - OrdererServiceName.Delphi.com
-    image: hyperledger/fabric-peer:x86_64-1.0.1
+    image: hyperledger/fabric-peer:x86_64-1.0.2
     command: peer node start
     environment:
     - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
@@ -96,7 +96,7 @@ services:
     - default
   ca.BU.Delphi.com:
     container_name: BUCA
-    image: hyperledger/fabric-ca:x86_64-1.0.1
+    image: hyperledger/fabric-ca:x86_64-1.0.2
     command: sh -c 'fabric-ca-server start -d'
     volumes:
     - /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/BU.Delphi.com/ca/:/etc/hyperledger/fabric-ca-server/BU.Delphi.com/ca
@@ -108,7 +108,7 @@ services:
     - default
   tlsca.BU.Delphi.com:
     container_name: BUTLSCA
-    image: hyperledger/fabric-ca:x86_64-1.0.1
+    image: hyperledger/fabric-ca:x86_64-1.0.2
     command: sh -c 'fabric-ca-server start -d'
     volumes:
     - /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/BU.Delphi.com/tlsca/:/etc/hyperledger/fabric-ca-server/BU.Delphi.com/ca
@@ -122,7 +122,7 @@ services:
     container_name: ENGContainerName
     depends_on:
     - OrdererServiceName.Delphi.com
-    image: hyperledger/fabric-peer:x86_64-1.0.1
+    image: hyperledger/fabric-peer:x86_64-1.0.2
     command: peer node start
     environment:
     - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
@@ -152,7 +152,7 @@ services:
     container_name: PMContainerName
     depends_on:
     - OrdererServiceName.Delphi.com
-    image: hyperledger/fabric-peer:x86_64-1.0.1
+    image: hyperledger/fabric-peer:x86_64-1.0.2
     command: peer node start
     environment:
     - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
@@ -176,5 +176,29 @@ services:
     volumes:
     - /run/docker.sock:/host/var/run/docker.sock
     - MSPROOT:/etc/hyperledger/crypto-config
+    networks:
+    - default
+  ca.PM.Delphi.com:
+    container_name: PMCA
+    image: hyperledger/fabric-ca:x86_64-1.0.2
+    command: sh -c 'fabric-ca-server start -d'
+    volumes:
+    - /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/PM.Delphi.com/ca/:/etc/hyperledger/fabric-ca-server/PM.Delphi.com/ca
+    environment:
+    - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server/PM.Delphi.com/ca
+    ports:
+    - 9054:7054
+    networks:
+    - default
+  tlsca.PM.Delphi.com:
+    container_name: PMTLSCA
+    image: hyperledger/fabric-ca:x86_64-1.0.2
+    command: sh -c 'fabric-ca-server start -d'
+    volumes:
+    - /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/PM.Delphi.com/tlsca/:/etc/hyperledger/fabric-ca-server/PM.Delphi.com/ca
+    environment:
+    - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server/PM.Delphi.com/ca
+    ports:
+    - 9055:7054
     networks:
     - default

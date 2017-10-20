@@ -10,11 +10,11 @@ const orgName = 'BU'
 const channelName = 'delphiChannel'
 
 const peers = helper.newPeers(peerIndexes, orgName)
-
+const client=helper.getClient()
 helper.getOrgAdmin(orgName).then(() => {
 
 	const channel = helper.getChannel(channelName)
-	return invoke(channel, peers, chaincodeName, invoke_fcn, invoke_args, orgName)
+	return invoke(channel, peers, chaincodeName, invoke_fcn, invoke_args, client)
 
 })
 const _testInvokeOnNewPeer = () => {
@@ -30,7 +30,7 @@ const _testInvokeOnNewPeer = () => {
 	helper.getOrgAdmin(orgName).then(() => {
 
 		const channel = helper.getChannel(channelName)
-		return invoke(channel, peers, chaincodeName, invoke_fcn, invoke_args, orgName)
+		return invoke(channel, peers, chaincodeName, invoke_fcn, invoke_args, client)
 
 	})
 }

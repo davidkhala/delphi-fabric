@@ -111,46 +111,31 @@ CONTAINER_GOPATH="/etc/hyperledger/gopath/"
 $ORDERERCMD.command "orderer"
 $ORDERERCMD.ports[0] $ORDERER_HOST_PORT:$ORDERER_CONTAINER_PORT
 
-p=0
-envPush "$ORDERERCMD" ORDERER_GENERAL_LOGLEVEL=debug
-envPush "$ORDERERCMD" ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
 
 orderer_hostName_full=$orderer_container_name.$COMPANY_DOMAIN
 ORDERER_STRUCTURE="ordererOrganizations/$COMPANY_DOMAIN/orderers/$orderer_hostName_full"
 CONTAINER_ORDERER_TLS_DIR="$CONTAINER_CRYPTO_CONFIG_DIR/$ORDERER_STRUCTURE/tls"
 
-envPush "$ORDERERCMD" ORDERER_GENERAL_TLS_ENABLED="$TLS_ENABLED"
-if [ "$TLS_ENABLED" == "true" ]; then
-	envPush "$ORDERERCMD" ORDERER_GENERAL_TLS_PRIVATEKEY=$CONTAINER_ORDERER_TLS_DIR/server.key
-	envPush "$ORDERERCMD" ORDERER_GENERAL_TLS_CERTIFICATE=$CONTAINER_ORDERER_TLS_DIR/server.crt
-	envPush "$ORDERERCMD" ORDERER_GENERAL_TLS_ROOTCAS="[${CONTAINER_ORDERER_TLS_DIR}/ca.crt]" # TODO test
-fi
 
-envPush "$ORDERERCMD" ORDERER_GENERAL_GENESISMETHOD=file # file|provisional
-envPush "$ORDERERCMD" ORDERER_GENERAL_GENESISFILE=$CONTAINER_CONFIGTX_DIR/$(basename $BLOCK_FILE)
-# NOTE remove ORDERER_GENERAL_GENESISFILE: panic: Unable to bootstrap orderer. Error reading genesis block file: open /etc/hyperledger/fabric/genesisblock: no such file or directory
-# NOTE when ORDERER_GENERAL_GENESISMETHOD=provisional  ORDERER_GENERAL_GENESISPROFILE=SampleNoConsortium -> panic: No system chain found.  If bootstrapping, does your system channel contain a consortiums group definition
-
-# MSP
-envPush "$ORDERERCMD" ORDERER_GENERAL_LOCALMSPID=OrdererMSP
-envPush "$ORDERERCMD" ORDERER_GENERAL_LOCALMSPDIR=$CONTAINER_CRYPTO_CONFIG_DIR/$ORDERER_STRUCTURE/msp
 
 $ORDERERCMD.volumes[0] "$CONFIGTXVolume:$CONTAINER_CONFIGTX_DIR"
 $ORDERERCMD.volumes[1] "$MSPROOTVolume:$CONTAINER_CRYPTO_CONFIG_DIR"
 $ORDERERCMD.networks[0] $networksName
 
+ORDERER_GENERAL_TLS_ROOTCAS="${CONTAINER_ORDERER_TLS_DIR}/ca.crt"
 for orgName in $orgNames; do
 	orgConfig=$(echo $orgsConfig | jq -r ".$orgName")
-	PEER_DOMAIN=$orgName.$COMPANY_DOMAIN
-	USER_ADMIN=Admin@$PEER_DOMAIN
+	ORG_DOMAIN=$orgName.$COMPANY_DOMAIN
+	USER_ADMIN=Admin@$ORG_DOMAIN
 	org_peersConfig=$(echo $orgConfig | jq -r ".peers")
-	ADMIN_STRUCTURE="peerOrganizations/$PEER_DOMAIN/users/$USER_ADMIN"
+	ADMIN_STRUCTURE="peerOrganizations/$ORG_DOMAIN/users/$USER_ADMIN"
+
 	for ((peerIndex = 0; peerIndex < $(echo $org_peersConfig | jq "length"); peerIndex++)); do
-		PEER_ANCHOR=peer$peerIndex.$PEER_DOMAIN # TODO multi peer case, take care of any 'peer[0]' occurrence
-		peerServiceName=$PEER_ANCHOR
+		PEER_DOMAIN=peer$peerIndex.$ORG_DOMAIN
+		peerServiceName=$PEER_DOMAIN
 		peerConfig=$(echo $org_peersConfig | jq -r ".[$peerIndex]")
 		peerContainer=$(echo $peerConfig | jq -r ".containerName")
-		PEER_STRUCTURE="peerOrganizations/$PEER_DOMAIN/peers/$PEER_ANCHOR"
+		PEER_STRUCTURE="peerOrganizations/$ORG_DOMAIN/peers/$PEER_DOMAIN"
 		# peer container
 		#
 		PEERCMD="yaml w -i $COMPOSE_FILE "services["$peerServiceName"]
@@ -184,8 +169,8 @@ for orgName in $orgNames; do
 		fi
 
 		#individual env
-		envPush "$PEERCMD" CORE_PEER_ID=$PEER_ANCHOR
-		envPush "$PEERCMD" CORE_PEER_ADDRESS=$PEER_ANCHOR:7051
+		envPush "$PEERCMD" CORE_PEER_ID=$PEER_DOMAIN
+		envPush "$PEERCMD" CORE_PEER_ADDRESS=$PEER_DOMAIN:7051
 
 		peerPortMap=$(echo $peerConfig | jq ".portMap")
 
@@ -218,14 +203,14 @@ for orgName in $orgNames; do
 			local TLS_ENABLED=$1
 			#	Config setting: https://hyperledger-fabric-ca.readthedocs.io/en/latest/serverconfig.html
 			CONTAINER_CA_HOME="/etc/hyperledger/fabric-ca-server"
-			CONTAINER_CA_VOLUME="$CONTAINER_CA_HOME/$PEER_DOMAIN/ca"
+			CONTAINER_CA_VOLUME="$CONTAINER_CA_HOME/$ORG_DOMAIN/ca"
 			if [ "$TLS_ENABLED" == "true" ]; then
 				tlsPrefix="tlsca"
 			else
 				tlsPrefix="ca"
 			fi
 
-			CA_HOST_VOLUME="${MSPROOT}peerOrganizations/$PEER_DOMAIN/${tlsPrefix}/"
+			CA_HOST_VOLUME="${MSPROOT}peerOrganizations/$ORG_DOMAIN/${tlsPrefix}/"
 			caServerConfig="${CA_HOST_VOLUME}fabric-ca-server-config.yaml"
 
 			if [ -f "$caServerConfig" ]; then
@@ -233,11 +218,11 @@ for orgName in $orgNames; do
 			fi
 			>$caServerConfig
 			privkeyFilename=$(basename $(find $CA_HOST_VOLUME -type f \( -name "*_sk" \)))
-			CACMD="yaml w -i $COMPOSE_FILE "services["$tlsPrefix.$PEER_DOMAIN"]
+			CACMD="yaml w -i $COMPOSE_FILE "services["$tlsPrefix.$ORG_DOMAIN"]
 
 			if [ "$TLS_ENABLED" == "true" ]; then
 
-				yaml w -i $caServerConfig tls.certfile "$CONTAINER_CA_VOLUME/$tlsPrefix.$PEER_DOMAIN-cert.pem"
+				yaml w -i $caServerConfig tls.certfile "$CONTAINER_CA_VOLUME/$tlsPrefix.$ORG_DOMAIN-cert.pem"
 				yaml w -i $caServerConfig tls.keyfile "$CONTAINER_CA_VOLUME/$privkeyFilename"
 				caContainerName=$(echo $caConfig | jq ".tlsca.containerName")
 				CA_HOST_PORT=$(echo $caConfig| jq ".tlsca.portHost")
@@ -247,7 +232,7 @@ for orgName in $orgNames; do
 			fi
 
 			$CACMD.container_name $caContainerName # TODO containerName testing
-			yaml w -i $caServerConfig ca.certfile "$CONTAINER_CA_VOLUME/$tlsPrefix.$PEER_DOMAIN-cert.pem"
+			yaml w -i $caServerConfig ca.certfile "$CONTAINER_CA_VOLUME/$tlsPrefix.$ORG_DOMAIN-cert.pem"
 			yaml w -i $caServerConfig ca.keyfile "$CONTAINER_CA_VOLUME/$privkeyFilename"
 
 			$CACMD.image hyperledger/fabric-ca:$IMAGE_TAG
@@ -285,10 +270,33 @@ for orgName in $orgNames; do
 		caGen false
 		if [ "$TLS_ENABLED" == "true" ]; then
 			caGen $TLS_ENABLED
+
+			CONTAINER_tlscaCert="$CONTAINER_CRYPTO_CONFIG_DIR/peerOrganizations/$ORG_DOMAIN/tlsca/tlsca.$ORG_DOMAIN-cert.pem"
+			ORDERER_GENERAL_TLS_ROOTCAS="$ORDERER_GENERAL_TLS_ROOTCAS,$CONTAINER_tlscaCert"
 		fi
 	fi
 
 done
+
+p=0
+envPush "$ORDERERCMD" ORDERER_GENERAL_LOGLEVEL=debug
+envPush "$ORDERERCMD" ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+envPush "$ORDERERCMD" ORDERER_GENERAL_TLS_ENABLED="$TLS_ENABLED"
+if [ "$TLS_ENABLED" == "true" ]; then
+	envPush "$ORDERERCMD" ORDERER_GENERAL_TLS_PRIVATEKEY=$CONTAINER_ORDERER_TLS_DIR/server.key
+	envPush "$ORDERERCMD" ORDERER_GENERAL_TLS_CERTIFICATE=$CONTAINER_ORDERER_TLS_DIR/server.crt
+	envPush "$ORDERERCMD" ORDERER_GENERAL_TLS_ROOTCAS="[$ORDERER_GENERAL_TLS_ROOTCAS]" # TODO this is required when using fabric-ca service with tlsca.* root identity to register/enroll identity
+fi
+
+envPush "$ORDERERCMD" ORDERER_GENERAL_GENESISMETHOD=file # file|provisional
+envPush "$ORDERERCMD" ORDERER_GENERAL_GENESISFILE=$CONTAINER_CONFIGTX_DIR/$(basename $BLOCK_FILE)
+# NOTE remove ORDERER_GENERAL_GENESISFILE: panic: Unable to bootstrap orderer. Error reading genesis block file: open /etc/hyperledger/fabric/genesisblock: no such file or directory
+# NOTE when ORDERER_GENERAL_GENESISMETHOD=provisional  ORDERER_GENERAL_GENESISPROFILE=SampleNoConsortium -> panic: No system chain found.  If bootstrapping, does your system channel contain a consortiums group definition
+
+# MSP
+envPush "$ORDERERCMD" ORDERER_GENERAL_LOCALMSPID=OrdererMSP
+envPush "$ORDERERCMD" ORDERER_GENERAL_LOCALMSPDIR=$CONTAINER_CRYPTO_CONFIG_DIR/$ORDERER_STRUCTURE/msp
+
 
 # NOTE: cli container is just a shadow of any existing peer! see the CORE_PEER_ADDRESS & CORE_PEER_MSPCONFIGPATH
 

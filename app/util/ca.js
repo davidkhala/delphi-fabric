@@ -16,6 +16,11 @@ const user = {
 	toMSP: ({ key, certificate, rootCertificate }, mspDir, { username, domain }) => {
 		toMSP({ key, certificate, rootCertificate }, mspDir, { name: username, delimiter: '@', domain })
 	}
+	, enroll: (caService, { username, password }) =>
+			enroll(caService, {
+				enrollmentID: username,
+				enrollmentSecret: password
+			})
 }
 exports.user = user
 exports.admin = {

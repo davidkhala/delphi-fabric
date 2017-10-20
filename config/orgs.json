@@ -3,7 +3,7 @@
     "domain": "Delphi.com",
     "TLS": true,
     "docker": {
-      "fabricTag": "1.0.1",
+      "fabricTag": "1.0.2",
       "network": "delphiNetwork",
       "volumes": {
         "CONFIGTX": {
@@ -172,7 +172,7 @@
         "userCount": 0,
         "ca": {
           "containerName": "PMCA",
-          "enable": false,
+          "enable": true,
           "admin": {
             "name": "CAadmin",
             "pass": "passwd"
