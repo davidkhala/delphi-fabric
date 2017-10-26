@@ -54,8 +54,7 @@ const setCAUser = ({ username, orgName }, isTLS = false) => {
 	const userRoot = path.join(orgPath, 'users', helper.formatUsername(username, orgName))
 	const userTarget = path.join(userRoot, targetDir)
 	const MSPID = orgsConfig[orgName].MSP.id
-	let adminUserPromise
-	adminUserPromise = caUtil.enroll(boundCA, { enrollmentID: CAadminName, enrollmentSecret: CAadminPass }).
+	const adminUserPromise = caUtil.enroll(boundCA, { enrollmentID: CAadminName, enrollmentSecret: CAadminPass }).
 			then((result) => {
 
 				return caUtil.user.build(helper.formatUsername(CAadminName, orgName), result, MSPID).then((user) => {

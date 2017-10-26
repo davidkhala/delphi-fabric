@@ -1,3 +1,6 @@
+
+// NOTE Invoke action cannot be performed on peer without chaincode installed(no matter whether chaincode has been instantiated on this peer): Error: cannot retrieve package for chaincode adminChaincode/v0, error open /var/hyperledger/production/chaincodes/adminChaincode.v0: no such file or directory
+
 const invoke = require('./invoke-chaincode').invokeChaincode
 const helper = require('./helper')
 
@@ -5,8 +8,8 @@ const invoke_fcn = ''
 const invoke_args = []
 
 const chaincodeName = 'adminChaincode'
-const peerIndexes = [0, 1]
-const orgName = 'BU'
+const peerIndexes = [0]
+const orgName = 'PM'
 const channelName = 'delphiChannel'
 
 const peers = helper.newPeers(peerIndexes, orgName)

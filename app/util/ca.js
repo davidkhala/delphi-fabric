@@ -109,6 +109,10 @@ const enroll = (caService, { enrollmentID, enrollmentSecret }) => {
 
 }
 
+/**
+ * FIXME attempt to use fabric-ca-client to generate msp for peer, failed:Cannot run peer because error when setting up MSP from directory /etc/hyperledger/crypto-config/msp: err Could not load a valid admin certificate from directory /etc/hyperledger/crypto-config/msp/admincerts, err stat /etc/hyperledger/crypto-config/msp/admincerts: no such file or directory
+ * @type {{revoke: (function(*=, {peerName?: *}, *=)), register: (function(*=, {peerName?: *, affiliation: *}, *=): String), toMSP: (function({key: *, certificate: *, rootCertificate: *}, *=, {peerName?: *, org_domain?: *})), enroll: (function(*=, {peerName?: *, password?: *}): Object)}}
+ */
 const peer = {
 	revoke: (caService, { peerName }, adminUser) => {
 		return revoke(caService, { enrollmentID: peerName }, adminUser)

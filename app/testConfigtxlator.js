@@ -60,7 +60,6 @@ const addOrg = (
 
 					})
 				})
-				// TODO rethink helper.getClient()
 			})
 		})
 

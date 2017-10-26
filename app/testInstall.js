@@ -11,7 +11,7 @@ const instantiate_args = []
 const chaincodeVersion = 'v0'
 const channelName = 'delphiChannel'
 //only one time, one org could deploy
-const deploy =(orgName,peerIndexes)=>{
+const deploy = (orgName, peerIndexes) => {
 	return helper.getOrgAdmin(orgName).then(() => {
 		const peers = helper.newPeers(peerIndexes, orgName)
 		const client = helper.getClient()
@@ -22,5 +22,14 @@ const deploy =(orgName,peerIndexes)=>{
 	})
 }
 
-deploy('PM',[0])
+deploy('BU', [0, 1]).then(()=>{
+	const orgName="PM"
+	const peerIndexes=[0]
+	// NOTE install but not instantiated
+	return helper.getOrgAdmin(orgName).then(() => {
+		const peers = helper.newPeers(peerIndexes, orgName)
+		const client = helper.getClient()
+		return install(peers, chaincodeId, chaincodePath, chaincodeVersion, client)
+	})
+})
 //todo query installed
