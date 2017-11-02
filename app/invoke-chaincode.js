@@ -1,8 +1,7 @@
 const helper = require('./helper.js')
-const logger = helper.getLogger('invoke-chaincode')
+const logger = require('./util/logger').new('invoke-chaincode')
 const eventHelper = require('./util/eventHub')
 
-//TODO should we just invoke on single container? or each container in channel? or even container outside channel
 /**
  *
  * @param channel
@@ -10,7 +9,7 @@ const eventHelper = require('./util/eventHub')
  * @param chaincodeId
  * @param fcn
  * @param args
- * @param {Client} client stateless: userContext shoudl be set in client
+ * @param client
  * @return {Promise.<TResult>}
  */
 const invoke = (channel, richPeers, chaincodeId, fcn, args, client = channel._clientContext) => {
@@ -32,7 +31,7 @@ const invoke = (channel, richPeers, chaincodeId, fcn, args, client = channel._cl
 				const promises = []
 
 				for (let peer of richPeers) {
-					const eventhub = helper.bindEventHub(peer)
+					const eventhub = helper.bindEventHub(peer,client)
 					const txPromise = eventHelper.txEventPromise(eventhub, { txId, eventWaitTime }, ({ tx, code }) => {
 						return { valid: code === 'VALID', interrupt: true }
 					})
@@ -54,6 +53,7 @@ const invoke = (channel, richPeers, chaincodeId, fcn, args, client = channel._cl
 }
 
 exports.invokeChaincode = invoke
-//TODO import query.js
+
 exports.reducer = ({ proposalResponses }) =>
 		proposalResponses.map((entry) => entry.response.payload.toString())
+//TODO import query.js

@@ -3,7 +3,7 @@
     "domain": "Delphi.com",
     "TLS": true,
     "docker": {
-      "fabricTag": "1.0.2",
+      "fabricTag": "1.1.0-preview",
       "network": "delphiNetwork",
       "volumes": {
         "CONFIGTX": {

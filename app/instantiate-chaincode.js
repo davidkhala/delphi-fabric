@@ -1,6 +1,6 @@
 const helper = require('./helper.js')
 const eventHelper = require('./util/eventHub')
-const logger = helper.getLogger('instantiate-chaincode')
+const logger = require('./util/logger').new('instantiate-chaincode')
 
 //FIXED: UTC [endorser] simulateProposal -> ERRO 370 failed to invoke chaincode name:"lscc"  on transaction ec81adb6041b4b71dade56f0e9749e3dd2a2be2a63e0518ed75aa94c94f3d3fe, error: Error starting container: API error (500): {"message":"Could not attach to network delphiProject_default: context deadline exceeded"}: setting docker network instead of docker-compose --project-name
 
@@ -19,6 +19,13 @@ exports.instantiateChaincode = (
 	return channel.initialize().then(() => {
 		logger.info('channel.initialize() success', channel.getOrganizations())
 		const txId = client.newTransactionID()
+		const Policy = require('fabric-client/lib/Policy')
+		const { Role, OrganizationUnit, Identity } = Policy.IDENTITY_TYPE // TODO only option 'Role' has been implemented
+		const roleType = 'member' //member|admin
+
+		const policyTypes = [
+			'signed-by', (key) => key.match(/^\d+\-of$/)
+		]
 		const request = {
 			chaincodeId,
 			chaincodeVersion,
@@ -26,7 +33,16 @@ exports.instantiateChaincode = (
 			fcn: 'init',// fcn is 'init' in default: `fcn` : optional - String of the function to be called on the chaincode once instantiated (default 'init')
 			txId,
 			targets: richPeers// optional: if not set, targets will be channel.getPeers
-			// ,'endorsement-policy':{}
+			// , 'endorsement-policy': {
+			// 	identities: [
+			// 		{
+			// 			[Role]: {
+			// 				name: roleType,
+			// 				mspId: ''
+			// 			}
+			// 		}],
+			// 	policy: {}
+			// }
 			// 		`chaincodeType` : optional -- Type of chaincode ['golang', 'car', 'java'] (default 'golang')
 		}
 		const existSymptom = '(status: 500, message: chaincode exists'
@@ -55,7 +71,7 @@ exports.instantiateChaincode = (
 
 					const promises = []
 					for (let peer of richPeers) {
-						const eventHub = helper.bindEventHub(peer)
+						const eventHub = helper.bindEventHub(peer,client)
 						const txPromise = eventHelper.txEventPromise(eventHub, { txId, eventWaitTime }, ({ tx, code }) => {
 							logger.debug('newTxEvent', { tx, code })
 							return { valid: code === 'VALID', interrupt: true }

@@ -2,15 +2,17 @@ const BaseClient = require('fabric-client/lib/BaseClient')
 const fs = require('fs')
 const User = require('fabric-client/lib/User')
 const setDefaultCryptoSuite = (client) => {
-	client.setCryptoSuite(BaseClient.newCryptoSuite())
-	client.getCryptoSuite().setCryptoKeyStore(BaseClient.newCryptoKeyStore())
+	const newCryptoSuite = BaseClient.newCryptoSuite()
+	newCryptoSuite.setCryptoKeyStore(BaseClient.newCryptoKeyStore())
+	client.setCryptoSuite(newCryptoSuite)
+	return client.getCryptoSuite()
 }
 
-const readFile = (path) => fs.readFileSync(path, 'utf8')
 
 
-// alternative to client.createUser
 /**
+ * alternative to client.createUser, for old version only
+ *
  * Returns a {@link User} object with signing identities based on the
  * private key and the corresponding x509 certificate. This allows applications
  * to use pre-existing crypto materials (private keys and certificates) to
@@ -24,6 +26,8 @@ const readFile = (path) => fs.readFileSync(path, 'utf8')
  * @returns {Promise} Promise for the user object.
  */
 const createUser = (client, opts) => {
+	const readFile = (path) => fs.readFileSync(path, 'utf8')
+
 	if (!opts) {
 		return Promise.reject(new Error('Client.createUser missing required \'opts\' parameter.'))
 	}

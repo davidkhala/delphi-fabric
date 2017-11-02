@@ -1,13 +1,12 @@
 const helper = require('./helper.js')
-const logger = helper.getLogger('Join-Channel')
+const logger = require('./util/logger').new('Join-Channel')
 const eventHelper = require('./util/eventHub')
 
 //
 //Attempt to send a request to the orderer with the sendCreateChain method
 //
-const joinChannel = (channel, peers) => {
+const joinChannel = (channel, peers,client = channel._clientContext) => {
 	logger.debug({ channelName: channel.getName(), peersSize: peers.length })
-	const client = helper.getClient()
 
 	return channel.getGenesisBlock({ txId: client.newTransactionID() }).then(genesis_block => {
 		logger.debug('signature identity', client.getUserContext().getName())
@@ -20,7 +19,7 @@ const joinChannel = (channel, peers) => {
 
 		const promises = []
 		for (let peer of peers) {
-			const eventHub = helper.bindEventHub(peer)
+			const eventHub = helper.bindEventHub(peer,client)
 
 			const validator = ({ block }) => {
 				logger.debug('new block event arrived', eventHub._ep, block)

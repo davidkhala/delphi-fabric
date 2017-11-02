@@ -1,5 +1,5 @@
 const helper = require('./helper')
-const logger = helper.getLogger('configtxlator')
+const logger = require('./util/logger').new('configtxlator')
 
 const path = require('path')
 const fs = require('fs')
@@ -44,11 +44,11 @@ const signChannelConfig = (channel, configUpdate_proto) => {
 		logger.debug('signature identity', client.getUserContext().getName())
 		signatures.push(client.signChannelConfig(proto))
 	}
-	let promise = helper.userAction.admin.orderer.select().then(signFunc)
+	let promise = helper.userAction.admin.orderer.select(client).then(signFunc)
 
 	for (let orgName in channel.orgs) {
 		promise = promise.then(() => {
-			return helper.userAction.admin.select(orgName).then(signFunc)
+			return helper.userAction.admin.select(orgName,client).then(signFunc)
 		})
 	}
 
@@ -59,10 +59,10 @@ const signChannelConfig = (channel, configUpdate_proto) => {
 }
 
 const channelUpdate = (channelName, mspCB) => {
-	const channel = helper.getChannel(channelName)
+	const channel = helper.prepareChannel(channelName, client, true)
 	const orderer = channel.getOrderers()[0]
 
-	return helper.userAction.admin.orderer.select().then(() => {
+	return helper.userAction.admin.orderer.select(client).then(() => {
 //	container not found:	getChannelConfig - Failed Proposal. Error: Error: SERVICE_UNAVAILABLE
 //	channel not found:	getChannelConfig - Failed Proposal. Error: Error: Invalid results returned ::NOT_FOUND
 

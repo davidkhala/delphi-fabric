@@ -1,6 +1,6 @@
 const fs = require('fs')
 const helper = require('./helper.js')
-const logger = helper.getLogger('create-Channel')
+const logger = require('./util/logger').new('create-Channel')
 const multiSign = require('./util/multiSign').signs
 //Attempt to send a request to the orderer with the sendCreateChain method
 //"../artifacts/channel/mychannel.tx"
@@ -12,7 +12,7 @@ const createChannel = (channelName, channelConfigFile, orgNames) => {
 	const clientSwitchPromises = []
 	for (let orgName of orgNames) {
 		const switchPromise = () => {
-			return helper.getOrgAdmin(orgName)
+			return helper.getOrgAdmin(orgName,client)
 		}
 		clientSwitchPromises.push(switchPromise)
 	}
@@ -22,7 +22,7 @@ const createChannel = (channelName, channelConfigFile, orgNames) => {
 	const channelConfig = client.extractChannelConfig(channelConfig_envelop)
 	logger.debug({ channelConfig })
 	return multiSign(client, clientSwitchPromises, channelConfig).then(signatures => {
-		const channel = helper.getChannel(channelName)
+		const channel = helper.prepareChannel(channelName,client,true)
 		const txId = client.newTransactionID()
 		const request = {
 			config: channelConfig,

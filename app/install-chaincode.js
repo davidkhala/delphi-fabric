@@ -1,6 +1,6 @@
 //NOTE install chaincode does not require channel existence
 const helper = require('./helper.js')
-const logger = helper.getLogger('install-chaincode')
+const logger = require('./util/logger').new('install-chaincode')
 
 //allowedCharsChaincodeName = "[A-Za-z0-9_-]+"
 // allowedCharsVersion       = "[A-Za-z0-9_.-]+"

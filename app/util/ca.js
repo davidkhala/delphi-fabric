@@ -1,40 +1,42 @@
+'use strict'
 const fs = require('fs')
 const path = require('path')
 const User = require('fabric-client/lib/User.js')
 const fsExtra = require('fs-extra')
-const logger = require('../helper').getLogger('ca-core')
+const logger = require('./logger').new('ca-core')
 const user = {
-	// @return promise()
+	/**
+	 *
+	 * @param username
+	 * @param key
+	 * @param certificate
+	 * @param MSPID
+	 * @return {Promise.<User>}
+	 */
 	build: (username, { key, certificate }, MSPID) => {
 		const user = new User(username)
 		return user.setEnrollment(key, certificate, MSPID).then(() => user)
 	},
-
 	register: (caService, { username, affiliation }, adminUser) =>
-			register(caService, { enrollmentID: username, affiliation, role: 'user' }, adminUser)
-	,
+			register(caService, { enrollmentID: username, affiliation, role: 'user' }, adminUser),
 	toMSP: ({ key, certificate, rootCertificate }, mspDir, { username, domain }) => {
-		toMSP({ key, certificate, rootCertificate }, mspDir, { name: username, delimiter: '@', domain })
-	}
-	, enroll: (caService, { username, password }) =>
+		_toMSP({ key, certificate, rootCertificate }, mspDir, { name: username, delimiter: '@', domain })
+	},
+	enroll: (caService, { username, password }) =>
 			enroll(caService, {
 				enrollmentID: username,
 				enrollmentSecret: password
-			})
-}
-exports.user = user
-exports.admin = {
-	toMSP: ({ key, certificate, rootCertificate }, mspDir, { adminName, domain }) => {
-		const admincerts = path.join(mspDir, 'admincerts')
-		fsExtra.ensureDirSync(admincerts)
-		fs.writeFileSync(path.join(admincerts, `${adminName}@${domain}-cert.pem`), certificate)
-		user.toMSP({ key, certificate, rootCertificate }, mspDir, { username: adminName, domain })
+			}),
+	admin: {
+		toMSP: ({ key, certificate, rootCertificate }, mspDir, { adminName, domain }) => {
+			const admincerts = path.join(mspDir, 'admincerts')
+			fsExtra.ensureDirSync(admincerts)
+			fs.writeFileSync(path.join(admincerts, `${adminName}@${domain}-cert.pem`), certificate)
+			user.toMSP({ key, certificate, rootCertificate }, mspDir, { username: adminName, domain })
+		}
 	}
 }
-
-/**
- * @return {String} password
- */
+exports.user = user
 const register = (caService, { enrollmentID, affiliation, role }, adminUser) => {
 	return caService.register({
 		enrollmentID,
@@ -48,15 +50,7 @@ const revoke = (caService, { enrollmentID }, adminUser) => {
 	return caService.revoke({ enrollmentID }, adminUser)
 }
 const pkcs11_key = {
-	generate: (cryptoSuite) =>
-			cryptoSuite.generateKey({ ephemeral: true }).then(pkcs11_key => {
-				//append for easy debug
-				pkcs11_key.pem = {
-					private: pkcs11_key.toBytes(), public: pkcs11_key.getPublicKey().toBytes()
-				}
-				return pkcs11_key
-			})
-	,
+	generate: (cryptoSuite) => cryptoSuite.generateKey({ ephemeral: !cryptoSuite._cryptoKeyStore }),
 	toKeystore: (pkcs11_key, dirName) => {
 		const filename = `${pkcs11_key._key.prvKeyHex}_sk`
 		const absolutePath = path.join(dirName, filename)
@@ -85,17 +79,12 @@ const pkcs11_key = {
  */
 const enroll = (caService, { enrollmentID, enrollmentSecret }) => {
 	//generate enrollment certificate pair for signing
-	let opts
-	if (caService.getCryptoSuite()._cryptoKeyStore) {
-		opts = { ephemeral: false }
-	} else {
-		opts = { ephemeral: true }
-	}
-	return caService.getCryptoSuite().generateKey(opts).then(
+
+	return pkcs11_key.generate(caService.getCryptoSuite()).then(
 			(privateKey) => {
 				//generate CSR using enrollmentID for the subject
 				//fixme pull request for fabric-node-sdk
-				const csr = privateKey.generateCSR(`CN=${enrollmentID},L=San Francisco,ST=California,C=US`)
+				const csr = privateKey.generateCSR(`CN=${enrollmentID}`)
 				return caService._fabricCAClient.enroll(enrollmentID, enrollmentSecret, csr).then(
 						(enrollResponse) => Promise.resolve({
 							key: privateKey,
@@ -109,37 +98,7 @@ const enroll = (caService, { enrollmentID, enrollmentSecret }) => {
 
 }
 
-/**
- * FIXME attempt to use fabric-ca-client to generate msp for peer, failed:Cannot run peer because error when setting up MSP from directory /etc/hyperledger/crypto-config/msp: err Could not load a valid admin certificate from directory /etc/hyperledger/crypto-config/msp/admincerts, err stat /etc/hyperledger/crypto-config/msp/admincerts: no such file or directory
- * @type {{revoke: (function(*=, {peerName?: *}, *=)), register: (function(*=, {peerName?: *, affiliation: *}, *=): String), toMSP: (function({key: *, certificate: *, rootCertificate: *}, *=, {peerName?: *, org_domain?: *})), enroll: (function(*=, {peerName?: *, password?: *}): Object)}}
- */
-const peer = {
-	revoke: (caService, { peerName }, adminUser) => {
-		return revoke(caService, { enrollmentID: peerName }, adminUser)
-	},
-	/**
-	 *
-	 * unregister or delete is not supported
-	 * @param caService
-	 * @param peerName
-	 * @param affiliation
-	 * @param adminUser
-	 * @return {String} password of this identity
-	 */
-	register: (caService, { peerName, affiliation }, adminUser) =>
-			register(caService, { enrollmentID: peerName, affiliation, role: 'peer' }, adminUser)
-	,
-	toMSP: ({ key, certificate, rootCertificate }, mspDirName, { peerName, org_domain }) => {
-		toMSP({ key, certificate, rootCertificate }, mspDirName, { name: peerName, delimiter: '.', domain: org_domain })
-	},
-	enroll: (caService, { peerName, password }) =>
-			enroll(caService, {
-				enrollmentID: peerName,
-				enrollmentSecret: password
-			})
-
-}
-const toMSP = ({ key, certificate, rootCertificate }, mspDirName, { name, delimiter, domain }) => {
+const _toMSP = ({ key, certificate, rootCertificate }, mspDirName, { name, delimiter, domain }) => {
 	const cacertsDir = path.join(mspDirName, 'cacerts')
 	const keystoreDir = path.join(mspDirName, 'keystore')
 	const signcertsDir = path.join(mspDirName, 'signcerts')
@@ -151,7 +110,7 @@ const toMSP = ({ key, certificate, rootCertificate }, mspDirName, { name, delimi
 	fs.writeFileSync(path.join(signcertsDir, `${name}${delimiter}${domain}-cert.pem`), certificate)
 
 }
-const toTLS = ({ key, certificate, rootCertificate }, tlsDir) => {
+const _toTLS = ({ key, certificate, rootCertificate }, tlsDir) => {
 	fsExtra.ensureDirSync(tlsDir)
 	pkcs11_key.toServerKey(key, tlsDir)
 	fs.writeFileSync(path.join(tlsDir, 'server.crt'), certificate)
@@ -159,6 +118,13 @@ const toTLS = ({ key, certificate, rootCertificate }, tlsDir) => {
 }
 
 exports.register = register
-exports.toTLS = toTLS
 exports.enroll = enroll
-exports.peer = peer
+exports.new = (caUrl, trustedRoots = []) => {
+	const caService = require('fabric-ca-client/lib/FabricCAClientImpl')
+	const tlsOptions = {
+		trustedRoots,
+		verify: trustedRoots.length > 0
+	}
+
+	return new caService(caUrl, tlsOptions)
+}

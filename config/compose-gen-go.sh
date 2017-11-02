@@ -85,7 +85,8 @@ jq ".$COMPANY.docker.volumes.CONFIGTX.dir=\"$CONFIGTX_DIR\"" $CONFIG_JSON | spon
 yaml w -i $COMPOSE_FILE volumes["$MSPROOTVolume"].external true
 yaml w -i $COMPOSE_FILE volumes["$CONFIGTXVolume"].external true
 
-networksName="default" # TODO
+networksName="default"
+
 dockerNetworkName=$(jq -r ".$COMPANY.docker.network" $CONFIG_JSON)
 yaml w -i $COMPOSE_FILE networks["$networksName"].external.name $dockerNetworkName
 
@@ -96,7 +97,6 @@ yaml w -i $COMPOSE_FILE services.ccenv.container_name ccenv.$COMPANY_DOMAIN
 # orderer
 ORDERER_SERVICE_NAME="OrdererServiceName.$COMPANY_DOMAIN" # orderer service name will linked to depends_on
 
-p=0
 function envPush() {
 	local CMD="$1"
 	$CMD.environment[$p] "$2"
@@ -116,8 +116,6 @@ orderer_hostName_full=$orderer_container_name.$COMPANY_DOMAIN
 ORDERER_STRUCTURE="ordererOrganizations/$COMPANY_DOMAIN/orderers/$orderer_hostName_full"
 CONTAINER_ORDERER_TLS_DIR="$CONTAINER_CRYPTO_CONFIG_DIR/$ORDERER_STRUCTURE/tls"
 
-
-
 $ORDERERCMD.volumes[0] "$CONFIGTXVolume:$CONTAINER_CONFIGTX_DIR"
 $ORDERERCMD.volumes[1] "$MSPROOTVolume:$CONTAINER_CRYPTO_CONFIG_DIR"
 $ORDERERCMD.networks[0] $networksName
@@ -129,7 +127,6 @@ for orgName in $orgNames; do
 	USER_ADMIN=Admin@$ORG_DOMAIN
 	org_peersConfig=$(echo $orgConfig | jq -r ".peers")
 	ADMIN_STRUCTURE="peerOrganizations/$ORG_DOMAIN/users/$USER_ADMIN"
-
 	for ((peerIndex = 0; peerIndex < $(echo $org_peersConfig | jq "length"); peerIndex++)); do
 		PEER_DOMAIN=peer$peerIndex.$ORG_DOMAIN
 		peerServiceName=$PEER_DOMAIN
@@ -160,7 +157,6 @@ for orgName in $orgNames; do
 		# only work when CORE_PEER_GOSSIP_ORGLEADER=true & CORE_PEER_GOSSIP_USELEADERELECTION=false
 		envPush "$PEERCMD" CORE_PEER_LOCALMSPID=${orgName}MSP
 		envPush "$PEERCMD" CORE_PEER_MSPCONFIGPATH=$CONTAINER_CRYPTO_CONFIG_DIR/$PEER_STRUCTURE/msp
-
 		envPush "$PEERCMD" CORE_PEER_TLS_ENABLED=$TLS_ENABLED
 		if [ "$TLS_ENABLED" == "true" ]; then
 			envPush "$PEERCMD" CORE_PEER_TLS_KEY_FILE=$CONTAINER_CRYPTO_CONFIG_DIR/$PEER_STRUCTURE/tls/server.key
@@ -185,12 +181,6 @@ for orgName in $orgNames; do
 
 		$PEERCMD.networks[0] $networksName
 		#   TODO GO setup failed on peer container: only fabric-tools has go dependencies
-		#set GOPATH map
-		#
-		#   envPush "$PEERCMD" GOPATH=$CONTAINER_GOPATH
-
-		#GOPATH and working_dir conflict: ERROR: for PMContainerName  Cannot start service peer0.pm.delphi.com: oci runtime error: container_linux.go:262: starting container process caused "chdir to cwd (\"/opt/gopath/src/github.com/hyperledger/fabric/peer\") set in config.json failed: no such file or directory"
-		#   $PEERCMD.volumes[3] "$GOPATH:$CONTAINER_GOPATH"
 	done
 
 	# CA
@@ -203,41 +193,40 @@ for orgName in $orgNames; do
 			local TLS_ENABLED=$1
 			#	Config setting: https://hyperledger-fabric-ca.readthedocs.io/en/latest/serverconfig.html
 			CONTAINER_CA_HOME="/etc/hyperledger/fabric-ca-server"
-			CONTAINER_CA_VOLUME="$CONTAINER_CA_HOME/$ORG_DOMAIN/ca"
+			CONTAINER_CA_VOLUME="$CONTAINER_CA_HOME/$ORG_DOMAIN"
 			if [ "$TLS_ENABLED" == "true" ]; then
 				tlsPrefix="tlsca"
 			else
 				tlsPrefix="ca"
 			fi
 
-			CA_HOST_VOLUME="${MSPROOT}peerOrganizations/$ORG_DOMAIN/${tlsPrefix}/"
-			caServerConfig="${CA_HOST_VOLUME}fabric-ca-server-config.yaml"
+			CA_HOST_VOLUME="${MSPROOT}peerOrganizations/$ORG_DOMAIN"
+			caServerConfig="$CA_HOST_VOLUME/$tlsPrefix/fabric-ca-server-config.yaml"
 
 			if [ -f "$caServerConfig" ]; then
 				rm $caServerConfig
 			fi
 			>$caServerConfig
-			privkeyFilename=$(basename $(find $CA_HOST_VOLUME -type f \( -name "*_sk" \)))
+			caPrivkeyFilename=$(basename $(find $CA_HOST_VOLUME/ca -type f \( -name "*_sk" \)))
+			tlscaPrivkeyFilename=$(basename $(find $CA_HOST_VOLUME/tlsca -type f \( -name "*_sk" \)))
 			CACMD="yaml w -i $COMPOSE_FILE "services["$tlsPrefix.$ORG_DOMAIN"]
 
 			if [ "$TLS_ENABLED" == "true" ]; then
-
-				yaml w -i $caServerConfig tls.certfile "$CONTAINER_CA_VOLUME/$tlsPrefix.$ORG_DOMAIN-cert.pem"
-				yaml w -i $caServerConfig tls.keyfile "$CONTAINER_CA_VOLUME/$privkeyFilename"
+				yaml w -i $caServerConfig tls.certfile "$CONTAINER_CA_VOLUME/tlsca/tlsca.$ORG_DOMAIN-cert.pem"
+				yaml w -i $caServerConfig tls.keyfile "$CONTAINER_CA_VOLUME/tlsca/$tlscaPrivkeyFilename"
 				caContainerName=$(echo $caConfig | jq ".tlsca.containerName")
 				CA_HOST_PORT=$(echo $caConfig| jq ".tlsca.portHost")
+				yaml w -i $caServerConfig ca.certfile "$CONTAINER_CA_VOLUME/ca/ca.$ORG_DOMAIN-cert.pem"
+			    yaml w -i $caServerConfig ca.keyfile "$CONTAINER_CA_VOLUME/ca/$caPrivkeyFilename"
 			else
                 caContainerName=$(echo $caConfig | jq ".containerName")
 				CA_HOST_PORT=$(echo $caConfig | jq ".portHost")
+				yaml w -i $caServerConfig ca.certfile "$CONTAINER_CA_VOLUME/ca/ca.$ORG_DOMAIN-cert.pem"
+			    yaml w -i $caServerConfig ca.keyfile "$CONTAINER_CA_VOLUME/ca/$caPrivkeyFilename"
 			fi
 
-			$CACMD.container_name $caContainerName # TODO containerName testing
-			yaml w -i $caServerConfig ca.certfile "$CONTAINER_CA_VOLUME/$tlsPrefix.$ORG_DOMAIN-cert.pem"
-			yaml w -i $caServerConfig ca.keyfile "$CONTAINER_CA_VOLUME/$privkeyFilename"
 
-			$CACMD.image hyperledger/fabric-ca:$IMAGE_TAG
 
-			$CACMD.command "sh -c 'fabric-ca-server start -d'"
 
 			# affiliations must be a map with 2-depth
 			yaml w -i $caServerConfig affiliations.$orgName[0] client
@@ -256,21 +245,19 @@ for orgName in $orgNames; do
 			yaml w -i $caServerConfig registry.identities[0].attrs["hf.Revoker"] true
 			yaml w -i $caServerConfig registry.identities[0].attrs["hf.Registrar.DelegateRoles"] "client,user"
 
-			$CACMD.volumes[0] "$CA_HOST_VOLUME:$CONTAINER_CA_VOLUME"
 
 			p=0
-			envPush "$CACMD" "FABRIC_CA_HOME=$CONTAINER_CA_VOLUME" # align with command
+			envPush "$CACMD" "FABRIC_CA_HOME=$CONTAINER_CA_VOLUME/$tlsPrefix" # align with command
 
-
-			$CACMD.ports[0] $CA_HOST_PORT:7054
+			$CACMD.container_name $caContainerName
 			$CACMD.networks[0] $networksName
-
+			$CACMD.image hyperledger/fabric-ca:$IMAGE_TAG
+			$CACMD.command "sh -c 'fabric-ca-server start -d'"
+			$CACMD.volumes[0] "$CA_HOST_VOLUME:$CONTAINER_CA_VOLUME"
+			$CACMD.ports[0] $CA_HOST_PORT:7054
 		}
-
-		caGen false
+		caGen $TLS_ENABLED
 		if [ "$TLS_ENABLED" == "true" ]; then
-			caGen $TLS_ENABLED
-
 			CONTAINER_tlscaCert="$CONTAINER_CRYPTO_CONFIG_DIR/peerOrganizations/$ORG_DOMAIN/tlsca/tlsca.$ORG_DOMAIN-cert.pem"
 			ORDERER_GENERAL_TLS_ROOTCAS="$ORDERER_GENERAL_TLS_ROOTCAS,$CONTAINER_tlscaCert"
 		fi

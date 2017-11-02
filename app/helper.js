@@ -14,18 +14,11 @@
  *  limitations under the License.
  */
 'use strict'
-const log4js = require('log4js')
-const getLogger = function(moduleName) {
-	const logger = log4js.getLogger(moduleName)
-	logger.setLevel('DEBUG')
-	return logger
-}
-const logger = getLogger('Helper')
 
+const logger = require('./util/logger').new('Helper')
 const path = require('path')
 const fs = require('fs-extra')
-const User = require('fabric-client/lib/User.js')
-const caService = require('fabric-ca-client/lib/FabricCAClientImpl')
+const caUtil = require('./util/ca')
 const globalConfig = require('../config/orgs.json')
 const COMPANY = 'delphi'
 const companyConfig = globalConfig[COMPANY]
@@ -40,7 +33,6 @@ const nodeConfig = require('./config.json')
 const clientUtil = require('./util/client')
 
 const Orderer = require('fabric-client/lib/Orderer')
-const objects = { user: {}, orderer: {}, caService: {}, tlscaService: {} } // client is for save CryptoSuite for each org??
 
 // set up the client and channel objects for each org
 const GPRC_protocol = companyConfig.TLS ? 'grpcs://' : 'grpc://'  // FIXME: assume using TLS
@@ -84,118 +76,66 @@ const preparePeer = (orgName, peerIndex, peerConfig) => {
 	return peer
 }
 
-//FIXME assume we have only one orderer
-
 const ordererConfig = companyConfig.orderer
-const orderer_hostName_full = `${ordererConfig.containerName}.${COMPANY_DOMAIN}`
-const orderer_tls_cacerts = path.join(CRYPTO_CONFIG_DIR,
-		`ordererOrganizations/${COMPANY_DOMAIN}/orderers/${orderer_hostName_full}/tls/ca.crt`)
-let orderer_url
-for (let portMapEach of companyConfig.orderer.portMap) {
-	if (portMapEach.container === 7050) {
-		orderer_url = `${GPRC_protocol}localhost:${portMapEach.host}`
-	}
-}
-//NOTE orderer without newCryptoSuite()
-objects.orderer = new Orderer(orderer_url, {
-	pem: fs.readFileSync(orderer_tls_cacerts).toString(),
-	'ssl-target-name-override': orderer_hostName_full
-})
 
-const client = new Client()
-// @param {Object} setting This optional parameter is an object with the following optional properties:
-// 	- software {boolean}: Whether to load a software-based implementation (true) or HSM implementation (false)
-//		default is true (for software based implementation), specific implementation module is specified
-//		in the setting 'crypto-suite-software'
-//  - keysize {number}: The key size to use for the crypto suite instance. default is value of the setting 'crypto-keysize'
-//  - algorithm {string}: Digital signature algorithm, currently supporting ECDSA only with value "EC"
-//  - hash {string}: 'SHA2' or 'SHA3'
+/**
+ * FIXME assume we have only one orderer
 
-for (let channelName in channelsConfig) {
+ * @param client
+ * @param channelName
+ * @param isRenew
+ */
+exports.prepareChannel = (channelName, client, isRenew) => {
+
 	const channelConfig = channelsConfig[channelName]
-	const channel = client.newChannel(channelName.toLowerCase())
-	channel.addOrderer(objects.orderer) //FIXME client-side-only operation?
+	if (isRenew) {delete client._channels[channelName.toLowerCase()]} else {
+		if (client._channels[channelName.toLowerCase()]) return client._channels[channelName.toLowerCase()]
+	}
+
+	const channel = client.newChannel(channelName.toLowerCase())//NOTE throw exception is exist
+	const orderer_hostName_full = `${ordererConfig.containerName}.${COMPANY_DOMAIN}`
+	const orderer_tls_cacerts = path.join(CRYPTO_CONFIG_DIR,
+			`ordererOrganizations/${COMPANY_DOMAIN}/orderers/${orderer_hostName_full}/tls/ca.crt`)
+	const orderer_url = `${GPRC_protocol}localhost:${ordererConfig.portMap[0].host}`
+
+	const orderer = new Orderer(orderer_url, {
+		pem: fs.readFileSync(orderer_tls_cacerts).toString(),
+		'ssl-target-name-override': orderer_hostName_full
+	})
+	channel.addOrderer(orderer)
 	for (let orgName in channelConfig.orgs) {
 		const orgConfigInChannel = channelConfig.orgs[orgName]
 		for (let peerIndex of orgConfigInChannel.peerIndexes) {
 			const peerConfig = orgsConfig[orgName].peers[peerIndex]
 
 			const peer = preparePeer(orgName, peerIndex, peerConfig)
-			channel.addPeer(peer) //FIXME client-side-only operation? Found: without container-side 'peer channel join', install chaincode still OK
+			channel.addPeer(peer)
+
 		}
 	}
-
-}
-
-for (let orgName in orgsConfig) {
-	const orgConfig = orgsConfig[orgName]
-
-	const ca_port = orgConfig.ca.portHost
-	const caHost = 'localhost'
-	const caProtocol = 'http://'
-
-	const caUrl = `${caProtocol}${caHost}:${ca_port}`
-	const tlsOptions = {
-		trustedRoots: [],
-		verify: false
-	}
-	objects.caService[orgName] = new caService(caUrl, tlsOptions)
-	if (companyConfig.TLS) {
-
-		const ca_port = orgConfig.ca.tlsca.portHost
-		const caProtocol = 'https://'
-
-		const caUrl = `${caProtocol}${caHost}:${ca_port}`
-		// const org_domain=`${orgName}.${COMPANY_DOMAIN}`
-		// const tlscaCert=path.join(CRYPTO_CONFIG_DIR,'peerOrganizations',org_domain,'tlsca',`tlsca.${org_domain}-cert.pem`)
-		// const trustedRoots=[fs.readFileSync(tlscaCert).toString()] //fixme  Error: Calling register endpoint failed with error [Error: Hostname/IP doesn't match certificate's altnames: "Host: localhost. is not cert's CN: tlsca.BU.Delphi.com"]
-
-		const tlsOptions = {
-			trustedRoots: [],
-			verify: false
-		}
-		objects.tlscaService[orgName] = new caService(caUrl, tlsOptions)
-	}
-
-}
-
-//state DB is designed for caching heavy-weight User object,
-// client.getUserContext() will first query existence in cache first
-
-const getStateDBCachePath = () => {
-	return nodeConfig.stateDBCacheDir
-}
-const getChannel = (channelName) => {
-
-	const channel = client.getChannel(channelName.toLowerCase())
 	channel.eventWaitTime = channelsConfig[channelName].eventWaitTime
 	channel.orgs = channelsConfig[channelName].orgs
 	return channel
 }
-exports.getCaService = (orgName) => objects.caService[orgName]
-exports.getTLSCAService = (orgName) => objects.tlscaService[orgName]
-const queryPeer = (containerName) => {
 
-// a data adapter, containerName=>key: orgName, peer: {index: index, value: peer, peer_hostName_full}
-	//FIXME for loop search
-	for (let orgName in orgsConfig) {
-		const orgBody = orgsConfig[orgName]
-		const peers = orgBody.peers
-		for (let index in peers) {
-			const peer = peers[index]
-			if (peer.containerName === containerName) {
-				const org_domain = `${orgName}.${COMPANY_DOMAIN}`
-				const peer_hostName_full = `peer${index}.${org_domain}`
-				return {
-					key: orgName, peer: {
-						index: index, value: peer, peer_hostName_full
-					}
-				}
-			}
-		}
-	}
+const getStateDBCachePath = () => {
+//state DB is designed for caching heavy-weight User object,
+// client.getUserContext() will first query existence in cache first
+	return nodeConfig.stateDBCacheDir
 }
-//
+
+exports.getCaService = (orgName, isTLS) => {
+	const orgConfig = orgsConfig[orgName]
+	const ca_port = isTLS ? orgConfig.ca.tlsca.portHost : orgConfig.ca.portHost
+	const caHost = 'localhost'
+	const caProtocol = isTLS ? 'https://' : 'http://'
+
+	const caUrl = `${caProtocol}${caHost}:${ca_port}`
+	// const org_domain=`${orgName}.${COMPANY_DOMAIN}`
+	// const tlscaCert=path.join(CRYPTO_CONFIG_DIR,'peerOrganizations',org_domain,'tlsca',`tlsca.${org_domain}-cert.pem`)
+	// const trustedRoots=[fs.readFileSync(tlscaCert).toString()] //fixme  Error: Calling register endpoint failed with error [Error: Hostname/IP doesn't match certificate's altnames: "Host: localhost. is not cert's CN: tlsca.BU.Delphi.com"]
+	return caUtil.new(caUrl)
+}
 const preparePeers = (peerIndexes, orgName) => {
 
 // work as a data adapter, containerNames: array --> orgname,peerIndex,peerConfig for each newPeer
@@ -212,7 +152,7 @@ const preparePeers = (peerIndexes, orgName) => {
 
 }
 
-const bindEventHub = (richPeer) => {
+const bindEventHub = (richPeer, client) => {
 	// NOTE newEventHub binds to clientContext, eventhub error { Error: event message must be properly signed by an identity from the same organization as the peer: [failed deserializing event creator: [Expected MSP ID PMMSP, received BUMSP]]
 
 	const eventHubPort = richPeer.peerConfig.eventHubPort
@@ -221,26 +161,13 @@ const bindEventHub = (richPeer) => {
 	return require('./util/eventHub').new(client, { eventHubPort, pem, peer_hostName_full })
 
 }
-const selectEventHubs = (peerIndexes, orgName) => {
+/**
+ * NOTE just static getter
+ * @param orgName
+ */
+const getMspID = (orgName) => {
 
-	return objects.user.admin.select(orgName).then(() => {
-
-		const targets = []
-		for (let index of peerIndexes) {
-			const peerConfig = orgsConfig[orgName].peers[index]
-			if (!peerConfig) continue
-			//FIXME bindEventHubSelect is a promise
-			const peer = preparePeer(orgName, index, peerConfig)
-			const eventHub = bindEventHub(peer)
-			targets.push(eventHub)
-		}
-		return Promise.resolve(targets)
-	})
-
-}
-const getMspID = function(org) {
-
-	const mspid = orgsConfig[org].MSP.id
+	const mspid = orgsConfig[orgName].MSP.id
 	return mspid
 }
 //NOTE have to do this since filename for private Key file would be as : a4fbafa51de1161a2f82ffa80cf1c34308482c33a9dcd4d150183183d0a3e0c6_sk
@@ -256,93 +183,101 @@ const getKeyFilesInDir = (dir) => {
 	})
 	return keyFiles
 }
-objects.user.clear = () => {
-	client._userContext = null
-	client.setCryptoSuite(null)
+const objects = {}
+
+objects.user = {
+	clear: (client) => {
+		client._userContext = null
+		client.setCryptoSuite(null)
+	},
+	tlsCreate: (tlsDir, username, orgName, mspid = getMspID(orgName), skipPersistence=false, client) => {
+		const privateKey = path.join(tlsDir, 'server.key')
+		const signedCert = path.join(tlsDir, 'server.crt')
+		const createUserOpt = {
+			username: formatUsername(username, orgName),
+			mspid,
+			cryptoContent: { privateKey, signedCert },
+			skipPersistence
+		}
+		if (skipPersistence) {
+			return client.createUser(client, createUserOpt)
+		} else {
+			return sdkUtils.newKeyValueStore({
+				path: getStateDBCachePath(orgName)
+			}).then((store) => {
+				client.setStateStore(store)
+				return clientUtil.createUser(client, createUserOpt)
+			})
+		}
+	},
+	mspCreate: (
+			client,
+			{ keystoreDir, signcertFile, username, orgName, mspid = getMspID(orgName), skipPersistence = false }) => {
+		const keyFile = getKeyFilesInDir(keystoreDir)[0]
+		// NOTE:(jsdoc) This allows applications to use pre-existing crypto materials (private keys and certificates) to construct user objects with signing capabilities
+		// NOTE In client.createUser option, two types of cryptoContent is supported:
+		// 1. cryptoContent: {		privateKey: keyFilePath,signedCert: certFilePath}
+		// 2. cryptoContent: {		privateKeyPEM: keyFileContent,signedCertPEM: certFileContent}
+
+		const createUserOpt = {
+			username: formatUsername(username, orgName),
+			mspid,
+			cryptoContent: { privateKey: keyFile, signedCert: signcertFile },
+			skipPersistence
+		}
+		if (skipPersistence) {
+			return client.createUser(client, createUserOpt)
+		} else {
+			return sdkUtils.newKeyValueStore({
+				path: getStateDBCachePath(orgName)
+			}).then((store) => {
+				client.setStateStore(store)
+				return client.createUser(client, createUserOpt)
+			})
+		}
+	},
+	/**
+	 * search in stateStore first, if not exist, then query state db to get cached user object
+	 * @param username
+	 * @param orgName
+	 * @param client
+	 * @return {Promise.<TResult>}
+	 */
+	get: (username, orgName, client) => {
+		const newKVS = () => sdkUtils.newKeyValueStore({
+			path: getStateDBCachePath(orgName)
+		}).then((store) => {
+			client.setStateStore(store)
+			return client.getUserContext(formatUsername(username, orgName), true)
+		})
+		if (client.getStateStore()) {
+			return client.loadUserFromStateStore(formatUsername(username, orgName)).then(user => {
+				if (user) return user
+				return newKVS()
+			})
+		} else {
+			return newKVS()
+		}
+	},
+	createIfNotExist: (keystoreDir, signcertFile, username, orgName, client) =>
+			objects.user.get(username, orgName, client).then(user => {
+				if (user) return client.setUserContext(user, false)
+				return objects.user.mspCreate(client, { keystoreDir, signcertFile, username, orgName })
+			}),
+	select: (keystoreDir, signcertFile, username, orgName, client) => {
+		objects.user.clear(client)
+		return objects.user.createIfNotExist(keystoreDir, signcertFile, username, orgName, client)
+	}
+
 }
 exports.formatPeerName = (peerName, orgName) => `${peerName}.${orgName}.${COMPANY_DOMAIN}`
 const formatUsername = (username, orgName) => `${username}@${orgName}.${COMPANY_DOMAIN}`
-
-objects.user.tlsCreate = (tlsDir, username, orgName, mspid = getMspID(orgName), persistInCache = true) => {
-	const privateKey = path.join(tlsDir, 'server.key')
-	const signedCert = path.join(tlsDir, 'server.crt')
-	const createUserOpt = {
-		username: formatUsername(username, orgName),
-		mspid,
-		cryptoContent: { privateKey, signedCert },
-		skipPersistence: !persistInCache
-	}
-	if (persistInCache) {
-
-		return sdkUtils.newKeyValueStore({
-			path: getStateDBCachePath(orgName)
-		}).then((store) => {
-			client.setStateStore(store)
-			//fixme: self.setUserContext(member) do not support persist flag => setUserContext(user, skipPersistence)
-			return clientUtil.createUser(client, createUserOpt)
-		})
-	} else {
-		//fixme: self.setUserContext(member) do not support persist flag => setUserContext(user, skipPersistence)
-		return clientUtil.createUser(client, createUserOpt)
-	}
-}
-objects.user.mspCreate = (
-		keystoreDir, signcertFile, username, orgName, mspid = getMspID(orgName), persistInCache = true) => {
-	const keyFile = getKeyFilesInDir(keystoreDir)[0]
-	// NOTE:(jsdoc) This allows applications to use pre-existing crypto materials (private keys and certificates) to construct user objects with signing capabilities
-	// NOTE In client.createUser option, two types of cryptoContent is supported:
-	// 1. cryptoContent: {		privateKey: keyFilePath,signedCert: certFilePath}
-	// 2. cryptoContent: {		privateKeyPEM: keyFileContent,signedCertPEM: certFileContent}
-
-	const createUserOpt = {
-		username: formatUsername(username, orgName),
-		mspid,
-		cryptoContent: { privateKey: keyFile, signedCert: signcertFile },
-		skipPersistence: !persistInCache
-	}
-	if (persistInCache) {
-
-		return sdkUtils.newKeyValueStore({
-			path: getStateDBCachePath(orgName)
-		}).then((store) => {
-			client.setStateStore(store)
-			//fixme: self.setUserContext(member) do not support persist flag => setUserContext(user, skipPersistence)
-			return clientUtil.createUser(client, createUserOpt)
-		})
-	} else {
-		//fixme: self.setUserContext(member) do not support persist flag => setUserContext(user, skipPersistence)
-		return clientUtil.createUser(client, createUserOpt)
-	}
-}
-/**
- * search in stateStore first, if not exist, then query state db to get cached user object
- *
- * @returns {Promise} A Promise for a {User} object
- * @param username
- * @param orgName
- */
-objects.user.get = (username, orgName) => {
-	const newKVS = () => sdkUtils.newKeyValueStore({
-		path: getStateDBCachePath(orgName)
-	}).then((store) => {
-		client.setStateStore(store)
-		return client.getUserContext(formatUsername(username, orgName), true)
-	})
-	if (client.getStateStore()) {
-		return client.loadUserFromStateStore(formatUsername(username, orgName)).then(user => {
-			if (user) return user
-			return newKVS()
-		})
-	} else {
-		return newKVS()
-	}
-}
 
 const rawAdminUsername = 'adminName'
 
 objects.user.admin = {
 	orderer: {
-		select: (ordererContainerName = 'ordererContainerName') => {
+		select: (client, ordererContainerName = 'ordererContainerName') => {
 
 			const rawOrdererUsername = 'ordererAdminName'
 
@@ -351,69 +286,46 @@ objects.user.admin = {
 			const signcertFile = path.join(CRYPTO_CONFIG_DIR,
 					`ordererOrganizations/${COMPANY_DOMAIN}/users/Admin@${COMPANY_DOMAIN}/msp/signcerts/Admin@${COMPANY_DOMAIN}-cert.pem`)
 			const ordererMSPID = ordererConfig.MSP.id
-			objects.user.clear()
+			objects.user.clear(client)
 
-			return objects.user.get(rawOrdererUsername, ordererContainerName).then(user => {
+			return objects.user.get(rawOrdererUsername, ordererContainerName, client).then(user => {
 				if (user) return client.setUserContext(user, false)
-				return objects.user.mspCreate(keystoreDir, signcertFile, rawOrdererUsername, ordererContainerName, ordererMSPID,
-						true)
+				return objects.user.mspCreate(client, {
+					keystoreDir, signcertFile, username: rawOrdererUsername, orgName: ordererContainerName,
+					mspid: ordererMSPID
+				})
 			})
 		}
 	}
-}
-objects.user.admin.get = (orgName) => objects.user.get(rawAdminUsername, orgName)
-objects.user.admin.create = (orgName) => {
+	,
+	get: (orgName, client) => objects.user.get(rawAdminUsername, orgName, client),
+	create: (orgName, client) => {
 
-	const org_domain = `${orgName}.${COMPANY_DOMAIN}`// BU.Delphi.com
-	const keystoreDir = path.join(CRYPTO_CONFIG_DIR, 'peerOrganizations', org_domain, 'users', `Admin@${org_domain}`,
-			'msp', 'keystore')
+		const org_domain = `${orgName}.${COMPANY_DOMAIN}`// BU.Delphi.com
+		const keystoreDir = path.join(CRYPTO_CONFIG_DIR, 'peerOrganizations', org_domain, 'users', `Admin@${org_domain}`,
+				'msp', 'keystore')
 
-	const signcertFile = path.join(CRYPTO_CONFIG_DIR,
-			'peerOrganizations', org_domain, 'users', `Admin@${org_domain}`, 'msp', 'signcerts',
-			`Admin@${org_domain}-cert.pem`)
+		const signcertFile = path.join(CRYPTO_CONFIG_DIR,
+				'peerOrganizations', org_domain, 'users', `Admin@${org_domain}`, 'msp', 'signcerts',
+				`Admin@${org_domain}-cert.pem`)
 
-	return objects.user.mspCreate(keystoreDir, signcertFile, rawAdminUsername, orgName)
-}
-objects.user.admin.tlsCreate = (orgName) => {
-	const org_domain = `${orgName}.${COMPANY_DOMAIN}`// BU.Delphi.com
-	const adminRoot = path.join(CRYPTO_CONFIG_DIR, 'peerOrganizations', org_domain, 'users', `Admin@${org_domain}`)
-	const tlsDir= path.join(adminRoot, 'tls')
-	//NOTE TODO:TLS will not be saved to cache to avoid override
-	return objects.user.tlsCreate(tlsDir, `tls.${rawAdminUsername}`, orgName,undefined,false)
-}
-//
-objects.user.createIfNotExist = (keystoreDir, signcertFile, username, orgName) => {
-	objects.user.get(username, orgName).then(user => {
+		return objects.user.mspCreate(client, { keystoreDir, signcertFile, username: rawAdminUsername, orgName })
+	},
+	createIfNotExist: (orgName, client) => objects.user.admin.get(orgName, client).then(user => {
 		if (user) return client.setUserContext(user, false)
-		return objects.user.mspCreate(keystoreDir, signcertFile, username, orgName)
-	})
+		return objects.user.admin.create(orgName, client)
+	}),
+	select: (orgName, client) => {
+		objects.user.clear(client)
+		return objects.user.admin.createIfNotExist(orgName, client)
+	}
 }
-objects.user.select = (keystoreDir, signcertFile, username, orgName) => {
-	objects.user.clear()
-	return objects.user.createIfNotExist(keystoreDir, signcertFile, username, orgName)
-}
-objects.user.admin.createIfNotExist = (orgName) => objects.user.admin.get(orgName).then(user => {
-	if (user) return client.setUserContext(user, false)
-	return objects.user.admin.create(orgName)
-})
-objects.user.admin.select = (orgName) => {
-	objects.user.clear()
-	return objects.user.admin.createIfNotExist(orgName)
 
-}
-// To solve: TypeError: Path must be a string. Received undefined
-const setGOPATH = () => {
+// TODO: TypeError: Path must be a string. Received undefined
+exports.setGOPATH = () => {
 	process.env.GOPATH = chaincodeConfig.GOPATH
 }
 
-const newPeerByContainer = (containerName) => {
-	const { key: orgName, peer: { index: index, value: peerConfig } } = queryPeer(containerName)
-	if (!orgName) {
-		logger.warn(`Could not find OrgName for containerName ${containerName}`)
-		throw new Error(`Could not find OrgName for containerName ${containerName}`)
-	}
-	return preparePeer(orgName, index, peerConfig)
-}
 exports.chaincodeProposalAdapter = (actionString, validator) => {
 	const _validator = validator ? validator : ({ response }) => {
 		return response && response.status === 200
@@ -443,20 +355,18 @@ exports.chaincodeProposalAdapter = (actionString, validator) => {
 	}
 }
 
-exports.getChannel = getChannel
-exports.getClient = () => client
-exports.getLogger = getLogger
-exports.setGOPATH = setGOPATH
+exports.getClient = () => {
+	const client = new Client()
+	clientUtil.setDefaultCryptoSuite(client)
+	return client
+}
 
 exports.helperConfig = Object.assign({ COMPANY }, { GPRC_protocol }, globalConfig)
-exports.queryPeer = queryPeer
 exports.gen_tls_cacerts = gen_tls_cacerts
 exports.preparePeer = preparePeer
 exports.newPeer = newPeer
 exports.newPeers = preparePeers
-exports.newPeerByContainer = newPeerByContainer
 exports.userAction = objects.user
-exports.eventHubsPromise = selectEventHubs
 exports.bindEventHub = bindEventHub
 exports.getOrgAdmin = objects.user.admin.select
 exports.formatUsername = formatUsername

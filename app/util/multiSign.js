@@ -1,5 +1,5 @@
 const helper = require('../helper')
-const logger = helper.getLogger('multi-signature')
+const logger = require('./logger').new('multi-signature')
 exports.signs = (client, clientSwitchPromises, proto) => {
 	const signatures = []
 	let promiseAll = Promise.resolve()

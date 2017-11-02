@@ -1,6 +1,6 @@
 //TODO This test case requires that the 'configtxlator' tool be running locally and on port 7059
 const helper = require('./helper')
-const logger = helper.getLogger('test-configtxlator')
+const logger = require('./util/logger').new('test-configtxlator')
 
 const channelName = 'delphiChannel'
 
@@ -20,7 +20,8 @@ const deleteOrg = (MSPName) => {
 const addOrg = (
 		orgName, MSPName, MSPID, templateMSPName, adminMSPDir, org_domain, peerPort, eventHubPort, peer_hostName_full
 		, chaincodePath, chaincodeId, chaincodeVersion, args) => {
-	const channel = helper.getChannel(channelName)
+	const client = helper.getClient()
+	const channel = helper.prepareChannel(channelName, client, true)
 	return api.channelUpdate(channelName,
 			({ update_config }) => {
 				if (channel.getOrganizations().find((entry) => {
@@ -36,12 +37,13 @@ const addOrg = (
 	).then(() => {
 		return channel.initialize().then(() => {
 			logger.debug('after update', channel.getOrganizations())
-			helper.userAction.clear()
+			helper.userAction.clear(client)
 			const keystoreDir = path.join(adminMSPDir, 'keystore')
 
 			const signcertFile = path.join(adminMSPDir, 'signcerts', `Admin@${org_domain}-cert.pem`)
 			logger.debug({ keystoreDir, signcertFile })
-			return helper.userAction.mspCreate(keystoreDir, signcertFile, 'adminName', orgName, MSPID, true).then(() => {
+			return helper.userAction.mspCreate(client,
+					{ keystoreDir, signcertFile, username: 'adminName', orgName, mspid: MSPID }).then(() => {
 
 				const tls_cacerts = api.format_tlscacert(adminMSPDir, org_domain)
 				const peer = helper.newPeer({ peerPort, tls_cacerts, peer_hostName_full })
@@ -54,7 +56,7 @@ const addOrg = (
 
 				return join(channel, [peer], orgName).then(() => {
 					helper.setGOPATH()
-					const client=helper.getClient()
+					const client = helper.getClient()
 					return installChaincode([peer], chaincodeId, chaincodePath, chaincodeVersion, client).then(() => {
 						return instantiate(channel, [peer], chaincodeId, chaincodeVersion, JSON.parse(args), client)
 
