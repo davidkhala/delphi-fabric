@@ -1,7 +1,7 @@
 exports.chain = (peer, channel) => channel.queryInfo(peer)
 exports.chaincodes = {
 	installed: (peer, client) => client.queryInstalledChaincodes(peer),
-	instantiated: (peer, channel, orgName) => channel.queryInstantiatedChaincodes(peer)
+	instantiated: (peer, channel) => channel.queryInstantiatedChaincodes(peer)
 }
 exports.block = {
 	hash: (peer, channel, hash) => channel.queryBlockByHash(Buffer.from(hash), peer),

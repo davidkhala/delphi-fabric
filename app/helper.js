@@ -183,7 +183,9 @@ const getKeyFilesInDir = (dir) => {
 	})
 	return keyFiles
 }
+const rawAdminUsername = 'adminName'
 const objects = {}
+
 
 objects.user = {
 	clear: (client) => {
@@ -226,13 +228,13 @@ objects.user = {
 			skipPersistence
 		}
 		if (skipPersistence) {
-			return client.createUser(client, createUserOpt)
+			return client.createUser(createUserOpt)
 		} else {
 			return sdkUtils.newKeyValueStore({
 				path: getStateDBCachePath(orgName)
 			}).then((store) => {
 				client.setStateStore(store)
-				return client.createUser(client, createUserOpt)
+				return client.createUser(createUserOpt)
 			})
 		}
 	},
@@ -273,7 +275,6 @@ objects.user = {
 exports.formatPeerName = (peerName, orgName) => `${peerName}.${orgName}.${COMPANY_DOMAIN}`
 const formatUsername = (username, orgName) => `${username}@${orgName}.${COMPANY_DOMAIN}`
 
-const rawAdminUsername = 'adminName'
 
 objects.user.admin = {
 	orderer: {

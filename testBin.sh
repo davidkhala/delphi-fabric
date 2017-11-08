@@ -37,6 +37,8 @@ fi
 ./config/crypto-config-gen-go.sh $COMPANY -i $CRYPTO_CONFIG_FILE
 ./common/bin-manage/cryptogen/runCryptogen.sh -i "$CRYPTO_CONFIG_FILE" -o "$CRYPTO_CONFIG_DIR"
 
+sudo chmod 777 -R $CRYPTO_CONFIG_DIR # FIXME: dev only, not for prd
+
 # NOTE IMPORTANT for node-sdk: clean stateDBcacheDir, otherwise cached crypto material will leads to Bad request:
 # TODO more subtle control to do in nodejs
 nodeAppConfigJson="$CURRENT/app/config.json"
