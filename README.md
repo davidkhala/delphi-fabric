@@ -10,7 +10,20 @@ $ git submodule update --init --recursive
 Installation
 -----------------------
  - run `$ ./install.sh`, it includes mikefarah/yaml, moreutils:sponge
+ - target Version
+   * docker-ce: 17.09.0-ce (API version 1.32)
+   * docker-compose: 1.14.0
+   * golang: 1.8.3
+   * node: 6.11.5, npm: 3.10.10
+   * java: 1.8.0_151
+   
+
   
+Major configuration
+-----------------------
+ we cluster most of the config in ``config/orgs.json``, enjoy!
+ - 
+
 
 test on single host
 -----------------------
@@ -28,7 +41,7 @@ test on single host
 2. in another terminal, run `$ ./docker.sh` to clean and restart network      
  
     
-3. Then come back to previous terminal running testBin.sh   
+3. Then come back to previous terminal running testLocal.sh   
   run `$ node app/testChannel.js`
   to create-channel and join-channel 
 4. `$ node app/testInstall.js` to install chaincode and instantiate chaincode
@@ -103,7 +116,7 @@ test invoke chaincode by user identity
 **steps**
 
 0. enable ca in config  
- ./config/orgs.json is our major config file. make sure in orgs.json:``.delphi.orgs.${orgName}.ca.enable`` is true.  
+ make sure in ``config/orgs.json``:``.delphi.orgs.${orgName}.ca.enable`` is true.  
  here we chose ``BU`` as the orgName 
   
 1. run steps 1-4 in section **test on single host**
@@ -113,6 +126,10 @@ test invoke chaincode by user identity
 
     
 ## TODO
-- java sdk linking
+- java sdk and docker-swarm: keep udpate
 - endorsement policy config
-
+- test backup and recover
+- kafka
+- cooperate with official network_config.json 
+- refactor: use npm:js-yaml to write more nodejs, less linux 
+- chaincode upgrade
