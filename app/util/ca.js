@@ -37,6 +37,19 @@ const user = {
 	}
 }
 exports.user = user
+exports.intermediateCA= {
+	register: (caService, { enrollmentID, affiliation }, adminUser) =>{
+
+		return caService.register({
+			enrollmentID,
+			affiliation: affiliation.toLowerCase(),
+			role:'client',
+			maxEnrollments: -1,
+			attrs:[{name:"hf.IntermediateCA",value:"true"}]
+		}, adminUser)
+	}
+
+}
 const register = (caService, { enrollmentID, affiliation, role }, adminUser) => {
 	return caService.register({
 		enrollmentID,
@@ -116,6 +129,7 @@ const _toTLS = ({ key, certificate, rootCertificate }, tlsDir) => {
 	fs.writeFileSync(path.join(tlsDir, 'server.crt'), certificate)
 	fs.writeFileSync(path.join(tlsDir, 'ca.crt'), rootCertificate)
 }
+exports.toTLS = _toTLS
 
 exports.register = register
 exports.enroll = enroll

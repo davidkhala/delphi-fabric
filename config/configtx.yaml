@@ -34,6 +34,16 @@ Profiles:
           AnchorPeers:
           - Host: PMContainerName
             Port: 7051
+  BUChannel:
+    Consortium: SampleConsortium
+    Application:
+      Organizations:
+      - Name: BUMSPName
+        ID: BUMSP
+        MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/BU.Delphi.com/msp
+        AnchorPeers:
+        - Host: BUContainerName
+          Port: 7051
   delphiChannel:
     Consortium: SampleConsortium
     Application:

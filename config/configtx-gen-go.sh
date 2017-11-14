@@ -6,12 +6,9 @@ configtx_file="$CURRENT/configtx.yaml"
 
 ################### company, orgs setting
 CONFIG_JSON="$CURRENT/orgs.json"
-
-CHANNEL_NAME="delphiChannel"
 COMPANY=$1
 MSPROOT=$2
 PROFILE_BLOCK=${COMPANY}Genesis # Take care, it is not file!
-PROFILE_CHANNEL=$CHANNEL_NAME   # Take care, it is not file!
 
 remain_params=""
 for ((i = 3; i <= $#; i++)); do
@@ -33,10 +30,6 @@ while getopts "j:i:b:c:" shortname $remain_params; do
 	b)
 		echo "set block profile (default: $PROFILE_BLOCK) ==> $OPTARG"
 		PROFILE_BLOCK="$OPTARG"
-		;;
-	c)
-		echo "set channel profile (default: $PROFILE_CHANNEL) ==> $OPTARG"
-		PROFILE_CHANNEL="$OPTARG"
 		;;
 	?)
 		echo "unknown argument"
@@ -67,46 +60,54 @@ yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Orderer.BatchSize.MaxMessageCou
 yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Orderer.BatchSize.AbsoluteMaxBytes '99 MB'
 yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Orderer.BatchSize.PreferredMaxBytes '512 KB'
 # TODO: MSP name here is using assumption here, make sure it align with other modules
-yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Orderer.Organizations[0].Name $(echo $ordererConfig | jq -r ".MSP.name" )
-yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Orderer.Organizations[0].ID $(echo $ordererConfig | jq -r ".MSP.id" )
+yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Orderer.Organizations[0].Name $(echo $ordererConfig | jq -r ".MSP.name")
+yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Orderer.Organizations[0].ID $(echo $ordererConfig | jq -r ".MSP.id")
 yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Orderer.Organizations[0].MSPDir "${MSPROOT}ordererOrganizations/$COMPANY_DOMAIN/msp"
 
-orgsConfig=$(echo $companyConfig| jq ".orgs")
+orgsConfig=$(echo $companyConfig | jq ".orgs")
 blockOrgs=$(echo $orgsConfig | jq -r "keys[]")
 echo =====blockorgs $blockOrgs
 i=0
 for orgName in $blockOrgs; do
-    orgConfig=$(echo $orgsConfig |jq -r ".${orgName}")
+	orgConfig=$(echo $orgsConfig | jq -r ".${orgName}")
 	yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Consortiums.SampleConsortium.Organizations[$i].Name ${orgName}MSPName
 	yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Consortiums.SampleConsortium.Organizations[$i].ID ${orgName}MSP
 	yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Consortiums.SampleConsortium.Organizations[$i].MSPDir \
 		"${MSPROOT}peerOrganizations/$orgName.$COMPANY_DOMAIN/msp"
 
-	peerContainer=$(echo $orgConfig |jq -r ".peers[0].containerName" )
+	peerContainer=$(echo $orgConfig | jq -r ".peers[0].containerName")
 
 	yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Consortiums.SampleConsortium.Organizations[$i].AnchorPeers[0].Host \
 		$peerContainer
 	yaml w -i $configtx_file Profiles.$PROFILE_BLOCK.Consortiums.SampleConsortium.Organizations[$i].AnchorPeers[0].Port \
 		$ANCHOR_PEER_CONTAINER_PORT
 
-    ((i++))
+	((i++))
 done
 
-channelOrgs=$(echo $companyConfig | jq -r ".channels.${CHANNEL_NAME}.orgs|keys[]")
+channelsConfig=$(echo $companyConfig | jq ".channels")
 
-echo =====channelOrgs $channelOrgs
-# channel profile
-yaml w -i $configtx_file Profiles.$PROFILE_CHANNEL.Consortium SampleConsortium
-i=0
-for orgName in $channelOrgs; do
-	orgConfig=$(echo $orgsConfig |jq -r ".${orgName}")
-	yaml w -i $configtx_file Profiles.$PROFILE_CHANNEL.Application.Organizations[$i].Name $(echo $orgConfig | jq -r ".MSP.name")
+channelNames=$(echo $channelsConfig | jq -r "keys[]")
 
-	yaml w -i $configtx_file Profiles.$PROFILE_CHANNEL.Application.Organizations[$i].ID $(echo $orgConfig | jq -r ".MSP.id")
-	yaml w -i $configtx_file Profiles.$PROFILE_CHANNEL.Application.Organizations[$i].MSPDir "${MSPROOT}peerOrganizations/$orgName.$COMPANY_DOMAIN/msp"
+for channelName in $channelNames; do
+	channelConfig=$(echo $channelsConfig | jq ".${channelName}")
+	channelOrgs=$(echo $channelConfig | jq -r ".orgs|keys[]")
+	echo =====channel:$channelName $channelOrgs
 
-	peerContainer=$(echo $orgConfig | jq -r ".peers[0].containerName")
-	yaml w -i $configtx_file Profiles.$PROFILE_CHANNEL.Application.Organizations[$i].AnchorPeers[0].Host $peerContainer
-	yaml w -i $configtx_file Profiles.$PROFILE_CHANNEL.Application.Organizations[$i].AnchorPeers[0].Port $ANCHOR_PEER_CONTAINER_PORT
-	((i++))
+	PROFILE_CHANNEL=$channelName
+	# channel profile
+	yaml w -i $configtx_file Profiles.$PROFILE_CHANNEL.Consortium SampleConsortium
+	i=0
+	for orgName in $channelOrgs; do
+		orgConfig=$(echo $orgsConfig | jq -r ".${orgName}")
+		yaml w -i $configtx_file Profiles.$PROFILE_CHANNEL.Application.Organizations[$i].Name $(echo $orgConfig | jq -r ".MSP.name")
+
+		yaml w -i $configtx_file Profiles.$PROFILE_CHANNEL.Application.Organizations[$i].ID $(echo $orgConfig | jq -r ".MSP.id")
+		yaml w -i $configtx_file Profiles.$PROFILE_CHANNEL.Application.Organizations[$i].MSPDir "${MSPROOT}peerOrganizations/$orgName.$COMPANY_DOMAIN/msp"
+
+		peerContainer=$(echo $orgConfig | jq -r ".peers[0].containerName") # anchor
+		yaml w -i $configtx_file Profiles.$PROFILE_CHANNEL.Application.Organizations[$i].AnchorPeers[0].Host $peerContainer
+		yaml w -i $configtx_file Profiles.$PROFILE_CHANNEL.Application.Organizations[$i].AnchorPeers[0].Port $ANCHOR_PEER_CONTAINER_PORT
+		((i++))
+	done
 done

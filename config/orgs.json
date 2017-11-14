@@ -1,9 +1,9 @@
 {
   "delphi": {
     "domain": "Delphi.com",
-    "TLS": false,
+    "TLS": true,
     "docker": {
-      "fabricTag": "1.0.1",
+      "fabricTag": "1.1.0-preview",
       "network": "delphiNetwork",
       "volumes": {
         "CONFIGTX": {
@@ -33,6 +33,7 @@
     },
     "channels": {
       "delphiChannel": {
+        "file": "delphi.tx",
         "eventWaitTime": 30000,
         "orgs": {
           "BU": {
@@ -44,6 +45,18 @@
           "PM": {
             "peerIndexes": [
               0
+            ]
+          }
+        }
+      },
+      "BUChannel": {
+        "eventWaitTime": 30000,
+        "file": "bu.tx",
+        "orgs": {
+          "BU": {
+            "peerIndexes": [
+              0,
+              1
             ]
           }
         }
@@ -91,7 +104,7 @@
         ],
         "userCount": 0,
         "ca": {
-          "enable": false,
+          "enable": true,
           "containerName": "BUCA",
           "admin": {
             "name": "CAadmin",

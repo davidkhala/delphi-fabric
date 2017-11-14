@@ -9,19 +9,17 @@ configtx_file="$config_dir/configtx.yaml"
 CRYPTO_CONFIG_DIR="$config_dir/crypto-config/"
 
 COMPANY='delphi' # must match to config_json
-
+companyConfig=$(jq ".$COMPANY" $CONFIG_JSON)
+channelsConfig=$(echo $companyConfig | jq ".channels")
 CONFIGTX_OUTPUT_DIR="$config_dir/configtx"
 mkdir -p $CONFIGTX_OUTPUT_DIR
 
 BLOCK_FILE="$CONFIGTX_OUTPUT_DIR/$COMPANY.block"
-CHANNEL_FILE="$CONFIGTX_OUTPUT_DIR/$COMPANY.channel"
 
 PROFILE_BLOCK=${COMPANY}Genesis
-PROFILE_CHANNEL=${COMPANY}Channel
-CHANNEL_NAME="delphiChannel"
-VERSION=$(jq -r ".$COMPANY.docker.fabricTag" $CONFIG_JSON)
+VERSION=$(echo $companyConfig | jq -r ".docker.fabricTag")
 IMAGE_TAG="x86_64-$VERSION"
-TLS_ENABLED=$(jq ".$COMPANY.TLS" $CONFIG_JSON)
+TLS_ENABLED=$(echo $companyConfig | jq ".TLS")
 
 ## update bin first
 ./common/bin-manage/pullBIN.sh -v $VERSION
@@ -46,11 +44,21 @@ stateDBCacheDir=$(jq -r '.stateDBCacheDir' $nodeAppConfigJson)
 rm -rf $stateDBCacheDir
 echo clear stateDBCacheDir $stateDBCacheDir
 
-./config/configtx-gen-go.sh $COMPANY $CRYPTO_CONFIG_DIR -i $configtx_file -b $PROFILE_BLOCK -c $PROFILE_CHANNEL
+./config/configtx-gen-go.sh $COMPANY $CRYPTO_CONFIG_DIR -i $configtx_file -b $PROFILE_BLOCK
 
 ./common/bin-manage/configtxgen/runConfigtxgen.sh block create $BLOCK_FILE -p $PROFILE_BLOCK -i $config_dir
-./common/bin-manage/configtxgen/runConfigtxgen.sh block view $BLOCK_FILE -v -p $PROFILE_BLOCK -i $config_dir
 
-./common/bin-manage/configtxgen/runConfigtxgen.sh channel create $CHANNEL_FILE -p $PROFILE_CHANNEL -i $config_dir -c ${CHANNEL_NAME,,}
-./common/bin-manage/configtxgen/runConfigtxgen.sh channel view $CHANNEL_FILE -v -p $PROFILE_CHANNEL -i $config_dir
+channelNames=$(echo $channelsConfig | jq -r "keys[]")
+for channelName in $channelNames; do
+	channelConfig=$(echo $channelsConfig | jq ".${channelName}")
+	channelFilename=$(echo $channelConfig | jq -r ".file")
+	channelFile="$CONFIGTX_OUTPUT_DIR/$channelFilename"
+	./common/bin-manage/configtxgen/runConfigtxgen.sh channel create $channelFile -p $channelName -i $config_dir -c ${channelName,,}
+    #NOTE Capital char in Channel name is not supported  [channel: delphiChannel] Rejecting broadcast of config message from 172.18.0.1:36954 because of error: initializing configtx manager failed: Bad channel id: channel ID 'delphiChannel' contains illegal characters
 
+done
+
+# write back GOPATH
+ChaincodeJson=$config_dir/chaincode.json
+gopath=${CURRENT}/GOPATH/
+jq ".GOPATH=\"${gopath}\"" $ChaincodeJson | sponge $ChaincodeJson

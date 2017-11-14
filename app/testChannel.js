@@ -4,7 +4,11 @@ const joinChannel = require('./join-channel').joinChannel
 const helper = require('./helper')
 const logger = require('./util/logger').new('testChannel')
 const channelName = 'delphiChannel'
-const channelConfigFile = '/home/david/Documents/delphi-fabric/config/configtx/delphi.channel'
+
+const company = helper.helperConfig.COMPANY;
+const companyConfig = helper.helperConfig[company]
+const channelConfig=companyConfig.channels[channelName]
+const channelConfigFile = `${companyConfig.docker.volumes.CONFIGTX.dir}/${channelConfig.file}`
 const joinAllfcn = () => {
 
 	const orgName = 'BU'

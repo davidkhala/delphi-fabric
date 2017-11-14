@@ -5,8 +5,6 @@ utilsDIR="$(dirname $CURRENT)/common/docker/utils"
 
 COMPOSE_FILE="$CURRENT/docker-compose.yaml"
 CONFIG_JSON="$CURRENT/orgs.json"
-# TODO if we use cli container to install chaincode, we need to set GOPATH in compose file; here we use node-sdk to do it
-GOPATH="$(dirname $CURRENT)/GOPATH/"
 IMAGE_TAG="x86_64-1.0.0"
 
 #TODO ledgersData, for resetChaincode CONTAINER_ledgersData="/var/hyperledger/production/ledgersData"
@@ -41,10 +39,6 @@ while getopts "j:s:v:f:g:" shortname $remain_params; do
 	f)
 		echo "set docker-compose file (default: $COMPOSE_FILE) ==> $OPTARG"
 		COMPOSE_FILE=$OPTARG
-		;;
-	g)
-		echo "set GOPATH on host machine (default: $GOPATH) ==> $OPTARG"
-		GOPATH=$OPTARG
 		;;
 	?)
 		echo "unknown argument"
@@ -194,14 +188,10 @@ for orgName in $orgNames; do
 			#	Config setting: https://hyperledger-fabric-ca.readthedocs.io/en/latest/serverconfig.html
 			CONTAINER_CA_HOME="/etc/hyperledger/fabric-ca-server"
 			CONTAINER_CA_VOLUME="$CONTAINER_CA_HOME/$ORG_DOMAIN"
-			if [ "$TLS_ENABLED" == "true" ]; then
-				tlsPrefix="tlsca"
-			else
-				tlsPrefix="ca"
-			fi
 
+            # NOTE since tlsca is not fully supported identity, use ca for even tlsca case
 			CA_HOST_VOLUME="${MSPROOT}peerOrganizations/$ORG_DOMAIN"
-			caServerConfig="$CA_HOST_VOLUME/$tlsPrefix/fabric-ca-server-config.yaml"
+			caServerConfig="$CA_HOST_VOLUME/ca/fabric-ca-server-config.yaml"
 
 			if [ -f "$caServerConfig" ]; then
 				rm $caServerConfig
@@ -209,13 +199,14 @@ for orgName in $orgNames; do
 			>$caServerConfig
 			caPrivkeyFilename=$(basename $(find $CA_HOST_VOLUME/ca -type f \( -name "*_sk" \)))
 			tlscaPrivkeyFilename=$(basename $(find $CA_HOST_VOLUME/tlsca -type f \( -name "*_sk" \)))
-			CACMD="yaml w -i $COMPOSE_FILE "services["$tlsPrefix.$ORG_DOMAIN"]
+			CACMD="yaml w -i $COMPOSE_FILE "services["ca.$ORG_DOMAIN"]
 
 			if [ "$TLS_ENABLED" == "true" ]; then
 				yaml w -i $caServerConfig tls.certfile "$CONTAINER_CA_VOLUME/tlsca/tlsca.$ORG_DOMAIN-cert.pem"
 				yaml w -i $caServerConfig tls.keyfile "$CONTAINER_CA_VOLUME/tlsca/$tlscaPrivkeyFilename"
 				caContainerName=$(echo $caConfig | jq ".tlsca.containerName")
 				CA_HOST_PORT=$(echo $caConfig| jq ".tlsca.portHost")
+				# FIXME should use tlsca cert for intermediate CA enroll, but if we use tlsca keypair for tlsca Service, invoke from new user will be blocked.
 				yaml w -i $caServerConfig ca.certfile "$CONTAINER_CA_VOLUME/ca/ca.$ORG_DOMAIN-cert.pem"
 			    yaml w -i $caServerConfig ca.keyfile "$CONTAINER_CA_VOLUME/ca/$caPrivkeyFilename"
 			else
@@ -244,10 +235,13 @@ for orgName in $orgNames; do
 			yaml w -i $caServerConfig registry.identities[0].attrs["hf.Registrar.Roles"] "client,user,peer"
 			yaml w -i $caServerConfig registry.identities[0].attrs["hf.Revoker"] true
 			yaml w -i $caServerConfig registry.identities[0].attrs["hf.Registrar.DelegateRoles"] "client,user"
+			# NOTE 1.1.0-preview "code":43,"message":"Registrar does not have any values for 'hf.Registrar.Attributes' thus can't register any attributes"
+			yaml w -i $caServerConfig registry.identities[0].attrs["hf.Registrar.Attributes"] "*"
+
 
 
 			p=0
-			envPush "$CACMD" "FABRIC_CA_HOME=$CONTAINER_CA_VOLUME/$tlsPrefix" # align with command
+			envPush "$CACMD" "FABRIC_CA_HOME=$CONTAINER_CA_VOLUME/ca" 
 
 			$CACMD.container_name $caContainerName
 			$CACMD.networks[0] $networksName
