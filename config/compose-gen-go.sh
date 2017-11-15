@@ -199,11 +199,11 @@ for orgName in $orgNames; do
 			>$caServerConfig
 			caPrivkeyFilename=$(basename $(find $CA_HOST_VOLUME/ca -type f \( -name "*_sk" \)))
 			tlscaPrivkeyFilename=$(basename $(find $CA_HOST_VOLUME/tlsca -type f \( -name "*_sk" \)))
-			CACMD="yaml w -i $COMPOSE_FILE "services["ca.$ORG_DOMAIN"]
+			CACMD="yaml w -i $COMPOSE_FILE "services["ca.$ORG_DOMAIN"] # fixme
 
 			if [ "$TLS_ENABLED" == "true" ]; then
-				yaml w -i $caServerConfig tls.certfile "$CONTAINER_CA_VOLUME/tlsca/tlsca.$ORG_DOMAIN-cert.pem"
-				yaml w -i $caServerConfig tls.keyfile "$CONTAINER_CA_VOLUME/tlsca/$tlscaPrivkeyFilename"
+				yaml w -i $caServerConfig tls.certfile "$CONTAINER_CA_VOLUME/ca/ca.$ORG_DOMAIN-cert.pem"
+				yaml w -i $caServerConfig tls.keyfile "$CONTAINER_CA_VOLUME/ca/$caPrivkeyFilename"
 				caContainerName=$(echo $caConfig | jq ".tlsca.containerName")
 				CA_HOST_PORT=$(echo $caConfig| jq ".tlsca.portHost")
 				# FIXME should use tlsca cert for intermediate CA enroll, but if we use tlsca keypair for tlsca Service, invoke from new user will be blocked.
