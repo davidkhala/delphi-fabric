@@ -131,7 +131,7 @@ test to run an intermediate CA
     * I found that when enrolling intermediate CA identity, 
     the ``tls.certfile`` and ``tls.keyfile`` of ``BUTLSCA`` should be set to the non-tls set of keypair
     like ``ca.BU.Delphi.com-cert.pem`` and its private key, otherwise we will encounter X509 problem. This might be a system-size dilemma of using 'tlsca' or 'ca' as issue prefix 
-  * __intermediate CA identity__: cityU.BU
+  * __intermediate CA identity__: ``cityU``
     * only registration of ``cityU`` is required. The enroll process will be automated inside container
   * __docker run__: npm dockerode
     * Finally, I take a chance to use npm module dockerode for manipulate docker via nodejs. it seems workable but require more callback handle codes.
@@ -139,7 +139,7 @@ test to run an intermediate CA
      
  **Steps**
  0. run steps 1-2 in section **test on single host**
- 1. run ``node app/testIntermediateCA.js`` (TODO detach mode is under development, if you found no response in the terminal, Ctrl+C and check running state by ``docker ps`` and docker )
+ 1. run ``node app/testIntermediateCA.js`` (TODO detach mode is under development, if you found no response in the terminal, Ctrl+C and check running state by ``docker ps`` and ``docker logs ca.cityU.BU.Delphi.com`` )
 
       
     
