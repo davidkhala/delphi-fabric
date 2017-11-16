@@ -1,6 +1,9 @@
 # delphi-fabric
 
-_after first time clone this repository, run_   
+
+Clone
+------------------
+_after first time clone this repository, submodule should be initialize_   
 ```
 $ cd <delphi-fabric>
 $ git submodule update --init --recursive
@@ -9,23 +12,39 @@ $ git submodule update --init --recursive
 
 Installation
 -----------------------
- - run `$ ./install.sh`, it includes mikefarah/yaml, moreutils:sponge
- - target Version
-   * docker-ce: 17.09.0-ce (API version 1.32)
-   * docker-compose: 1.14.0
-   * golang: 1.8.3
-   * node: 6.11.5, npm: 3.10.10
-   * java: 1.8.0_151
+
+ **推荐环境** ubuntu 16.04：安装脚本和大部分代码目前只在这个版本系统中测试过; The only tested OS and version for ``install.sh`` and almost all program.
+
+**安装脚本**  
+`$ ./install.sh`
+
+> **墙内网络的问题**  
+在墙内由于docker-compose，yaml工具，npm 包安装都很慢，因而时常会出现运行安装脚本到一般卡死的情况。  
+If any problem found when running ``install.sh``, like hanging in ``npm install``, it is recommended to install manually for each requirement   
+----
+ 以下是依赖的版本列表，遇到问题可以自行寻找安装源  
+  **Requirements**  
+   * docker-ce 17.09.0-ce (API version 1.32)
+   * docker-compose 1.14.0 
+        * docker相关组件是通过孙子模块``docker-manager``的脚本安装的，见https://github.com/davidkhala/docker-manager
+   * golang 1.8.3 (optional可选)
+   * node 6.11.5, npm 3.10.10: npm install卡死的话，可以考虑添加淘宝的源 
+        - ``$ npm config set registry  https://registry.npm.taobao.org/``
+   * java 1.8.0_151 (测试java-sdk用)
+   * mikefarah/yaml 1.13.1: 一个通过命令行操作yaml文件的工具 https://github.com/mikefarah/yaml，对于不同arch和操作系统的版本都有提供binary，不推荐用go安装，因为手动升级和清理不太方便。TODO：以后争取用js-yaml取代它
+   * jq 1.5.1：一个用命令行解析json的工具 https://stedolan.github.io/jq/
+   * moreutils 0.57-1 : 工具集，ubuntu或类似系统专用。我们用到其中sponge工具，用于结合jq 将pipeline里面的内容inline更新到源文件里
+   
+-----
+ 
    
 
   
 Major configuration
 -----------------------
  we cluster most of the config in ``config/orgs.json``, enjoy!
- - 
 
-
-test on single host
+Test on single host
 -----------------------
 **steps**
 1. run `$ ./testLocal.sh`
