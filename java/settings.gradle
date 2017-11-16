@@ -1,2 +1,4 @@
 rootProject.name = 'com.s1coder.davidliu'
-include ':fabric-java'
+include ':common-java'
+
+project(':common-java').projectDir = new File(rootDir.getParentFile(),'common/java/')

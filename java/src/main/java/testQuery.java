@@ -31,7 +31,7 @@ public class testQuery {
             Channel channel = testPrepareChannel(orgName,"delphi.tx");
             HFClient client = ChannelUtil.getClient(channel);
             Peer peer0PM = client.newPeer("b", "grpc://localhost:9051");
-            testMain.joinPeer(channel, peer0PM);
+            ChannelUtil.joinPeer(channel, peer0PM);
 
             List<Query.ChaincodeInfo> installedInfo = client.queryInstalledChaincodes(peer0PM);
             System.out.println("installed chaincodes:"+installedInfo.size());

@@ -1,42 +1,21 @@
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import model.AdminUser;
+import model.Chaincode;
 import model.ChannelUtil;
 import org.hyperledger.fabric.sdk.*;
-import org.hyperledger.fabric.sdk.exception.CryptoException;
-import org.hyperledger.fabric.sdk.exception.InvalidArgumentException;
-import org.hyperledger.fabric.sdk.exception.ProposalException;
-import org.hyperledger.fabric.sdk.exception.TransactionException;
 import org.hyperledger.fabric.sdk.security.CryptoSuite;
 
 import java.io.File;
 import java.io.FileReader;
-import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.spec.InvalidKeySpecException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 public class testMain {
 
 
-    static void joinPeer(Channel channel, Peer peer) throws ProposalException, InvalidArgumentException {
-
-        try {
-            channel.joinPeer(peer);
-        } catch (ProposalException e) {
-            if (e.getMessage().contains("status: 500, message: Cannot create ledger from genesis block, due to LedgerID already exists")) {
-//                swallow
-                channel.addPeer(peer);
-                return;
-            }
-            throw e;
-        }
-    }
 
     public static void main(String[] args) {
         String channelName = "delphiChannel".toLowerCase();
@@ -80,9 +59,9 @@ public class testMain {
 
             System.out.println("channel created");
 
-            joinPeer(channel, peer0BU);
+            ChannelUtil.joinPeer(channel, peer0BU);
             channel.addEventHub(client.newEventHub("peer0BU","grpc://localhost:7053"));
-            joinPeer(channel, peer1BU);
+            ChannelUtil.joinPeer(channel, peer1BU);
             channel.addEventHub(client.newEventHub("peer1BU","grpc://localhost:7063"));
 
             channel.initialize();// TODO double initialize to connect eventhub
@@ -91,7 +70,7 @@ public class testMain {
             pmAdmin.setEnrollment(pmAdminMSPRoot);
             client.setUserContext(pmAdmin);
 
-            joinPeer(channel, peer0PM);
+            ChannelUtil.joinPeer(channel, peer0PM);
             channel.addEventHub(client.newEventHub("peer0PM","grpc://localhost:9053"));
 
             channel.initialize();// TODO double initialize to connect eventhub
@@ -107,7 +86,7 @@ public class testMain {
                 Set<Peer> targets = new HashSet<>();
                 targets.add(peer0PM);
 
-                testChaincode.ProposalResultWrapper resultWrapper = testChaincode.install(client, targets, chaincodeMetaData, GOPATH);
+                Chaincode.ProposalResultWrapper resultWrapper = Chaincode.install(client, targets, chaincodeMetaData, GOPATH);
                 if (resultWrapper.hasError()) {
                     for (ProposalResponse failureResponse : resultWrapper.failureResponses) {
                         System.out.println("joinPeer failed on " + failureResponse.getPeer().getUrl());// TODO
@@ -130,7 +109,7 @@ public class testMain {
 //                            }
 //                    );
 //                });
-                testChaincode.ProposalResultWrapper instantiateResult = testChaincode.instantiate(channel, targets, chaincodeMetaData, new String[]{});
+                Chaincode.ProposalResultWrapper instantiateResult = Chaincode.instantiate(channel, targets, chaincodeMetaData, new String[]{});
                 if(instantiateResult.hasError()){
                     return;
                 }
@@ -139,7 +118,7 @@ public class testMain {
                 System.out.println("["+instantiateEvent.getTransactionActionInfoCount()+"]"+instantiateEvent.getTransactionID()+instantiateEvent.getTimestamp());
 
 //
-                testChaincode.ProposalResultWrapper invokeResult = testChaincode.invoke(channel, targets, chaincodeMetaData, new String[]{});
+                Chaincode.ProposalResultWrapper invokeResult = Chaincode.invoke(channel, targets, chaincodeMetaData, new String[]{});
                 if(invokeResult.hasError()){
                     return;
                 }
