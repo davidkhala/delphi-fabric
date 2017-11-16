@@ -38,36 +38,6 @@ public class testMain {
         }
     }
 
-    public static Channel testPrepareChannel(String orgName) throws TransactionException, IOException, InvalidArgumentException, InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException, CryptoException {
-        String channelName = "delphiChannel".toLowerCase();
-        HFClient client = HFClient.createNewInstance();
-
-        client.setCryptoSuite(CryptoSuite.Factory.getCryptoSuite());
-
-        Map<String, String> msps = new HashMap<>();
-        msps.put("BU", "BUMSP");
-        msps.put("PM", "PMMSP");
-        String company = "delphi";
-
-
-        ClassLoader classLoader = ClassLoader.getSystemClassLoader();
-
-        JsonObject orgsJson = new JsonParser().parse(new FileReader(new File(classLoader.getResource("orgs.json").getFile()))).getAsJsonObject();
-
-        String cryptoRoot = orgsJson.getAsJsonObject(company).getAsJsonObject("docker").getAsJsonObject("volumes")
-                .getAsJsonObject("MSPROOT").getAsJsonPrimitive("dir").getAsString();
-
-        String configTxRoot = orgsJson.getAsJsonObject(company).getAsJsonObject("docker").getAsJsonObject("volumes")
-                .getAsJsonObject("CONFIGTX").getAsJsonPrimitive("dir").getAsString();
-        File channelFile = new File(configTxRoot, "delphi.channel");
-
-        File adminMSPRoot = new File(cryptoRoot, "peerOrganizations/"+orgName+".Delphi.com/users/Admin@"+orgName+".Delphi.com/msp");
-        AdminUser adminUser = new AdminUser(msps.get(orgName));
-        adminUser.setEnrollment(adminMSPRoot);
-        client.setUserContext(adminUser);
-
-        return ChannelUtil.createOrGetChannel(client, channelName, "grpc://localhost:7250", channelFile);
-    }
     public static void main(String[] args) {
         String channelName = "delphiChannel".toLowerCase();
         try {
@@ -90,7 +60,7 @@ public class testMain {
 
             String configTxRoot = orgsJson.getAsJsonObject(company).getAsJsonObject("docker").getAsJsonObject("volumes")
                     .getAsJsonObject("CONFIGTX").getAsJsonPrimitive("dir").getAsString();
-            File channelFile = new File(configTxRoot, "delphi.channel");
+            File channelFile = new File(configTxRoot, "delphi.tx");
             File genesisBlockFile = new File(configTxRoot, "delphi.block");
 
             File buAdminMSPRoot = new File(cryptoRoot, "peerOrganizations/BU.Delphi.com/users/Admin@BU.Delphi.com/msp");
