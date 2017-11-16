@@ -124,18 +124,6 @@ const getStateDBCachePath = () => {
 	return nodeConfig.stateDBCacheDir
 }
 
-exports.getCaService = (orgName, isTLS) => {
-	const orgConfig = orgsConfig[orgName]
-	const ca_port = isTLS ? orgConfig.ca.tlsca.portHost : orgConfig.ca.portHost
-	const caHost = 'localhost'
-	const caProtocol = isTLS ? 'https://' : 'http://'
-
-	const caUrl = `${caProtocol}${caHost}:${ca_port}`
-	// const org_domain=`${orgName}.${COMPANY_DOMAIN}`
-	// const tlscaCert=path.join(CRYPTO_CONFIG_DIR,'peerOrganizations',org_domain,'tlsca',`tlsca.${org_domain}-cert.pem`)
-	// const trustedRoots=[fs.readFileSync(tlscaCert).toString()] //fixme  Error: Calling register endpoint failed with error [Error: Hostname/IP doesn't match certificate's altnames: "Host: localhost. is not cert's CN: tlsca.BU.Delphi.com"]
-	return caUtil.new(caUrl)
-}
 const preparePeers = (peerIndexes, orgName) => {
 
 // work as a data adapter, containerNames: array --> orgname,peerIndex,peerConfig for each newPeer
@@ -183,6 +171,7 @@ const getKeyFilesInDir = (dir) => {
 	})
 	return keyFiles
 }
+
 const rawAdminUsername = 'adminName'
 const objects = {}
 
@@ -371,3 +360,4 @@ exports.userAction = objects.user
 exports.bindEventHub = bindEventHub
 exports.getOrgAdmin = objects.user.admin.select
 exports.formatUsername = formatUsername
+exports.findKeyfiles = getKeyFilesInDir

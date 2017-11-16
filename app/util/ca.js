@@ -134,11 +134,11 @@ exports.toTLS = _toTLS
 exports.register = register
 exports.enroll = enroll
 exports.new = (caUrl, trustedRoots = []) => {
-	const caService = require('fabric-ca-client/lib/FabricCAClientImpl')
+	const CAClient = require('fabric-ca-client/lib/FabricCAClientImpl')
 	const tlsOptions = {
 		trustedRoots,
 		verify: trustedRoots.length > 0
 	}
 
-	return new caService(caUrl, tlsOptions)
+	return new CAClient(caUrl, tlsOptions)
 }
