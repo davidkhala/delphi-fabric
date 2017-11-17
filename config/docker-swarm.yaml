@@ -10,10 +10,17 @@ networks:
       name: delphiNetwork
 services:
   OrdererServiceName-Delphi-com:
-    image: hyperledger/fabric-orderer:x86_64-1.0.1
+    networks:
+      default:
+        aliases:
+        - orderContainerName
+    image: hyperledger/fabric-orderer:x86_64-1.0.2
     command: orderer
     ports:
     - 7250:7050
+    volumes:
+    - CONFIGTX_swarm:/etc/hyperledger/configtx
+    - MSPROOT_swarm:/etc/hyperledger/crypto-config
     environment:
     - ORDERER_GENERAL_LOGLEVEL=debug
     - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
@@ -22,17 +29,10 @@ services:
     - ORDERER_GENERAL_GENESISFILE=/etc/hyperledger/configtx/delphi.block
     - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
     - ORDERER_GENERAL_LOCALMSPDIR=/etc/hyperledger/crypto-config/ordererOrganizations/Delphi.com/orderers/orderContainerName.Delphi.com/msp
-    volumes:
-    - CONFIGTX_swarm:/etc/hyperledger/configtx
-    - MSPROOT_swarm:/etc/hyperledger/crypto-config
-    networks:
-      default:
-        aliases:
-        - orderContainerName.Delphi.com
   peer0-BU-Delphi-com:
     depends_on:
     - OrdererServiceName-Delphi-com
-    image: hyperledger/fabric-peer:x86_64-1.0.1
+    image: hyperledger/fabric-peer:x86_64-1.0.2
     command: peer node start
     deploy:
       placement:
@@ -47,7 +47,7 @@ services:
     - CORE_PEER_GOSSIP_ORGLEADER=false
     - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.BU.Delphi.com:7051
     - CORE_PEER_LOCALMSPID=BUMSP
-    - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/BU.Delphi.com/users/Admin@BU.Delphi.com/msp
+    - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/BU.Delphi.com/peers/peer0.BU.Delphi.com/msp
     - CORE_PEER_TLS_ENABLED=false
     - CORE_PEER_ID=peer0.BU.Delphi.com
     - CORE_PEER_ADDRESS=peer0.BU.Delphi.com:7051
@@ -55,7 +55,7 @@ services:
     - 7051:7051
     - 7053:7053
     volumes:
-    - /run/:/host/var/run/
+    - /run/docker.sock:/host/var/run/docker.sock
     - MSPROOT_swarm:/etc/hyperledger/crypto-config
     networks:
       default:
@@ -64,7 +64,7 @@ services:
   peer1-BU-Delphi-com:
     depends_on:
     - OrdererServiceName-Delphi-com
-    image: hyperledger/fabric-peer:x86_64-1.0.1
+    image: hyperledger/fabric-peer:x86_64-1.0.2
     command: peer node start
     deploy:
       placement:
@@ -79,7 +79,7 @@ services:
     - CORE_PEER_GOSSIP_ORGLEADER=false
     - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.BU.Delphi.com:7051
     - CORE_PEER_LOCALMSPID=BUMSP
-    - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/BU.Delphi.com/users/Admin@BU.Delphi.com/msp
+    - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/BU.Delphi.com/peers/peer1.BU.Delphi.com/msp
     - CORE_PEER_TLS_ENABLED=false
     - CORE_PEER_ID=peer1.BU.Delphi.com
     - CORE_PEER_ADDRESS=peer1.BU.Delphi.com:7051
@@ -87,16 +87,29 @@ services:
     - 7061:7051
     - 7063:7053
     volumes:
-    - /run/:/host/var/run/
+    - /run/docker.sock:/host/var/run/docker.sock
     - MSPROOT_swarm:/etc/hyperledger/crypto-config
     networks:
       default:
         aliases:
         - peer1.BU.Delphi.com
+  ca-BU-Delphi-com:
+    environment:
+    - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server/BU.Delphi.com/ca
+    networks:
+      default:
+        aliases:
+        - BUCA
+    image: hyperledger/fabric-ca:x86_64-1.0.2
+    command: sh -c 'fabric-ca-server start -d'
+    volumes:
+    - /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/BU.Delphi.com/ca/:/etc/hyperledger/fabric-ca-server/BU.Delphi.com/ca
+    ports:
+    - 7054:7054
   peer0-ENG-Delphi-com:
     depends_on:
     - OrdererServiceName-Delphi-com
-    image: hyperledger/fabric-peer:x86_64-1.0.1
+    image: hyperledger/fabric-peer:x86_64-1.0.2
     command: peer node start
     deploy:
       placement:
@@ -111,7 +124,7 @@ services:
     - CORE_PEER_GOSSIP_ORGLEADER=false
     - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.ENG.Delphi.com:7051
     - CORE_PEER_LOCALMSPID=ENGMSP
-    - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/ENG.Delphi.com/users/Admin@ENG.Delphi.com/msp
+    - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/ENG.Delphi.com/peers/peer0.ENG.Delphi.com/msp
     - CORE_PEER_TLS_ENABLED=false
     - CORE_PEER_ID=peer0.ENG.Delphi.com
     - CORE_PEER_ADDRESS=peer0.ENG.Delphi.com:7051
@@ -119,7 +132,7 @@ services:
     - 8051:7051
     - 8053:7053
     volumes:
-    - /run/:/host/var/run/
+    - /run/docker.sock:/host/var/run/docker.sock
     - MSPROOT_swarm:/etc/hyperledger/crypto-config
     networks:
       default:
@@ -128,7 +141,7 @@ services:
   peer0-PM-Delphi-com:
     depends_on:
     - OrdererServiceName-Delphi-com
-    image: hyperledger/fabric-peer:x86_64-1.0.1
+    image: hyperledger/fabric-peer:x86_64-1.0.2
     command: peer node start
     deploy:
       placement:
@@ -143,7 +156,7 @@ services:
     - CORE_PEER_GOSSIP_ORGLEADER=false
     - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.PM.Delphi.com:7051
     - CORE_PEER_LOCALMSPID=PMMSP
-    - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/PM.Delphi.com/users/Admin@PM.Delphi.com/msp
+    - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/PM.Delphi.com/peers/peer0.PM.Delphi.com/msp
     - CORE_PEER_TLS_ENABLED=false
     - CORE_PEER_ID=peer0.PM.Delphi.com
     - CORE_PEER_ADDRESS=peer0.PM.Delphi.com:7051
@@ -151,9 +164,22 @@ services:
     - 9051:7051
     - 9053:7053
     volumes:
-    - /run/:/host/var/run/
+    - /run/docker.sock:/host/var/run/docker.sock
     - MSPROOT_swarm:/etc/hyperledger/crypto-config
     networks:
       default:
         aliases:
         - peer0.PM.Delphi.com
+  ca-PM-Delphi-com:
+    environment:
+    - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server/PM.Delphi.com/ca
+    networks:
+      default:
+        aliases:
+        - PMCA
+    image: hyperledger/fabric-ca:x86_64-1.0.2
+    command: sh -c 'fabric-ca-server start -d'
+    volumes:
+    - /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/PM.Delphi.com/ca/:/etc/hyperledger/fabric-ca-server/PM.Delphi.com/ca
+    ports:
+    - 9054:7054
