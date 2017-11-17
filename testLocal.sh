@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 CURRENT="$(dirname $(readlink -f ${BASH_SOURCE}))"
 
 config_dir="$CURRENT/config"

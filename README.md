@@ -32,8 +32,8 @@ If any problem found when running ``install.sh``, like hanging in ``npm install`
         - ``$ npm config set registry  https://registry.npm.taobao.org/``
    * java 1.8.0_151 (测试java-sdk用)
    * mikefarah/yaml 1.13.1: 一个通过命令行操作yaml文件的工具 https://github.com/mikefarah/yaml
-        * 对于不同arch和操作系统的版本都有提供binary
-        * 不推荐用go安装，因为手动升级和清理不太方便。
+        * binary安装：优点：可以自己指定下载的版本，缺点：墙内从github下载binary经常断开
+        * golang安装：优点：墙内可用，缺点：手动升级和清理不太方便，而且无法指定版本号，必须先安装golang
         * TODO：以后争取用js-yaml取代它
    * jq 1.5.1：一个用命令行解析json的工具 https://stedolan.github.io/jq/
    * moreutils 0.57-1 : 工具集，ubuntu或类似系统专用。我们用到其中sponge工具，用于结合jq 将pipeline里面的内容inline更新到源文件里
