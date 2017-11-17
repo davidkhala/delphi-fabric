@@ -12,7 +12,7 @@ function yamlBin() {
 	mv yaml_linux_amd64 /usr/local/bin/yaml
 }
 function yamlGolang() {
-	if go version; then
+	if ! go version; then
 		$CURRENT/common/install.sh golang
 	fi
 	#	FIXME: because go get cannot specify a tag, consider about https://github.com/golang/dep
