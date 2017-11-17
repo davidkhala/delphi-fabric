@@ -3,7 +3,7 @@ set -e
 CURRENT="$(dirname $(readlink -f ${BASH_SOURCE}))"
 if [ ! -f "$CURRENT/common/install.sh" ];then
     git submodule update --init --recursive
-else
+fi
 $CURRENT/common/install.sh
 
 #   install mikefarah/yaml
