@@ -18,12 +18,16 @@ function yamlGolang() {
 	#	FIXME: because go get cannot specify a tag, consider about https://github.com/golang/dep
 	go get github.com/mikefarah/yaml
 }
+function gitSync(){
+    git pull
+    git submodule update --init --recursive
+}
 
 if [ -n "$fcn" ]; then
 	$fcn
 else
 	if [ ! -f "$CURRENT/common/install.sh" ]; then
-		git submodule update --init --recursive
+		gitSync
 	fi
 	$CURRENT/common/install.sh
 	# write to config: jq do not support in-place editing, use moreutils:sponge
