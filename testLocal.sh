@@ -15,10 +15,10 @@ VERSION=$(jq -r ".$COMPANY.docker.fabricTag" $CONFIG_JSON)
 IMAGE_TAG="x86_64-$VERSION"
 TLS_ENABLED=$(jq ".$COMPANY.TLS" $CONFIG_JSON)
 
-./testBin.sh
+$CURRENT/testBin.sh
 COMPOSE_FILE="$config_dir/docker-compose.yaml"
 
 if [ -f "$COMPOSE_FILE" ]; then
-	./docker.sh down
+	$CURRENT/docker.sh down
 fi
-./config/compose-gen-go.sh $COMPANY $CRYPTO_CONFIG_DIR $BLOCK_FILE -f $COMPOSE_FILE -s $TLS_ENABLED -v $IMAGE_TAG
+$CURRENT/config/compose-gen-go.sh $COMPANY $CRYPTO_CONFIG_DIR $BLOCK_FILE -f $COMPOSE_FILE -s $TLS_ENABLED -v $IMAGE_TAG

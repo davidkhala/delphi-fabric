@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-
+set -e
 CURRENT="$(dirname $(readlink -f ${BASH_SOURCE}))"
 
 config_dir="$CURRENT/config"
@@ -22,7 +22,7 @@ IMAGE_TAG="x86_64-$VERSION"
 TLS_ENABLED=$(echo $companyConfig | jq ".TLS")
 
 ## update bin first
-./common/bin-manage/pullBIN.sh -v $VERSION
+$CURRENT/common/bin-manage/pullBIN.sh -v $VERSION
 if npm list fabric-client@$VERSION --depth=0; then : # --depth=0 => list only top level modules
 else
 	npm install fabric-client@$VERSION --save --save-exact
@@ -32,10 +32,10 @@ else
 	npm install fabric-ca-client@$VERSION --save --save-exact
 fi
 
-./config/crypto-config-gen-go.sh $COMPANY -i $CRYPTO_CONFIG_FILE
-./common/bin-manage/cryptogen/runCryptogen.sh -i "$CRYPTO_CONFIG_FILE" -o "$CRYPTO_CONFIG_DIR"
+$CURRENT/config/crypto-config-gen-go.sh $COMPANY -i $CRYPTO_CONFIG_FILE
+$CURRENT/common/bin-manage/cryptogen/runCryptogen.sh -i "$CRYPTO_CONFIG_FILE" -o "$CRYPTO_CONFIG_DIR"
 
-sudo chmod 777 -R $CRYPTO_CONFIG_DIR # FIXME: dev only, not for prd
+chmod 777 -R $CRYPTO_CONFIG_DIR # FIXME: dev only, not for prd
 
 # NOTE IMPORTANT for node-sdk: clean stateDBcacheDir, otherwise cached crypto material will leads to Bad request:
 # TODO more subtle control to do in nodejs
@@ -44,9 +44,9 @@ stateDBCacheDir=$(jq -r '.stateDBCacheDir' $nodeAppConfigJson)
 rm -rf $stateDBCacheDir
 echo clear stateDBCacheDir $stateDBCacheDir
 
-./config/configtx-gen-go.sh $COMPANY $CRYPTO_CONFIG_DIR -i $configtx_file -b $PROFILE_BLOCK
+$CURRENT/config/configtx-gen-go.sh $COMPANY $CRYPTO_CONFIG_DIR -i $configtx_file -b $PROFILE_BLOCK
 
-./common/bin-manage/configtxgen/runConfigtxgen.sh block create $BLOCK_FILE -p $PROFILE_BLOCK -i $config_dir
+$CURRENT/common/bin-manage/configtxgen/runConfigtxgen.sh block create $BLOCK_FILE -p $PROFILE_BLOCK -i $config_dir
 
 channelNames=$(echo $channelsConfig | jq -r "keys[]")
 for channelName in $channelNames; do

@@ -17,6 +17,8 @@ function yamlGolang() {
 	fi
 	#	FIXME: because go get cannot specify a tag, consider about https://github.com/golang/dep
 	go get github.com/mikefarah/yaml
+	ln -s $(which yaml) /usr/local/bin/yaml
+
 }
 function gitSync(){
     git pull
