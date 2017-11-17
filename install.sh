@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
+set -e
 CURRENT="$(dirname $(readlink -f ${BASH_SOURCE}))"
+if [ ! -f "$CURRENT/common/install.sh" ];then
+    git submodule update --init --recursive
+else
 $CURRENT/common/install.sh
 
 #   install mikefarah/yaml
