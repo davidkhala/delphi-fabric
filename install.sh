@@ -1,19 +1,32 @@
 #!/usr/bin/env bash
 set -e
 CURRENT="$(dirname $(readlink -f ${BASH_SOURCE}))"
-if [ ! -f "$CURRENT/common/install.sh" ];then
-    git submodule update --init --recursive
-fi
-$CURRENT/common/install.sh
+fcn=$1
 
 #   install mikefarah/yaml
-wget https://github.com/mikefarah/yaml/releases/download/1.13.1/yaml_linux_amd64
-chmod +x yaml_linux_amd64
-sudo mv yaml_linux_amd64 /usr/local/bin/yaml
+yamlVersion=1.13.1
 
+function yamlBin() {
+	wget https://github.com/mikefarah/yaml/releases/download/${yamlVersion}/yaml_linux_amd64
+	chmod +x yaml_linux_amd64
+	mv yaml_linux_amd64 /usr/local/bin/yaml
+}
+function yamlGolang() {
+	if go version; then
+		$CURRENT/common/install.sh golang
+	fi
+	#	FIXME: because go get cannot specify a tag, consider about https://github.com/golang/dep
+	go get github.com/mikefarah/yaml
+}
 
-
-# write to config: jq do not support in-place editing, use moreutils:sponge
-sudo apt -qq install -y moreutils
-
-npm install
+if [ -n "$fcn" ]; then
+	$fcn
+else
+	if [ ! -f "$CURRENT/common/install.sh" ]; then
+		git submodule update --init --recursive
+	fi
+	$CURRENT/common/install.sh
+	# write to config: jq do not support in-place editing, use moreutils:sponge
+	apt -qq install -y moreutils
+	npm install
+fi
