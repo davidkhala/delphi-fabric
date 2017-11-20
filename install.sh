@@ -17,6 +17,17 @@ function yamlGolang() {
 	fi
 	#	FIXME: because go get cannot specify a tag, consider about https://github.com/golang/dep
 	go get github.com/mikefarah/yaml
+	ln -s $(which yaml) /usr/local/bin/yaml
+
+}
+function cn(){
+    if [ ! -f "$CURRENT/common/install.sh" ]; then
+		gitSync
+	fi
+    $CURRENT/common/install.sh cn
+    apt -qq install -y moreutils
+	npm install
+	yamlGolang
 }
 function gitSync(){
     git pull
@@ -33,4 +44,5 @@ else
 	# write to config: jq do not support in-place editing, use moreutils:sponge
 	apt -qq install -y moreutils
 	npm install
+	yamlBin
 fi
