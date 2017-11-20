@@ -27,6 +27,7 @@ function cn(){
     $CURRENT/common/install.sh cn
     apt -qq install -y moreutils
 	npm install
+	yamlGolang
 }
 function gitSync(){
     git pull
@@ -43,4 +44,5 @@ else
 	# write to config: jq do not support in-place editing, use moreutils:sponge
 	apt -qq install -y moreutils
 	npm install
+	yamlBin
 fi
