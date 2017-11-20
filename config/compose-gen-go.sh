@@ -105,7 +105,6 @@ CONTAINER_GOPATH="/etc/hyperledger/gopath/"
 $ORDERERCMD.command "orderer"
 $ORDERERCMD.ports[0] $ORDERER_HOST_PORT:$ORDERER_CONTAINER_PORT
 
-
 orderer_hostName_full=$orderer_container_name.$COMPANY_DOMAIN
 ORDERER_STRUCTURE="ordererOrganizations/$COMPANY_DOMAIN/orderers/$orderer_hostName_full"
 CONTAINER_ORDERER_TLS_DIR="$CONTAINER_CRYPTO_CONFIG_DIR/$ORDERER_STRUCTURE/tls"
@@ -161,7 +160,7 @@ for orgName in $orgNames; do
 		#individual env
 		envPush "$PEERCMD" CORE_PEER_ID=$PEER_DOMAIN
 		envPush "$PEERCMD" CORE_PEER_ADDRESS=$PEER_DOMAIN:7051
-
+		envPush "$PEERCMD" GODEBUG=netdns=go
 		peerPortMap=$(echo $peerConfig | jq ".portMap")
 
 		for ((j = 0; j < $(echo $peerPortMap | jq "length"); j++)); do
@@ -189,7 +188,7 @@ for orgName in $orgNames; do
 			CONTAINER_CA_HOME="/etc/hyperledger/fabric-ca-server"
 			CONTAINER_CA_VOLUME="$CONTAINER_CA_HOME/$ORG_DOMAIN"
 
-            # NOTE since tlsca is not fully supported identity, use ca for even tlsca case
+			# NOTE since tlsca is not fully supported identity, use ca for even tlsca case
 			CA_HOST_VOLUME="${MSPROOT}peerOrganizations/$ORG_DOMAIN"
 			caServerConfig="$CA_HOST_VOLUME/ca/fabric-ca-server-config.yaml"
 
@@ -205,19 +204,16 @@ for orgName in $orgNames; do
 				yaml w -i $caServerConfig tls.certfile "$CONTAINER_CA_VOLUME/ca/ca.$ORG_DOMAIN-cert.pem"
 				yaml w -i $caServerConfig tls.keyfile "$CONTAINER_CA_VOLUME/ca/$caPrivkeyFilename"
 				caContainerName=$(echo $caConfig | jq ".tlsca.containerName")
-				CA_HOST_PORT=$(echo $caConfig| jq ".tlsca.portHost")
+				CA_HOST_PORT=$(echo $caConfig | jq ".tlsca.portHost")
 				# FIXME should use tlsca cert for intermediate CA enroll, but if we use tlsca keypair for tlsca Service, invoke from new user will be blocked.
 				yaml w -i $caServerConfig ca.certfile "$CONTAINER_CA_VOLUME/ca/ca.$ORG_DOMAIN-cert.pem"
-			    yaml w -i $caServerConfig ca.keyfile "$CONTAINER_CA_VOLUME/ca/$caPrivkeyFilename"
+				yaml w -i $caServerConfig ca.keyfile "$CONTAINER_CA_VOLUME/ca/$caPrivkeyFilename"
 			else
-                caContainerName=$(echo $caConfig | jq ".containerName")
+				caContainerName=$(echo $caConfig | jq ".containerName")
 				CA_HOST_PORT=$(echo $caConfig | jq ".portHost")
 				yaml w -i $caServerConfig ca.certfile "$CONTAINER_CA_VOLUME/ca/ca.$ORG_DOMAIN-cert.pem"
-			    yaml w -i $caServerConfig ca.keyfile "$CONTAINER_CA_VOLUME/ca/$caPrivkeyFilename"
+				yaml w -i $caServerConfig ca.keyfile "$CONTAINER_CA_VOLUME/ca/$caPrivkeyFilename"
 			fi
-
-
-
 
 			# affiliations must be a map with 2-depth
 			yaml w -i $caServerConfig affiliations.$orgName[0] client
@@ -238,11 +234,9 @@ for orgName in $orgNames; do
 			# NOTE 1.1.0-preview "code":43,"message":"Registrar does not have any values for 'hf.Registrar.Attributes' thus can't register any attributes"
 			yaml w -i $caServerConfig registry.identities[0].attrs["hf.Registrar.Attributes"] "*"
 
-
-
 			p=0
-			envPush "$CACMD" "FABRIC_CA_HOME=$CONTAINER_CA_VOLUME/ca" 
-
+			envPush "$CACMD" "FABRIC_CA_HOME=$CONTAINER_CA_VOLUME/ca"
+			envPush "$CACMD" GODEBUG=netdns=go
 			$CACMD.container_name $caContainerName
 			$CACMD.networks[0] $networksName
 			$CACMD.image hyperledger/fabric-ca:$IMAGE_TAG
@@ -277,7 +271,7 @@ envPush "$ORDERERCMD" ORDERER_GENERAL_GENESISFILE=$CONTAINER_CONFIGTX_DIR/$(base
 # MSP
 envPush "$ORDERERCMD" ORDERER_GENERAL_LOCALMSPID=OrdererMSP
 envPush "$ORDERERCMD" ORDERER_GENERAL_LOCALMSPDIR=$CONTAINER_CRYPTO_CONFIG_DIR/$ORDERER_STRUCTURE/msp
-
+envPush "$ORDERERCMD" GODEBUG=netdns=go
 
 # NOTE: cli container is just a shadow of any existing peer! see the CORE_PEER_ADDRESS & CORE_PEER_MSPCONFIGPATH
 
