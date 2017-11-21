@@ -175,13 +175,12 @@ const getKeyFilesInDir = (dir) => {
 const rawAdminUsername = 'adminName'
 const objects = {}
 
-
 objects.user = {
 	clear: (client) => {
 		client._userContext = null
 		client.setCryptoSuite(null)
 	},
-	tlsCreate: (tlsDir, username, orgName, mspid = getMspID(orgName), skipPersistence=false, client) => {
+	tlsCreate: (tlsDir, username, orgName, mspid = getMspID(orgName), skipPersistence = false, client) => {
 		const privateKey = path.join(tlsDir, 'server.key')
 		const signedCert = path.join(tlsDir, 'server.crt')
 		const createUserOpt = {
@@ -264,7 +263,6 @@ objects.user = {
 exports.formatPeerName = (peerName, orgName) => `${peerName}.${orgName}.${COMPANY_DOMAIN}`
 const formatUsername = (username, orgName) => `${username}@${orgName}.${COMPANY_DOMAIN}`
 
-
 objects.user.admin = {
 	orderer: {
 		select: (client, ordererContainerName = 'ordererContainerName') => {
@@ -318,25 +316,29 @@ exports.setGOPATH = () => {
 
 exports.chaincodeProposalAdapter = (actionString, validator) => {
 	const _validator = validator ? validator : ({ response }) => {
-		return response && response.status === 200
+		return { isValid: response && response.status === 200, isSwallowed: false }
 	}
 	return ([responses, proposal, header]) => {
 
-		const errCounter = [] // NOTE logic: reject only when all bad
+		let errCounter = 0 // NOTE logic: reject only when all bad
+		let swallowCounter = 0
 		for (let i in responses) {
 			const proposalResponse = responses[i]
-			if (_validator(proposalResponse)) {
+			const { isValid, isSwallowed } = _validator(proposalResponse)
+			if (isValid) {
 				logger.info(`${actionString} was good for [${i}]`, proposalResponse)
+				if (isSwallowed) {
+					swallowCounter++
+				}
 			} else {
 				logger.error(`${actionString} was bad for [${i}]`, proposalResponse)
-				errCounter.push(proposalResponse)
+				errCounter++
 			}
-		}
-		if (errCounter.length === responses.length) {
-			return Promise.reject(responses)
 		}
 
 		return Promise.resolve({
+			errCounter,
+			swallowCounter,
 			nextRequest: {
 				proposalResponses: responses, proposal
 			}
