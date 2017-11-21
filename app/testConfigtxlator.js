@@ -5,7 +5,7 @@ const logger = require('./util/logger').new('test-configtxlator')
 const channelName = 'delphiChannel'
 
 const join = require('./join-channel').joinChannel
-const instantiate = require('./instantiate-chaincode').instantiateChaincode
+const instantiate = require('./instantiate-chaincode').instantiate
 const installChaincode = require('./install-chaincode').installChaincode
 
 const api = require('./configtxlator')
@@ -58,7 +58,7 @@ const addOrg = (
 					helper.setGOPATH()
 					const client = helper.getClient()
 					return installChaincode([peer], chaincodeId, chaincodePath, chaincodeVersion, client).then(() => {
-						return instantiate(channel, [peer], chaincodeId, chaincodeVersion, JSON.parse(args), client)
+						return instantiate(channel, [peer], {chaincodeId, chaincodeVersion, args:JSON.parse(args)}, client)
 
 					})
 				})

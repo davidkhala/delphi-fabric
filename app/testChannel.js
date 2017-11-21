@@ -40,12 +40,12 @@ const joinAllfcn = () => {
 createChannel(channelName, channelConfigFile, ['BU', 'PM']).then(() => {
 	return joinAllfcn()
 }).catch(err => {
-	logger.error(err)
 	if (err.toString().includes('Error: BAD_REQUEST')) {
 		//existing swallow
 		return joinAllfcn()
+	}else {
+		return Promise.reject(err)
 	}
-
 }).then(() => {
 	logger.info('finished')
 	process.exit(0)

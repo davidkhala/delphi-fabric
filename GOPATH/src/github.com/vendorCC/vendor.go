@@ -25,41 +25,27 @@ import (
 	"github.com/hyperledger/fabric/protos/ledger/queryresult"
 )
 
-var logger = shim.NewLogger("example_cc0")
+var logger = shim.NewLogger("vendor_cc")
 
 // SimpleChaincode example simple Chaincode implementation
 type SimpleChaincode struct {
 }
 
 func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response {
-	logger.Info("########### example_cc0 Init ###########")
+	logger.Info("########### vendor Init ###########")
 
 	_, args := stub.GetFunctionAndParameters()
-	var A, B string    // Entities
-	var Aval, Bval int // Asset holdings
-	var err error
+	var projectTitle, projectContent string
+	var err error;
 
 	// Initialize the chaincode
-	A = args[0]
-	Aval, err = strconv.Atoi(args[1])
-	if err != nil {
-		return shim.Error("Expecting integer value for asset holding")
+	projectTitle = args[0]
+	projectContent = args[1]
+	if len(projectTitle)==0 {
+		return shim.Error("empty project Title")
 	}
-	B = args[2]
-	Bval, err = strconv.Atoi(args[3])
-	if err != nil {
-		return shim.Error("Expecting integer value for asset holding")
-	}
-	logger.Info("Aval = %d, Bval = %d\n", Aval, Bval)
-
-	// Write the state to the ledger
-	err = stub.PutState(A, []byte(strconv.Itoa(Aval)))
-	if err != nil {
-		return shim.Error(err.Error())
-	}
-
-	err = stub.PutState(B, []byte(strconv.Itoa(Bval)))
-	if err != nil {
+	err = stub.PutState(projectTitle, []byte(projectContent))
+	if err != nil{
 		return shim.Error(err.Error())
 	}
 
@@ -69,7 +55,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response {
 
 // Transaction makes payment of X units from A to B
 func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
-	logger.Info("########### example_cc0 Invoke ###########")
+	logger.Info("########### vendor Invoke ###########")
 
 	function, args := stub.GetFunctionAndParameters()
 

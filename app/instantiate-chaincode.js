@@ -8,8 +8,8 @@ const logger = require('./util/logger').new('instantiate-chaincode')
 // 		"chaincodeVersion":"v0",
 // 		"args":["a","100","b","200"]
 // set peers to 'undefined' to target all peers in channel
-exports.instantiateChaincode = (
-		channel, richPeers, chaincodeId, chaincodeVersion, args, client = channel._clientContext) => {
+exports.instantiate = (
+		channel, richPeers, { chaincodeId, chaincodeVersion, args }, client = channel._clientContext) => {
 	logger.debug(
 			{ channelName: channel.getName(), peersSize: richPeers.length, chaincodeId, chaincodeVersion, args })
 
@@ -49,29 +49,23 @@ exports.instantiateChaincode = (
 		return channel.sendInstantiateProposal(request).
 				then(helper.chaincodeProposalAdapter('instantiate', proposalResponse => {
 					const { response } = proposalResponse
-					if (response && response.status === 200) return true
+					if (response && response.status === 200) return { isValid: true, isSwallowed: false }
 					if (proposalResponse instanceof Error && proposalResponse.toString().includes(existSymptom)) {
 						logger.warn('swallow when existence')
-						return true
+						return { isValid: true, isSwallowed: true }
 					}
-					return false
+					return { isValid: false, isSwallowed: false }
 				})).
-				then(({ nextRequest }) => {
-					//ehhhh... duplicated check for skipping
+				then(({ swallowCounter, nextRequest }) => {
 					const { proposalResponses } = nextRequest
-					const existCounter = []
-					for (let proposalResponse of proposalResponses) {
-						if (proposalResponse instanceof Error && proposalResponse.toString().includes(existSymptom)) {
-							existCounter.push(proposalResponse)
-						}
-					}
-					if (existCounter.length === proposalResponses.length) {
+
+					if (swallowCounter === proposalResponses.length) {
 						return Promise.resolve(proposalResponses)
 					}
 
 					const promises = []
 					for (let peer of richPeers) {
-						const eventHub = helper.bindEventHub(peer,client)
+						const eventHub = helper.bindEventHub(peer, client)
 						const txPromise = eventHelper.txEventPromise(eventHub, { txId, eventWaitTime }, ({ tx, code }) => {
 							logger.debug('newTxEvent', { tx, code })
 							return { valid: code === 'VALID', interrupt: true }
@@ -85,6 +79,50 @@ exports.instantiateChaincode = (
 					})
 				})
 	})
+}
+exports.upgrade = (channel, richPeers, { chaincodeId, chaincodeVersion, args }, client = channel._clientContext) => {
+
+	const { eventWaitTime } = channel
+	const txId = client.newTransactionID()
+	const request = {
+		chaincodeId,
+		chaincodeVersion,
+		args,
+		txId
+	}
+	const existSymptom = '(status: 500, message: version already exists for chaincode '
+
+	return channel.sendUpgradeProposal(request).
+			then(helper.chaincodeProposalAdapter('upgrade', proposalResponse => {
+				const { response } = proposalResponse
+				if (response && response.status === 200) return { isValid: true, isSwallowed: false }
+				if (proposalResponse instanceof Error && proposalResponse.toString().includes(existSymptom)) {
+					logger.warn('swallow when existence')
+					return { isValid: true, isSwallowed: true }
+				}
+				return { isValid: false, isSwallowed: false }
+			})).
+			then(({ swallowCounter, nextRequest }) => {
+				const { proposalResponses } = nextRequest
+
+				if(swallowCounter === proposalResponses.length){
+					return Promise.resolve(proposalResponses)
+				}
+				const promises = []
+				for (let peer of richPeers) {
+					const eventHub = helper.bindEventHub(peer, client)
+					const txPromise = eventHelper.txEventPromise(eventHub, { txId, eventWaitTime }, ({ tx, code }) => {
+						logger.debug('newTxEvent', { tx, code })
+						return { valid: code === 'VALID', interrupt: true }
+					})
+					promises.push(txPromise)
+				}
+
+				return channel.sendTransaction(nextRequest).then(() => {
+					logger.info('channel.sendTransaction success')
+					return Promise.all(promises)
+				})
+			})
 }
 
 

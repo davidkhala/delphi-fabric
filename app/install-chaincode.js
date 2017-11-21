@@ -5,9 +5,9 @@ const logger = require('./util/logger').new('install-chaincode')
 //allowedCharsChaincodeName = "[A-Za-z0-9_-]+"
 // allowedCharsVersion       = "[A-Za-z0-9_.-]+"
 //
-const installChaincode = (peers, chaincodeId, chaincodePath, chaincodeVersion, client) => {
+const installChaincode = (peers, { chaincodeId, chaincodePath, chaincodeVersion }, client) => {
 	logger.debug('============ Install chaincode ============')
-	logger.debug({ peers_length: peers.length, chaincodeId, chaincodePath, chaincodeVersion})
+	logger.debug({ peers_length: peers.length, chaincodeId, chaincodePath, chaincodeVersion })
 	helper.setGOPATH()
 
 	const request = {
@@ -17,12 +17,23 @@ const installChaincode = (peers, chaincodeId, chaincodePath, chaincodeVersion, c
 		chaincodeVersion
 	}
 	return client.installChaincode(request).then(helper.chaincodeProposalAdapter('install', (proposalResponse) => {
-		if (proposalResponse.response && proposalResponse.response.status === 200) return true
+		const { response } = proposalResponse
+		if (response && response.status === 200) return {
+			isValid: true,
+			isSwallowed: false
+		}
 		if (proposalResponse instanceof Error && proposalResponse.toString().includes('exists')) {
 			logger.warn('swallow when exsitence')
-			return true
+			return { isValid: true, isSwallowed: true }
 		}
-		return false
-	}))
+		return { isValid: false, isSwallowed: false }
+	})).then((result) => {
+		const { errCounter, nextRequest: { proposalResponses } } = result
+		if (errCounter === proposalResponses.length) {
+			return Promise.reject(proposalResponses)
+		}else {
+			return Promise.resolve(result)
+		}
+	})
 }
 exports.installChaincode = installChaincode

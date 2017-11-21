@@ -34,6 +34,7 @@ services:
     - ORDERER_GENERAL_GENESISFILE=/etc/hyperledger/configtx/delphi.block
     - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
     - ORDERER_GENERAL_LOCALMSPDIR=/etc/hyperledger/crypto-config/ordererOrganizations/Delphi.com/orderers/orderContainerName.Delphi.com/msp
+    - GODEBUG=netdns=go
   peer0.BU.Delphi.com:
     container_name: BUContainerName
     depends_on:
@@ -56,6 +57,7 @@ services:
     - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/crypto-config/peerOrganizations/BU.Delphi.com/peers/peer0.BU.Delphi.com/tls/ca.crt
     - CORE_PEER_ID=peer0.BU.Delphi.com
     - CORE_PEER_ADDRESS=peer0.BU.Delphi.com:7051
+    - GODEBUG=netdns=go
     ports:
     - 7051:7051
     - 7053:7053
@@ -86,6 +88,7 @@ services:
     - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/crypto-config/peerOrganizations/BU.Delphi.com/peers/peer1.BU.Delphi.com/tls/ca.crt
     - CORE_PEER_ID=peer1.BU.Delphi.com
     - CORE_PEER_ADDRESS=peer1.BU.Delphi.com:7051
+    - GODEBUG=netdns=go
     ports:
     - 7061:7051
     - 7063:7053
@@ -97,6 +100,7 @@ services:
   ca.BU.Delphi.com:
     environment:
     - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server/BU.Delphi.com/ca
+    - GODEBUG=netdns=go
     container_name: BUTLSCA
     networks:
     - default
@@ -128,6 +132,7 @@ services:
     - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/crypto-config/peerOrganizations/ENG.Delphi.com/peers/peer0.ENG.Delphi.com/tls/ca.crt
     - CORE_PEER_ID=peer0.ENG.Delphi.com
     - CORE_PEER_ADDRESS=peer0.ENG.Delphi.com:7051
+    - GODEBUG=netdns=go
     ports:
     - 8051:7051
     - 8053:7053
@@ -158,6 +163,7 @@ services:
     - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/crypto-config/peerOrganizations/PM.Delphi.com/peers/peer0.PM.Delphi.com/tls/ca.crt
     - CORE_PEER_ID=peer0.PM.Delphi.com
     - CORE_PEER_ADDRESS=peer0.PM.Delphi.com:7051
+    - GODEBUG=netdns=go
     ports:
     - 9051:7051
     - 9053:7053

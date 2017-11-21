@@ -12,6 +12,12 @@
         "delphiChannel"
       ],
       "path": "github.com/admin"
+    },
+    "vendorChaincode": {
+      "target_channels": [
+        "delphiChannel"
+      ],
+      "path": "github.com/vendorCC"
     }
   }
 }
