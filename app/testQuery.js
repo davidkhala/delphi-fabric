@@ -6,15 +6,32 @@ const channelName = 'delphiChannel'
 const logger = require('./util/logger').new('test-query')
 const client = helper.getClient()
 
-const peer = peerUtil.new({ peerPort: 9051, peer_hostName_full: 'peer0.PM.Delphi.com', host: 'localhost' })
 const queryInstantiated = () => {
-	return helper.getOrgAdmin('PM', client).then(() => {
+	const orgName = 'PM'
+	const peerIndexes = [0]
+	const peers = helper.newPeers(peerIndexes, orgName)
+
+	return helper.getOrgAdmin(orgName, client).then(() => {
 		const channel = helper.prepareChannel(channelName, client, true)
-		return query.chaincodes.instantiated(peer, channel).then((queryTrans) => {
-			logger.info(queryTrans)
+		return query.chaincodes.instantiated(peers[0], channel).then((result) => {
+			logger.info(result)
+			return Promise.resolve(result)
+		})
+
+	})
+}
+const queryInstalled = ()=>{
+	const orgName = 'PM'
+	const peerIndexes = [0]
+	const peers = helper.newPeers(peerIndexes, orgName)
+	return helper.getOrgAdmin(orgName, client).then(() => {
+
+		return query.chaincodes.installed(peers[0], client).then((result) => {
+			logger.info(result)
+			return Promise.resolve(result)
 		})
 
 	})
 }
 
-queryInstantiated()
+queryInstalled()

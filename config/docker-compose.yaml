@@ -29,7 +29,7 @@ services:
     - ORDERER_GENERAL_TLS_ENABLED=true
     - ORDERER_GENERAL_TLS_PRIVATEKEY=/etc/hyperledger/crypto-config/ordererOrganizations/Delphi.com/orderers/orderContainerName.Delphi.com/tls/server.key
     - ORDERER_GENERAL_TLS_CERTIFICATE=/etc/hyperledger/crypto-config/ordererOrganizations/Delphi.com/orderers/orderContainerName.Delphi.com/tls/server.crt
-    - ORDERER_GENERAL_TLS_ROOTCAS=[/etc/hyperledger/crypto-config/ordererOrganizations/Delphi.com/orderers/orderContainerName.Delphi.com/tls/ca.crt,/etc/hyperledger/crypto-config/peerOrganizations/BU.Delphi.com/tlsca/tlsca.BU.Delphi.com-cert.pem]
+    - ORDERER_GENERAL_TLS_ROOTCAS=[/etc/hyperledger/crypto-config/ordererOrganizations/Delphi.com/orderers/orderContainerName.Delphi.com/tls/ca.crt]
     - ORDERER_GENERAL_GENESISMETHOD=file
     - ORDERER_GENERAL_GENESISFILE=/etc/hyperledger/configtx/delphi.block
     - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
@@ -97,19 +97,6 @@ services:
     - MSPROOT:/etc/hyperledger/crypto-config
     networks:
     - default
-  ca.BU.Delphi.com:
-    environment:
-    - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server/BU.Delphi.com/ca
-    - GODEBUG=netdns=go
-    container_name: BUTLSCA
-    networks:
-    - default
-    image: hyperledger/fabric-ca:x86_64-1.1.0-preview
-    command: sh -c 'fabric-ca-server start -d'
-    volumes:
-    - /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/BU.Delphi.com:/etc/hyperledger/fabric-ca-server/BU.Delphi.com
-    ports:
-    - 7055:7054
   peer0.ENG.Delphi.com:
     container_name: ENGContainerName
     depends_on:

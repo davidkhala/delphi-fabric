@@ -4,10 +4,9 @@ const invoke = require('./invoke-chaincode').invokeChaincode
 const helper = require('./helper')
 
 const logger = require('./util/logger').new('testInvoke')
-const invoke_fcn = ''
-const invoke_args = []
-
-const chaincodeName = 'adminChaincode'
+const chaincodeId = 'adminChaincode'
+const fcn = 'read'
+const args = ['project', 'Blockchain Hyperledger Demonstration']
 const peerIndexes = [0]
 const orgName = 'PM'
 const channelName = 'delphiChannel'
@@ -16,7 +15,7 @@ const peers = helper.newPeers(peerIndexes, orgName)
 const client = helper.getClient()
 helper.getOrgAdmin(orgName, client).then(() => {
 	const channel = helper.prepareChannel(channelName, client, true)
-	return invoke(channel, peers, chaincodeName, invoke_fcn, invoke_args, client)
+	return invoke(channel, peers, { chaincodeId, fcn, args })
 }).then(require('./invoke-chaincode').reducer).then(_ => logger.info(_))
 const _testInvokeOnNewPeer = () => {
 	const orgName = 'AM'
@@ -31,7 +30,7 @@ const _testInvokeOnNewPeer = () => {
 	helper.getOrgAdmin(orgName).then(() => {
 
 		const channel = helper.prepareChannel(channelName)
-		return invoke(channel, peers, chaincodeName, invoke_fcn, invoke_args, client)
+		return invoke(channel, peers, { chaincodeId, fcn, args })
 
 	})
 }

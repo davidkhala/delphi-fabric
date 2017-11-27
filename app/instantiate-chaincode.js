@@ -9,7 +9,7 @@ const logger = require('./util/logger').new('instantiate-chaincode')
 // 		"args":["a","100","b","200"]
 // set peers to 'undefined' to target all peers in channel
 exports.instantiate = (
-		channel, richPeers, { chaincodeId, chaincodeVersion, args }, client = channel._clientContext) => {
+		channel, richPeers, { chaincodeId, chaincodeVersion, args, fcn = 'init' }, client = channel._clientContext) => {
 	logger.debug(
 			{ channelName: channel.getName(), peersSize: richPeers.length, chaincodeId, chaincodeVersion, args })
 
@@ -30,7 +30,7 @@ exports.instantiate = (
 			chaincodeId,
 			chaincodeVersion,
 			args,
-			fcn: 'init',// fcn is 'init' in default: `fcn` : optional - String of the function to be called on the chaincode once instantiated (default 'init')
+			fcn,
 			txId,
 			targets: richPeers// optional: if not set, targets will be channel.getPeers
 			// , 'endorsement-policy': {
@@ -80,7 +80,28 @@ exports.instantiate = (
 				})
 	})
 }
-exports.upgrade = (channel, richPeers, { chaincodeId, chaincodeVersion, args }, client = channel._clientContext) => {
+exports.upgradeToCurrent = (channel, richPeer, { chaincodeId, args }, client = channel._clientContext) => {
+	const ChaincodeUtil = require('./util/chaincode')
+	const Query = require('./query')
+	return Query.chaincodes.installed(richPeer, client).then(({ chaincodes }) => {
+		const foundChaincode = chaincodes.find((element) => element.name === chaincodeId)
+		if (!foundChaincode) {
+			return Promise.reject(`No chaincode found with name ${chaincodeId}`)
+		}
+		const { version } = foundChaincode
+
+		// [ { name: 'adminChaincode',
+		// 	version: 'v0',
+		// 	path: 'github.com/admin',
+		// 	input: '',
+		// 	escc: '',
+		// 	vscc: '' } ]
+
+		const chaincodeVersion = ChaincodeUtil.nextVersion(version)
+		return upgrade(channel, [richPeer], { chaincodeId, args, chaincodeVersion }, client)
+	})
+}
+const upgrade = (channel, richPeers, { chaincodeId, chaincodeVersion, args }, client = channel._clientContext) => {
 
 	const { eventWaitTime } = channel
 	const txId = client.newTransactionID()
@@ -105,7 +126,7 @@ exports.upgrade = (channel, richPeers, { chaincodeId, chaincodeVersion, args }, 
 			then(({ swallowCounter, nextRequest }) => {
 				const { proposalResponses } = nextRequest
 
-				if(swallowCounter === proposalResponses.length){
+				if (swallowCounter === proposalResponses.length) {
 					return Promise.resolve(proposalResponses)
 				}
 				const promises = []
@@ -125,5 +146,4 @@ exports.upgrade = (channel, richPeers, { chaincodeId, chaincodeVersion, args }, 
 			})
 }
 
-
-
+exports.upgrade = upgrade

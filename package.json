@@ -2,7 +2,6 @@
   "name": "delphi-fabric",
   "version": "1.0.0",
   "description": "based on balance-transfer example: node program to demonstrate using node.js SDK APIs",
-  "main": "app/app.js",
   "keywords": [
     "v1.x fabric node-sdk java-sdk sample"
   ],
@@ -18,9 +17,6 @@
     "cors": "^2.8.3",
     "dockerode": "^2.5.0",
     "express": "^4.15.2",
-    "express-bearer-token": "^2.1.0",
-    "express-jwt": "^5.1.0",
-    "express-session": "^1.15.2",
     "fabric-ca-client": "1.1.0-preview",
     "fabric-client": "1.1.0-preview",
     "fs-extra": "^2.0.0",
@@ -29,7 +25,9 @@
     "level": "^1.7.0",
     "lodash": "^4.17.4",
     "log4js": "^0.6.38",
-    "request": "^2.81.0"
+    "request": "^2.81.0",
+    "long": "^3.2.0",
+    "request-promise-native": "^1.0.5"
   },
   "devDependencies": {
     "sleep": "^5.1.1",

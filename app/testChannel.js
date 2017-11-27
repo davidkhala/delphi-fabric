@@ -1,13 +1,13 @@
-const createChannel = require('./create-channel').createChannel
+const createChannel = require('./create-channel').create
 const joinChannel = require('./join-channel').joinChannel
 
 const helper = require('./helper')
 const logger = require('./util/logger').new('testChannel')
 const channelName = 'delphiChannel'
 
-const company = helper.helperConfig.COMPANY;
+const company = helper.helperConfig.COMPANY
 const companyConfig = helper.helperConfig[company]
-const channelConfig=companyConfig.channels[channelName]
+const channelConfig = companyConfig.channels[channelName]
 const channelConfigFile = `${companyConfig.docker.volumes.CONFIGTX.dir}/${channelConfig.file}`
 const joinAllfcn = () => {
 
@@ -19,9 +19,9 @@ const joinAllfcn = () => {
 				{ 'portMap': [{ 'host': 7061, 'container': 7051 }, { 'host': 7063, 'container': 7053 }] })
 	]
 
-	const client = helper.getClient();
-	const channel = helper.prepareChannel(channelName,client,true)
-	return helper.getOrgAdmin(orgName,client).then(()=>joinChannel(channel, peers).then(() => {
+	const client = helper.getClient()
+	const channel = helper.prepareChannel(channelName, client, true)
+	return helper.getOrgAdmin(orgName, client).then(() => joinChannel(channel, peers).then(() => {
 
 		const orgName = 'PM'
 		const peers = [
@@ -32,8 +32,20 @@ const joinAllfcn = () => {
 				]
 			})
 		]
-		return helper.getOrgAdmin(orgName,client).then(()=>joinChannel(channel, peers))
-	}))
+		return helper.getOrgAdmin(orgName, client).then(() => joinChannel(channel, peers))
+	})).then(() => {
+
+		const orgName = 'ENG'
+		const peers = [
+			helper.preparePeer(orgName, 0, {
+				'portMap': [
+					{ 'host': 8051, 'container': 7051 },
+					{ 'host': 8053, 'container': 7053 }
+				]
+			})
+		]
+		return helper.getOrgAdmin(orgName, client).then(() => joinChannel(channel, peers))
+	})
 }
 //E0905 10:07:20.462272826    7262 ssl_transport_security.c:947] Handshake failed with fatal error SSL_ERROR_SSL: error:14090086:SSL routines:ssl3_get_server_certificate:certificate verify failed.
 
@@ -43,7 +55,7 @@ createChannel(channelName, channelConfigFile, ['BU', 'PM']).then(() => {
 	if (err.toString().includes('Error: BAD_REQUEST')) {
 		//existing swallow
 		return joinAllfcn()
-	}else {
+	} else {
 		return Promise.reject(err)
 	}
 }).then(() => {

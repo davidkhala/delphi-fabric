@@ -50,7 +50,7 @@ exports.runNewCA = ({
 				]
 			},
 			NetworkMode: networkName
-		},
+		}
 
 	}
 	return docker.run(image, cmd, undefined, createOptions)
@@ -67,9 +67,21 @@ exports.runNewCA = ({
 	// ports:
 	// 		- 7055:7054
 }
+exports.uninstallChaincode = ({ containerName, chaincodeId, chaincodeVersion }) => {
+	const container = docker.getContainer(containerName)
+	const options = {
+		Cmd: ['rm', '-rf', `/var/hyperledger/production/chaincodes/${chaincodeId}.${chaincodeVersion}`]
+	}
+
+	return container.exec(options).then(exec =>
+			exec.start().then(() => exec.inspect())
+	)
+
+// 	docker exec $PEER_CONTAINER rm -rf /var/hyperledger/production/chaincodes/$CHAINCODE_NAME.$VERSION
+}
 //TODO for testNewOrgs
 const runNewPeer = ({
-											peer: { containerName, port, eventHubPort ,networkName}, version, arch = 'x86_64',
+											peer: { containerName, port, eventHubPort, networkName }, version, arch = 'x86_64',
 											msp: { id, configPath, containerConfigPath }, domain,
 											tls
 										}) => {

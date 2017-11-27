@@ -93,7 +93,7 @@ const testInvoke = () => {
 		const chaincodeId = 'adminChaincode'
 		const fcn = ''
 		const args = []
-		return invoke(channel, peers, chaincodeId, fcn, args).
+		return invoke(channel, peers, {chaincodeId, fcn, args}).
 				then(require('./invoke-chaincode').reducer).
 				then((result) => {logger.info(result)})
 	}).catch(err => {

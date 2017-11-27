@@ -114,62 +114,8 @@ setCAAdmin(client, { orgName, TLS }).then((adminUser) =>
 		const MSPID = `${orgName}MSP` // fixme
 		const caUrl = `http://localhost:${intermediatePort}` //TODO intermediate TLS?
 		const intermediateCaService = caUtil.new(caUrl)// todo
-		return setCAAdmin(client, { orgName, TLS }, intermediateCaService).then((adminUser) => {
-
-			// 	logger.info("set intermediate admin")
-			// 	const username = 'student'
-			// 	const userTarget = path.join(root, 'users', helper.formatUsername(username, intermediateID))
-			//
-			// 	fsExtra.ensureDirSync(userTarget)
-			// 	const passwordFile = `${userTarget}/pwdFile` // fixme: file with password content security issue
-			// 	const affiliation = orgName.toLowerCase()
-			//
-			// 	const enrollAnyWay = (password) => {
-			// 		return caUtil.user.enroll(intermediateCaService,
-			// 				{ username: helper.formatPeerName(username, orgName), password }).
-			// 				then((result) => {
-			//
-			// 					//fixme bug design in CryptoSuite_ECDSA_AES.importKey
-			// 					caUtil.toTLS(result, userTarget)
-			// 					helper.userAction.clear(client)
-			// 					return caUtil.user.build(helper.formatUsername(username, orgName), result, MSPID).then((user) => {
-			//
-			// 						return client.setUserContext(user, true)
-			// 					})
-			// 				})
-			// 	}
-			// 	return caUtil.user.register(intermediateCaService,
-			// 			{ username: helper.formatPeerName(username, orgName), affiliation },
-			// 			adminUser).
-			// 			then((password) => {
-			// 				fs.writeFileSync(passwordFile, password)
-			// 				return enrollAnyWay(password)
-			// 			}).catch(err => {
-			// 				if (err.toString().includes('"code":0')) {
-			// 					logger.warn(err)
-			// 					const password = fs.readFileSync(passwordFile).toString()
-			//
-			// 					//[[{"code":0,"message":"Identity 'peerF' is already registered"}]]
-			// 					return enrollAnyWay(password)
-			// 				} else {
-			// 					return Promise.reject(err)
-			// 				}
-			// 			})
-			// }).then((user) => {
-			//
-			// 	const channelName = 'delphiChannel'
-			// 	const channel = helper.prepareChannel(channelName, client, true)
-			//
-			// 	const peers = helper.newPeers([0], orgName)
-			// 	const chaincodeId = 'adminChaincode'
-			// 	const fcn = ''
-			// 	const args = []
-			// 	const invoke = require('./invoke-chaincode').invokeChaincode
-			// 	return invoke(channel, peers, chaincodeId, fcn, args).
-			// 			then(require('./invoke-chaincode').reducer).
-			// 			then((result) => {logger.info(result)})
-			// })
-		})
+		return setCAAdmin(client, { orgName, TLS }, intermediateCaService)
 //	TODO do NewUserInvoke on intermediate CA
 
-	}).catch(err => {logger.error(err)})
+	})
+}).catch(err => {logger.error(err)})

@@ -6,7 +6,7 @@ const channelName = 'delphiChannel'
 
 const join = require('./join-channel').joinChannel
 const instantiate = require('./instantiate-chaincode').instantiate
-const installChaincode = require('./install-chaincode').installChaincode
+const installChaincode = require('./install-chaincode').install
 
 const api = require('./configtxlator')
 

@@ -20,18 +20,18 @@ function yamlGolang() {
 	ln -s $(which yaml) /usr/local/bin/yaml
 
 }
-function cn(){
-    if [ ! -f "$CURRENT/common/install.sh" ]; then
+function cn() {
+	if [ ! -f "$CURRENT/common/install.sh" ]; then
 		gitSync
 	fi
-    $CURRENT/common/install.sh cn
-    apt -qq install -y moreutils
+	$CURRENT/common/install.sh cn
+	apt -qq install -y moreutils
 	npm install
 	yamlGolang
 }
-function gitSync(){
-    git pull
-    git submodule update --init --recursive
+function gitSync() {
+	git pull
+	git submodule update --init --recursive
 }
 
 if [ -n "$fcn" ]; then

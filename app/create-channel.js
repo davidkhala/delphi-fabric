@@ -55,4 +55,4 @@ const createChannel = (channelName, channelConfigFile, orgNames) => {
 	})
 }
 
-exports.createChannel = createChannel
+exports.create = createChannel

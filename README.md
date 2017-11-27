@@ -175,5 +175,6 @@ test to run an intermediate CA
 - kafka
 - cooperate with official network_config.json 
 - refactor: use npm:js-yaml to write more nodejs, less linux 
-- chaincode upgrade
+- chaincode version string format
+- chaincode uninstall
 - use path.resolve to replace `${path}/filename` 

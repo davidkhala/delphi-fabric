@@ -12,7 +12,7 @@ const eventHelper = require('./util/eventHub')
  * @param client
  * @return {Promise.<TResult>}
  */
-const invoke = (channel, richPeers, chaincodeId, fcn, args, client = channel._clientContext) => {
+const invoke = (channel, richPeers, { chaincodeId, fcn, args }, client = channel._clientContext) => {
 	logger.debug({ channelName: channel.getName(), peersSize: richPeers.length, chaincodeId, fcn, args })
 	const { eventWaitTime } = channel
 	const txId = client.newTransactionID()
@@ -26,12 +26,16 @@ const invoke = (channel, richPeers, chaincodeId, fcn, args, client = channel._cl
 	}
 	return channel.sendTransactionProposal(request).
 			then(helper.chaincodeProposalAdapter('invoke')).
-			then(({ nextRequest }) => {
+			then(({ nextRequest, errCounter }) => {
+				const { proposalResponses } = nextRequest
 
+				if (errCounter === proposalResponses.length) {
+					return Promise.reject({ proposalResponses })
+				}
 				const promises = []
 
 				for (let peer of richPeers) {
-					const eventhub = helper.bindEventHub(peer,client)
+					const eventhub = helper.bindEventHub(peer, client)
 					const txPromise = eventHelper.txEventPromise(eventhub, { txId, eventWaitTime }, ({ tx, code }) => {
 						return { valid: code === 'VALID', interrupt: true }
 					})
@@ -43,7 +47,7 @@ const invoke = (channel, richPeers, chaincodeId, fcn, args, client = channel._cl
 							Promise.resolve(
 									{
 										txEventResponses: result,
-										proposalResponses: nextRequest.proposalResponses
+										proposalResponses
 									}
 							)
 					)

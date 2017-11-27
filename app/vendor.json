@@ -1,0 +1,49 @@
+{
+  "project": {
+    "title": "Blockchain Hyperledger Demonstration",
+    "stackHolder": ["BU.Delphi.com", "PM.Delphi.com", "ENG.Delphi.com"],
+    "requirement": [
+      "Use of Hyperledger Fabric as the blockchain protocol",
+      "Smart contract / chain code to represent assets and their lifecycle",
+      "Front end to illustrate interactions that connects to the Fabric back end",
+      "Multi channel architecture to leverage privacy",
+      "Use of CA to manage users / identities"
+    ]
+  },
+  "projectUpdate": {
+    "schedule": [
+      {
+        "Installment": 20000,
+        "ID": "protoType",
+        "DeadLine": "Jun 2017"
+      },
+      {
+        "Installment": 5000,
+        "ID": "UI/UX",
+        "DeadLine": "Oct 2017"
+      },
+      {
+        "Installment": 10000,
+        "ID": "UAT",
+        "DeadLine": "DEC 2017"
+      },
+      {
+        "Installment": 20000,
+        "ID": "Intergration Test",
+        "DeadLine": "Jan 2018"
+      },
+      {
+        "Installment": 50000,
+        "ID": "PRD release",
+        "DeadLine": "Jun 2018"
+      },
+      {
+        "Installment": 0,
+        "ID": "Free maintain/support",
+        "DeadLine": "Jun 2019"
+      }
+    ]
+  }
+}
+
+
