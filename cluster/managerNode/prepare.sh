@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-
+set -e
 CURRENT="$(dirname $(readlink -f $BASH_SOURCE))"
 
 root="$(dirname $(dirname $CURRENT))"
@@ -12,7 +12,10 @@ COMPANY="delphi"
 
 # change hostName
 nodeHostName=$1 # "fabric-swarm-manager"
-$ubuntuDir/hostname.sh change $nodeHostName
+if [ -n "$nodeHostName" ];then
+    $ubuntuDir/hostname.sh change $nodeHostName
+fi
+
 
 $root/cluster/prepare.sh
 
@@ -21,7 +24,7 @@ CONFIGTX_nfs="/home/david/Documents/nfs/CONFIGTX"
 MSPROOT_nfs="/home/david/Documents/nfs/MSPROOT"
 
 
-mainNodeID=$(jq -r ".$COMPANY.leaderNode.hostname" $SWARM_CONFIG)
+mainNodeID=$(jq -r ".$COMPANY.leaderNode.hostname" $SWARM_CONFIG) # TODO to query network map server
 
 # NOTE using node labels to fetch directory information
 CONFIGTX_DIR=$($utilsDir/swarm.sh getNodeLabels $mainNodeID | jq -r ".CONFIGTX")
