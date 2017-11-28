@@ -21,4 +21,6 @@ COMPOSE_FILE="$config_dir/docker-compose.yaml"
 if [ -f "$COMPOSE_FILE" ]; then
 	$CURRENT/docker.sh down
 fi
+
+./common/docker/utils/docker.sh pullIfNotExist hyperledger/fabric-ccenv:$IMAGE_TAG
 $CURRENT/config/compose-gen-go.sh $COMPANY $CRYPTO_CONFIG_DIR $BLOCK_FILE -f $COMPOSE_FILE -s $TLS_ENABLED -v $IMAGE_TAG

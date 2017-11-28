@@ -21,15 +21,28 @@ function _gluster() {
 	echo
 
 }
+
+./testBin.sh
 volumesConfig=$(jq -r ".$COMPANY.docker.volumes" $CONFIG_JSON)
 CONFIGTXDir=$(echo $volumesConfig | jq -r ".CONFIGTX.dir")
 MSPROOTDir=$(echo $volumesConfig | jq -r ".MSPROOT.dir")
 
 
 
+### setup nfs-server in host
+./common/ubuntu/nfs.sh exposeHost "$CONFIGTXDir"
+./common/ubuntu/nfs.sh exposeHost "$MSPROOTDir"
+
+./common/ubuntu/nfs.sh startHost
+
 thisHostName=$($CURRENT/common/ubuntu/hostname.sh get)
-$CURRENT/common/docker/utils/swarm.sh addNodeLabels $thisHostName CONFIGTX=$CONFIGTXDir
-$CURRENT/common/docker/utils/swarm.sh addNodeLabels $thisHostName MSPROOT=$MSPROOTDir
-$CURRENT/common/docker/utils/swarm.sh getNodeLabels
+./common/docker/utils/swarm.sh addNodeLabels $thisHostName CONFIGTX=$CONFIGTXDir
+./common/docker/utils/swarm.sh addNodeLabels $thisHostName MSPROOT=$MSPROOTDir
+./common/docker/utils/swarm.sh getNodeLabels
+
+
+./common/docker/utils/docker.sh pullIfNotExist hyperledger/fabric-ccenv:$IMAGE_TAG # FIXME: rethink when to pull cc-env
+
+
 
 $CURRENT/config/swarm-gen-go.sh $COMPANY $CRYPTO_CONFIG_DIR $BLOCK_FILE -s $TLS_ENABLED -v $IMAGE_TAG

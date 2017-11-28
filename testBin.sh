@@ -6,15 +6,15 @@ config_dir="$CURRENT/config"
 CONFIG_JSON=$config_dir/orgs.json
 CRYPTO_CONFIG_FILE="$config_dir/crypto-config.yaml"
 configtx_file="$config_dir/configtx.yaml"
-CRYPTO_CONFIG_DIR="$config_dir/crypto-config/"
+MSPROOT="$config_dir/crypto-config/"
 
 COMPANY='delphi' # must match to config_json
 companyConfig=$(jq ".$COMPANY" $CONFIG_JSON)
 channelsConfig=$(echo $companyConfig | jq ".channels")
-CONFIGTX_OUTPUT_DIR="$config_dir/configtx"
-mkdir -p $CONFIGTX_OUTPUT_DIR
+CONFIGTX_DIR="$config_dir/configtx"
+mkdir -p $CONFIGTX_DIR
 
-BLOCK_FILE="$CONFIGTX_OUTPUT_DIR/$COMPANY.block"
+BLOCK_FILE="$CONFIGTX_DIR/$COMPANY.block"
 
 PROFILE_BLOCK=${COMPANY}Genesis
 VERSION=$(echo $companyConfig | jq -r ".docker.fabricTag")
@@ -33,9 +33,11 @@ else
 fi
 
 node -e "require('./config/crypto-config.js').gen({\"COMPANY\":\"$COMPANY\"})"
-$CURRENT/common/bin-manage/cryptogen/runCryptogen.sh -i "$CRYPTO_CONFIG_FILE" -o "$CRYPTO_CONFIG_DIR"
+$CURRENT/common/bin-manage/cryptogen/runCryptogen.sh -i "$CRYPTO_CONFIG_FILE" -o "$MSPROOT"
 
-chmod 777 -R $CRYPTO_CONFIG_DIR # FIXME: dev only, not for prd
+jq ".$COMPANY.docker.volumes.MSPROOT.dir=\"$MSPROOT\"" $CONFIG_JSON | sponge $CONFIG_JSON
+
+chmod 777 -R $MSPROOT # FIXME: dev only, not for prd
 
 # NOTE IMPORTANT for node-sdk: clean stateDBcacheDir, otherwise cached crypto material will leads to Bad request:
 # TODO more subtle control to do in nodejs
@@ -44,16 +46,17 @@ stateDBCacheDir=$(jq -r '.stateDBCacheDir' $nodeAppConfigJson)
 rm -rf $stateDBCacheDir
 echo clear stateDBCacheDir $stateDBCacheDir
 
-node -e "require('./config/configtx.js').gen({\"COMPANY\":\"$COMPANY\",\"MSPROOT\":\"$CRYPTO_CONFIG_DIR\"})"
+node -e "require('./config/configtx.js').gen({\"COMPANY\":\"$COMPANY\",\"MSPROOT\":\"$MSPROOT\"})"
 
 
 $CURRENT/common/bin-manage/configtxgen/runConfigtxgen.sh block create $BLOCK_FILE -p $PROFILE_BLOCK -i $config_dir
+jq ".$COMPANY.docker.volumes.CONFIGTX.dir=\"$CONFIGTX_DIR\"" $CONFIG_JSON | sponge $CONFIG_JSON
 
 channelNames=$(echo $channelsConfig | jq -r "keys[]")
 for channelName in $channelNames; do
 	channelConfig=$(echo $channelsConfig | jq ".${channelName}")
 	channelFilename=$(echo $channelConfig | jq -r ".file")
-	channelFile="$CONFIGTX_OUTPUT_DIR/$channelFilename"
+	channelFile="$CONFIGTX_DIR/$channelFilename"
 	./common/bin-manage/configtxgen/runConfigtxgen.sh channel create $channelFile -p $channelName -i $config_dir -c ${channelName,,}
     #NOTE Capital char in Channel name is not supported  [channel: delphiChannel] Rejecting broadcast of config message from 172.18.0.1:36954 because of error: initializing configtx manager failed: Bad channel id: channel ID 'delphiChannel' contains illegal characters
 

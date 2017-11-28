@@ -5,7 +5,7 @@
   "delphi": {
     "leaderNode": {
       "hostname": "david-Project",
-      "managerToken": "docker swarm join --token SWMTKN-1-5gqkjonor70whnbfdaegj22g1ot2o5ym2o4g1civxb0jk6afzh-0plt9jlw9s87qc6nwosa3snlb 192.168.0.121:2377",
+      "managerToken": "docker swarm join --token SWMTKN-1-3d14kffp9aorgeesfxsg0d8nnyxjluwj1wyq6veie8ckiqfes3-0trc36azxilwkch9uzq6m5s8o 192.168.0.121:2377",
       "ip": "192.168.0.121"
     },
     "managerNodes": {}
