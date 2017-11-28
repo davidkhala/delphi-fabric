@@ -73,7 +73,7 @@
           {
             "swarm": {
               "constraints": [
-                "node.hostname == ubuntu"
+                "node.hostname == david-Project"
               ]
             },
             "containerName": "BUContainerName",
@@ -91,7 +91,7 @@
           {
             "swarm": {
               "constraints": [
-                "node.hostname == fabric-swarm-manager"
+                "node.hostname == admin-soc"
               ]
             },
             "containerName": "BUContainer1",
@@ -131,7 +131,7 @@
           {
             "swarm": {
               "constraints": [
-                "node.hostname == fabric-swarm-manager"
+                "node.hostname == admin-soc"
               ]
             },
             "containerName": "ENGContainerName",
@@ -171,7 +171,7 @@
           {
             "swarm": {
               "constraints": [
-                "node.hostname == ubuntu"
+                "node.hostname == david-Project"
               ]
             },
             "containerName": "PMContainerName",

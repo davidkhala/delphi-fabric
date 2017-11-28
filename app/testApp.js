@@ -95,5 +95,39 @@ testQuery.chaincodeInstantiate()
 testQuery.channelJoined()
 testQuery.chainHeight()
 
+const testSwarmServer = ()=>{
+    requestPromise({
+        method: 'POST',
+        uri: 'http://localhost:4001/delphi/leader/update',
+        body: {
+            ip:"123", hostname:"232", managerToken:"123"
+        },
+        json: true
+    }).then(result => {
+        logger.debug(result)
+    })
 
+    requestPromise({
+        method: 'POST',
+        uri: 'http://localhost:4001/delphi/manager/join',
+        body: {
+            ip:"123", hostname:"232",
+        },
+        json: true
+    }).then(result => {
+        logger.debug(result)
+    })
 
+    requestPromise({
+        method: 'POST',
+        uri: 'http://localhost:4001/delphi/manager/leave',
+        body: {
+            hostname:"232",
+        },
+        json: true
+    }).then(result => {
+        logger.debug(result)
+    })
+}
+
+testSwarmServer()

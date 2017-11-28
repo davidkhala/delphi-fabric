@@ -177,4 +177,6 @@ test to run an intermediate CA
 - refactor: use npm:js-yaml to write more nodejs, less linux 
 - chaincode version string format
 - chaincode uninstall
-- use path.resolve to replace `${path}/filename` 
+- use path.resolve to replace `${path}/filename`
+- /common/docker/install.sh ::suDocker problem: gpasswd -a $USER docker <The user object here is 'root' when sudo, not the original 'david'>
+- swarm mode : network server to manage ip:hostname and deploy contraints

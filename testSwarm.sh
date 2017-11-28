@@ -27,9 +27,9 @@ MSPROOTDir=$(echo $volumesConfig | jq -r ".MSPROOT.dir")
 
 
 
-thisHostName=$(./common/ubuntu/hostname.sh get)
-./common/docker/utils/swarm.sh addNodeLabels $thisHostName CONFIGTX=$CONFIGTXDir
-./common/docker/utils/swarm.sh addNodeLabels $thisHostName MSPROOT=$MSPROOTDir
-./common/docker/utils/swarm.sh getNodeLabels
+thisHostName=$($CURRENT/common/ubuntu/hostname.sh get)
+$CURRENT/common/docker/utils/swarm.sh addNodeLabels $thisHostName CONFIGTX=$CONFIGTXDir
+$CURRENT/common/docker/utils/swarm.sh addNodeLabels $thisHostName MSPROOT=$MSPROOTDir
+$CURRENT/common/docker/utils/swarm.sh getNodeLabels
 
-./config/swarm-gen-go.sh $COMPANY $CRYPTO_CONFIG_DIR $BLOCK_FILE -s $TLS_ENABLED -v $IMAGE_TAG
+$CURRENT/config/swarm-gen-go.sh $COMPANY $CRYPTO_CONFIG_DIR $BLOCK_FILE -s $TLS_ENABLED -v $IMAGE_TAG
