@@ -23,7 +23,8 @@ $root/cluster/prepare.sh
 CONFIGTX_nfs="/home/david/Documents/nfs/CONFIGTX"
 MSPROOT_nfs="/home/david/Documents/nfs/MSPROOT"
 
-
+mkdir -p $CONFIGTX_nfs
+mkdir -p $MSPROOT_nfs
 mainNodeID=$(jq -r ".$COMPANY.leaderNode.hostname" $SWARM_CONFIG) # TODO to query network map server
 
 # NOTE using node labels to fetch directory information
@@ -32,12 +33,14 @@ CONFIGTX_DIR=$($utilsDir/swarm.sh getNodeLabels $mainNodeID | jq -r ".CONFIGTX")
 MSPROOT_DIR=$($utilsDir/swarm.sh getNodeLabels $mainNodeID | jq -r ".MSPROOT")
 thisIP=$($utilsDir/swarm.sh getNodeIP $mainNodeID)
 if [ ! "$MSPROOT_DIR" == "null" ]; then
+    echo mountClient $MSPROOT_nfs $thisIP $MSPROOT_DIR
 	$ubuntuDir/nfs.sh mountClient $MSPROOT_nfs $thisIP $MSPROOT_DIR
 else
 	echo label MSPROOT_DIR not exist in node $mainNodeID . exit
 	exit 1
 fi
 if [ ! "$CONFIGTX_DIR" == "null" ]; then
+    echo mountClient $CONFIGTX_nfs $thisIP $CONFIGTX_DIR
 	$ubuntuDir/nfs.sh mountClient $CONFIGTX_nfs $thisIP $CONFIGTX_DIR
 else
 	echo label CONFIGTX_DIR not exist in node $mainNodeID . exit
