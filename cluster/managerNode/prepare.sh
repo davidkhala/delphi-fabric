@@ -32,13 +32,13 @@ CONFIGTX_DIR=$($utilsDir/swarm.sh getNodeLabels $mainNodeID | jq -r ".CONFIGTX")
 MSPROOT_DIR=$($utilsDir/swarm.sh getNodeLabels $mainNodeID | jq -r ".MSPROOT")
 thisIP=$($utilsDir/swarm.sh getNodeIP $mainNodeID)
 if [ ! "$MSPROOT_DIR" == "null" ]; then
-	$ubuntuDir/nfs.sh mount $MSPROOT_nfs $thisIP $MSPROOT_DIR
+	$ubuntuDir/nfs.sh mountClient $MSPROOT_nfs $thisIP $MSPROOT_DIR
 else
 	echo label MSPROOT_DIR not exist in node $mainNodeID . exit
 	exit 1
 fi
 if [ ! "$CONFIGTX_DIR" == "null" ]; then
-	$ubuntuDir/nfs.sh mount $CONFIGTX_nfs $thisIP $CONFIGTX_DIR
+	$ubuntuDir/nfs.sh mountClient $CONFIGTX_nfs $thisIP $CONFIGTX_DIR
 else
 	echo label CONFIGTX_DIR not exist in node $mainNodeID . exit
 	exit 1
