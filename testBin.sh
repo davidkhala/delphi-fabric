@@ -32,7 +32,7 @@ else
 	npm install fabric-ca-client@$VERSION --save --save-exact
 fi
 
-$CURRENT/config/crypto-config-gen-go.sh $COMPANY -i $CRYPTO_CONFIG_FILE
+node -e "require('./config/crypto-config.js').gen({\"COMPANY\":\"$COMPANY\"})"
 $CURRENT/common/bin-manage/cryptogen/runCryptogen.sh -i "$CRYPTO_CONFIG_FILE" -o "$CRYPTO_CONFIG_DIR"
 
 chmod 777 -R $CRYPTO_CONFIG_DIR # FIXME: dev only, not for prd
@@ -44,7 +44,8 @@ stateDBCacheDir=$(jq -r '.stateDBCacheDir' $nodeAppConfigJson)
 rm -rf $stateDBCacheDir
 echo clear stateDBCacheDir $stateDBCacheDir
 
-$CURRENT/config/configtx-gen-go.sh $COMPANY $CRYPTO_CONFIG_DIR -i $configtx_file -b $PROFILE_BLOCK
+node -e "require('./config/configtx.js').gen({\"COMPANY\":\"$COMPANY\",\"MSPROOT\":\"$CRYPTO_CONFIG_DIR\"})"
+
 
 $CURRENT/common/bin-manage/configtxgen/runConfigtxgen.sh block create $BLOCK_FILE -p $PROFILE_BLOCK -i $config_dir
 

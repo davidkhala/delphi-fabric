@@ -1,27 +1,27 @@
-OrdererOrgs:
-- Name: OrdererCrytoName
-  Domain: Delphi.com
-  Specs:
-  - Hostname: orderContainerName
 PeerOrgs:
-- Name: BU
-  Domain: BU.Delphi.com
-  Template:
-    Count: 2
-    Start: 0
-  Users:
-    Count: 0
-- Name: ENG
-  Domain: ENG.Delphi.com
-  Template:
-    Count: 1
-    Start: 0
-  Users:
-    Count: 0
-- Name: PM
-  Domain: PM.Delphi.com
-  Template:
-    Count: 1
-    Start: 0
-  Users:
-    Count: 0
+  - Name: BU
+    Domain: BU.Delphi.com
+    Template:
+      Start: 0
+      Count: 2
+    Users:
+      Count: 0
+  - Name: ENG
+    Domain: ENG.Delphi.com
+    Template:
+      Start: 0
+      Count: 1
+    Users:
+      Count: 0
+  - Name: PM
+    Domain: PM.Delphi.com
+    Template:
+      Start: 0
+      Count: 1
+    Users:
+      Count: 0
+OrdererOrgs:
+  - Name: OrdererCrytoName
+    Domain: Delphi.com
+    Specs:
+      - Hostname: orderContainerName

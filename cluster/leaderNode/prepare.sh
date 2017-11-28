@@ -12,6 +12,7 @@ if ! ip addr show | grep "inet ${advertiseAddr}";then
     ip addr show | grep "inet "
     exit 1
 fi
+### setup swarm
 utilsDir=$root/common/docker/utils
 $utilsDir/swarm.sh create $advertiseAddr
 $utilsDir/swarm.sh view
@@ -26,5 +27,4 @@ jq ".$COMPANY.leaderNode.ip=\"${advertiseAddr}\"" $SWARM_CONFIG | sponge $SWARM_
 
 
 $root/cluster/prepare.sh
-$root/testBin.sh
-$root/testSwarm.sh
+
