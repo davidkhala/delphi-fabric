@@ -30,7 +30,7 @@ const invoke = (channel, richPeers, { chaincodeId, fcn, args }, client = channel
 				const { proposalResponses } = nextRequest
 
 				if (errCounter === proposalResponses.length) {
-					return Promise.reject( {proposalResponses} )
+					return Promise.reject({ proposalResponses })
 				}
 				const promises = []
 
@@ -60,4 +60,19 @@ exports.invokeChaincode = invoke
 
 exports.reducer = ({ proposalResponses }) =>
 		proposalResponses.map((entry) => entry.response.payload.toString())
-//TODO import query.js
+const query = (channel, peers, { chaincodeId, fcn, args }, client = channel._clientContext) => {
+	logger.debug('query',{ channelName: channel.getName(), peersSize: peers.length, chaincodeId, fcn, args })
+	const txId = client.newTransactionID()
+
+	const request = {
+		chaincodeId,
+		fcn,
+		args,
+		txId,
+		targets: peers //optional: use channel.getPeers() as default
+	}
+
+	return channel.queryByChaincode(request).then(results=>results.map(e=>e.toString()))
+
+}
+exports.query = query

@@ -290,16 +290,18 @@ func (t *SimpleChaincode) progress(chain shim.ChaincodeStubInterface, args []str
 // Query callback representing the query of a chaincode
 func (t *SimpleChaincode) read(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 
-	if len(args) < 2 {
+	if len(args) < 1 {
 		return shim.Error("no query target specified")
 	}
-	target := args[1]
+	target := args[0]
+	logger.Info("target",target)
 	switch target {
 	case "project":
-		if len(args) < 3 {
+		if len(args) < 2 {
 			return shim.Error("no project title specified")
 		}
-		projectTitle := args[2]
+		projectTitle := args[1]
+		logger.Info("title",projectTitle)
 		project, _ := stub.GetState(projectTitle)
 		return shim.Success(project)
 	}

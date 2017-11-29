@@ -117,7 +117,8 @@ const errorSyntaxHandle = (err, res) => {
 	}
 
 	if (err.toString().includes('NOT_FOUND') || err.toString().includes('could not find')
-			|| err.toString().includes('no such file or directory')) {
+			|| err.toString().includes('no such file or directory')
+			|| err.toString().includes('not found')) {
 		res.status(404)
 	}
 	if (err.toString().includes('Connect Failed') || err.toString().includes('Service Unavailable')) {
