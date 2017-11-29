@@ -56,11 +56,14 @@ exports.instantiate = (
 					}
 					return { isValid: false, isSwallowed: false }
 				})).
-				then(({ swallowCounter, nextRequest }) => {
+				then(({ errCounter, swallowCounter, nextRequest }) => {
 					const { proposalResponses } = nextRequest
 
+					if (errCounter === proposalResponses.length) {
+						return Promise.reject({ proposalResponses })
+					}
 					if (swallowCounter === proposalResponses.length) {
-						return Promise.resolve(proposalResponses)
+						return Promise.resolve({ proposalResponses })
 					}
 
 					const promises = []

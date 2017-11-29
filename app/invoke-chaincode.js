@@ -30,7 +30,7 @@ const invoke = (channel, richPeers, { chaincodeId, fcn, args }, client = channel
 				const { proposalResponses } = nextRequest
 
 				if (errCounter === proposalResponses.length) {
-					return Promise.reject({ proposalResponses })
+					return Promise.reject( {proposalResponses} )
 				}
 				const promises = []
 

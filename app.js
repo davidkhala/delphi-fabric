@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 'use strict'
-const logger = require('./app/util/logger').new('SampleWebApp')
+const logger = require('./app/util/logger').new('express API')
 const express = require('express')
 const bodyParser = require('body-parser')
 const http = require('http')
@@ -36,7 +36,7 @@ const joinChannel = require('./app/join-channel').joinChannel
 const Query = require('./app/query')
 const install = require('./app/install-chaincode.js').install
 const instantiate = require('./app/instantiate-chaincode.js').instantiate
-const invoke = require('./app/invoke-chaincode.js').invokeChaincode
+const { invokeChaincode: invoke, reducer } = require('./app/invoke-chaincode.js')
 const host = config.host
 const port = config.port
 ///////////////////////////////////////////////////////////////////////////////
@@ -112,13 +112,17 @@ const errorSyntaxHandle = (err, res) => {
 	if (err.toString().includes('FORBIDDEN')) {
 		res.status(403)
 	}
-	if(err.toString().includes('Failed to deserialize creator identity')){
+	if (err.toString().includes('Failed to deserialize creator identity')) {
 		res.status(401)
 	}
-	if(err.toString().includes("NOT_FOUND")){
+
+	if (err.toString().includes('NOT_FOUND') || err.toString().includes('could not find')
+			|| err.toString().includes('no such file or directory')) {
 		res.status(404)
 	}
-
+	if (err.toString().includes('Connect Failed') || err.toString().includes('Service Unavailable')) {
+		res.status(503)
+	}
 
 	res.send(err.toString())
 }
@@ -216,7 +220,12 @@ app.post('/chaincode/instantiate/:chaincodeId', (req, res) => {
 		}).then((message) => {
 			res.send(message)
 		}).catch(err => {
-			errorSyntaxHandle(err, res)
+			const { proposalResponses } = err
+			if (proposalResponses) {
+				errorSyntaxHandle(proposalResponses, res)
+			} else {
+				errorSyntaxHandle(err, res)
+			}
 		})
 	})
 
@@ -240,9 +249,25 @@ app.post('/chaincode/invoke/:chaincodeId', (req, res) => {
 			chaincodeId, fcn,
 			args: JSON.parse(args)
 		}).then((message) => {
-			res.send(message)
+			const payloads = reducer(message)
+			res.json({
+				req: {
+					chaincodeId,
+					fcn,
+					channelName,
+					orgName,
+					peerIndex,
+					args
+				},
+				payloads
+			})
 		}).catch(err => {
-			errorSyntaxHandle(err, res)
+			const { proposalResponses } = err
+			if (proposalResponses) {
+				errorSyntaxHandle(proposalResponses, res)
+			} else {
+				errorSyntaxHandle(err, res)
+			}
 		})
 	})
 
@@ -262,8 +287,7 @@ app.post('/query/block/height/:blockNumber', (req, res) => {
 		const peer = helper.newPeers([peerIndex], orgName)[0]
 		return Query.block.height(peer, channel, blockNumber).then((message) => {
 			res.send(message)
-		})
-		.catch(err => {
+		}).catch(err => {
 			errorSyntaxHandle(err, res)
 		})
 	})
@@ -281,8 +305,7 @@ app.post('/query/block/hash', (req, res) => {
 		const channel = helper.prepareChannel(channelName, client)
 		return Query.block.hash(peer, channel, Buffer.from(hashHex, 'hex')).then((message) => {
 			res.send(message)
-		})
-		.catch(err => {
+		}).catch(err => {
 			errorSyntaxHandle(err, res)
 		})
 	})
@@ -300,8 +323,7 @@ app.post('/query/tx', (req, res) => {
 		const peer = helper.newPeers([peerIndex], orgName)[0]
 		return Query.tx(peer, channel, txId).then((message) => {
 			res.send(message)
-		})
-		.catch(err => {
+		}).catch(err => {
 			errorSyntaxHandle(err, res)
 		})
 	})
@@ -330,8 +352,7 @@ app.post('/query/chain', (req, res) => {
 					}
 					//npm long:to parse{ low: 4, high: 0, unsigned: true }
 					res.send(message)
-				})
-		.catch(err => {
+				}).catch(err => {
 			errorSyntaxHandle(err, res)
 		})
 	})
@@ -339,6 +360,7 @@ app.post('/query/chain', (req, res) => {
 })
 // Query to fetch all Installed/instantiated chaincodes
 app.post('/query/chaincodes/installed', (req, res) => {
+	logger.debug('==================== query installed CHAINCODE ==================')
 	const { orgName, peerIndex } = req.body
 	logger.debug({ orgName, peerIndex })
 	const client = helper.getClient()
@@ -349,12 +371,12 @@ app.post('/query/chaincodes/installed', (req, res) => {
 		return Query.chaincodes.installed(peer, client).then((message) => {
 			res.send(message)
 		})
-	})
-	.catch(err => {
+	}).catch(err => {
 		errorSyntaxHandle(err, res)
 	})
 })
 app.post('/query/chaincodes/instantiated', (req, res) => {
+	logger.debug('==================== query instantiated CHAINCODE ==================')
 	const { orgName, peerIndex, channelName } = req.body
 	logger.debug({ orgName, peerIndex, channelName })
 	const client = helper.getClient()
@@ -365,14 +387,13 @@ app.post('/query/chaincodes/instantiated', (req, res) => {
 		return Query.chaincodes.instantiated(peer, channel).then((message) => {
 			res.send(message)
 		})
-	})
-	.catch(err => {
+	}).catch(err => {
 		errorSyntaxHandle(err, res)
 	})
 })
 // Query to fetch channels
 app.post('/query/channelJoined', (req, res) => {
-	logger.debug('================ GET CHANNELS ======================')
+	logger.debug('================ query joined CHANNELS ======================')
 	const { orgName, peerIndex } = req.body
 	logger.debug({ orgName, peerIndex })
 	if (invalid.peer(res, { peerIndex, orgName })) return
@@ -383,8 +404,8 @@ app.post('/query/channelJoined', (req, res) => {
 				message) => {
 			res.send(message)
 		})
-	})
-	.catch(err => {
+	}).catch(err => {
 		errorSyntaxHandle(err, res)
 	})
 })
+//TODO ping docker container
