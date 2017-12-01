@@ -94,7 +94,7 @@ const testInvoke = () => {
 		const fcn = ''
 		const args = []
 		return invoke(channel, peers, {chaincodeId, fcn, args}).
-				then(require('./invoke-chaincode').reducer).
+				then(require('./util/chaincode').reducer).
 				then((result) => {logger.info(result)})
 	}).catch(err => {
 		if (err.toString().includes('Failed to deserialize creator identity')) {

@@ -1,7 +1,7 @@
 const helper = require('./helper.js')
 const logger = require('./util/logger').new('invoke-chaincode')
 const eventHelper = require('./util/eventHub')
-
+const {resultWrapper}  = require('./util/chaincode')
 /**
  *
  * @param channel
@@ -29,7 +29,7 @@ const invoke = (channel, richPeers, { chaincodeId, fcn, args }, client = channel
 			then(({ nextRequest, errCounter }) => {
 				const { proposalResponses } = nextRequest
 
-				if (errCounter === proposalResponses.length) {
+				if (errCounter >0) {
 					return Promise.reject({ proposalResponses })
 				}
 				const promises = []
@@ -43,13 +43,8 @@ const invoke = (channel, richPeers, { chaincodeId, fcn, args }, client = channel
 				}
 
 				return channel.sendTransaction(nextRequest).then((/*{ status: 'SUCCESS' }*/) => {
-					return Promise.all(promises).then((result) =>
-							Promise.resolve(
-									{
-										txEventResponses: result,
-										proposalResponses
-									}
-							)
+					return Promise.all(promises).then((txEventResponses) =>
+							resultWrapper(txEventResponses,{proposalResponses})
 					)
 				})
 			})
@@ -58,8 +53,6 @@ const invoke = (channel, richPeers, { chaincodeId, fcn, args }, client = channel
 
 exports.invokeChaincode = invoke
 
-exports.reducer = ({ proposalResponses }) =>
-		proposalResponses.map((entry) => entry.response.payload.toString())
 const query = (channel, peers, { chaincodeId, fcn, args }, client = channel._clientContext) => {
 	logger.debug('query',{ channelName: channel.getName(), peersSize: peers.length, chaincodeId, fcn, args })
 	const txId = client.newTransactionID()

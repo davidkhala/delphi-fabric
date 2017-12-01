@@ -29,7 +29,7 @@ const install = (peers, { chaincodeId, chaincodePath, chaincodeVersion }, client
 		return { isValid: false, isSwallowed: false }
 	})).then((result) => {
 		const { errCounter, nextRequest: { proposalResponses } } = result
-		if (errCounter === proposalResponses.length) {
+		if (errCounter > 0) {
 			return Promise.reject(proposalResponses)
 		} else {
 			return Promise.resolve(result)

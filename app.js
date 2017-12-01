@@ -22,6 +22,7 @@ const path = require('path')
 const fs = require('fs')
 const app = express()
 const cors = require('cors')
+const WebSocket = require('ws')
 const config = require('./app/config.json')
 const companyConfig = require('./config/orgs.json').delphi
 const channelsConfig = companyConfig.channels
@@ -35,8 +36,9 @@ const joinChannel = require('./app/join-channel').joinChannel
 
 const Query = require('./app/query')
 const install = require('./app/install-chaincode.js').install
-const instantiate = require('./app/instantiate-chaincode.js').instantiate
-const { invokeChaincode: invoke, reducer } = require('./app/invoke-chaincode.js')
+const { instantiate, upgrade } = require('./app/instantiate-chaincode.js')
+const { reducer } = require('./app/util/chaincode')
+const { invokeChaincode: invoke } = require('./app/invoke-chaincode.js')
 const host = config.host
 const port = config.port
 ///////////////////////////////////////////////////////////////////////////////
@@ -60,72 +62,270 @@ logger.info('**************  http://' + host + ':' + port +
 		'  ******************')
 server.timeout = 240000
 
-const getErrorMessage = (message) => {
-	return {
-		success: false,
-		message
+const wss = new WebSocket.Server({ server })
+
+wss.on('connection', (ws, req) => {
+	const url = require('url')
+
+	const location = url.parse(req.url, true)
+	// You might use location.query.access_token to authenticate or share sessions
+	// or req.headers.cookie (see http://stackoverflow.com/a/16395220/151312)
+
+	const pathSplit = location.path.split('/')
+	console.log(pathSplit)
+	//[ '', 'chaincode', 'invoke', 'vendorChaincode' ]
+	let messageCB = (message) => {
+		console.log('received: %s', message)
+		ws.send(JSON.stringify({ data: 'pong', status: 200 }), (err) => {
+			if (err) {
+				console.error(err)
+			}
+		})
 	}
-}
+	const sendError = (error) => {
+		ws.send(JSON.stringify({ data: error, status: 400 }), (err) => {
+			if (err) {
+				console.error(err)
+			}
+		})
+	}
+
+	if (pathSplit.length === 4) {
+		switch (pathSplit[1]) {
+			case 'chaincode':
+				const chaincodeId = pathSplit[3]
+				const invalidChaincodeId = invalid.chaincodeId({ chaincodeId })
+				if (invalidChaincodeId) return sendError(invalidChaincodeId)
+				switch (pathSplit[2]) {
+					case 'invoke':
+						messageCB = (message) => {
+							logger.debug('==================== INVOKE CHAINCODE ==================')
+							const { fcn, args: argsString, orgName, peerIndex, channelName } = JSON.parse(message)
+							const args = JSON.parse(argsString)
+							logger.debug({ chaincodeId, fcn, args, orgName, peerIndex, channelName })
+							const invalidPeer = invalid.peer({ peerIndex, orgName })
+							if (invalidPeer) return sendError(invalidPeer)
+
+							const invalidChannelName = invalid.channelName({ channelName })
+							if (invalidChannelName) return sendError(invalidChannelName)
+
+							const invalidArgs = invalid.args({ args })
+							if (invalidArgs) return sendError(invalidArgs)
+
+							const client = helper.getClient()
+							helper.getOrgAdmin(orgName, client).then(() => {
+								const channel = helper.prepareChannel(channelName, client)
+								const peers = helper.newPeers([peerIndex], orgName)
+								return invoke(channel, peers, {
+									chaincodeId, fcn,
+									args
+								}).then((message) => {
+									const data = reducer(message)
+									const sendContent = JSON.stringify({ data:data.responses, status: 200 })
+									ws.send(sendContent, (err) => {
+										if (err) {
+											logger.error(err)
+										}
+									})
+
+								}).catch(err => {
+									logger.error(err)
+									const { proposalResponses } = err
+									if (proposalResponses) {
+										ws.send(webSocketErrorFormat(proposalResponses), err => {
+											if (err) {
+												logger.error(err)
+											}
+										})
+									} else {
+										ws.send(webSocketErrorFormat(err), err => {
+											if (err) {
+												logger.error(err)
+											}
+										})
+									}
+								})
+							})
+
+						}
+						break
+					case 'instantiate':
+						messageCB = (message) => {
+							logger.debug('==================== INSTANTIATE CHAINCODE ==================')
+
+							const { chaincodeVersion, channelName, fcn, args: argsString, peerIndex, orgName } = JSON.parse(message)
+							const args = JSON.parse(argsString)
+							logger.debug({ channelName, chaincodeId, chaincodeVersion, fcn, args, peerIndex, orgName })
+							const invalidPeer = invalid.peer({ orgName, peerIndex })
+							if (invalidPeer) return sendError(invalidPeer)
+
+							const invalidChannelName = invalid.channelName({ channelName })
+							if (invalidChannelName) return sendError(invalidChannelName)
+
+							const invalidArgs = invalid.args({ args })
+							if (invalidArgs) return sendError(invalidArgs)
+							const client = helper.getClient()
+							return helper.getOrgAdmin(orgName, client).then(() => {
+								const channel = helper.prepareChannel(channelName, client)
+								const peers = helper.newPeers([peerIndex], orgName) // FIXME :trick here
+								return instantiate(channel, peers, {
+									chaincodeId, chaincodeVersion, fcn,
+									args
+								}).then((_) => {
+									const sendContent = JSON.stringify({ data:`instantiate request has been processed successfully with ${message}`, status: 200 })
+									ws.send(sendContent, (err) => {
+										if (err) {
+											logger.error(err)
+										}
+									})
+								}).catch(err => {
+									const { proposalResponses } = err
+									if (proposalResponses) {
+										ws.send(webSocketErrorFormat(proposalResponses), err => {
+											if (err) {
+												logger.error(err)
+											}
+										})
+									} else {
+										ws.send(webSocketErrorFormat(err), err => {
+											if (err) {
+												logger.error(err)
+											}
+										})
+									}
+								})
+							})
+						}
+						break
+					case 'upgrade':
+						messageCB = (message) => {
+							logger.debug('==================== upgrade CHAINCODE ==================')
+
+							const { chaincodeVersion, channelName, fcn, args: argsString, peerIndex, orgName } = JSON.parse(message)
+							const args = JSON.parse(argsString)
+							logger.debug({ channelName, chaincodeId, chaincodeVersion, fcn, args, peerIndex, orgName })
+							const invalidPeer = invalid.peer({ orgName, peerIndex })
+							if (invalidPeer) return sendError(invalidPeer)
+							const invalidChannelName = invalid.channelName({ channelName })
+							if (invalidChannelName) return sendError(invalidChannelName)
+
+							const invalidArgs = invalid.args({ args })
+							if (invalidArgs) return sendError(invalidArgs)
+							const client = helper.getClient()
+							helper.getOrgAdmin(orgName, client).then(() => {
+								const channel = helper.prepareChannel(channelName, client)
+								const peers = helper.newPeers([peerIndex], orgName) // FIXME :trick here
+								return upgrade(channel, peers, {
+									chaincodeId, chaincodeVersion, fcn,
+									args
+								}).then((_) => {
+									const sendContent = JSON.stringify({ data:`upgrade request has been processed successfully with ${message}`, status: 200 })
+									ws.send(sendContent, (err) => {
+										if (err) {
+											logger.error(err)
+										}
+									})
+								}).catch(err => {
+									const { proposalResponses } = err
+									if (proposalResponses) {
+										ws.send(webSocketErrorFormat(proposalResponses), err => {
+											if (err) {
+												logger.error(err)
+											}
+										})
+									} else {
+										ws.send(webSocketErrorFormat(err), err => {
+											if (err) {
+												logger.error(err)
+											}
+										})
+									}
+								})
+							})
+						}
+
+						break
+					default:
+
+				}
+				break
+			default:
+		}
+	}
+
+	ws.on('message', messageCB)
+
+})
+
 const invalid = {
-	orgName: (res, { orgName }) => {
+	orgName: ({ orgName }) => {
 		const orgConfig = orgsConfig[orgName]
 		if (!orgConfig) {
-			res.json(getErrorMessage(`config of org '${orgName}' not found`))
-			return true
+			return `config of org '${orgName}' not found`
 		}
 		return false
 	},
-	channelName: (res, { channelName }) => {
+	channelName: ({ channelName }) => {
 		const channelConfig = channelsConfig[channelName]
 		if (!channelConfig) {
-			res.json(getErrorMessage(`config of channel '${channelName}' not found`))
-			return true
+			return `config of channel '${channelName}' not found`
 		}
 		return false
 	},
-	peer: (res, { orgName, peerIndex }) => {
-		if (invalid.orgName(res, { orgName })) return true
+	peer: ({ orgName, peerIndex }) => {
+		const invalidOrgname = invalid.orgName({ orgName })
+		if (invalidOrgname) return invalidOrgname
 		const orgConfig = orgsConfig[orgName]
 		const peerConfig = orgConfig.peers[peerIndex]
 		if (!peerConfig) {
-			res.json(getErrorMessage(`config of peer${peerIndex}.${orgName} not found`))
-			return true
+			return `config of peer${peerIndex}.${orgName} not found`
 		}
 		return false
 	},
-	chaincodeVersion: (res, { chaincodeVersion }) => {
+	args: ({ args }) => {
+		if (!Array.isArray(args)) {
+			return `Arguments must be an array but got:${args}`
+		}
+		return false
+	},
+	chaincodeVersion: ({ chaincodeVersion }) => {
 		//TODO
 	},
-	chaincodeId: (res, { chaincodeId }) => {
+	chaincodeId: ({ chaincodeId }) => {
 		const chaincodeConfig = chaincodesConfig.chaincodes[chaincodeId]
 		if (!chaincodeConfig) {
-			res.json(getErrorMessage(`config of chaincode ${chaincodeId} not found`))
-			return true
+			return `config of chaincode ${chaincodeId} not found`
 		}
 		return false
 	}
 }
+const errorCodeMap = {
+	'BAD_REQUEST': 400,
+	'FORBIDDEN': 403,
+	'Failed to deserialize creator identity': 401,
+	'NOT_FOUND': 404,
+	'could not find': 404,
+	'no such file or directory': 404,
+	'not found': 404,
+	'Connect Failed': 503,
+	'Service Unavailable': 503
+
+}
 const errorSyntaxHandle = (err, res) => {
-	if (err.toString().includes('BAD_REQUEST')) {
-		res.status(400)
+	const { data, status } = JSON.parse(webSocketErrorFormat(err))
+	res.status(status)
+	res.send(data)
+}
+const webSocketErrorFormat = (err) => {
+	let status = 500
+	for (let errorMessage in errorCodeMap) {
+		if (err.toString().includes(errorMessage)) {
+			status = errorCodeMap[errorMessage]
+			break
+		}
 	}
-	if (err.toString().includes('FORBIDDEN')) {
-		res.status(403)
-	}
-	if (err.toString().includes('Failed to deserialize creator identity')) {
-		res.status(401)
-	}
+	return JSON.stringify({ data: err.toString(), status })
 
-	if (err.toString().includes('NOT_FOUND') || err.toString().includes('could not find')
-			|| err.toString().includes('no such file or directory')
-			|| err.toString().includes('not found')) {
-		res.status(404)
-	}
-	if (err.toString().includes('Connect Failed') || err.toString().includes('Service Unavailable')) {
-		res.status(503)
-	}
-
-	res.send(err.toString())
 }
 
 // Create Channel
@@ -135,8 +335,16 @@ app.post('/channel/create/:channelName', (req, res) => {
 	const { channelName } = req.params
 	const { orgName } = req.body
 
-	if (invalid.channelName(res, { channelName })) return
-	if (invalid.orgName(res, { orgName })) return
+	const invalidChannelName = invalid.channelName({ channelName })
+	if (invalidChannelName) {
+		res.send(invalidChannelName)
+		return
+	}
+	const invalidOrgName = invalid.orgName({ orgName })
+	if (invalidOrgName) {
+		res.send(invalidOrgName)
+		return
+	}
 	const channelFileName = channelsConfig[channelName].file
 	const channelConfigFile = path.resolve(CONFIGTXDir, channelFileName)
 	logger.debug({ orgName, channelName, channelConfigFile })
@@ -149,6 +357,7 @@ app.post('/channel/create/:channelName', (req, res) => {
 	createChannel(channelName, channelConfigFile, [orgName]).then((message) => {
 		res.send(`channel ${channelName} created successfully by ${orgName} with configuration in ${channelConfigFile}`)
 	}).catch(err => {
+		logger.error(err)
 		errorSyntaxHandle(err, res)
 	})
 })
@@ -157,11 +366,20 @@ app.post('/channel/join/:channelName', (req, res) => {
 	logger.info('<<<<<<<<<<<<<<<<< J O I N  C H A N N E L >>>>>>>>>>>>>>>>>')
 	const { channelName } = req.params
 
-	if (invalid.channelName(res, { channelName })) return
+	const invalidChannelName = invalid.channelName({ channelName })
+	if (invalidChannelName) {
+		res.send(invalidChannelName)
+		return
+	}
+
 	const { orgName, peerIndex } = req.body
 	logger.debug({ channelName, orgName, peerIndex })
 
-	if (invalid.peer(res, { orgName, peerIndex })) return
+	const invalidPeer = invalid.peer({ orgName, peerIndex })
+	if (invalidPeer) {
+		res.send(invalidPeer)
+		return
+	}
 
 	const peers = helper.newPeers([peerIndex], orgName)
 
@@ -182,8 +400,16 @@ app.post('/chaincode/install/:chaincodeId', (req, res) => {
 	const { chaincodeId } = req.params
 	const { peerIndex, chaincodeVersion, orgName } = req.body
 
-	if (invalid.chaincodeId(res, { chaincodeId })) return
-	if (invalid.peer(res, { orgName, peerIndex })) return
+	const invalidChaincodeId = invalid.chaincodeId({ chaincodeId })
+	if (invalidChaincodeId) {
+		res.send(invalidChaincodeId)
+		return
+	}
+	const invalidPeer = invalid.peer({ orgName, peerIndex })
+	if (invalidPeer) {
+		res.send(invalidPeer)
+		return
+	}
 	const chaincodeConfig = chaincodesConfig.chaincodes[chaincodeId]
 	const chaincodePath = chaincodeConfig.path
 
@@ -201,85 +427,17 @@ app.post('/chaincode/install/:chaincodeId', (req, res) => {
 	})
 
 })
-// Instantiate chaincode on target peers
-app.post('/chaincode/instantiate/:chaincodeId', (req, res) => {
-	logger.debug('==================== INSTANTIATE CHAINCODE ==================')
-	const { chaincodeId } = req.params
-
-	const { chaincodeVersion, channelName, fcn, args, peerIndex, orgName } = req.body
-	logger.debug({ channelName, chaincodeId, chaincodeVersion, fcn, args })
-	if (invalid.peer(res, { peerIndex, orgName })) return
-	if (invalid.chaincodeId(res, { chaincodeId })) return
-	if (invalid.channelName(res, { channelName })) return
-	const client = helper.getClient()
-	helper.getOrgAdmin(orgName, client).then(() => {
-		const channel = helper.prepareChannel(channelName, client)
-		const peers = helper.newPeers([peerIndex], orgName)
-		return instantiate(channel, peers, {
-			chaincodeId, chaincodeVersion, fcn,
-			args: JSON.parse(args)
-		}).then((message) => {
-			res.send(message)
-		}).catch(err => {
-			const { proposalResponses } = err
-			if (proposalResponses) {
-				errorSyntaxHandle(proposalResponses, res)
-			} else {
-				errorSyntaxHandle(err, res)
-			}
-		})
-	})
-
-})
-// Invoke transaction on chaincode on target peers
-app.post('/chaincode/invoke/:chaincodeId', (req, res) => {
-	logger.debug('==================== INVOKE ON CHAINCODE ==================')
-	const { chaincodeId } = req.params
-	const { fcn, args, orgName, peerIndex, channelName } = req.body
-
-	logger.debug({ chaincodeId, fcn, args, orgName, peerIndex, channelName })
-	if (invalid.peer(res, { peerIndex, orgName })) return
-	if (invalid.chaincodeId(res, { chaincodeId })) return
-	if (invalid.channelName(res, { channelName })) return
-
-	const client = helper.getClient()
-	helper.getOrgAdmin(orgName, client).then(() => {
-		const channel = helper.prepareChannel(channelName, client)
-		const peers = helper.newPeers([peerIndex], orgName)
-		return invoke(channel, peers, {
-			chaincodeId, fcn,
-			args: JSON.parse(args)
-		}).then((message) => {
-			const payloads = reducer(message)
-			res.json({
-				req: {
-					chaincodeId,
-					fcn,
-					channelName,
-					orgName,
-					peerIndex,
-					args
-				},
-				payloads
-			})
-		}).catch(err => {
-			const { proposalResponses } = err
-			if (proposalResponses) {
-				errorSyntaxHandle(proposalResponses, res)
-			} else {
-				errorSyntaxHandle(err, res)
-			}
-		})
-	})
-
-})
 //  Query Get Block by BlockNumber
 app.post('/query/block/height/:blockNumber', (req, res) => {
 	logger.debug('==================== GET BLOCK BY NUMBER ==================')
 	const { blockNumber } = req.params
 	const { peerIndex, orgName, channelName } = req.body
 
-	if (invalid.peer(res, { peerIndex, orgName })) return
+	const invalidPeer = invalid.peer({ orgName, peerIndex })
+	if (invalidPeer) {
+		res.send(invalidPeer)
+		return
+	}
 	logger.debug({ blockNumber, peerIndex, orgName, channelName })
 
 	const client = helper.getClient()
@@ -299,7 +457,11 @@ app.post('/query/block/hash', (req, res) => {
 	logger.debug('================ GET BLOCK BY HASH ======================')
 	const { hashHex, peerIndex, orgName, channelName } = req.body
 	logger.debug({ hashHex, peerIndex, orgName, channelName })
-	if (invalid.peer(res, { peerIndex, orgName })) return
+	const invalidPeer = invalid.peer({ orgName, peerIndex })
+	if (invalidPeer) {
+		res.send(invalidPeer)
+		return
+	}
 	const client = helper.getClient()
 	const peer = helper.newPeers([peerIndex], orgName)[0]
 	helper.getOrgAdmin(orgName, client).then(() => {
@@ -317,7 +479,11 @@ app.post('/query/tx', (req, res) => {
 	logger.debug('================ GET TRANSACTION BY TRANSACTION_ID ======================')
 	const { txId, orgName, peerIndex, channelName } = req.body
 	logger.debug({ txId, orgName, peerIndex, channelName })
-	if (invalid.peer(res, { peerIndex, orgName })) return
+	const invalidPeer = invalid.peer({ orgName, peerIndex })
+	if (invalidPeer) {
+		res.send(invalidPeer)
+		return
+	}
 	const client = helper.getClient()
 	helper.getOrgAdmin(orgName, client).then(() => {
 		const channel = helper.prepareChannel(channelName, client)
@@ -337,7 +503,12 @@ app.post('/query/chain', (req, res) => {
 	logger.debug('================ GET blockchain INFORMATION ======================')
 	const { orgName, peerIndex, channelName } = req.body
 	logger.debug({ orgName, peerIndex, channelName })
-	if (invalid.peer(res, { peerIndex, orgName })) return
+
+	const invalidPeer = invalid.peer({ orgName, peerIndex })
+	if (invalidPeer) {
+		res.send(invalidPeer)
+		return
+	}
 	const client = helper.getClient()
 	helper.getOrgAdmin(orgName, client).then(() => {
 		const channel = helper.prepareChannel(channelName, client)
@@ -365,7 +536,11 @@ app.post('/query/chaincodes/installed', (req, res) => {
 	const { orgName, peerIndex } = req.body
 	logger.debug({ orgName, peerIndex })
 	const client = helper.getClient()
-	if (invalid.peer(res, { peerIndex, orgName })) return
+	const invalidPeer = invalid.peer({ orgName, peerIndex })
+	if (invalidPeer) {
+		res.send(invalidPeer)
+		return
+	}
 
 	const peer = helper.newPeers([peerIndex], orgName)[0]
 	helper.getOrgAdmin(orgName, client).then(() => {
@@ -381,7 +556,11 @@ app.post('/query/chaincodes/instantiated', (req, res) => {
 	const { orgName, peerIndex, channelName } = req.body
 	logger.debug({ orgName, peerIndex, channelName })
 	const client = helper.getClient()
-	if (invalid.peer(res, { peerIndex, orgName })) return
+	const invalidPeer = invalid.peer({ orgName, peerIndex })
+	if (invalidPeer) {
+		res.send(invalidPeer)
+		return
+	}
 	const peer = helper.newPeers([peerIndex], orgName)[0]
 	helper.getOrgAdmin(orgName, client).then(() => {
 		const channel = helper.prepareChannel(channelName, client)
@@ -397,7 +576,11 @@ app.post('/query/channelJoined', (req, res) => {
 	logger.debug('================ query joined CHANNELS ======================')
 	const { orgName, peerIndex } = req.body
 	logger.debug({ orgName, peerIndex })
-	if (invalid.peer(res, { peerIndex, orgName })) return
+	const invalidPeer = invalid.peer({ orgName, peerIndex })
+	if (invalidPeer) {
+		res.send(invalidPeer)
+		return
+	}
 	const client = helper.getClient()
 	const peer = helper.newPeers([peerIndex], orgName)[0]
 	helper.getOrgAdmin(orgName, client).then(() => {

@@ -21,7 +21,7 @@ exports.invoke = ({ orgName, fcn, args }) => {
 		const channel = helper.prepareChannel(channelName, client, true)
 		const peers = helper.newPeers([0], orgName) //NOTE hardcode
 		return Invoke(channel, peers, { chaincodeId, fcn, args })
-	}).then(require('./invoke-chaincode').reducer)
+	}).then(require('./util/chaincode').reducer)
 
 }
 exports.query = ({orgName,fcn,args})=>{

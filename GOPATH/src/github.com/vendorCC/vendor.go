@@ -131,8 +131,8 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response {
 	if err != nil {
 		return shim.Error(err.Error())
 	}
-	if cert.Subject.CommonName != partASubject {
-		return shim.Error("invalid creator:" + cert.Subject.CommonName + "; allowed creator:" + partASubject)
+	if cert.Subject.CommonName != partASubject && cert.Subject.CommonName != partBSubject {
+		return shim.Error("invalid creator:" + cert.Subject.CommonName + "; allowed creator:" + partASubject+", "+partBSubject)
 	}
 
 	_, args := stub.GetFunctionAndParameters()
@@ -180,13 +180,12 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response {
 func (t *SimpleChaincode) Invoke(chain shim.ChaincodeStubInterface) pb.Response {
 	logger.Info("########### vendor Invoke ###########")
 
-	fcn,args := chain.GetFunctionAndParameters()
+	fcn, args := chain.GetFunctionAndParameters()
 
 	if len(args) == 0 {
 		return shim.Error("empty params")
 	}
 	if fcn == "read" {
-		// queries an entity state
 		return t.read(chain, args)
 	}
 	if fcn == "progress" {
@@ -208,7 +207,7 @@ func (t *SimpleChaincode) progress(chain shim.ChaincodeStubInterface, args []str
 	step := Step{}
 	var stepBytes []byte
 	switch cert.Subject.CommonName {
-	case partASubject:
+	case partBSubject:
 		submit := Submit{}
 		err = json.Unmarshal([]byte(payloadJSON), &submit)
 		if err != nil {
@@ -230,7 +229,7 @@ func (t *SimpleChaincode) progress(chain shim.ChaincodeStubInterface, args []str
 
 		step.Status = Submitted
 
-	case partBSubject:
+	case partASubject:
 		review := Review{}
 		err = json.Unmarshal([]byte(payloadJSON), &review)
 		if err != nil {
@@ -294,16 +293,25 @@ func (t *SimpleChaincode) read(stub shim.ChaincodeStubInterface, args []string) 
 		return shim.Error("no query target specified")
 	}
 	target := args[0]
-	logger.Info("target",target)
+	logger.Info("target", target)
 	switch target {
 	case "project":
 		if len(args) < 2 {
 			return shim.Error("no project title specified")
 		}
 		projectTitle := args[1]
-		logger.Info("title",projectTitle)
+		logger.Info("title", projectTitle)
 		project, _ := stub.GetState(projectTitle)
 		return shim.Success(project)
+	case "step":
+		if len(args) < 2 {
+			return shim.Error("no step ID specified")
+		}
+		stepID := args[1]
+		logger.Info("step ID", stepID)
+		stepBytes, _ := stub.GetState(stepID)
+		return shim.Success(stepBytes)
+
 	}
 
 	return shim.Success(nil)

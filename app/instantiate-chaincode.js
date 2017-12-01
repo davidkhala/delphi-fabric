@@ -1,6 +1,7 @@
 const helper = require('./helper.js')
 const eventHelper = require('./util/eventHub')
-const logger = require('./util/logger').new('instantiate-chaincode')
+
+const { resultWrapper } = require('./util/chaincode')
 
 //FIXED: UTC [endorser] simulateProposal -> ERRO 370 failed to invoke chaincode name:"lscc"  on transaction ec81adb6041b4b71dade56f0e9749e3dd2a2be2a63e0518ed75aa94c94f3d3fe, error: Error starting container: API error (500): {"message":"Could not attach to network delphiProject_default: context deadline exceeded"}: setting docker network instead of docker-compose --project-name
 
@@ -9,7 +10,9 @@ const logger = require('./util/logger').new('instantiate-chaincode')
 // 		"args":["a","100","b","200"]
 // set peers to 'undefined' to target all peers in channel
 exports.instantiate = (
-		channel, richPeers, { chaincodeId, chaincodeVersion, args, fcn = 'init' }, client = channel._clientContext) => {
+		channel, richPeers = channel.getPeers(), { chaincodeId, chaincodeVersion, args, fcn = 'init' },
+		client = channel._clientContext) => {
+	const logger = require('./util/logger').new('instantiate-chaincode')
 	logger.debug(
 			{ channelName: channel.getName(), peersSize: richPeers.length, chaincodeId, chaincodeVersion, args })
 
@@ -59,7 +62,7 @@ exports.instantiate = (
 				then(({ errCounter, swallowCounter, nextRequest }) => {
 					const { proposalResponses } = nextRequest
 
-					if (errCounter === proposalResponses.length) {
+					if (errCounter > 0) {
 						return Promise.reject({ proposalResponses })
 					}
 					if (swallowCounter === proposalResponses.length) {
@@ -76,14 +79,16 @@ exports.instantiate = (
 						promises.push(txPromise)
 					}
 
-					return channel.sendTransaction(nextRequest).then(() => {
-						logger.info('channel.sendTransaction success')
+					return channel.sendTransaction(nextRequest).then((response) => {
+						logger.info('channel.sendTransaction', response)
 						return Promise.all(promises)
 					})
+					//	NOTE result parser is not required here, because the payload in proposalresponse is in form of garbled characters.
 				})
 	})
 }
-exports.upgradeToCurrent = (channel, richPeer, { chaincodeId, args }, client = channel._clientContext) => {
+exports.upgradeToCurrent = (channel, richPeer, { chaincodeId, args, fcn }, client = channel._clientContext) => {
+	const logger = require('./util/logger').new('upgradeToCurrent-chaincode')
 	const ChaincodeUtil = require('./util/chaincode')
 	const Query = require('./query')
 	return Query.chaincodes.installed(richPeer, client).then(({ chaincodes }) => {
@@ -101,18 +106,22 @@ exports.upgradeToCurrent = (channel, richPeer, { chaincodeId, args }, client = c
 		// 	vscc: '' } ]
 
 		const chaincodeVersion = ChaincodeUtil.nextVersion(version)
-		return upgrade(channel, [richPeer], { chaincodeId, args, chaincodeVersion }, client)
+		return upgrade(channel, [richPeer], { chaincodeId, args, chaincodeVersion, fcn }, client)
 	})
 }
-const upgrade = (channel, richPeers, { chaincodeId, chaincodeVersion, args }, client = channel._clientContext) => {
+const upgrade = (
+		channel, richPeers = channel.getPeers(), { chaincodeId, chaincodeVersion, args, fcn },
+		client = channel._clientContext) => {
 
+	const logger = require('./util/logger').new('upgrade-chaincode')
 	const { eventWaitTime } = channel
 	const txId = client.newTransactionID()
 	const request = {
 		chaincodeId,
 		chaincodeVersion,
 		args,
-		txId
+		txId,
+		fcn
 	}
 	const existSymptom = '(status: 500, message: version already exists for chaincode '
 
@@ -126,11 +135,14 @@ const upgrade = (channel, richPeers, { chaincodeId, chaincodeVersion, args }, cl
 				}
 				return { isValid: false, isSwallowed: false }
 			})).
-			then(({ swallowCounter, nextRequest }) => {
+			then(({ errCounter, swallowCounter, nextRequest }) => {
 				const { proposalResponses } = nextRequest
 
+				if (errCounter > 0) {
+					return Promise.reject({ proposalResponses })
+				}
 				if (swallowCounter === proposalResponses.length) {
-					return Promise.resolve(proposalResponses)
+					return Promise.resolve({ proposalResponses })
 				}
 				const promises = []
 				for (let peer of richPeers) {
@@ -146,6 +158,7 @@ const upgrade = (channel, richPeers, { chaincodeId, chaincodeVersion, args }, cl
 					logger.info('channel.sendTransaction success')
 					return Promise.all(promises)
 				})
+				//	NOTE result parser is not required here, because the payload in proposalresponse is in form of garbled characters.
 			})
 }
 
