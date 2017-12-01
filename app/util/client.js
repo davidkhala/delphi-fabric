@@ -1,6 +1,7 @@
 const BaseClient = require('fabric-client/lib/BaseClient')
 const fs = require('fs')
 const User = require('fabric-client/lib/User')
+const Client = require('fabric-client')
 const setDefaultCryptoSuite = (client) => {
 	const newCryptoSuite = BaseClient.newCryptoSuite()
 	newCryptoSuite.setCryptoKeyStore(BaseClient.newCryptoKeyStore())
@@ -73,3 +74,9 @@ const createUser = (client, opts) => {
 }
 exports.createUser = createUser
 exports.setDefaultCryptoSuite = setDefaultCryptoSuite
+
+exports.new= () => {
+	const client = new Client()
+	setDefaultCryptoSuite(client)
+	return client
+}

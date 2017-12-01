@@ -14,12 +14,12 @@
     "schedule": [
       {
         "Installment": 20000,
-        "ID": "protoType",
+        "ID": "prototype",
         "DeadLine": "Jun 2017"
       },
       {
         "Installment": 5000,
-        "ID": "UI/UX",
+        "ID": "UI",
         "DeadLine": "Oct 2017"
       },
       {
@@ -29,17 +29,17 @@
       },
       {
         "Installment": 20000,
-        "ID": "Intergration Test",
+        "ID": "SIT",
         "DeadLine": "Jan 2018"
       },
       {
         "Installment": 50000,
-        "ID": "PRD release",
+        "ID": "PRD",
         "DeadLine": "Jun 2018"
       },
       {
         "Installment": 0,
-        "ID": "Free maintain/support",
+        "ID": "support",
         "DeadLine": "Jun 2019"
       }
     ]

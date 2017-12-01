@@ -1,6 +1,7 @@
 //TODO This test case requires that the 'configtxlator' tool be running locally and on port 7059
 const helper = require('./helper')
 const logger = require('./util/logger').new('test-configtxlator')
+const ClientUtil = require('./util/client')
 
 const channelName = 'delphiChannel'
 
@@ -20,7 +21,7 @@ const deleteOrg = (MSPName) => {
 const addOrg = (
 		orgName, MSPName, MSPID, templateMSPName, adminMSPDir, org_domain, peerPort, eventHubPort, peer_hostName_full
 		, chaincodePath, chaincodeId, chaincodeVersion, args) => {
-	const client = helper.getClient()
+	const client = ClientUtil.new()
 	const channel = helper.prepareChannel(channelName, client, true)
 	return api.channelUpdate(channelName,
 			({ update_config }) => {
@@ -56,7 +57,7 @@ const addOrg = (
 
 				return join(channel, [peer], orgName).then(() => {
 					helper.setGOPATH()
-					const client = helper.getClient()
+					const client = ClientUtil.new()
 					return installChaincode([peer], chaincodeId, chaincodePath, chaincodeVersion, client).then(() => {
 						return instantiate(channel, [peer], {chaincodeId, chaincodeVersion, args:JSON.parse(args)}, client)
 

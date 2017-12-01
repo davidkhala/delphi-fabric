@@ -17,8 +17,9 @@ const COMPANY_DOMAIN = companyConfig.domain
 
 const org_domain = `${orgName}.${COMPANY_DOMAIN}`
 const orgPath = path.join(CRYPTO_CONFIG_DIR, 'peerOrganizations', org_domain)
+const ClientUtil = require('./util/client')
 
-const client = helper.getClient()
+const client = ClientUtil.new()
 const intermediateName = 'cityU'
 
 const intermediateID = `${intermediateName}.ca.${org_domain}`

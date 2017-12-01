@@ -13,6 +13,8 @@ const fsExtra = require('fs-extra')
 const caUtil = require('./util/ca')
 const caHelper = require('./caHelper')
 const globalConfig = require('../config/orgs.json')
+const ClientUtil = require('./util/client')
+
 const COMPANY = 'delphi'
 const companyConfig = globalConfig[COMPANY]
 const CRYPTO_CONFIG_DIR = companyConfig.docker.volumes.MSPROOT.dir
@@ -83,7 +85,7 @@ const setCAUser = (client, { username, orgName, TLS }) => {
 let retry = 0
 const invoke = require('./invoke-chaincode').invokeChaincode
 const testInvoke = () => {
-	const client = helper.getClient()
+	const client = ClientUtil.new()
 	const orgName = 'BU'
 	return setCAUser(client, { username: 'userB', orgName, TLS: companyConfig.TLS }).then(() => {
 		const channelName = 'delphiChannel'
@@ -93,7 +95,7 @@ const testInvoke = () => {
 		const chaincodeId = 'adminChaincode'
 		const fcn = ''
 		const args = []
-		return invoke(channel, peers, {chaincodeId, fcn, args}).
+		return invoke(channel, peers, { chaincodeId, fcn, args }).
 				then(require('./util/chaincode').reducer).
 				then((result) => {logger.info(result)})
 	}).catch(err => {

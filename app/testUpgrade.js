@@ -5,6 +5,7 @@ const helper = require('./helper')
 const chaincodeConfig = require('../config/chaincode.json')
 const logger = require('./util/logger').new('testUpgrade')
 const chaincodeId = 'vendorChaincode'
+const ClientUtil = require('./util/client')
 
 const args = [JSON.stringify(require('./vendor.json').project)]
 
@@ -42,7 +43,7 @@ const updateInstallAll = (chaincodeInfo) => {
 	})
 }
 
-const client = helper.getClient()
+const client = ClientUtil.new()
 const Query = require('./query')
 
 helper.getOrgAdmin('BU', client).then(() => {

@@ -4,7 +4,8 @@ const logger = require('./util/logger').new('configtxlator')
 const path = require('path')
 const fs = require('fs')
 const agent = require('./util/agent2configtxlator')
-const client = helper.getClient()
+const ClientUtil = require('./util/client')
+const client = ClientUtil.new()
 
 const format_tlscacert = (adminMSPDir, org_domain) => path.join(adminMSPDir, 'tlscacerts',
 		`tlsca.${org_domain}-cert.pem`)

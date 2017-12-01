@@ -1,10 +1,12 @@
 const query = require('./query')
 const peerUtil = require('./util/peer')
 const helper = require('./helper')
+const ClientUtil = require('./util/client')
+
 const channelName = 'delphiChannel'
 
 const logger = require('./util/logger').new('test-query')
-const client = helper.getClient()
+const client = ClientUtil.new()
 
 const queryInstantiated = () => {
 	const orgName = 'PM'

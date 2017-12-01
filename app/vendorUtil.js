@@ -10,12 +10,13 @@ const UpdateInstall = require('./install-chaincode').updateInstall
 const Instantiate = require('./instantiate-chaincode').instantiate
 const chaincodeId = 'vendorChaincode'
 const channelName = 'delphiChannel'
+const ClientUtil = require('./util/client')
 
 const chaincodeConfig = require('../config/chaincode.json')
 
 const chaincodePath = chaincodeConfig.chaincodes[chaincodeId].path
 
-const client = helper.getClient()
+const client = ClientUtil.new()
 exports.invoke = ({ orgName, fcn, args }) => {
 	return helper.getOrgAdmin(orgName, client).then(() => {
 		const channel = helper.prepareChannel(channelName, client, true)

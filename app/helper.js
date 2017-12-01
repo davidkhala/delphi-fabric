@@ -30,8 +30,8 @@ const chaincodeConfig = require('../config/chaincode.json')
 const Client = require('fabric-client')
 const sdkUtils = require('fabric-client/lib/utils')
 const nodeConfig = require('./config.json')
-const clientUtil = require('./util/client')
-
+const ClientUtil = require('./util/client')
+const EventHubUtil = require('./util/eventHub')
 const Orderer = require('fabric-client/lib/Orderer')
 
 // set up the client and channel objects for each org
@@ -146,7 +146,7 @@ const bindEventHub = (richPeer, client) => {
 	const eventHubPort = richPeer.peerConfig.eventHubPort
 	const pem = richPeer.pem
 	const peer_hostName_full = richPeer._options['grpc.ssl_target_name_override']
-	return require('./util/eventHub').new(client, { eventHubPort, pem, peer_hostName_full })
+	return EventHubUtil.new(client, { eventHubPort, pem, peer_hostName_full })
 
 }
 /**
@@ -190,13 +190,13 @@ objects.user = {
 			skipPersistence
 		}
 		if (skipPersistence) {
-			return client.createUser(client, createUserOpt)
+			return client.createUser(createUserOpt)
 		} else {
 			return sdkUtils.newKeyValueStore({
 				path: getStateDBCachePath(orgName)
 			}).then((store) => {
 				client.setStateStore(store)
-				return clientUtil.createUser(client, createUserOpt)
+				return client.createUser(createUserOpt)
 			})
 		}
 	},
@@ -345,12 +345,6 @@ exports.chaincodeProposalAdapter = (actionString, validator) => {
 		})
 
 	}
-}
-
-exports.getClient = () => {
-	const client = new Client()
-	clientUtil.setDefaultCryptoSuite(client)
-	return client
 }
 
 exports.helperConfig = Object.assign({ COMPANY }, { GPRC_protocol }, globalConfig)

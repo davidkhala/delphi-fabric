@@ -11,9 +11,10 @@ const args = ['project', 'Blockchain Hyperledger Demonstration']
 const peerIndexes = [0]
 const orgName = 'PM'
 const channelName = 'delphiChannel'
+const ClientUtil = require('./util/client')
 
 const peers = helper.newPeers(peerIndexes, orgName)
-const client = helper.getClient()
+const client = ClientUtil.new()
 helper.getOrgAdmin(orgName, client).then(() => {
 	const channel = helper.prepareChannel(channelName, client, true)
 	return invoke(channel, peers, { chaincodeId, fcn, args })

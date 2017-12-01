@@ -1,5 +1,6 @@
 const helper = require('./helper.js')
 const eventHelper = require('./util/eventHub')
+const ClientUtil = require('./util/client')
 
 const { resultWrapper } = require('./util/chaincode')
 
@@ -71,10 +72,15 @@ exports.instantiate = (
 
 					const promises = []
 					for (let peer of richPeers) {
-						const eventHub = helper.bindEventHub(peer, client)
-						const txPromise = eventHelper.txEventPromise(eventHub, { txId, eventWaitTime }, ({ tx, code }) => {
-							logger.debug('newTxEvent', { tx, code })
-							return { valid: code === 'VALID', interrupt: true }
+
+						const eventHubClient = ClientUtil.new()
+						const peerOrgName= peer.peerConfig.orgName
+						const txPromise = helper.getOrgAdmin(peerOrgName,eventHubClient).then(()=>{
+							const eventHub = helper.bindEventHub(peer, eventHubClient)
+							return eventHelper.txEventPromise(eventHub, { txId, eventWaitTime }, ({ tx, code }) => {
+								logger.debug('newTxEvent', { tx, code })
+								return { valid: code === 'VALID', interrupt: true }
+							})
 						})
 						promises.push(txPromise)
 					}
@@ -146,10 +152,14 @@ const upgrade = (
 				}
 				const promises = []
 				for (let peer of richPeers) {
-					const eventHub = helper.bindEventHub(peer, client)
-					const txPromise = eventHelper.txEventPromise(eventHub, { txId, eventWaitTime }, ({ tx, code }) => {
-						logger.debug('newTxEvent', { tx, code })
-						return { valid: code === 'VALID', interrupt: true }
+					const eventHubClient = ClientUtil.new()
+					const peerOrgName= peer.peerConfig.orgName
+					const txPromise = helper.getOrgAdmin(peerOrgName,eventHubClient).then(()=>{
+						const eventHub = helper.bindEventHub(peer, eventHubClient)
+						return eventHelper.txEventPromise(eventHub, { txId, eventWaitTime }, ({ tx, code }) => {
+							logger.debug('newTxEvent', { tx, code })
+							return { valid: code === 'VALID', interrupt: true }
+						})
 					})
 					promises.push(txPromise)
 				}

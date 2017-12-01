@@ -31,6 +31,7 @@ const chaincodesConfig = require('./config/chaincode.json')
 const CONFIGTXDir = companyConfig.docker.volumes.CONFIGTX.dir
 
 const helper = require('./app/helper.js')
+const ClientUtil = require('./app/util/client')
 const createChannel = require('./app/create-channel').create
 const joinChannel = require('./app/join-channel').joinChannel
 
@@ -112,7 +113,7 @@ wss.on('connection', (ws, req) => {
 							const invalidArgs = invalid.args({ args })
 							if (invalidArgs) return sendError(invalidArgs)
 
-							const client = helper.getClient()
+							const client = ClientUtil.new()
 							helper.getOrgAdmin(orgName, client).then(() => {
 								const channel = helper.prepareChannel(channelName, client)
 								const peers = helper.newPeers([peerIndex], orgName)
@@ -164,11 +165,11 @@ wss.on('connection', (ws, req) => {
 
 							const invalidArgs = invalid.args({ args })
 							if (invalidArgs) return sendError(invalidArgs)
-							const client = helper.getClient()
+							const client = ClientUtil.new()
 							return helper.getOrgAdmin(orgName, client).then(() => {
 								const channel = helper.prepareChannel(channelName, client)
-								const peers = helper.newPeers([peerIndex], orgName) // FIXME :trick here
-								return instantiate(channel, peers, {
+								const peers = helper.newPeers([peerIndex], orgName)
+								return instantiate(channel, undefined, {
 									chaincodeId, chaincodeVersion, fcn,
 									args
 								}).then((_) => {
@@ -211,11 +212,11 @@ wss.on('connection', (ws, req) => {
 
 							const invalidArgs = invalid.args({ args })
 							if (invalidArgs) return sendError(invalidArgs)
-							const client = helper.getClient()
+							const client = ClientUtil.new()
 							helper.getOrgAdmin(orgName, client).then(() => {
 								const channel = helper.prepareChannel(channelName, client)
-								const peers = helper.newPeers([peerIndex], orgName) // FIXME :trick here
-								return upgrade(channel, peers, {
+								const peers = helper.newPeers([peerIndex], orgName)
+								return upgrade(channel, undefined, {
 									chaincodeId, chaincodeVersion, fcn,
 									args
 								}).then((_) => {
@@ -383,7 +384,7 @@ app.post('/channel/join/:channelName', (req, res) => {
 
 	const peers = helper.newPeers([peerIndex], orgName)
 
-	const client = helper.getClient()
+	const client = ClientUtil.new()
 	helper.getOrgAdmin(orgName, client).then(() => {
 		const channel = helper.prepareChannel(channelName, client)
 		return joinChannel(channel, peers).then((message) => {
@@ -417,7 +418,7 @@ app.post('/chaincode/install/:chaincodeId', (req, res) => {
 	//TODO to test ChaincodeVersion
 
 	helper.setGOPATH()
-	const client = helper.getClient()
+	const client = ClientUtil.new()
 	helper.getOrgAdmin(orgName, client).then(() => {
 		return install(peers, { chaincodeId, chaincodePath, chaincodeVersion }, client).
 				then((message) => {
@@ -440,7 +441,7 @@ app.post('/query/block/height/:blockNumber', (req, res) => {
 	}
 	logger.debug({ blockNumber, peerIndex, orgName, channelName })
 
-	const client = helper.getClient()
+	const client = ClientUtil.new()
 	helper.getOrgAdmin(orgName, client).then(() => {
 		const channel = helper.prepareChannel(channelName, client)
 		const peer = helper.newPeers([peerIndex], orgName)[0]
@@ -462,7 +463,7 @@ app.post('/query/block/hash', (req, res) => {
 		res.send(invalidPeer)
 		return
 	}
-	const client = helper.getClient()
+	const client = ClientUtil.new()
 	const peer = helper.newPeers([peerIndex], orgName)[0]
 	helper.getOrgAdmin(orgName, client).then(() => {
 		const channel = helper.prepareChannel(channelName, client)
@@ -484,7 +485,7 @@ app.post('/query/tx', (req, res) => {
 		res.send(invalidPeer)
 		return
 	}
-	const client = helper.getClient()
+	const client = ClientUtil.new()
 	helper.getOrgAdmin(orgName, client).then(() => {
 		const channel = helper.prepareChannel(channelName, client)
 		const peer = helper.newPeers([peerIndex], orgName)[0]
@@ -509,7 +510,7 @@ app.post('/query/chain', (req, res) => {
 		res.send(invalidPeer)
 		return
 	}
-	const client = helper.getClient()
+	const client = ClientUtil.new()
 	helper.getOrgAdmin(orgName, client).then(() => {
 		const channel = helper.prepareChannel(channelName, client)
 		const peer = helper.newPeers([peerIndex], orgName)[0]
@@ -535,7 +536,7 @@ app.post('/query/chaincodes/installed', (req, res) => {
 	logger.debug('==================== query installed CHAINCODE ==================')
 	const { orgName, peerIndex } = req.body
 	logger.debug({ orgName, peerIndex })
-	const client = helper.getClient()
+	const client = ClientUtil.new()
 	const invalidPeer = invalid.peer({ orgName, peerIndex })
 	if (invalidPeer) {
 		res.send(invalidPeer)
@@ -555,7 +556,7 @@ app.post('/query/chaincodes/instantiated', (req, res) => {
 	logger.debug('==================== query instantiated CHAINCODE ==================')
 	const { orgName, peerIndex, channelName } = req.body
 	logger.debug({ orgName, peerIndex, channelName })
-	const client = helper.getClient()
+	const client = ClientUtil.new()
 	const invalidPeer = invalid.peer({ orgName, peerIndex })
 	if (invalidPeer) {
 		res.send(invalidPeer)
@@ -581,7 +582,7 @@ app.post('/query/channelJoined', (req, res) => {
 		res.send(invalidPeer)
 		return
 	}
-	const client = helper.getClient()
+	const client = ClientUtil.new()
 	const peer = helper.newPeers([peerIndex], orgName)[0]
 	helper.getOrgAdmin(orgName, client).then(() => {
 		return Query.channel.joined(peer, client).then((

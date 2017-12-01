@@ -1,5 +1,6 @@
 const createChannel = require('./create-channel').create
 const joinChannel = require('./join-channel').joinChannel
+const ClientUtil = require('./util/client')
 
 const helper = require('./helper')
 const logger = require('./util/logger').new('testChannel')
@@ -19,7 +20,7 @@ const joinAllfcn = () => {
 				{ 'portMap': [{ 'host': 7061, 'container': 7051 }, { 'host': 7063, 'container': 7053 }] })
 	]
 
-	const client = helper.getClient()
+	const client = ClientUtil.new()
 	const channel = helper.prepareChannel(channelName, client, true)
 	return helper.getOrgAdmin(orgName, client).then(() => joinChannel(channel, peers).then(() => {
 

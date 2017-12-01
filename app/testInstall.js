@@ -5,6 +5,7 @@ const helper = require('./helper')
 const logger = require('./util/logger').new('testInstall')
 const chaincodeConfig = require('../config/chaincode.json')
 const chaincodeId = 'adminChaincode'
+const ClientUtil = require('./util/client')
 
 const chaincodePath = chaincodeConfig.chaincodes[chaincodeId].path
 
@@ -21,7 +22,7 @@ const deploy = (orgName, peerIndexes) => {
 		})
 	})
 }
-const client = helper.getClient()
+const client = ClientUtil.new()
 
 deploy('BU', [0, 1]).then(() => {
 	return deploy('PM', [0])
