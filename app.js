@@ -102,7 +102,7 @@ wss.on('connection', (ws, req) => {
 						messageCB = (message) => {
 							logger.debug('==================== INVOKE CHAINCODE ==================')
 							const { fcn, args: argsString, orgName, peerIndex, channelName } = JSON.parse(message)
-							const args = JSON.parse(argsString)
+							const args = argsString?JSON.parse(argsString):[]
 							logger.debug({ chaincodeId, fcn, args, orgName, peerIndex, channelName })
 							const invalidPeer = invalid.peer({ peerIndex, orgName })
 							if (invalidPeer) return sendError(invalidPeer)
@@ -155,8 +155,9 @@ wss.on('connection', (ws, req) => {
 							logger.debug('==================== INSTANTIATE CHAINCODE ==================')
 
 							const { chaincodeVersion, channelName, fcn, args: argsString, peerIndex, orgName } = JSON.parse(message)
-							const args = JSON.parse(argsString)
-							logger.debug({ channelName, chaincodeId, chaincodeVersion, fcn, args, peerIndex, orgName })
+
+							logger.debug({ channelName, chaincodeId, chaincodeVersion, fcn, argsString, peerIndex, orgName })
+							const args =argsString? JSON.parse(argsString):[]
 							const invalidPeer = invalid.peer({ orgName, peerIndex })
 							if (invalidPeer) return sendError(invalidPeer)
 
@@ -203,7 +204,7 @@ wss.on('connection', (ws, req) => {
 							logger.debug('==================== upgrade CHAINCODE ==================')
 
 							const { chaincodeVersion, channelName, fcn, args: argsString, peerIndex, orgName } = JSON.parse(message)
-							const args = JSON.parse(argsString)
+							const args = argsString?JSON.parse(argsString):[]
 							logger.debug({ channelName, chaincodeId, chaincodeVersion, fcn, args, peerIndex, orgName })
 							const invalidPeer = invalid.peer({ orgName, peerIndex })
 							if (invalidPeer) return sendError(invalidPeer)
