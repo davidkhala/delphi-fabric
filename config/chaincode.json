@@ -2,21 +2,12 @@
   "GOPATH": "/home/david/Documents/delphi-fabric/GOPATH/",
   "chaincodes": {
     "delphiChaincode": {
-      "target_channels": [
-        "delphiChannel"
-      ],
       "path": "github.com/delphi"
     },
     "adminChaincode": {
-      "target_channels": [
-        "delphiChannel"
-      ],
       "path": "github.com/admin"
     },
     "vendorChaincode": {
-      "target_channels": [
-        "delphiChannel"
-      ],
       "path": "github.com/vendorCC"
     }
   }

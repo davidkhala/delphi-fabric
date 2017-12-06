@@ -12,41 +12,18 @@ const channelConfig = companyConfig.channels[channelName]
 const channelConfigFile = `${companyConfig.docker.volumes.CONFIGTX.dir}/${channelConfig.file}`
 const joinAllfcn = () => {
 
-	const orgName = 'BU'
-	const peers = [
-		helper.preparePeer(orgName, 0,
-				{ 'portMap': [{ 'host': 7051, 'container': 7051 }, { 'host': 7053, 'container': 7053 }] }),
-		helper.preparePeer(orgName, 1,
-				{ 'portMap': [{ 'host': 7061, 'container': 7051 }, { 'host': 7063, 'container': 7053 }] })
-	]
+	let promise = Promise.resolve()
 
-	const client = ClientUtil.new()
-	const channel = helper.prepareChannel(channelName, client, true)
-	return helper.getOrgAdmin(orgName, client).then(() => joinChannel(channel, peers).then(() => {
+	for (let orgName in  channelConfig.orgs) {
+		const { peerIndexes } = channelConfig.orgs[orgName]
+		const peers = helper.newPeers(peerIndexes, orgName)
+		const client = ClientUtil.new()
+		const channel = helper.prepareChannel(channelName, client)
+		promise = promise.then(() => helper.getOrgAdmin(orgName, client)).then(() => joinChannel(channel, peers))
 
-		const orgName = 'PM'
-		const peers = [
-			helper.preparePeer(orgName, 0, {
-				'portMap': [
-					{ 'host': 9051, 'container': 7051 },
-					{ 'host': 9053, 'container': 7053 }
-				]
-			})
-		]
-		return helper.getOrgAdmin(orgName, client).then(() => joinChannel(channel, peers))
-	})).then(() => {
+	}
 
-		const orgName = 'ENG'
-		const peers = [
-			helper.preparePeer(orgName, 0, {
-				'portMap': [
-					{ 'host': 8051, 'container': 7051 },
-					{ 'host': 8053, 'container': 7053 }
-				]
-			})
-		]
-		return helper.getOrgAdmin(orgName, client).then(() => joinChannel(channel, peers))
-	})
+	return promise
 }
 //E0905 10:07:20.462272826    7262 ssl_transport_security.c:947] Handshake failed with fatal error SSL_ERROR_SSL: error:14090086:SSL routines:ssl3_get_server_certificate:certificate verify failed.
 

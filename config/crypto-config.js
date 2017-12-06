@@ -17,7 +17,7 @@ exports.gen = ({
         Name: 'OrdererCrytoName',
         Domain: COMPANY_DOMAIN,
         Specs: [
-            {Hostname: ordererConfig.containerName}
+            {Hostname: ordererConfig.container_name}
         ]
     }]
     const PeerOrgs = []

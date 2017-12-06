@@ -14,9 +14,7 @@ channelsConfig=$(echo $companyConfig | jq ".channels")
 CONFIGTX_DIR="$config_dir/configtx"
 mkdir -p $CONFIGTX_DIR
 
-BLOCK_FILE="$CONFIGTX_DIR/$COMPANY.block"
 
-PROFILE_BLOCK=${COMPANY}Genesis
 VERSION=$(echo $companyConfig | jq -r ".docker.fabricTag")
 IMAGE_TAG="x86_64-$VERSION"
 TLS_ENABLED=$(echo $companyConfig | jq ".TLS")
@@ -48,9 +46,10 @@ echo clear stateDBCacheDir $stateDBCacheDir
 
 node -e "require('./config/configtx.js').gen({\"COMPANY\":\"$COMPANY\",\"MSPROOT\":\"$MSPROOT\"})"
 
+BLOCK_FILE=$(echo $companyConfig|jq -r ".orderer.genesis_block.file")
+PROFILE_BLOCK=$(echo $companyConfig|jq -r ".orderer.genesis_block.profile")
 
-$CURRENT/common/bin-manage/configtxgen/runConfigtxgen.sh block create $BLOCK_FILE -p $PROFILE_BLOCK -i $config_dir
-jq ".$COMPANY.docker.volumes.CONFIGTX.dir=\"$CONFIGTX_DIR\"" $CONFIG_JSON | sponge $CONFIG_JSON
+./common/bin-manage/configtxgen/runConfigtxgen.sh block create "$CONFIGTX_DIR/$BLOCK_FILE" -p $PROFILE_BLOCK -i $config_dir
 
 channelNames=$(echo $channelsConfig | jq -r "keys[]")
 for channelName in $channelNames; do
@@ -59,9 +58,8 @@ for channelName in $channelNames; do
 	channelFile="$CONFIGTX_DIR/$channelFilename"
 	./common/bin-manage/configtxgen/runConfigtxgen.sh channel create $channelFile -p $channelName -i $config_dir -c ${channelName,,}
     #NOTE Capital char in Channel name is not supported  [channel: delphiChannel] Rejecting broadcast of config message from 172.18.0.1:36954 because of error: initializing configtx manager failed: Bad channel id: channel ID 'delphiChannel' contains illegal characters
-
 done
-
+jq ".$COMPANY.docker.volumes.CONFIGTX.dir=\"$CONFIGTX_DIR\"" $CONFIG_JSON | sponge $CONFIG_JSON
 # write back GOPATH
 ChaincodeJson=$config_dir/chaincode.json
 gopath=${CURRENT}/GOPATH/

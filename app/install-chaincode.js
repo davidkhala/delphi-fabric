@@ -61,15 +61,17 @@ exports.updateInstall = (peers, { chaincodeId }, client) => {
 	})
 
 }
+//FIXME not ready, will lead to failure of  cannot retrieve package for chaincode adminChaincode/v0, error open /var/hyperledger/production/chaincodes/adminChaincode.v0: no such file or directory
+//TODO: not working in swarm mode
 exports.uninstall = (richPeers, { chaincodeId, chaincodeVersion }) => {
 	const logger = require('./util/logger').new('uninstall-chaincode')
 
 	const Dockerode = require('./util/dockerode')
 	const promises = []
 	for (let peer of richPeers) {
-		const containerName = peer.peerConfig.containerName
-		logger.debug(containerName)
-		promises.push(Dockerode.uninstallChaincode({ containerName, chaincodeId, chaincodeVersion }))
+		const {container_name} = peer.peerConfig
+		logger.debug(container_name)
+		promises.push(Dockerode.uninstallChaincode({ container_name, chaincodeId, chaincodeVersion }))
 	}
 	return Promise.all(promises)
 

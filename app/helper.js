@@ -93,7 +93,7 @@ exports.prepareChannel = (channelName, client, isRenew) => {
 	}
 
 	const channel = client.newChannel(channelName.toLowerCase())//NOTE throw exception is exist
-	const orderer_hostName_full = `${ordererConfig.containerName}.${COMPANY_DOMAIN}`
+	const orderer_hostName_full = `${ordererConfig.container_name}.${COMPANY_DOMAIN}`
 	const orderer_tls_cacerts = path.join(CRYPTO_CONFIG_DIR,
 			`ordererOrganizations/${COMPANY_DOMAIN}/orderers/${orderer_hostName_full}/tls/ca.crt`)
 	const orderer_url = `${GPRC_protocol}localhost:${ordererConfig.portMap[0].host}`
@@ -161,15 +161,7 @@ const getMspID = (orgName) => {
 //NOTE have to do this since filename for private Key file would be as : a4fbafa51de1161a2f82ffa80cf1c34308482c33a9dcd4d150183183d0a3e0c6_sk
 const getKeyFilesInDir = (dir) => {
 	const files = fs.readdirSync(dir)
-
-	const keyFiles = []
-	files.forEach((file_name) => {
-		let filePath = path.join(dir, file_name)
-		if (file_name.endsWith('_sk')) {
-			keyFiles.push(filePath)
-		}
-	})
-	return keyFiles
+	return files.filter((fileName) => fileName.endsWith('_sk')).map((fileName)=>path.resolve(dir, fileName))
 }
 
 const rawAdminUsername = 'adminName'

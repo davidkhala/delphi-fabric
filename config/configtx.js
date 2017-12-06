@@ -23,7 +23,7 @@ exports.gen = ({
     const blockProfileConfig = {
         Orderer: {
             OrdererType: 'solo',
-            Addresses: [`${ordererConfig.containerName}:${ordererContainerPort}`],
+            Addresses: [`${ordererConfig.container_name}:${ordererContainerPort}`],
             BatchTimeout: '2s',
             BatchSize: {
                 MaxMessageCount: 10,
@@ -49,7 +49,7 @@ exports.gen = ({
             ID: orgConfig.MSP.id,
             MSPDir: path.join(MSPROOT, 'peerOrganizations', `${orgName}.${COMPANY_DOMAIN}`, 'msp'),
             AnchorPeers: [{
-                Host: anchorPeerConfig.containerName,
+                Host: anchorPeerConfig.container_name,
                 Port: 7051
             }]
         }

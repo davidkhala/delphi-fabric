@@ -7,19 +7,23 @@
       "network": "delphiNetwork",
       "volumes": {
         "CONFIGTX": {
-          "local": "CONFIGTX_DIR",
+          "local": "CONFIGTX_local",
           "swarm": "CONFIGTX_swarm",
           "dir": "/home/david/Documents/delphi-fabric/config/configtx"
         },
         "MSPROOT": {
-          "local": "MSPROOT",
+          "local": "MSPROOT_local",
           "swarm": "MSPROOT_swarm",
           "dir": "/home/david/Documents/delphi-fabric/config/crypto-config/"
         }
       }
     },
     "orderer": {
-      "containerName": "orderContainerName",
+      "genesis_block": {
+        "file": "delphi.block",
+        "profile": "delphiGenesis"
+      },
+      "container_name": "orderContainerName",
       "portMap": [
         {
           "host": 7250,
@@ -73,10 +77,10 @@
           {
             "swarm": {
               "constraints": [
-                "node.hostname == david-Project"
+                "node.hostname == ubuntu"
               ]
             },
-            "containerName": "BUContainerName",
+            "container_name": "BUContainerName",
             "portMap": [
               {
                 "host": 7051,
@@ -91,10 +95,10 @@
           {
             "swarm": {
               "constraints": [
-                "node.hostname == admin-soc"
+                "node.hostname == ubuntu"
               ]
             },
-            "containerName": "BUContainer1",
+            "container_name": "BUContainer1",
             "portMap": [
               {
                 "host": 7061,
@@ -109,15 +113,13 @@
         ],
         "userCount": 0,
         "ca": {
-          "enable": false,
-          "containerName": "BUCA",
+          "enable": true,
           "admin": {
             "name": "CAadmin",
             "pass": "passwd"
           },
           "portHost": 7054,
           "tlsca": {
-            "containerName": "BUTLSCA",
             "portHost": 7055
           }
         },
@@ -131,10 +133,10 @@
           {
             "swarm": {
               "constraints": [
-                "node.hostname == admin-soc"
+                "node.hostname == fabric-swarm-manager"
               ]
             },
-            "containerName": "ENGContainerName",
+            "container_name": "ENGContainerName",
             "portMap": [
               {
                 "host": 8051,
@@ -150,14 +152,12 @@
         "userCount": 0,
         "ca": {
           "enable": false,
-          "containerName": "ENGCA",
           "admin": {
             "name": "CAadmin",
             "pass": "passwd"
           },
           "portHost": 8054,
           "tlsca": {
-            "containerName": "ENGTLSCA",
             "portHost": 8055
           }
         },
@@ -171,10 +171,10 @@
           {
             "swarm": {
               "constraints": [
-                "node.hostname == david-Project"
+                "node.hostname == fabric-swarm-manager"
               ]
             },
-            "containerName": "PMContainerName",
+            "container_name": "PMContainerName",
             "portMap": [
               {
                 "host": 9051,
@@ -189,7 +189,6 @@
         ],
         "userCount": 0,
         "ca": {
-          "containerName": "PMCA",
           "enable": false,
           "admin": {
             "name": "CAadmin",
@@ -197,7 +196,6 @@
           },
           "portHost": 9054,
           "tlsca": {
-            "containerName": "PMTLSCA",
             "portHost": 9055
           }
         },

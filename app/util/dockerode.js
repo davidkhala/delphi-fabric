@@ -20,7 +20,7 @@ const testUbuntu = () => {
 }
 
 exports.runNewCA = ({
-											ca: { containerName, port, networkName }, version, arch = 'x86_64',
+											ca: { container_name, port, networkName }, version, arch = 'x86_64',
 											config: { CAHome, containerCAHome }
 										}) => {
 
@@ -32,7 +32,7 @@ exports.runNewCA = ({
 
 	const Env = [`FABRIC_CA_HOME=${containerCAHome}`]
 	const createOptions = {
-		name: containerName,
+		name: container_name,
 		Env,
 		Volumes: {
 			[containerCAHome]: {}
@@ -67,8 +67,8 @@ exports.runNewCA = ({
 	// ports:
 	// 		- 7055:7054
 }
-exports.uninstallChaincode = ({ containerName, chaincodeId, chaincodeVersion }) => {
-	const container = docker.getContainer(containerName)
+exports.uninstallChaincode = ({ container_name, chaincodeId, chaincodeVersion }) => {
+	const container = docker.getContainer(container_name)
 	const options = {
 		Cmd: ['rm', '-rf', `/var/hyperledger/production/chaincodes/${chaincodeId}.${chaincodeVersion}`]
 	}
@@ -81,7 +81,7 @@ exports.uninstallChaincode = ({ containerName, chaincodeId, chaincodeVersion }) 
 }
 //TODO for testNewOrgs
 const runNewPeer = ({
-											peer: { containerName, port, eventHubPort, networkName }, version, arch = 'x86_64',
+											peer: { container_name, port, eventHubPort, networkName }, version, arch = 'x86_64',
 											msp: { id, configPath, containerConfigPath }, domain,
 											tls
 										}) => {
@@ -98,14 +98,14 @@ const runNewPeer = ({
 		'CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock',
 		'CORE_LOGGING_LEVEL=DEBUG',
 		'CORE_LEDGER_HISTORY_ENABLEHISTORYDATABASE=true',
-		`CORE_PEER_GOSSIP_EXTERNALENDPOINT=${containerName}:7051`,
+		`CORE_PEER_GOSSIP_EXTERNALENDPOINT=${container_name}:7051`,
 		`CORE_PEER_LOCALMSPID=${id}`,
 		`CORE_PEER_MSPCONFIGPATH=${containerConfigPath}`,
 		`CORE_PEER_ID=${domain}`,
 		`CORE_PEER_ADDRESS=${domain}:7051`].concat(tlsParams)
 
 	const createOptions = {
-		name: containerName,
+		name: container_name,
 		Env,
 		Volumes: {
 			'/host/var/run/docker.sock': {},
@@ -138,23 +138,3 @@ const runNewPeer = ({
 		console.log(data.StatusCode)
 	})
 }
-
-// docker run -d --name $peerContainerName \
-// 		-e CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock \
-// -e CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=$dockerNetworkName \
-// 		-e CORE_LOGGING_LEVEL=DEBUG \
-// 		-e CORE_LEDGER_HISTORY_ENABLEHISTORYDATABASE=true \
-// 		-e CORE_PEER_GOSSIP_USELEADERELECTION=false \
-// 		-e CORE_PEER_GOSSIP_ORGLEADER=true \
-// 		-e CORE_PEER_GOSSIP_EXTERNALENDPOINT=$peerContainerName:7051 \
-// 		-e CORE_PEER_LOCALMSPID=$MSPID \
-// 		-e CORE_PEER_MSPCONFIGPATH=$CRYPTO_CONFIG_CONTAINER_DIR/peerOrganizations/$org_domain/peers/$peerDomainName/msp \
-// 		-e CORE_PEER_TLS_ENABLED=$TLS_ENABLED \
-// 		$TLS_ENV \
-// 		-e CORE_PEER_ID=$peerDomainName \
-// 		-e CORE_PEER_ADDRESS=$peerDomainName:7051 \
-// 		-p $peerPort:7051 \
-// 		-p $eventHubPort:7053 \
-// 		--volume /run/docker.sock:/host/var/run/docker.sock \
-// 		--volume $CRYPTO_CONFIG_DIR:$CRYPTO_CONFIG_CONTAINER_DIR \
-// 		$image $CMD

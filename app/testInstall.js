@@ -1,5 +1,5 @@
 const install = require('./install-chaincode').install
-const uninstall = require('./install-chaincode').uninstall
+
 const instantiate = require('./instantiate-chaincode').instantiate
 const helper = require('./helper')
 const logger = require('./util/logger').new('testInstall')
@@ -9,33 +9,23 @@ const ClientUtil = require('./util/client')
 
 const chaincodePath = chaincodeConfig.chaincodes[chaincodeId].path
 
-const instantiate_args = [JSON.stringify(require('./vendor.json').project)]
+const instantiate_args = []
 
 const chaincodeVersion = 'v0'
 const channelName = 'delphiChannel'
 //only one time, one org could deploy
 const deploy = (orgName, peerIndexes) => {
 	const peers = helper.newPeers(peerIndexes, orgName)
-	return uninstall(peers, { chaincodeId, chaincodeVersion }).then(() => {
-		return helper.getOrgAdmin(orgName, client).then(() => {
-			return install(peers, { chaincodeId, chaincodePath, chaincodeVersion }, client)
-		})
+
+	return helper.getOrgAdmin(orgName, client).then(() => {
+		return install(peers, { chaincodeId, chaincodePath, chaincodeVersion }, client)
 	})
 }
 const client = ClientUtil.new()
 
-deploy('BU', [0, 1]).then(() => {
-	return deploy('PM', [0])
-	const orgName = 'PM'
-	const peerIndexes = [0]
-	// NOTE install but not instantiated
-	return helper.getOrgAdmin(orgName, client).then(() => {
-		const peers = helper.newPeers(peerIndexes, orgName)
-		return install(peers, { chaincodeId, chaincodePath, chaincodeVersion }, client)
-	})
-}).then(() => {
-	return deploy('ENG', [0])
-}).then(() => {
+deploy('BU', [0, 1]).then(() => deploy('PM', [0])
+).then(() => deploy('ENG', [0])
+).then(() => {
 	const orgName = 'BU'
 	const peers = helper.newPeers([0], orgName)
 	return helper.getOrgAdmin(orgName, client).then(() => {

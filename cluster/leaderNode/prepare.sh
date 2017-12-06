@@ -6,7 +6,7 @@ CONFIG_DIR="$root/config/"
 COMPANY="delphi"
 SWARM_CONFIG="$CONFIG_DIR/swarm.json"
 
-advertiseAddr="192.168.0.121"
+advertiseAddr="192.168.0.167"
 if ! ip addr show | grep "inet ${advertiseAddr}";then
     echo advertiseAddr:$advertiseAddr is not one of IPs assinged to this machine
     ip addr show | grep "inet "
@@ -14,7 +14,13 @@ if ! ip addr show | grep "inet ${advertiseAddr}";then
 fi
 ### setup swarm
 utilsDir=$root/common/docker/utils
+
 $utilsDir/swarm.sh create $advertiseAddr
+#This node is already part of a swarm. Use "docker swarm leave" to leave this swarm and join another one.
+# use this to check string contains
+#if [[ $string == *"My long"* ]]; then
+#  echo "It's there!"
+#fi
 $utilsDir/swarm.sh view
 
 

@@ -4,10 +4,10 @@ CURRENT="$(dirname $(readlink -f ${BASH_SOURCE}))"
 
 CONFIG_DIR="$CURRENT/config"
 CONFIG_JSON="$CONFIG_DIR/orgs.json"
-CRYPTO_CONFIG_DIR="$CONFIG_DIR/crypto-config/"
 COMPANY='delphi' # must match to config_json
-CONFIGTX_OUTPUT_DIR="$CONFIG_DIR/configtx"
-BLOCK_FILE="$CONFIGTX_OUTPUT_DIR/$COMPANY.block"
+companyConfig=$(jq ".$COMPANY" $CONFIG_JSON)
+volumesConfig=$(echo $companyConfig| jq -r ".docker.volumes")
+
 VERSION=$(jq -r ".${COMPANY}.docker.fabricTag" $CONFIG_JSON)
 IMAGE_TAG="x86_64-$VERSION"
 
@@ -24,25 +24,26 @@ function _gluster() {
 
 ./testBin.sh
 volumesConfig=$(jq -r ".$COMPANY.docker.volumes" $CONFIG_JSON)
-CONFIGTXDir=$(echo $volumesConfig | jq -r ".CONFIGTX.dir")
-MSPROOTDir=$(echo $volumesConfig | jq -r ".MSPROOT.dir")
+CONFIGTX_DIR=$(echo $volumesConfig | jq -r ".CONFIGTX.dir")
+MSPROOT_DIR=$(echo $volumesConfig| jq -r ".MSPROOT.dir") # update in testBin.sh
 
 
 
 ### setup nfs-server in host
-./common/ubuntu/nfs.sh exposeHost "$CONFIGTXDir"
-./common/ubuntu/nfs.sh exposeHost "$MSPROOTDir"
+./common/ubuntu/nfs.sh exposeHost "$CONFIGTX_DIR"
+./common/ubuntu/nfs.sh exposeHost "$MSPROOT_DIR"
 
 ./common/ubuntu/nfs.sh startHost
 
 thisHostName=$($CURRENT/common/ubuntu/hostname.sh get)
-./common/docker/utils/swarm.sh addNodeLabels $thisHostName CONFIGTX=$CONFIGTXDir
-./common/docker/utils/swarm.sh addNodeLabels $thisHostName MSPROOT=$MSPROOTDir
+./common/docker/utils/swarm.sh addNodeLabels $thisHostName CONFIGTX=$CONFIGTX_DIR
+./common/docker/utils/swarm.sh addNodeLabels $thisHostName MSPROOT=$MSPROOT_DIR
 ./common/docker/utils/swarm.sh getNodeLabels
-
-
 ./common/docker/utils/docker.sh pullIfNotExist hyperledger/fabric-ccenv:$IMAGE_TAG # FIXME: rethink when to pull cc-env
 
 
-
-$CURRENT/config/swarm-gen-go.sh $COMPANY $CRYPTO_CONFIG_DIR $BLOCK_FILE -s $TLS_ENABLED -v $IMAGE_TAG
+COMPOSE_FILE="$CONFIG_DIR/docker-swarm.yaml"
+if [ -f "$COMPOSE_FILE" ]; then
+	./docker-swarm.sh down
+fi
+node -e "require('./config/docker-compose').gen({'COMPANY':'$COMPANY','MSPROOT':'$MSPROOT_DIR','COMPOSE_FILE':'$COMPOSE_FILE','type': 'swarm'})"
