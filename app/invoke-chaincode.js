@@ -51,7 +51,7 @@ const invoke = (channel, richPeers, { chaincodeId, fcn, args }, client = channel
 
 }
 
-exports.invokeChaincode = invoke
+exports.invoke = invoke
 
 const query = (channel, peers, { chaincodeId, fcn, args }, client = channel._clientContext) => {
 	logger.debug('query',{ channelName: channel.getName(), peersSize: peers.length, chaincodeId, fcn, args })

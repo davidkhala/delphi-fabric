@@ -83,7 +83,7 @@ const setCAUser = (client, { username, orgName, TLS }) => {
 }
 
 let retry = 0
-const invoke = require('./invoke-chaincode').invokeChaincode
+const { invoke } = require('./invoke-chaincode')
 const testInvoke = () => {
 	const client = ClientUtil.new()
 	const orgName = 'BU'

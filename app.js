@@ -24,12 +24,13 @@ const app = express()
 const cors = require('cors')
 const WebSocket = require('ws')
 const config = require('./app/config.json')
-const companyConfig = require('./config/orgs.json').delphi
+const COMPANY = 'delphi'
+const companyConfig = require('./config/orgs.json')[COMPANY]
 const channelsConfig = companyConfig.channels
-const orgsConfig = companyConfig.orgs
 const chaincodesConfig = require('./config/chaincode.json')
 const CONFIGTXDir = companyConfig.docker.volumes.CONFIGTX.dir
 
+const wsCommon = require('./express/websocketCommon')
 const helper = require('./app/helper.js')
 const ClientUtil = require('./app/util/client')
 const createChannel = require('./app/create-channel').create
@@ -63,9 +64,9 @@ logger.info('**************  http://' + host + ':' + port +
 		'  ******************')
 server.timeout = 240000
 
-const wss = new WebSocket.Server({ server })
+const ws = new WebSocket.Server({ server })
 
-wss.on('connection', (ws, req) => {
+ws.on('connection', (ws, req) => {
 	const url = require('url')
 
 	const location = url.parse(req.url, true)
@@ -73,179 +74,28 @@ wss.on('connection', (ws, req) => {
 	// or req.headers.cookie (see http://stackoverflow.com/a/16395220/151312)
 
 	const pathSplit = location.path.split('/')
-	console.log(pathSplit)
-	//[ '', 'chaincode', 'invoke', 'vendorChaincode' ]
+	logger.debug('onConnect', pathSplit)
 	let messageCB = (message) => {
-		console.log('received: %s', message)
-		ws.send(JSON.stringify({ data: 'pong', status: 200 }), (err) => {
-			if (err) {
-				console.error(err)
-			}
-		})
+		logger.debug('received: %s', message)
+		wsCommon.pong(ws, (err) => {logger.error(err)})
 	}
-	const sendError = (error) => {
-		ws.send(JSON.stringify({ data: error, status: 400 }), (err) => {
-			if (err) {
-				console.error(err)
-			}
-		})
-	}
+	const { errorHandle } = wsCommon
 
 	if (pathSplit.length === 4) {
 		switch (pathSplit[1]) {
 			case 'chaincode':
 				const chaincodeId = pathSplit[3]
 				const invalidChaincodeId = invalid.chaincodeId({ chaincodeId })
-				if (invalidChaincodeId) return sendError(invalidChaincodeId)
+				if (invalidChaincodeId) return errorHandle(invalidChaincodeId, ws)
 				switch (pathSplit[2]) {
 					case 'invoke':
-						messageCB = (message) => {
-							logger.debug('==================== INVOKE CHAINCODE ==================')
-							const { fcn, args: argsString, orgName, peerIndex, channelName } = JSON.parse(message)
-							const args = argsString?JSON.parse(argsString):[]
-							logger.debug({ chaincodeId, fcn, args, orgName, peerIndex, channelName })
-							const invalidPeer = invalid.peer({ peerIndex, orgName })
-							if (invalidPeer) return sendError(invalidPeer)
-
-							const invalidChannelName = invalid.channelName({ channelName })
-							if (invalidChannelName) return sendError(invalidChannelName)
-
-							const invalidArgs = invalid.args({ args })
-							if (invalidArgs) return sendError(invalidArgs)
-
-							const client = ClientUtil.new()
-							helper.getOrgAdmin(orgName, client).then(() => {
-								const channel = helper.prepareChannel(channelName, client)
-								const peers = helper.newPeers([peerIndex], orgName)
-								return invoke(channel, peers, {
-									chaincodeId, fcn,
-									args
-								}).then((message) => {
-									const data = reducer(message)
-									const sendContent = JSON.stringify({ data:data.responses, status: 200 })
-									ws.send(sendContent, (err) => {
-										if (err) {
-											logger.error(err)
-										}
-									})
-
-								}).catch(err => {
-									logger.error(err)
-									const { proposalResponses } = err
-									if (proposalResponses) {
-										ws.send(webSocketErrorFormat(proposalResponses), err => {
-											if (err) {
-												logger.error(err)
-											}
-										})
-									} else {
-										ws.send(webSocketErrorFormat(err), err => {
-											if (err) {
-												logger.error(err)
-											}
-										})
-									}
-								})
-							})
-
-						}
+						messageCB = require('./express/ws-chaincode').invoke({ COMPANY, chaincodeId }, ws)
 						break
 					case 'instantiate':
-						messageCB = (message) => {
-							logger.debug('==================== INSTANTIATE CHAINCODE ==================')
-
-							const { chaincodeVersion, channelName, fcn, args: argsString, peerIndex, orgName } = JSON.parse(message)
-
-							logger.debug({ channelName, chaincodeId, chaincodeVersion, fcn, argsString, peerIndex, orgName })
-							const args =argsString? JSON.parse(argsString):[]
-							const invalidPeer = invalid.peer({ orgName, peerIndex })
-							if (invalidPeer) return sendError(invalidPeer)
-
-							const invalidChannelName = invalid.channelName({ channelName })
-							if (invalidChannelName) return sendError(invalidChannelName)
-
-							const invalidArgs = invalid.args({ args })
-							if (invalidArgs) return sendError(invalidArgs)
-							const client = ClientUtil.new()
-							return helper.getOrgAdmin(orgName, client).then(() => {
-								const channel = helper.prepareChannel(channelName, client)
-								const peers = helper.newPeers([peerIndex], orgName)
-								return instantiate(channel, undefined, {
-									chaincodeId, chaincodeVersion, fcn,
-									args
-								}).then((_) => {
-									const sendContent = JSON.stringify({ data:`instantiate request has been processed successfully with ${message}`, status: 200 })
-									ws.send(sendContent, (err) => {
-										if (err) {
-											logger.error(err)
-										}
-									})
-								}).catch(err => {
-									const { proposalResponses } = err
-									if (proposalResponses) {
-										ws.send(webSocketErrorFormat(proposalResponses), err => {
-											if (err) {
-												logger.error(err)
-											}
-										})
-									} else {
-										ws.send(webSocketErrorFormat(err), err => {
-											if (err) {
-												logger.error(err)
-											}
-										})
-									}
-								})
-							})
-						}
+						messageCB = require('./express/ws-chaincode').instantiate({ COMPANY, chaincodeId }, ws)
 						break
 					case 'upgrade':
-						messageCB = (message) => {
-							logger.debug('==================== upgrade CHAINCODE ==================')
-
-							const { chaincodeVersion, channelName, fcn, args: argsString, peerIndex, orgName } = JSON.parse(message)
-							const args = argsString?JSON.parse(argsString):[]
-							logger.debug({ channelName, chaincodeId, chaincodeVersion, fcn, args, peerIndex, orgName })
-							const invalidPeer = invalid.peer({ orgName, peerIndex })
-							if (invalidPeer) return sendError(invalidPeer)
-							const invalidChannelName = invalid.channelName({ channelName })
-							if (invalidChannelName) return sendError(invalidChannelName)
-
-							const invalidArgs = invalid.args({ args })
-							if (invalidArgs) return sendError(invalidArgs)
-							const client = ClientUtil.new()
-							helper.getOrgAdmin(orgName, client).then(() => {
-								const channel = helper.prepareChannel(channelName, client)
-								const peers = helper.newPeers([peerIndex], orgName)
-								return upgrade(channel, undefined, {
-									chaincodeId, chaincodeVersion, fcn,
-									args
-								}).then((_) => {
-									const sendContent = JSON.stringify({ data:`upgrade request has been processed successfully with ${message}`, status: 200 })
-									ws.send(sendContent, (err) => {
-										if (err) {
-											logger.error(err)
-										}
-									})
-								}).catch(err => {
-									const { proposalResponses } = err
-									if (proposalResponses) {
-										ws.send(webSocketErrorFormat(proposalResponses), err => {
-											if (err) {
-												logger.error(err)
-											}
-										})
-									} else {
-										ws.send(webSocketErrorFormat(err), err => {
-											if (err) {
-												logger.error(err)
-											}
-										})
-									}
-								})
-							})
-						}
-
+						messageCB = require('./express/ws-chaincode').upgrade({ COMPANY, chaincodeId }, ws)
 						break
 					default:
 
@@ -259,66 +109,9 @@ wss.on('connection', (ws, req) => {
 
 })
 
-const invalid = {
-	orgName: ({ orgName }) => {
-		const orgConfig = orgsConfig[orgName]
-		if (!orgConfig) {
-			return `config of org '${orgName}' not found`
-		}
-		return false
-	},
-	channelName: ({ channelName }) => {
-		const channelConfig = channelsConfig[channelName]
-		if (!channelConfig) {
-			return `config of channel '${channelName}' not found`
-		}
-		return false
-	},
-	peer: ({ orgName, peerIndex }) => {
-		const invalidOrgname = invalid.orgName({ orgName })
-		if (invalidOrgname) return invalidOrgname
-		const orgConfig = orgsConfig[orgName]
-		const peerConfig = orgConfig.peers[peerIndex]
-		if (!peerConfig) {
-			return `config of peer${peerIndex}.${orgName} not found`
-		}
-		return false
-	},
-	args: ({ args }) => {
-		if (!Array.isArray(args)) {
-			return `Arguments must be an array but got:${args}`
-		}
-		return false
-	},
-	chaincodeVersion: ({ chaincodeVersion }) => {
-		//TODO
-	},
-	chaincodeId: ({ chaincodeId }) => {
-		const chaincodeConfig = chaincodesConfig.chaincodes[chaincodeId]
-		if (!chaincodeConfig) {
-			return `config of chaincode ${chaincodeId} not found`
-		}
-		return false
-	}
-}
-const errorCodeMap = {
-	'BAD_REQUEST': 400,
-	'FORBIDDEN': 403,
-	'Failed to deserialize creator identity': 401,
-	'NOT_FOUND': 404,
-	'could not find': 404,
-	'no such file or directory': 404,
-	'not found': 404,
-	'Connect Failed': 503,
-	'Service Unavailable': 503
-
-}
+const invalid = require('./express/formValid').invalid(COMPANY)
+const errorCodeMap = require('./express/errorCodeMap.json')
 const errorSyntaxHandle = (err, res) => {
-	const { data, status } = JSON.parse(webSocketErrorFormat(err))
-	res.status(status)
-	res.send(data)
-}
-const webSocketErrorFormat = (err) => {
 	let status = 500
 	for (let errorMessage in errorCodeMap) {
 		if (err.toString().includes(errorMessage)) {
@@ -326,8 +119,8 @@ const webSocketErrorFormat = (err) => {
 			break
 		}
 	}
-	return JSON.stringify({ data: err.toString(), status })
-
+	res.status(status)
+	res.send(err.toString())
 }
 
 // Create Channel
