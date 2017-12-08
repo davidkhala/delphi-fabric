@@ -9,6 +9,12 @@
     },
     "vendorChaincode": {
       "path": "github.com/vendorCC"
+    },
+    "medicalChaincode": {
+      "path": "github.com/medical"
+    },
+    "exchangeCC":{
+      "path":"github.com/exchange"
     }
   }
 }

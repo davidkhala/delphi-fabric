@@ -88,7 +88,6 @@ exports.gen = ({
 		const orgDomain = `${orgName}.${COMPANY_DOMAIN}`
 		const peersConfig = orgConfig.peers
 
-
 		for (let peerIndex in peersConfig) {
 			const peerDomain = `peer${peerIndex}.${orgDomain}`
 			const peerConfig = peersConfig[peerIndex]
@@ -108,6 +107,8 @@ exports.gen = ({
 						`CORE_PEER_TLS_ENABLED=${TLS}`,
 						`CORE_PEER_ID=${peerDomain}`,
 						`CORE_PEER_ADDRESS=${peerDomain}:7051`,
+						`CORE_CHAINCODE_EXECUTETIMEOUT=180s`,
+
 						`GODEBUG=netdns=go`//NOTE aliyun only
 					]
 			if (TLS) {
@@ -128,7 +129,7 @@ exports.gen = ({
 				ports,
 				volumes: [
 					`/run/docker.sock:${dockerSock}`,
-					`${MSPROOTVolume}:${container.dir.MSPROOT}`]
+					`${MSPROOTVolume}:${container.dir.MSPROOT}`,
 			}
 
 			let peerServiceName = peerDomain
@@ -141,9 +142,9 @@ exports.gen = ({
 					}
 				}
 				//TODO network map service here
-				peerService.deploy={
-					placement:{
-						constraints:peerConfig.swarm.constraints
+				peerService.deploy = {
+					placement: {
+						constraints: peerConfig.swarm.constraints
 					}
 				}
 			} else {
@@ -155,7 +156,6 @@ exports.gen = ({
 		}
 		const caConfig = orgConfig.ca
 		if (caConfig.enable) {
-
 
 			const CAVolume = path.join(MSPROOT, 'peerOrganizations', orgDomain, 'ca')
 			const caServerConfigFile = path.resolve(CAVolume, 'fabric-ca-server-config.yaml')
