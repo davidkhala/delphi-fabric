@@ -1,20 +1,17 @@
 {
-  "GOPATH": "/home/david/Documents/delphi-fabric/GOPATH/",
+  "GOPATH": "/home/david/go/",
   "chaincodes": {
     "delphiChaincode": {
-      "path": "github.com/delphi"
+      "path": "github.com/davidkhala/chaincode/delphi"
     },
     "adminChaincode": {
-      "path": "github.com/admin"
+      "path": "github.com/davidkhala/chaincode/admin"
     },
     "vendorChaincode": {
-      "path": "github.com/vendorCC"
-    },
-    "medicalChaincode": {
-      "path": "github.com/medical"
+      "path": "github.com/davidkhala/chaincode/vendorCC"
     },
     "exchangeCC":{
-      "path":"github.com/exchange"
+      "path":"github.com/davidkhala/chaincode/exchange"
     }
   }
 }

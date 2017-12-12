@@ -60,7 +60,5 @@ for channelName in $channelNames; do
     #NOTE Capital char in Channel name is not supported  [channel: delphiChannel] Rejecting broadcast of config message from 172.18.0.1:36954 because of error: initializing configtx manager failed: Bad channel id: channel ID 'delphiChannel' contains illegal characters
 done
 jq ".$COMPANY.docker.volumes.CONFIGTX.dir=\"$CONFIGTX_DIR\"" $CONFIG_JSON | sponge $CONFIG_JSON
-# write back GOPATH
-ChaincodeJson=$config_dir/chaincode.json
-gopath=${CURRENT}/GOPATH/
-jq ".GOPATH=\"${gopath}\"" $ChaincodeJson | sponge $ChaincodeJson
+
+go get -u "github.com/davidkhala/chaincode" # FIXME: please use your own chaincode as in config/chaincode.json

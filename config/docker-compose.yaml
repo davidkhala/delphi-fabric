@@ -27,6 +27,7 @@ services:
       - CORE_PEER_TLS_ENABLED=true
       - CORE_PEER_ID=peer0.BU.Delphi.com
       - 'CORE_PEER_ADDRESS=peer0.BU.Delphi.com:7051'
+      - CORE_CHAINCODE_EXECUTETIMEOUT=180s
       - GODEBUG=netdns=go
       - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/crypto-config/peerOrganizations/BU.Delphi.com/peers/peer0.BU.Delphi.com/tls/server.key
       - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/crypto-config/peerOrganizations/BU.Delphi.com/peers/peer0.BU.Delphi.com/tls/server.crt
@@ -58,6 +59,7 @@ services:
       - CORE_PEER_TLS_ENABLED=true
       - CORE_PEER_ID=peer1.BU.Delphi.com
       - 'CORE_PEER_ADDRESS=peer1.BU.Delphi.com:7051'
+      - CORE_CHAINCODE_EXECUTETIMEOUT=180s
       - GODEBUG=netdns=go
       - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/crypto-config/peerOrganizations/BU.Delphi.com/peers/peer1.BU.Delphi.com/tls/server.key
       - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/crypto-config/peerOrganizations/BU.Delphi.com/peers/peer1.BU.Delphi.com/tls/server.crt
@@ -102,6 +104,7 @@ services:
       - CORE_PEER_TLS_ENABLED=true
       - CORE_PEER_ID=peer0.ENG.Delphi.com
       - 'CORE_PEER_ADDRESS=peer0.ENG.Delphi.com:7051'
+      - CORE_CHAINCODE_EXECUTETIMEOUT=180s
       - GODEBUG=netdns=go
       - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/crypto-config/peerOrganizations/ENG.Delphi.com/peers/peer0.ENG.Delphi.com/tls/server.key
       - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/crypto-config/peerOrganizations/ENG.Delphi.com/peers/peer0.ENG.Delphi.com/tls/server.crt
@@ -133,6 +136,7 @@ services:
       - CORE_PEER_TLS_ENABLED=true
       - CORE_PEER_ID=peer0.PM.Delphi.com
       - 'CORE_PEER_ADDRESS=peer0.PM.Delphi.com:7051'
+      - CORE_CHAINCODE_EXECUTETIMEOUT=180s
       - GODEBUG=netdns=go
       - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/crypto-config/peerOrganizations/PM.Delphi.com/peers/peer0.PM.Delphi.com/tls/server.key
       - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/crypto-config/peerOrganizations/PM.Delphi.com/peers/peer0.PM.Delphi.com/tls/server.crt

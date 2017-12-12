@@ -129,7 +129,7 @@ exports.gen = ({
 				ports,
 				volumes: [
 					`/run/docker.sock:${dockerSock}`,
-					`${MSPROOTVolume}:${container.dir.MSPROOT}`,
+					`${MSPROOTVolume}:${container.dir.MSPROOT}`]
 			}
 
 			let peerServiceName = peerDomain
