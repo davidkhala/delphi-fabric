@@ -186,7 +186,7 @@ exports.gen = ({
 						}]
 				},
 				ca: {
-					certfile: `${container.dir.CA_HOME}/ca.$ORG_DOMAIN-cert.pem`,
+					certfile: `${container.dir.CA_HOME}/ca.${orgDomain}-cert.pem`,
 					keyfile: `${container.dir.CA_HOME}/${path.basename(caPrivateKey)}`
 				}
 			}
@@ -198,7 +198,7 @@ exports.gen = ({
 				ORDERER_GENERAL_TLS_ROOTCAS += `,${container.dir.MSPROOT}/peerOrganizations/${orgDomain}/tlsca/tlsca.${orgDomain}-cert.pem`
 				caContainerName = `tlsca.${orgDomain}`
 				caServerConfig.tls = {
-					certfile: `${container.dir.CA_HOME}/ca.$ORG_DOMAIN-cert.pem`,
+					certfile: `${container.dir.CA_HOME}/ca.${orgDomain}-cert.pem`,
 					keyfile: `${container.dir.CA_HOME}/${path.basename(caPrivateKey)}`
 				}
 			} else {
