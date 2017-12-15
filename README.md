@@ -163,13 +163,16 @@ test to run an intermediate CA
  0. run steps 1-2 in section **test on single host**
  1. run ``node app/testIntermediateCA.js`` (TODO detach mode is under development, if you found no response in the terminal, Ctrl+C and check running state by ``docker ps`` and ``docker logs ca.cityU.BU.Delphi.com`` )
 
-      
-    
+govendor: to import third-party package in vendor folder 
+--------      
+  - govendor could only be run under system $GOPATH, then the location of chaincode cannot be arbitrary again
+  - my sample chaincodes have been migrated to ``github.com/davidkhala/chaincode``
+  
 
 
     
 ## TODO
-- java sdk and docker-swarm: keep udpate
+- java sdk and docker-swarm: keep update
 - endorsement policy config
 - test backup and recover
 - kafka
