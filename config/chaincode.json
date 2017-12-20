@@ -2,16 +2,13 @@
   "GOPATH": "/home/david/go/",
   "chaincodes": {
     "delphiChaincode": {
-      "path": "github.com/davidkhala/chaincode/delphi"
+      "path": "github.com/davidkhala/chaincode/golang/delphi"
     },
     "adminChaincode": {
-      "path": "github.com/davidkhala/chaincode/admin"
+      "path": "github.com/davidkhala/chaincode/golang/admin"
     },
     "vendorChaincode": {
-      "path": "github.com/davidkhala/chaincode/vendorCC"
-    },
-    "exchangeCC":{
-      "path":"github.com/davidkhala/chaincode/exchange"
+      "path": "github.com/davidkhala/chaincode/golang/vendorCC"
     }
   }
 }
