@@ -1,52 +1,257 @@
-const {instantWS, persistWS,wsStates,clearEventListener} = require('./websocketCommon')
+const {persistWS, wsStates, clearEventListener} = require('./websocketCommon')
 const WebSocket = require('ws')
 const log4js = require('log4js')
 const logger = log4js.getLogger('medical-common')
 logger.setLevel('DEBUG')
-exports.errJson = (json, {errCode, errMessage} = {errCode: 'success', errMessage: ''}) => {
+
+const errJson = (json, {errCode, errMessage} = {errCode: 'success', errMessage: ''}) => {
+
     return Object.assign({errCode, errMessage}, json)
 }
-
-exports.newWS = ({wsID}) =>
+exports.errJson = errJson
+exports.errCase = {
+    invalidHKID: {errCode: "fail", errMessage: `invalid HKID`}
+}
+/**
+ * consent is a consent action counter,0 =>false, >0 => true
+ * @param consent
+ * @returns {string}
+ */
+const getConsentStatus = (consent) => {
+    if (consent > 0) {
+        return "consent"
+    } else {
+        return "pending"
+    }
+}
+exports.getConsentStatus = getConsentStatus
+const getPaymentStatus = (bool) => {
+    if (bool) {
+        return "paid"
+    } else {
+        return "unpaid"
+    }
+}
+exports.getPaymentStatus = getPaymentStatus
+exports.newWS = ({wsID, route}) =>
     persistWS({
-        //10.6.88.130
-        //10.6.64.244
-        wsUrl: `wss://10.6.64.244:3001/${wsID}:password`,
+        wsUrl: `wss://10.6.64.242:3001/medical/${route}/${wsID}:password`,
         options: {
             rejectUnauthorized: false
         }
     })
 
+/**
+ *
+ * @param ws
+ * @param fn
+ * @param args each empty object as array element ==> 1 request
+ * @returns {*}
+ */
+const send = (ws, {fn, args = [{}]}) => {
 
-exports.send = (ws, {fn, args = []}) => {
-
-    if(ws.readyState === WebSocket.OPEN){
-        logger.debug('send',{fn, args})
+    if (ws.readyState === WebSocket.OPEN) {
+        logger.debug('send', {fn, args})
         ws.send(JSON.stringify({fn, args}))
-    }else {
-        logger.debug('state',wsStates[ws.readyState])
-        ws.on('open',()=>{
-            logger.debug('opened, send',{fn, args})
+    } else {
+        logger.debug('state', wsStates[ws.readyState])
+        ws.on('open', () => {
+            require('sleep').msleep(10)// FIXME waiting for Hyperledger enroll
+            logger.debug(ws.url, ws.readyState, 'opened, send', JSON.stringify({fn, args}))
+
             ws.send(JSON.stringify({fn, args}))
         })
     }
 
     return ws
 }
+exports.send = send
 /**
  *
  * @param ws
  * @param onMessage
+ * @param onErr
  */
-exports.setOnMessage = (ws, onMessage) => {
+const setOnMessage = (ws, onMessage, onErr) => {
     ws.on('message', (data) => {
-        logger.debug('message',data)
-        const {msg, index, state, resp,err} = JSON.parse(data)
-        if (onMessage) onMessage({action: msg, errCode:state,errMessage: err?err:'', resp})
-        clearEventListener(ws,'message')
+        logger.debug('message', data)
+        const {msg, index, state, resp, err} = JSON.parse(data)
+        if (msg === 'txState') {
+            ws.txState = state;
+        } else {
+            if (err) {
+                logger.error(data)
+                const errorWrapper = {
+                    action: msg, index, errCode: state,
+                    errMessage: err
+                }
+                if (onErr) {
+                    onErr(errorWrapper)
+                }else {
+                    throw new Error(JSON.stringify(errorWrapper))
+                }
+            } else {
+                onMessage({
+                    action: msg,
+                    index,
+                    resp,
+                    errCode: 'success' ,
+                    errMessage: state
+                })
+            }
+            clearEventListener(ws, 'message')
+        }
     })
 }
+exports.setOnMessage = setOnMessage
 
-exports.PIBuild = (insurers) => {
-    return insurers.map(({insurerID, IPN}) => `${insurerID}+${IPN}`)
+
+exports.trimHKID = (hkid) => {
+    const strValidChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+    // basic check length
+    const rawLength = hkid.length
+    if (rawLength < 8)
+        return false;
+
+    let trimHKID = hkid;
+    // handling bracket
+    if (hkid.charAt(rawLength - 3) === '(' && hkid.charAt(rawLength - 1) === ')')
+        trimHKID = hkid.substring(0, rawLength - 3) + hkid.charAt(rawLength - 2);
+
+    // convert to upper case
+    trimHKID = trimHKID.toUpperCase();
+
+
+    // regular expression to check pattern and split
+    const hkidPat = /^([A-Z]{1,2})([0-9]{6})([A0-9])$/;
+    const matchArray = trimHKID.match(hkidPat);
+
+    // not match, return false
+    if (matchArray == null)
+        return false;
+
+    // the character part, numeric part and check digit part
+    const charPart = matchArray[1];
+    const numPart = matchArray[2];
+    const checkDigit = matchArray[3];
+
+    // calculate the checksum for character part
+    let checkSum = 0;
+    if (charPart.length === 2) {
+        checkSum += 9 * (10 + strValidChars.indexOf(charPart.charAt(0)));
+        checkSum += 8 * (10 + strValidChars.indexOf(charPart.charAt(1)));
+    } else {
+        checkSum += 9 * 36;
+        checkSum += 8 * (10 + strValidChars.indexOf(charPart));
+    }
+
+    // calculate the checksum for numeric part
+    for (let i = 0, j = 7; i < numPart.length; i++, j--)
+        checkSum += j * numPart.charAt(i);
+
+    // verify the check digit
+    const remaining = checkSum % 11;
+    const verify = remaining === 0 ? 0 : 11 - remaining;
+
+    if (verify === parseInt(checkDigit) || (verify === 10 && checkDigit === 'A')) {
+        return trimHKID
+    } else {
+        return false
+    }
+}
+
+exports.claimListHandler = (req, res) => {
+    const {claimID} = req.body
+    const {ws} = res.locals;
+
+    send(ws, {fn: 'getVoucherClaimRecords'})
+
+    setOnMessage(ws, (message) => {
+        const {resp} = message
+
+        const claimMap = {}
+        let promise = Promise.resolve()
+        const targetResp = (claimID ? [resp.find(({claimId}) => {
+                return claimId === claimID
+            })]
+            : resp)
+        targetResp.forEach(({
+                                claimId,
+                                time, token, briefDesc, fee, consent,
+                                patientId, insurers
+                            }) => {
+
+            claimMap[claimId] = {
+                claimID: claimId,
+                visitToken: token,
+                fee,
+                claimTime: time,
+                patientConsentStatus: getConsentStatus(consent),
+                medicalProcedureDescription: briefDesc,
+                insurers: []
+            }
+
+            insurers.forEach(({insurerId, policyNum}) => {
+                promise = promise.then(() => new Promise((resolve, reject) => {
+                    send(ws, {fn: 'getPolicyRecords', args: [{insurerId, policyNum, patientId}]})
+                    setOnMessage(ws, message => {
+                        const {resp} = message
+                        const policy = {
+                            insurerID: insurerId,
+                            IPN: policyNum
+                        }
+                        if (resp && resp.length === 1) {
+                            const {startTime, endTime, maxAmount} = resp[0];
+                            policy.startTime = startTime
+                            policy.endTime = endTime
+                            policy.maxPaymentAmount = maxAmount
+                        }
+                        resolve(policy)
+                    })
+                })).then((policy) => new Promise((resolve, reject) => {
+                        send(ws, {
+                            fn: 'getVoucherPaymentRecords',
+                            args: [{insurerId, policyNum, claimId: claimID}]
+                        })
+                        setOnMessage(ws, message => {
+                            const {resp} = message
+                            const insurer = {
+                                policy,
+                                paymentStatus: getPaymentStatus(false)
+                            }
+
+                            if (resp && resp.length === 1) {
+                                const {amount, time} = resp[0]
+                                insurer.paymentStatus = getPaymentStatus(true)
+                                insurer.paymentTime = time
+                                insurer.paymentAmount = amount
+                            }
+
+                            claimMap[claimId].insurers.push(insurer)//anyway
+
+                            resolve()
+                        })
+
+                    })
+                )
+            })
+
+
+        })
+
+
+        promise.then(() => {
+
+            const voucher_claims = Object.keys(claimMap).map((key) => {
+                return claimMap[key];
+            });
+            res.send(errJson({voucher_claims}))
+        }).catch(err => {
+            logger.error(err)
+            res.send(errJson({},{errCode:'syntax error',errMessage:err}))
+            return Promise.reject(err)
+        })
+
+    })
 }

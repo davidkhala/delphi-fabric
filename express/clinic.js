@@ -1,138 +1,125 @@
 const express = require('express')
 const router = express.Router()
-const visitToken = 'A123456(0)|clinic0001|1513044007425' // fixme
-const BPI = 'BlockchainPolicyID'
-const insurerID = 'AXA'
 
-const prescription = 'aspirin'
-const { errJson, newWS, PIBuild, send, setOnMessage } = require('./medicalCommon')
+const log4js = require('log4js')
+const logger = log4js.getLogger('clinic')
+logger.setLevel('DEBUG')
+const {
+    errJson, newWS, send, setOnMessage,
+    trimHKID, errCase, getConsentStatus, getPaymentStatus,claimListHandler
+} = require('./medicalCommon')
 const connectionPool = {}
 
 router.use((req, res, next) => {
-	console.log(req.url, req.body)
-	next()
+    logger.debug('recv request', req.url, req.body);
+    logger.debug('connectionPool', Object.keys(connectionPool));
+    const {clinicID} = req.body;
+    if (!connectionPool[clinicID]) {
+        const ws = newWS({wsID: clinicID, route: "clinic"})
+        connectionPool[clinicID] = ws
+
+        ws.on('close', event => {
+            console.log(`close delete connectionPool[${clinicID}]`);
+            delete connectionPool[clinicID]
+        });
+    }
+
+    res.locals.ws = connectionPool[clinicID]
+
+    next()
 })
 router.post('/visit_registration/list', (req, res) => {
-	const { clinicID, HKID } = req.body
-	const ws = connectionPool[HKID] ? connectionPool[HKID] : newWS({ wsID: clinicID })
+    const {HKID} = req.body
+    const trimmed = trimHKID(HKID)
+    if (!trimmed) {
+        res.send(errJson({}, errCase.invalidHKID))
+        return
+    }
 
-	setOnMessage(ws, message => {
-		const { errMessage, resp: respTemp } = message
-		const resp = respTemp[0]
-		const { token, bpIds } = resp
-		res.json(errJson({ BPIs: bpIds, visitToken: token }, { errMessage }))
+    const {ws} = res.locals;
 
-	})
-	send(ws, { fn: 'getRegistrationRecords', args: [{ patientId: HKID, clinicId: clinicID }] })
-	ws.on('close', event => {
-		console.log('close')
-		delete connectionPool[HKID]
-	})
+    setOnMessage(ws, message => {
+        const {resp} = message
+        if (resp && resp.length === 1) {
+            const {token, insurers} = resp[0]
+            const policies = insurers.map(({insurerId, policyNum}) => {
+                return {IPN: policyNum, insurerID: insurerId}
+            })
+            res.send(errJson({policies, visitToken: token}, message))
+        } else {
+            res.send(errJson({}), message)
+        }
+    })
+    send(ws, {fn: 'getRegistrationRecords', args: [{patientId: trimmed}]})
+
 
 })
 router.post('/policy/view', (req, res) => {
-	const { clinicID, BPIs: BPIsString } = req.body
-	const ws = connectionPool[HKID] ? connectionPool[HKID] : newWS({ wsID: clinicID })
+    const {HKID, policies} = req.body
+    const trimmed = trimHKID(HKID)
+    if (!trimmed) {
+        res.send(errJson({}, errCase.invalidHKID))
+        return
+    }
+    const {ws} = res.locals;
 
-	const BPIs = JSON.parse(BPIsString)
-	const args = BPIs.map(entry => {return { bpId: entry }})
-	send(ws, { fn: 'getPolicyRecords', args })
-	setOnMessage(ws, message => {
-		const { errMessage, resp } = message
-		res.json(errJson({ policies: resp }, { errMessage }))
-	})
+    setOnMessage(ws, message => {
+        const {resp} = message
+        const policies = resp.map(({insurerId, policyNum, startTime, endTime, maxAmount}) => {
+            return {IPN: policyNum, insurerID: insurerId, startTime, endTime, maxPaymentAmount: maxAmount}
+        })
 
-	ws.on('close', event => {
-		console.log('close')
-		delete connectionPool[HKID]
-	})
+        res.send(errJson({policies}, message))
+    })
+    send(ws, {
+        fn: 'getPolicyRecords',
+        args: JSON.parse(policies).map(({IPN, insurerID}) => {
+            return {insurerId: insurerID, policyNum: IPN, patientId: trimmed}
+        })
+    })
+
 })
 router.post('/voucher_claim/create', (req, res) => {
-	const { clinicID, visitToken, insurers: insurersString, fee, prescription, claimID } = req.body
+    const {
+        claimID,
+        claimTime,
+        HKID,
+        visitToken,
+        medicalProcedureDescription,
+        fee,
+        policies
+    } = req.body
+    const trimmed = trimHKID(HKID)
+    if (!trimmed) {
+        res.send(errJson({}, errCase.invalidHKID))
+        return
+    }
 
-	const insurers = JSON.parse(insurersString)
-	const ws = connectionPool[HKID] ? connectionPool[HKID] : newWS({ wsID: clinicID })
-	send(ws, {
-		fn: 'setVoucherClaimRecords',
-		args: [
-			{
-				claimId: claimID, clinicId: clinicID, token: visitToken, briefDesc: prescription, fee,
-				insurerIds: insurers.map(({ insurerID }) => {return insurerID}),
-				bpIds: insurers.map(({ BPI }) => {return BPI})
-			}]
-	})
+    const {ws} = res.locals;
 
-	setOnMessage(ws, message => {
-		const { errMessage } = message
-		res.json(errJson({}, { errMessage }))
-	})
-	ws.on('close', event => {
-		console.log('close')
-		delete connectionPool[HKID]
-	})
+    send(ws, {
+        fn: 'setVoucherClaimRecords',
+        args: [
+            {
+                claimId: claimID,
+                patientId: trimmed,
+                time: claimTime,
+                token: visitToken,
+                briefDesc: medicalProcedureDescription,
+                fee,
+                insurers: JSON.parse(policies).map(({IPN, insurerID}) => {
+                    return {insurerId: insurerID, policyNum: IPN}
+                }),
+            }]
+    })
+
+    setOnMessage(ws, message => {
+        res.send(errJson({}, message))
+    })
+
 })
-router.post('/voucher_claim/list', (req, res) => {
-	const { clinicID, claimID } = req.body
-	const ws = connectionPool[HKID] ? connectionPool[HKID] : newWS({ wsID: clinicID })
 
-	send(ws, { fn: 'getVoucherClaimRecords', args: [{ clinicId: clinicID }] })
+router.post('/voucher_claim/list', claimListHandler)
 
-	setOnMessage(ws, (message) => {
-		const { errMessage, resp} = message
-
-		/**
-		 * {claimId,bpId}
-		 * @type {Array}
-		 */
-		const paymentListArgs = []
-		const claimMap = {}
-		(claimID ? [resp.find(({ claimId }) => {return claimId === claimID})]
-				: resp).forEach(({
-													 claimId, time, briefDesc, fee, insurerIds, bpIds, consent
-												 }) => {
-
-			const insurers = []
-			for (let i = 0; i < insurerIds.length; i++) {
-				insurers.push({
-					insurerID: insurerIds[i],
-					BPI: bpIds[i]
-				})
-				paymentListArgs.push({ claimId, bpId: bpIds[i] })
-			}
-
-			claimMap[claimId] = {
-				claimID: claimId,
-				fee,
-				insurers,
-				patientConsentStatus: consent,
-				claimTime: time,
-				prescription: briefDesc
-			}
-		})
-
-		send(ws, { fn: 'getVoucherPaymentRecords', args: paymentListArgs })
-		setOnMessage(ws, message => {
-			const { errMessage, resp } = message
-			for (let i = 0; i < resp.length; i++) {
-				const response = resp[i]
-				const { amount, time } = response
-				const request = paymentListArgs[i]
-				const { claimId, bpId } = request
-
-				claimMap[claimId].insurers[i].payment = {
-					paymentTime: time,
-					paymentAmount: amount
-				}
-			}
-			const voucher_claims = [Object.values(claimMap)]
-			res.send(errJson({ voucher_claims }, { errMessage }))
-
-		})
-	})
-	ws.on('close', event => {
-		console.log('close')
-		delete connectionPool[HKID]
-	})
-})
 
 module.exports = router

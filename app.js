@@ -56,6 +56,8 @@ app.use(bodyParser.urlencoded({
 }))
 app.use('/config', require('./express/configExpose'))
 app.use('/patient',require('./express/patient'))
+app.use('/clinic',require('./express/clinic'))
+
 app.get('/',(req,res,next)=>{
     res.send('pong from davids server')
 })

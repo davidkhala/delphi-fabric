@@ -184,3 +184,4 @@ govendor: to import third-party package in vendor folder
 - /common/docker/install.sh ::suDocker problem: gpasswd -a $USER docker <The user object here is 'root' when sudo, not the original 'david'>
 - swarm mode : network server to manage ip:hostname and deploy constraints
 - stress test in nodejs
+- test: whether chaincode upgrade will reset data?
