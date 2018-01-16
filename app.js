@@ -30,7 +30,7 @@ const channelsConfig = companyConfig.channels
 const chaincodesConfig = require('./config/chaincode.json')
 const CONFIGTXDir = companyConfig.docker.volumes.CONFIGTX.dir
 
-const wsCommon = require('./express/websocketCommon')
+const wsCommon = require('./express/webSocketCommon')
 const helper = require('./app/helper.js')
 const ClientUtil = require('./app/util/client')
 const createChannel = require('./app/create-channel').create

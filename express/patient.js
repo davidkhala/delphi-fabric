@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const {clearEventListener} = require('./websocketCommon')
 const log4js = require('log4js')
 const logger = log4js.getLogger('patient')
 logger.setLevel('DEBUG')
@@ -35,7 +34,7 @@ router.use((req, res, next) => {
     next()
 });
 
-router.post('/policy/list', (req, res) => {
+router.post('/policy/view', (req, res) => {
 
     const {IPN, insurerID} = req.body;
     const {ws} = res.locals;

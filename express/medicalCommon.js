@@ -1,4 +1,4 @@
-const {persistWS, wsStates, clearEventListener} = require('./websocketCommon')
+const {persistWS, wsStates, clearEventListener} = require('./webSocketCommon')
 const WebSocket = require('ws')
 const log4js = require('log4js')
 const logger = log4js.getLogger('medical-common')
