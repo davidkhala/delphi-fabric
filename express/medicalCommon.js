@@ -1,4 +1,4 @@
-const {persistWS, wsStates, clearEventListener,newLogger} = require('./webSocketCommon')
+const {persistWS, wsStates, clearEventListener, newLogger} = require('./webSocketCommon')
 const WebSocket = require('ws')
 const logger = newLogger('medical-common')
 const errJson = (json, {errCode, errMessage} = {errCode: 'success', errMessage: ''}) => {
@@ -84,7 +84,7 @@ const setOnMessage = (ws, onMessage, onErr) => {
                 }
                 if (onErr) {
                     onErr(errorWrapper)
-                }else {
+                } else {
                     throw new Error(JSON.stringify(errorWrapper))
                 }
             } else {
@@ -92,7 +92,7 @@ const setOnMessage = (ws, onMessage, onErr) => {
                     action: msg,
                     index,
                     resp,
-                    errCode: 'success' ,
+                    errCode: 'success',
                     errMessage: state
                 })
             }
@@ -174,12 +174,14 @@ exports.claimListHandler = (req, res) => {
             })]
             : resp)
         targetResp.forEach(({
+                                clinicId,
                                 claimId,
                                 time, token, briefDesc, fee, consent,
                                 patientId, insurers
                             }) => {
 
             claimMap[claimId] = {
+                clinicID: clinicId,
                 claimID: claimId,
                 visitToken: token,
                 fee,
@@ -246,7 +248,7 @@ exports.claimListHandler = (req, res) => {
             res.send(errJson({voucher_claims}))
         }).catch(err => {
             logger.error(err)
-            res.send(errJson({},{errCode:'syntax error',errMessage:err}))
+            res.send(errJson({}, {errCode: 'syntax error', errMessage: err}))
             return Promise.reject(err)
         })
 
