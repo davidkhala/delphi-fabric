@@ -1,8 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const log4js = require('log4js')
-const logger = log4js.getLogger('patient')
-logger.setLevel('DEBUG')
+const {newLogger} = require('./webSocketCommon')
+const logger = newLogger('patient')
 const {errJson, newWS, send, setOnMessage, trimHKID, errCase, claimListHandler} = require('./medicalCommon');
 
 const connectionPool = {};

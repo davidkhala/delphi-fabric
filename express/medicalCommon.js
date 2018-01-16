@@ -1,9 +1,6 @@
-const {persistWS, wsStates, clearEventListener} = require('./webSocketCommon')
+const {persistWS, wsStates, clearEventListener,newLogger} = require('./webSocketCommon')
 const WebSocket = require('ws')
-const log4js = require('log4js')
-const logger = log4js.getLogger('medical-common')
-logger.setLevel('DEBUG')
-
+const logger = newLogger('medical-common')
 const errJson = (json, {errCode, errMessage} = {errCode: 'success', errMessage: ''}) => {
 
     return Object.assign({errCode, errMessage}, json)

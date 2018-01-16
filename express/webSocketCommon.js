@@ -1,8 +1,13 @@
 const WebSocket = require('ws')
 const log4js = require('log4js')
-const logger = log4js.getLogger('ws-common')
-logger.setLevel('DEBUG')
 
+const newLogger = (moduleName)=> {
+    const logger = log4js.getLogger(moduleName)
+    logger.level = 'debug'
+    return logger
+}
+exports.newLogger = newLogger
+const logger = newLogger('ws-common')
 exports.wsStates = ['CONNECTING', 'OPEN', 'CLOSING', 'CLOSED']
 const wsMethods = ['open', 'message', 'close', 'error']
 
