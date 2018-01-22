@@ -11,20 +11,22 @@ const {
 const connectionPool = {}
 
 router.use((req, res, next) => {
-    logger.debug('recv request', req.url, req.body);
-    logger.debug('connectionPool', Object.keys(connectionPool));
+    const route = "clinic"
+    logger.debug(route, 'recv request', req.url, req.body);
+    logger.debug(route, 'connectionPool', Object.keys(connectionPool));
     const {clinicID} = req.body;
-    if (!connectionPool[clinicID]) {
-        const ws = newWS({wsID: clinicID, route: "clinic"})
-        connectionPool[clinicID] = ws
+    const wsID = clinicID
+    if (!connectionPool[wsID]) {
+        const ws = newWS({wsID, route})
+        connectionPool[wsID] = ws
 
         ws.on('close', event => {
-            console.log(`close delete connectionPool[${clinicID}]`);
-            delete connectionPool[clinicID]
+            logger.error(route, 'closeEvent', `delete connectionPool[${wsID}]`);
+            delete connectionPool[wsID]
         });
     }
 
-    res.locals.ws = connectionPool[clinicID]
+    res.locals.ws = connectionPool[wsID]
 
     next()
 })
@@ -32,7 +34,7 @@ router.post('/visit_registration/list', (req, res) => {
     const {HKID} = req.body
     const trimmed = trimHKID(HKID)
     if (!trimmed) {
-        res.send(errJson({}, errCase.invalidHKID))
+        res.send(errCase.invalidParam("HKID"))
         return
     }
 
@@ -47,9 +49,9 @@ router.post('/visit_registration/list', (req, res) => {
             })
             res.send(errJson({policies, visitToken: token}, message))
         } else {
-            res.send(message)
+            res.send(errCase.emptyResp)
         }
-    },onErr(res))
+    }, onErr(res))
     send(ws, {fn: 'getRegistrationRecords', args: [{patientId: trimmed}]})
 
 
@@ -58,7 +60,7 @@ router.post('/policy/view', (req, res) => {
     const {HKID, policies} = req.body
     const trimmed = trimHKID(HKID)
     if (!trimmed) {
-        res.send(errJson({}, errCase.invalidHKID))
+        res.send(errCase.invalidParam("HKID"))
         return
     }
     const {ws} = res.locals;
@@ -70,10 +72,11 @@ router.post('/policy/view', (req, res) => {
         })
 
         res.send(errJson({policies}, message))
-    },onErr(res))
+    }, onErr(res))
+
     send(ws, {
         fn: 'getPolicyRecords',
-        args: policies.map(({IPN, insurerID}) => {
+        args: (Array.isArray(policies) ? policies : JSON.parse(policies)).map(({IPN, insurerID}) => {
             return {insurerId: insurerID, policyNum: IPN, patientId: trimmed}
         })
     })
@@ -91,7 +94,7 @@ router.post('/voucher_claim/create', (req, res) => {
     } = req.body
     const trimmed = trimHKID(HKID)
     if (!trimmed) {
-        res.send(errJson({}, errCase.invalidHKID))
+        res.send(errCase.invalidParam("HKID"))
         return
     }
 
@@ -99,7 +102,7 @@ router.post('/voucher_claim/create', (req, res) => {
 
     setOnMessage(ws, message => {
         res.send(message)
-    },onErr(res))
+    }, onErr(res))
 
     send(ws, {
         fn: 'setVoucherClaimRecords',
@@ -111,7 +114,7 @@ router.post('/voucher_claim/create', (req, res) => {
                 token: visitToken,
                 briefDesc: medicalProcedureDescription,
                 fee,
-                insurers: policies.map(({IPN, insurerID}) => {
+                insurers: (Array.isArray(policies) ? policies : JSON.parse(policies)).map(({IPN, insurerID}) => {
                     return {insurerId: insurerID, policyNum: IPN}
                 }),
             }]

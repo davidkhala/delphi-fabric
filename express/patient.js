@@ -8,8 +8,9 @@ const {
 
 const connectionPool = {};
 router.use((req, res, next) => {
-    logger.debug('recv request', req.url, req.body);
-    logger.debug('connectionPool', Object.keys(connectionPool));
+    const route = "patient"
+    logger.debug(route,'recv request', req.url, req.body);
+    logger.debug(route,'connectionPool', Object.keys(connectionPool));
     const {HKID} = req.body;
 
     const trimmed = trimHKID(HKID)
@@ -17,19 +18,19 @@ router.use((req, res, next) => {
         res.send(errCase.invalidHKID)
         return
     }
+    const wsID = trimmed;
 
-
-    if (!connectionPool[trimmed]) {
-        const ws = newWS({wsID: trimmed, route: "patient"})
-        connectionPool[trimmed] = ws
+    if (!connectionPool[wsID]) {
+        const ws = newWS({wsID, route})
+        connectionPool[wsID] = ws
 
         ws.on('close', event => {
-            console.log(`close delete connectionPool[${trimmed}]`);
-            delete connectionPool[trimmed]
+            logger.error(route,'closeEvent',`delete connectionPool[${wsID}]`);
+            delete connectionPool[wsID]
         });
     }
 
-    res.locals.ws = connectionPool[trimmed]
+    res.locals.ws = connectionPool[wsID]
 
 
     next()
@@ -62,13 +63,14 @@ router.post('/visit_registration/create', (req, res) => {
 
     const {visitToken, clinicID, policies} = req.body;
 
+
     const {ws} = res.locals;
 
     setOnMessage(ws, (message) => {
 
         res.send(message)
     }, onErr(res));
-    const insurers = policies.map(({IPN, insurerID}) => {
+    const insurers = (Array.isArray(policies)?policies:JSON.parse(policies)).map(({IPN, insurerID}) => {
         return {insurerId: insurerID, policyNum: IPN}
     })
 

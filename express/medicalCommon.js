@@ -7,16 +7,23 @@ const errJson = (json, {errCode, errMessage} = {errCode: 'success', errMessage: 
 }
 exports.errJson = errJson
 
-const onErr = (res,then) => {
+const onErr = (res, then) => {
     return (err) => {
         res.send(err)
-        if(then){then(err)}
+        if (then) {
+            then(err)
+        }
     }
 }
 exports.onErr = onErr
-exports.errCase = {
-    invalidHKID: {errCode: "fail", errMessage: `invalid HKID`}
+
+const errCase = {
+    emptyResp: {errCode: 'success', errMessage: 'No records found'},
+    invalidParam: (param) => {
+        return {errCode: "fail", errMessage: `Invalid ${param}`}
+    },
 }
+exports.errCase = errCase
 /**
  * consent is a consent action counter,0 =>false, >0 => true
  * @param consent
@@ -206,14 +213,14 @@ exports.claimListHandler = (req, res) => {
                             insurerID: insurerId,
                             IPN: policyNum
                         }
-                        if ( resp.length === 1) {
+                        if (resp.length === 1) {
                             const {startTime, endTime, maxAmount} = resp[0];
                             policy.startTime = startTime
                             policy.endTime = endTime
                             policy.maxPaymentAmount = maxAmount
                         }
                         resolve(policy)
-                    },(err)=>{
+                    }, (err) => {
                         reject(err)
                     })
                 })).then((policy) => new Promise((resolve, reject) => {
@@ -238,7 +245,7 @@ exports.claimListHandler = (req, res) => {
                             claimMap[claimId].insurers.push(insurer)//anyway
 
                             resolve()
-                        },(err)=>{
+                        }, (err) => {
                             reject(err)
                         })
 
@@ -258,15 +265,15 @@ exports.claimListHandler = (req, res) => {
             res.send(errJson({voucher_claims}))
         }).catch(err => {
             logger.error(err)
-            if(err.action){
+            if (err.action) {
                 res.send(err)
-            }else {
+            } else {
                 res.send({errCode: 'syntax error', errMessage: err})
             }
 
             return Promise.reject(err)
         })
 
-    },onErr(res))
+    }, onErr(res))
     send(ws, {fn: 'getVoucherClaimRecords'})
 }
