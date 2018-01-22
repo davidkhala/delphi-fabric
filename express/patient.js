@@ -2,7 +2,9 @@ const express = require('express');
 const router = express.Router();
 const {newLogger} = require('./webSocketCommon')
 const logger = newLogger('patient')
-const {errJson, newWS, send, setOnMessage, trimHKID, errCase, claimListHandler} = require('./medicalCommon');
+const {
+    errJson, newWS, send, setOnMessage, trimHKID, errCase, claimListHandler, onErr
+} = require('./medicalCommon');
 
 const connectionPool = {};
 router.use((req, res, next) => {
@@ -12,7 +14,7 @@ router.use((req, res, next) => {
 
     const trimmed = trimHKID(HKID)
     if (!trimmed) {
-        res.send(errJson({}, errCase.invalidHKID))
+        res.send(errCase.invalidHKID)
         return
     }
 
@@ -40,23 +42,17 @@ router.post('/policy/view', (req, res) => {
 
     setOnMessage(ws, (message) => {
         const {resp} = message;
-        if (resp) {
-
-            const policies = resp
-                .filter(({insurerId}) => !insurerID || (insurerID === insurerId))
-                .filter(({policyNum}) => !IPN || (IPN === policyNum))
-                .map(({insurerId, policyNum, startTime, endTime, maxAmount}) => {
-                    return {
-                        insurerID: insurerId, IPN: policyNum,
-                        startTime, endTime, maxPaymentAmount: maxAmount
-                    }
-                })
-            res.send(errJson({policies}, message))
-        } else {
-            res.send(errJson({}, message))
-        }
-
-    });
+        const policies = resp
+            .filter(({insurerId}) => !insurerID || (insurerID === insurerId))
+            .filter(({policyNum}) => !IPN || (IPN === policyNum))
+            .map(({insurerId, policyNum, startTime, endTime, maxAmount}) => {
+                return {
+                    insurerID: insurerId, IPN: policyNum,
+                    startTime, endTime, maxPaymentAmount: maxAmount
+                }
+            })
+        res.send(errJson({policies}, message))
+    }, onErr(res));
     send(ws, {fn: 'getPolicyRecords'})
 
 });
@@ -70,9 +66,9 @@ router.post('/visit_registration/create', (req, res) => {
 
     setOnMessage(ws, (message) => {
 
-        res.send(errJson({}, message))
-    });
-    const insurers = JSON.parse(policies).map(({IPN, insurerID}) => {
+        res.send(message)
+    }, onErr(res));
+    const insurers = policies.map(({IPN, insurerID}) => {
         return {insurerId: insurerID, policyNum: IPN}
     })
 
@@ -97,8 +93,8 @@ router.post('/voucher_claim/consent', (req, res) => {
     const {ws} = res.locals;
 
     setOnMessage(ws, (message) => {
-        res.send(errJson({}, message))
-    });
+        res.send(message)
+    }, onErr(res));
     send(ws, {fn: 'setVoucherConsentRecords', args: [{claimId: claimID}]})
 
 

@@ -6,6 +6,14 @@ const errJson = (json, {errCode, errMessage} = {errCode: 'success', errMessage: 
     return Object.assign({errCode, errMessage}, json)
 }
 exports.errJson = errJson
+
+const onErr = (res,then) => {
+    return (err) => {
+        res.send(err)
+        if(then){then(err)}
+    }
+}
+exports.onErr = onErr
 exports.errCase = {
     invalidHKID: {errCode: "fail", errMessage: `invalid HKID`}
 }
@@ -162,8 +170,6 @@ exports.claimListHandler = (req, res) => {
     const {claimID} = req.body
     const {ws} = res.locals;
 
-    send(ws, {fn: 'getVoucherClaimRecords'})
-
     setOnMessage(ws, (message) => {
         const {resp} = message
 
@@ -200,18 +206,20 @@ exports.claimListHandler = (req, res) => {
                             insurerID: insurerId,
                             IPN: policyNum
                         }
-                        if (resp && resp.length === 1) {
+                        if ( resp.length === 1) {
                             const {startTime, endTime, maxAmount} = resp[0];
                             policy.startTime = startTime
                             policy.endTime = endTime
                             policy.maxPaymentAmount = maxAmount
                         }
                         resolve(policy)
+                    },(err)=>{
+                        reject(err)
                     })
                 })).then((policy) => new Promise((resolve, reject) => {
                         send(ws, {
                             fn: 'getVoucherPaymentRecords',
-                            args: [{insurerId, policyNum, claimId: claimID}]
+                            args: [{insurerId, policyNum, claimId}]
                         })
                         setOnMessage(ws, message => {
                             const {resp} = message
@@ -220,7 +228,7 @@ exports.claimListHandler = (req, res) => {
                                 paymentStatus: getPaymentStatus(false)
                             }
 
-                            if (resp && resp.length === 1) {
+                            if (resp.length === 1) {
                                 const {amount, time} = resp[0]
                                 insurer.paymentStatus = getPaymentStatus(true)
                                 insurer.paymentTime = time
@@ -230,6 +238,8 @@ exports.claimListHandler = (req, res) => {
                             claimMap[claimId].insurers.push(insurer)//anyway
 
                             resolve()
+                        },(err)=>{
+                            reject(err)
                         })
 
                     })
@@ -248,9 +258,15 @@ exports.claimListHandler = (req, res) => {
             res.send(errJson({voucher_claims}))
         }).catch(err => {
             logger.error(err)
-            res.send(errJson({}, {errCode: 'syntax error', errMessage: err}))
+            if(err.action){
+                res.send(err)
+            }else {
+                res.send({errCode: 'syntax error', errMessage: err})
+            }
+
             return Promise.reject(err)
         })
 
-    })
+    },onErr(res))
+    send(ws, {fn: 'getVoucherClaimRecords'})
 }

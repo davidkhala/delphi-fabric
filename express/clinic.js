@@ -5,7 +5,8 @@ const {newLogger} = require('./webSocketCommon')
 const logger = newLogger('clinic')
 const {
     errJson, newWS, send, setOnMessage,
-    trimHKID, errCase, claimListHandler
+    trimHKID, errCase, claimListHandler,
+    onErr
 } = require('./medicalCommon')
 const connectionPool = {}
 
@@ -39,16 +40,16 @@ router.post('/visit_registration/list', (req, res) => {
 
     setOnMessage(ws, message => {
         const {resp} = message
-        if (resp && resp.length === 1) {
+        if (resp.length === 1) {
             const {token, insurers} = resp[0]
             const policies = insurers.map(({insurerId, policyNum}) => {
                 return {IPN: policyNum, insurerID: insurerId}
             })
             res.send(errJson({policies, visitToken: token}, message))
         } else {
-            res.send(errJson({}), message)
+            res.send(message)
         }
-    })
+    },onErr(res))
     send(ws, {fn: 'getRegistrationRecords', args: [{patientId: trimmed}]})
 
 
@@ -69,10 +70,10 @@ router.post('/policy/view', (req, res) => {
         })
 
         res.send(errJson({policies}, message))
-    })
+    },onErr(res))
     send(ws, {
         fn: 'getPolicyRecords',
-        args: JSON.parse(policies).map(({IPN, insurerID}) => {
+        args: policies.map(({IPN, insurerID}) => {
             return {insurerId: insurerID, policyNum: IPN, patientId: trimmed}
         })
     })
@@ -96,6 +97,10 @@ router.post('/voucher_claim/create', (req, res) => {
 
     const {ws} = res.locals;
 
+    setOnMessage(ws, message => {
+        res.send(message)
+    },onErr(res))
+
     send(ws, {
         fn: 'setVoucherClaimRecords',
         args: [
@@ -106,14 +111,10 @@ router.post('/voucher_claim/create', (req, res) => {
                 token: visitToken,
                 briefDesc: medicalProcedureDescription,
                 fee,
-                insurers: JSON.parse(policies).map(({IPN, insurerID}) => {
+                insurers: policies.map(({IPN, insurerID}) => {
                     return {insurerId: insurerID, policyNum: IPN}
                 }),
             }]
-    })
-
-    setOnMessage(ws, message => {
-        res.send(errJson({}, message))
     })
 
 })
