@@ -8,11 +8,12 @@ exports.gen = ({
                    cryptoConfigFile = path.resolve(CURRENT, 'crypto-config.yaml')
                }) => {
     const companyConfig = globalConfig[COMPANY]
-    const channelsConfig = companyConfig.channels
     const COMPANY_DOMAIN = companyConfig.domain
     const ordererConfig = companyConfig.orderer
     const orgsConfig = companyConfig.orgs
-    fs.unlinkSync(cryptoConfigFile)
+    if(fs.existsSync(cryptoConfigFile)){
+        fs.unlinkSync(cryptoConfigFile)
+    }
     const OrdererOrgs = [{
         Name: 'OrdererCrytoName',
         Domain: COMPANY_DOMAIN,
@@ -36,5 +37,22 @@ exports.gen = ({
         })
     }
     fs.writeFileSync(cryptoConfigFile, yaml.safeDump({PeerOrgs, OrdererOrgs}))
+
+}
+//TODO temporary before refactor to fabric-ca key gen
+exports.newOrg = ({Name, Domain, Count = 1, CRYPTO_UPDATE_CONFIG = path.resolve(CURRENT, 'crypto-config-update.yaml')}) => {
+    if(fs.existsSync(CRYPTO_UPDATE_CONFIG)){
+        fs.unlinkSync(CRYPTO_UPDATE_CONFIG)
+    }
+    const PeerOrgs = [{
+        Name, Domain, Template: {
+            Start: 0,
+            Count
+        },
+        Users: {
+            Count: 0
+        }
+    }]
+    fs.writeFileSync(CRYPTO_UPDATE_CONFIG, yaml.safeDump({PeerOrgs}))
 
 }

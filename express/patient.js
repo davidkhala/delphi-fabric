@@ -15,7 +15,7 @@ router.use((req, res, next) => {
 
     const trimmed = trimHKID(HKID)
     if (!trimmed) {
-        res.send(errCase.invalidHKID)
+        res.send(errCase.invalidParam("HKID"))
         return
     }
     const wsID = trimmed;

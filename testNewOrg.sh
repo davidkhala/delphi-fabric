@@ -60,17 +60,13 @@ function down() {
 	fi
 }
 function up() {
-	>$CRYPTO_UPDATE_CONFIG
-	yaml w -i $CRYPTO_UPDATE_CONFIG PeerOrgs[$i].Name $orgName
-	yaml w -i $CRYPTO_UPDATE_CONFIG PeerOrgs[$i].Domain "$orgName.$COMPANY_DOMAIN"
-
-	yaml w -i $CRYPTO_UPDATE_CONFIG PeerOrgs[$i].Template.Count $peerCount
-	yaml w -i $CRYPTO_UPDATE_CONFIG PeerOrgs[$i].Template.Start 0
-	yaml w -i $CRYPTO_UPDATE_CONFIG PeerOrgs[$i].Users.Count $userCount
-
+    node -e "require('./config/crypto-config.js').newOrg({
+    Name:'${orgName}',
+    Domain:'${orgName}.${COMPANY_DOMAIN}',
+    CRYPTO_UPDATE_CONFIG:'${CRYPTO_UPDATE_CONFIG}'
+    })"
 	# TODO use fabric-ca for key generate
 	./common/bin-manage/cryptogen/runCryptogen.sh -i $CRYPTO_UPDATE_CONFIG -o $CRYPTO_CONFIG_DIR -a
-	rm $CRYPTO_UPDATE_CONFIG
 
 	CMD="peer node start"
 
@@ -112,6 +108,12 @@ function up() {
 	eventHubPort=$(./common/docker/utils/docker.sh viewContainerPort $peerContainerName 7053)
 	node -e "require('./app/testConfigtxlator.js').addOrg('${orgName}', '${MSPName}', '${MSPID}', 'BUMSPName', '${adminUserMspDir}', '${org_domain}','${peerPort}','${eventHubPort}','${peerDomainName}'
     ,'${chaincodePath}','${chaincodeId}','${chaincodeVersion}','${chaincode_args}')"
+#    addOrg TypeError: Cannot read property 'MSP' of undefined
+#    at getMspID (/home/davidliu/Documents/delphi-fabric/app/helper.js:158:35)
+#    at Object.mspCreate (/home/davidliu/Documents/delphi-fabric/app/helper.js:197:60)
+#    at Object.create (/home/davidliu/Documents/delphi-fabric/app/helper.js:292:23)
+#    at objects.user.admin.get.then.user (/home/davidliu/Documents/delphi-fabric/app/helper.js:296:29)
+
 }
 
 if [ "$1" == "up" ]; then

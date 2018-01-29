@@ -35,8 +35,6 @@ $CURRENT/common/bin-manage/cryptogen/runCryptogen.sh -i "$CRYPTO_CONFIG_FILE" -o
 
 jq ".$COMPANY.docker.volumes.MSPROOT.dir=\"$MSPROOT\"" $CONFIG_JSON | sponge $CONFIG_JSON
 
-chmod 777 -R $MSPROOT # FIXME: dev only, not for prd
-
 # NOTE IMPORTANT for node-sdk: clean stateDBcacheDir, otherwise cached crypto material will leads to Bad request:
 # TODO more subtle control to do in nodejs
 nodeAppConfigJson="$CURRENT/app/config.json"
@@ -62,7 +60,6 @@ done
 jq ".$COMPANY.docker.volumes.CONFIGTX.dir=\"$CONFIGTX_DIR\"" $CONFIG_JSON | sponge $CONFIG_JSON
 
 chaincodeJSON=$config_dir/chaincode.json
-chmod 777 $chaincodeJSON
 GOPATH=$(go env GOPATH)
 jq ".GOPATH=\"$GOPATH\"" $chaincodeJSON | sponge $chaincodeJSON
 

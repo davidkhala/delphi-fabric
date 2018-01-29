@@ -2,9 +2,7 @@ const helper = require('./helper.js')
 const logger = require('./util/logger').new('Join-Channel')
 const eventHelper = require('./util/eventHub')
 
-//
-//Attempt to send a request to the orderer with the sendCreateChain method
-//
+//TODO test whether we could let peers from different org to join channel in 1 request
 const joinChannel = (channel, peers,client = channel._clientContext) => {
 	logger.debug({ channelName: channel.getName(), peersSize: peers.length })
 
@@ -19,22 +17,23 @@ const joinChannel = (channel, peers,client = channel._clientContext) => {
 
 		const promises = []
 		for (let peer of peers) {
-			const eventHub = helper.bindEventHub(peer,client)
-
-			const validator = ({ block }) => {
-				logger.debug('new block event arrived', eventHub._ep, block)
-				// in real-world situations, a peer may have more than one channels so
-				// we must check that this block came from the channel we asked the peer to join
-				if (block.data.data.length === 1) {
-					// Config block must only contain one transaction
-					if (block.data.data[0].payload.header.channel_header.channel_id
-							=== channel.getName()) {
-						return { valid: true, interrupt: true }
-					}
-				}
-				return { valid: false, interrupt: false }
-			}
-			const blockEventPromise = eventHelper.blockEventPromise(eventHub, { eventWaitTime }, validator)
+            const blockEventPromise = peer.peerConfig.eventHub.clientPromise.then((client)=>{
+                const eventHub = helper.bindEventHub(peer,client)//using same client
+                const validator = ({ block }) => {
+                    logger.debug('new block event arrived', eventHub._ep, block)
+                    // in real-world situations, a peer may have more than one channels so
+                    // we must check that this block came from the channel we asked the peer to join
+                    if (block.data.data.length === 1) {
+                        // Config block must only contain one transaction
+                        if (block.data.data[0].payload.header.channel_header.channel_id
+                            === channel.getName()) {
+                            return { valid: true, interrupt: true }
+                        }
+                    }
+                    return { valid: false, interrupt: false }
+                }
+                return eventHelper.blockEventPromise(eventHub, { eventWaitTime }, validator)
+			})
 
 			promises.push(blockEventPromise)
 
@@ -57,6 +56,7 @@ const joinChannel = (channel, peers,client = channel._clientContext) => {
 				}
 			}
 			if (joinedBefore.length === data.length) {
+				//when all joined before
 				return Promise.resolve(data)
 			} else {
 				return Promise.all(promises)

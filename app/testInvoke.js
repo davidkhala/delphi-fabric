@@ -27,7 +27,9 @@ const _testInvokeOnNewPeer = () => {
 	const AMPeer = helper.newPeer({ peerPort, peer_hostName_full, tls_cacerts })
 	const peers = [AMPeer]//helper.newPeers(peerIndexes, orgName)
 	AMPeer.peerConfig = {
-		eventHubPort
+		eventHub:{
+			port : eventHubPort
+		}
 	}
 	helper.getOrgAdmin(orgName).then(() => {
 

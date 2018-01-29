@@ -29,12 +29,10 @@ exports.compute = {
 		formData
 	}).then((resp) => {
 		const bodyString = resp.body.toString()
-		//Error computing update: no differences detected between original and updated config
-		//NOTE take it as error here
-		const noDiffErr = 'Error computing update: no differences detected between original and updated config'
-		if (bodyString.includes(noDiffErr)) {
 
-			throw new Error(bodyString)
+		const noDiffErr = 'Error computing update: no differences detected between original and updated config'
+        if (bodyString.includes(noDiffErr)) {
+            //NOTE swallow it here
 		}
 		return resp
 

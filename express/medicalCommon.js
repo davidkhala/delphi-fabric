@@ -119,6 +119,7 @@ exports.setOnMessage = setOnMessage
 
 
 exports.trimHKID = (hkid) => {
+    return hkid.replace(new RegExp('(', 'g'), '').replace(new RegExp(')', 'g'), '');
     const strValidChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
     // basic check length
