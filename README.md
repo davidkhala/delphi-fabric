@@ -182,4 +182,3 @@ govendor: to import third-party package in vendor folder
 - stress test in nodejs
 - test: whether chaincode upgrade will reset data?
 - function new() -> classify
-- avoid $ sudo everywhere
