@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-
+set -e
 CURRENT="$(dirname $(readlink -f ${BASH_SOURCE}))"
 root=$(dirname $(dirname $CURRENT))
 

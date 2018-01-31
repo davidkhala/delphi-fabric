@@ -11,13 +11,21 @@ const logger = newLogger('ws-common')
 exports.wsStates = ['CONNECTING', 'OPEN', 'CLOSING', 'CLOSED']
 const wsMethods = ['open', 'message', 'close', 'error']
 
-exports.clearEventListener = (ws, method) => {
-    const listeners = ws.listeners(method)
+exports.clearEventListener = (ws, method,listener) => {
     if (wsMethods.find((_) => _ === method)){
-        logger.debug('clearEventListener', method)
-        for (let listener of listeners) {
-            ws.removeEventListener(method, listener)
+        const listeners = ws.listeners(method)
+        logger.debug('clearEventListener', method,listener?`of single on size:${listeners.length}`:'batch')
+        for (let listenerEach of listeners) {
+            if(listener){
+                if(listenerEach ===listener){
+                    ws.removeEventListener(method, listenerEach);
+                    break;
+                }else continue;
+            }else {
+                ws.removeEventListener(method, listenerEach)
+            }
         }
+
     }
 }
 

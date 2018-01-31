@@ -26,7 +26,6 @@ If any problem found when running ``install.sh``, like hanging in ``npm install`
   **Requirements**  
    * docker-ce 17.09.0-ce (API version 1.32)
    * docker-compose 1.14.0 
-        * docker相关组件是通过孙子模块``docker-manager``的脚本安装的，见https://github.com/davidkhala/docker-manager
    * golang 1.7.6 (optional可选)
    * node 6.11.5, npm 3.10.10: npm install卡死的话，可以考虑添加淘宝的源 
         - ``$ npm config set registry  https://registry.npm.taobao.org/``
