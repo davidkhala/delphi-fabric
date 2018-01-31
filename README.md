@@ -24,10 +24,11 @@ If any problem found when running ``install.sh``, like hanging in ``npm install`
 ----
  以下是依赖的版本列表，遇到问题可以自行寻找安装源  
   **Requirements**  
-   * docker-ce 17.09.0-ce (API version 1.32)
+   * fabric: 1.1.0-alpha (for docker image, binary tool and fabric-sdk)
+   * docker-ce 17.12.0-ce (API version 1.35)
    * docker-compose 1.14.0 
-   * golang 1.7.6 (optional可选)
-   * node 6.11.5, npm 3.10.10: npm install卡死的话，可以考虑添加淘宝的源 
+   * golang 1.9.2 : align with docker version
+   * node 6.12.3, npm 3.10.10: npm install卡死的话，可以考虑添加淘宝的源 
         - ``$ npm config set registry  https://registry.npm.taobao.org/``
    * java 1.8.0_151 (测试java-sdk用)
    * jq 1.5.1：一个用命令行解析json的工具 https://stedolan.github.io/jq/
