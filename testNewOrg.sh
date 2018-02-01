@@ -10,7 +10,7 @@ CRYPTO_UPDATE_CONFIG="$config_dir/crypto-config-update.yaml"
 CONFIG_JSON="$config_dir/orgs.json"
 CONFIG_chaincode="$config_dir/chaincode.json"
 
-COMPANY="delphi"
+
 orgName="AM"
 MSPName="${orgName}MSPName"
 MSPID="${orgName}MSP"
@@ -18,7 +18,7 @@ peerContainerName="AMContainerName"
 peerPort="7071"     # map for 7051, random assign when empty
 eventHubPort="7073" # map for 7053, random assign when empty
 
-companyConfig=$(jq -r ".$COMPANY" $CONFIG_JSON)
+companyConfig=$(jq "." $CONFIG_JSON)
 COMPANY_DOMAIN=$(echo $companyConfig | jq -r ".domain")
 TLS_ENABLED=$(echo $companyConfig | jq ".TLS")
 dockerNetworkName=$(echo $companyConfig | jq -r ".docker.network")

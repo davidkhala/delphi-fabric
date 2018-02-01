@@ -8,7 +8,7 @@ utilsDir="$root/common/docker/utils"
 CONFIG_DIR="$root/config"
 CONFIG_JSON="$CONFIG_DIR/orgs.json"
 SWARM_CONFIG="$CONFIG_DIR/swarm.json"
-COMPANY="delphi"
+
 
 # change hostName
 nodeHostName=$1 # "fabric-swarm-manager"
@@ -25,7 +25,7 @@ MSPROOT_nfs="/home/david/Documents/nfs/MSPROOT"
 
 mkdir -p $CONFIGTX_nfs
 mkdir -p $MSPROOT_nfs
-mainNodeID=$(jq -r ".$COMPANY.leaderNode.hostname" $SWARM_CONFIG) # TODO to query network map server
+mainNodeID=$(jq -r ".leaderNode.hostname" $SWARM_CONFIG) # TODO to query network map server
 
 # NOTE using node labels to fetch directory information
 CONFIGTX_DIR=$($utilsDir/swarm.sh getNodeLabels $mainNodeID | jq -r ".CONFIGTX")
@@ -47,7 +47,7 @@ else
 	exit 1
 fi
 
-volumesConfig=$(jq -r ".$COMPANY.docker.volumes" $CONFIG_JSON)
+volumesConfig=$(jq -r ".docker.volumes" $CONFIG_JSON)
 CONFIGTX_swarm=$(echo $volumesConfig | jq -r ".CONFIGTX.swarm")
 MSPROOT_swarm=$(echo $volumesConfig | jq -r ".MSPROOT.swarm")
 $root/cluster/clean.sh

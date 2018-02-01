@@ -4,14 +4,13 @@ CURRENT="$(dirname $(readlink -f ${BASH_SOURCE}))"
 
 CONFIG_DIR="$CURRENT/config"
 CONFIG_JSON="$CONFIG_DIR/orgs.json"
-COMPANY='delphi' # must match to config_json
-companyConfig=$(jq ".$COMPANY" $CONFIG_JSON)
+companyConfig=$(jq "." $CONFIG_JSON)
 volumesConfig=$(echo $companyConfig| jq -r ".docker.volumes")
 
-VERSION=$(jq -r ".${COMPANY}.docker.fabricTag" $CONFIG_JSON)
+VERSION=$(jq -r ".docker.fabricTag" $CONFIG_JSON)
 IMAGE_TAG="x86_64-$VERSION"
 
-TLS_ENABLED=$(jq ".$COMPANY.TLS" $CONFIG_JSON)
+TLS_ENABLED=$(jq ".TLS" $CONFIG_JSON)
 function _gluster() {
 	# TODO not ready
 	manager0_glusterRoot="/home/david/Documents/gluster"
@@ -23,7 +22,7 @@ function _gluster() {
 }
 
 ./testBin.sh
-volumesConfig=$(jq -r ".$COMPANY.docker.volumes" $CONFIG_JSON)
+volumesConfig=$(jq -r ".docker.volumes" $CONFIG_JSON)
 CONFIGTX_DIR=$(echo $volumesConfig | jq -r ".CONFIGTX.dir")
 MSPROOT_DIR=$(echo $volumesConfig| jq -r ".MSPROOT.dir") # update in testBin.sh
 
@@ -46,4 +45,4 @@ COMPOSE_FILE="$CONFIG_DIR/docker-swarm.yaml"
 if [ -f "$COMPOSE_FILE" ]; then
 	./docker-swarm.sh down
 fi
-node -e "require('./config/docker-compose').gen({'COMPANY':'$COMPANY','MSPROOT':'$MSPROOT_DIR','COMPOSE_FILE':'$COMPOSE_FILE','type': 'swarm'})"
+node -e "require('./config/docker-compose').gen({'MSPROOT':'$MSPROOT_DIR','COMPOSE_FILE':'$COMPOSE_FILE','type': 'swarm'})"

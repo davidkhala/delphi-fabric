@@ -10,7 +10,7 @@ const fs = require('fs')
 const app = express()
 const cors = require('cors')
 const config = require('../app/config.json')
-const companyConfig = require('../config/orgs.json').delphi
+const companyConfig = require('../config/orgs.json')
 const channelsConfig = companyConfig.channels
 const orgsConfig = companyConfig.orgs
 const CONFIGTXDir = companyConfig.docker.volumes.CONFIGTX.dir
@@ -49,14 +49,12 @@ const writeFilePretty = ( configObj) => {
 app.get('/config', (req, res) => {
     res.json(require(swarmJsonPath))
 })
-app.post('/:COMPANY/leader/update', (req, res) => {
+app.post('/leader/update', (req, res) => {
     const {ip, hostname, managerToken} = req.body
-    const {COMPANY} = req.params
-    logger.debug({COMPANY})
     const oldConfig = require(swarmJsonPath)
-    if (ip) oldConfig[COMPANY].leaderNode.ip = ip
-    if (hostname) oldConfig[COMPANY].leaderNode.hostname = hostname
-    if (managerToken) oldConfig[COMPANY].leaderNode.managerToken = managerToken
+    if (ip) oldConfig.leaderNode.ip = ip
+    if (hostname) oldConfig.leaderNode.hostname = hostname
+    if (managerToken) oldConfig.leaderNode.managerToken = managerToken
 
     const content = writeFilePretty(oldConfig)
     res.json(content)
@@ -65,25 +63,23 @@ app.post('/:COMPANY/leader/update', (req, res) => {
 /**
  * called after manager node join swarm
  */
-app.post('/:COMPANY/manager/join', (req, res) => {
+app.post('/manager/join', (req, res) => {
     const {ip, hostname} = req.body
-    const {COMPANY} = req.params
-    logger.debug('manager join', {COMPANY, ip, hostname})
+    logger.debug('manager join', { ip, hostname})
 
 
     const oldConfig = require(swarmJsonPath)
-    oldConfig[COMPANY].managerNodes[hostname] = {ip}
+    oldConfig.managerNodes[hostname] = {ip}
     const content =  writeFilePretty(oldConfig)
 
     res.json(content)
 
 })
-app.post('/:COMPANY/manager/leave', (req, res) => {
+app.post('/manager/leave', (req, res) => {
     const {hostname} = req.body
-    const {COMPANY} = req.params
-    logger.debug('manager leave', {COMPANY, hostname})
+    logger.debug('manager leave', {hostname})
     const oldConfig = require(swarmJsonPath)
-    delete oldConfig[COMPANY].managerNodes[hostname]
+    delete oldConfig.managerNodes[hostname]
     const content = writeFilePretty(oldConfig)
 
     res.json(content)

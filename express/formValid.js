@@ -1,5 +1,5 @@
-exports.invalid = (COMPANY) => {
-	const companyConfig = require('../config/orgs.json')[COMPANY]
+exports.invalid = () => {
+	const companyConfig = require('../config/orgs.json')
 	const channelsConfig = companyConfig.channels
 	const orgsConfig = companyConfig.orgs
 	const chaincodesConfig = require('../config/chaincode.json')

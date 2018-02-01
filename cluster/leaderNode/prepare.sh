@@ -3,7 +3,7 @@ set -e
 CURRENT="$(dirname $(readlink -f $BASH_SOURCE))"
 root="$(dirname $(dirname $CURRENT))"
 CONFIG_DIR="$root/config/"
-COMPANY="delphi"
+
 SWARM_CONFIG="$CONFIG_DIR/swarm.json"
 
 advertiseAddr="192.168.0.167"
@@ -26,10 +26,10 @@ $utilsDir/swarm.sh view
 
 thisHostName=$($root/common/ubuntu/hostname.sh get)
 
-jq ".$COMPANY.leaderNode.hostname=\"${thisHostName}\"" $SWARM_CONFIG | sponge $SWARM_CONFIG
+jq ".leaderNode.hostname=\"${thisHostName}\"" $SWARM_CONFIG | sponge $SWARM_CONFIG
 joinToken=$($root/common/docker/utils/swarm.sh managerToken)
-jq ".$COMPANY.leaderNode.managerToken=\"${joinToken}\"" $SWARM_CONFIG | sponge $SWARM_CONFIG
-jq ".$COMPANY.leaderNode.ip=\"${advertiseAddr}\"" $SWARM_CONFIG | sponge $SWARM_CONFIG
+jq ".leaderNode.managerToken=\"${joinToken}\"" $SWARM_CONFIG | sponge $SWARM_CONFIG
+jq ".leaderNode.ip=\"${advertiseAddr}\"" $SWARM_CONFIG | sponge $SWARM_CONFIG
 
 
 $root/cluster/prepare.sh

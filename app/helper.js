@@ -20,8 +20,8 @@ const path = require('path');
 const fs = require('fs-extra');
 const caUtil = require('./util/ca');
 const globalConfig = require('../config/orgs.json');
-const COMPANY = 'delphi';
-const companyConfig = globalConfig[COMPANY];
+
+const companyConfig = globalConfig;
 const orgsConfig = companyConfig.orgs;
 const CRYPTO_CONFIG_DIR = companyConfig.docker.volumes.MSPROOT.dir;
 const channelsConfig = companyConfig.channels;
@@ -347,7 +347,7 @@ exports.chaincodeProposalAdapter = (actionString, validator) => {
     };
 };
 
-exports.helperConfig = Object.assign({COMPANY}, {GPRC_protocol}, globalConfig);
+exports.helperConfig = Object.assign({}, {GPRC_protocol}, globalConfig);
 exports.gen_tls_cacerts = gen_tls_cacerts;
 exports.preparePeer = preparePeer;
 exports.newPeer = newPeer;

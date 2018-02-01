@@ -1,208 +1,229 @@
 {
-  "delphi": {
-    "domain": "Delphi.com",
-    "TLS": true,
-    "docker": {
-      "fabricTag": "1.1.0-alpha",
-      "network": "delphiNetwork",
-      "volumes": {
-        "CONFIGTX": {
-          "local": "CONFIGTX_local",
-          "swarm": "CONFIGTX_swarm",
-          "dir": "/home/davidliu/Documents/delphi-fabric/config/configtx"
+  "kafka": {
+    "K": 4,
+    "Z": 3,
+    "M": 2,
+    "N": 3,
+    "rule": "1<M<N<K,K>=4,Orderer.AbsoluteMaxBytes < replica.fetch.max.bytes <= message.max.bytes",
+    "zookeepers": [
+      "zookeeper0",
+      "zookeeper1",
+      "zookeeper2"
+    ],
+    "orderers": [
+      "orderer0",
+      "orderer1",
+      "orderer2"
+    ],
+    "kafkas": [
+      "kafka0",
+      "kafka1",
+      "kafka2",
+      "kafka3"
+    ]
+  },
+  "domain": "Delphi.com",
+  "TLS": true,
+  "docker": {
+    "fabricTag": "1.1.0-preview",
+    "network": "delphiNetwork",
+    "volumes": {
+      "CONFIGTX": {
+        "local": "CONFIGTX_local",
+        "swarm": "CONFIGTX_swarm",
+        "dir": "/home/davidliu/Documents/delphi-fabric/config/configtx"
+      },
+      "MSPROOT": {
+        "local": "MSPROOT_local",
+        "swarm": "MSPROOT_swarm",
+        "dir": "/home/davidliu/Documents/delphi-fabric/config/crypto-config/"
+      }
+    }
+  },
+  "orderer": {
+    "genesis_block": {
+      "file": "delphi.block",
+      "profile": "delphiGenesis"
+    },
+    "container_name": "orderContainerName",
+    "portMap": [
+      {
+        "host": 7250,
+        "container": 7050
+      }
+    ],
+    "MSP": {
+      "name": "OrdererMSPName",
+      "id": "OrdererMSP"
+    }
+  },
+  "channels": {
+    "delphiChannel": {
+      "file": "delphi.tx",
+      "eventWaitTime": 30000,
+      "orgs": {
+        "BU": {
+          "peerIndexes": [
+            0,
+            1
+          ]
         },
-        "MSPROOT": {
-          "local": "MSPROOT_local",
-          "swarm": "MSPROOT_swarm",
-          "dir": "/home/davidliu/Documents/delphi-fabric/config/crypto-config/"
+        "PM": {
+          "peerIndexes": [
+            0
+          ]
+        },
+        "ENG": {
+          "peerIndexes": [
+            0
+          ]
         }
       }
     },
-    "orderer": {
-      "genesis_block": {
-        "file": "delphi.block",
-        "profile": "delphiGenesis"
-      },
-      "container_name": "orderContainerName",
-      "portMap": [
+    "BUChannel": {
+      "eventWaitTime": 30000,
+      "file": "bu.tx",
+      "orgs": {
+        "BU": {
+          "peerIndexes": [
+            0,
+            1
+          ]
+        }
+      }
+    }
+  },
+  "orgs": {
+    "BU": {
+      "peers": [
         {
-          "host": 7250,
-          "container": 7050
+          "swarm": {
+            "constraints": [
+              "node.hostname == ubuntu"
+            ]
+          },
+          "container_name": "BUContainerName",
+          "portMap": [
+            {
+              "host": 7051,
+              "container": 7051
+            },
+            {
+              "host": 7053,
+              "container": 7053
+            }
+          ]
+        },
+        {
+          "swarm": {
+            "constraints": [
+              "node.hostname == ubuntu"
+            ]
+          },
+          "container_name": "BUContainer1",
+          "portMap": [
+            {
+              "host": 7061,
+              "container": 7051
+            },
+            {
+              "host": 7063,
+              "container": 7053
+            }
+          ]
         }
       ],
+      "userCount": 0,
+      "ca": {
+        "enable": true,
+        "admin": {
+          "name": "CAadmin",
+          "pass": "passwd"
+        },
+        "portHost": 7054,
+        "tlsca": {
+          "portHost": 7055
+        }
+      },
       "MSP": {
-        "name": "OrdererMSPName",
-        "id": "OrdererMSP"
+        "name": "BUMSPName",
+        "id": "BUMSP"
       }
     },
-    "channels": {
-      "delphiChannel": {
-        "file": "delphi.tx",
-        "eventWaitTime": 30000,
-        "orgs": {
-          "BU": {
-            "peerIndexes": [
-              0,
-              1
+    "ENG": {
+      "peers": [
+        {
+          "swarm": {
+            "constraints": [
+              "node.hostname == fabric-swarm-manager"
             ]
           },
-          "PM": {
-            "peerIndexes": [
-              0
-            ]
-          },
-          "ENG": {
-            "peerIndexes": [
-              0
-            ]
-          }
+          "container_name": "ENGContainerName",
+          "portMap": [
+            {
+              "host": 8051,
+              "container": 7051
+            },
+            {
+              "host": 8053,
+              "container": 7053
+            }
+          ]
+        }
+      ],
+      "userCount": 0,
+      "ca": {
+        "enable": false,
+        "admin": {
+          "name": "CAadmin",
+          "pass": "passwd"
+        },
+        "portHost": 8054,
+        "tlsca": {
+          "portHost": 8055
         }
       },
-      "BUChannel": {
-        "eventWaitTime": 30000,
-        "file": "bu.tx",
-        "orgs": {
-          "BU": {
-            "peerIndexes": [
-              0,
-              1
-            ]
-          }
-        }
+      "MSP": {
+        "name": "ENGMSPName",
+        "id": "ENGMSP"
       }
     },
-    "orgs": {
-      "BU": {
-        "peers": [
-          {
-            "swarm": {
-              "constraints": [
-                "node.hostname == ubuntu"
-              ]
-            },
-            "container_name": "BUContainerName",
-            "portMap": [
-              {
-                "host": 7051,
-                "container": 7051
-              },
-              {
-                "host": 7053,
-                "container": 7053
-              }
+    "PM": {
+      "peers": [
+        {
+          "swarm": {
+            "constraints": [
+              "node.hostname == fabric-swarm-manager"
             ]
           },
-          {
-            "swarm": {
-              "constraints": [
-                "node.hostname == ubuntu"
-              ]
+          "container_name": "PMContainerName",
+          "portMap": [
+            {
+              "host": 9051,
+              "container": 7051
             },
-            "container_name": "BUContainer1",
-            "portMap": [
-              {
-                "host": 7061,
-                "container": 7051
-              },
-              {
-                "host": 7063,
-                "container": 7053
-              }
-            ]
-          }
-        ],
-        "userCount": 0,
-        "ca": {
-          "enable": true,
-          "admin": {
-            "name": "CAadmin",
-            "pass": "passwd"
-          },
-          "portHost": 7054,
-          "tlsca": {
-            "portHost": 7055
-          }
+            {
+              "host": 9053,
+              "container": 7053
+            }
+          ]
+        }
+      ],
+      "userCount": 0,
+      "ca": {
+        "enable": false,
+        "admin": {
+          "name": "CAadmin",
+          "pass": "passwd"
         },
-        "MSP": {
-          "name": "BUMSPName",
-          "id": "BUMSP"
+        "portHost": 9054,
+        "tlsca": {
+          "portHost": 9055
         }
       },
-      "ENG": {
-        "peers": [
-          {
-            "swarm": {
-              "constraints": [
-                "node.hostname == fabric-swarm-manager"
-              ]
-            },
-            "container_name": "ENGContainerName",
-            "portMap": [
-              {
-                "host": 8051,
-                "container": 7051
-              },
-              {
-                "host": 8053,
-                "container": 7053
-              }
-            ]
-          }
-        ],
-        "userCount": 0,
-        "ca": {
-          "enable": false,
-          "admin": {
-            "name": "CAadmin",
-            "pass": "passwd"
-          },
-          "portHost": 8054,
-          "tlsca": {
-            "portHost": 8055
-          }
-        },
-        "MSP": {
-          "name": "ENGMSPName",
-          "id": "ENGMSP"
-        }
-      },
-      "PM": {
-        "peers": [
-          {
-            "swarm": {
-              "constraints": [
-                "node.hostname == fabric-swarm-manager"
-              ]
-            },
-            "container_name": "PMContainerName",
-            "portMap": [
-              {
-                "host": 9051,
-                "container": 7051
-              },
-              {
-                "host": 9053,
-                "container": 7053
-              }
-            ]
-          }
-        ],
-        "userCount": 0,
-        "ca": {
-          "enable": false,
-          "admin": {
-            "name": "CAadmin",
-            "pass": "passwd"
-          },
-          "portHost": 9054,
-          "tlsca": {
-            "portHost": 9055
-          }
-        },
-        "MSP": {
-          "name": "PMMSPName",
-          "id": "PMMSP"
-        }
+      "MSP": {
+        "name": "PMMSPName",
+        "id": "PMMSP"
       }
     }
   }

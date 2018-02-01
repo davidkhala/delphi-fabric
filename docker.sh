@@ -2,11 +2,10 @@
 set -e
 CURRENT="$(dirname $(readlink -f ${BASH_SOURCE}))"
 config_dir="$CURRENT/config"
-COMPANY='delphi' # must match to config_json
 COMPOSE_FILE="$config_dir/docker-compose.yaml"
 CONFIG_JSON="$config_dir/orgs.json"
 
-dockerNetworkName=$(jq -r ".$COMPANY.docker.network" $CONFIG_JSON)
+dockerNetworkName=$(jq -r ".docker.network" $CONFIG_JSON)
 
 
 function down() {

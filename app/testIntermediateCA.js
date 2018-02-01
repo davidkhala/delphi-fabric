@@ -9,8 +9,8 @@ const caHelper = require('./caHelper')
 const setCAAdmin = caHelper.setCAAdmin
 const orgName = 'BU'
 const globalConfig = require('../config/orgs.json')
-const COMPANY = 'delphi'
-const companyConfig = globalConfig[COMPANY]
+
+const companyConfig = globalConfig
 const caService = caHelper.getCaService({ orgName, TLS: companyConfig.TLS })
 const CRYPTO_CONFIG_DIR = companyConfig.docker.volumes.MSPROOT.dir
 const COMPANY_DOMAIN = companyConfig.domain

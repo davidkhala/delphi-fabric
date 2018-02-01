@@ -98,7 +98,7 @@ testQuery.chainHeight()
 const testSwarmServer = ()=>{
     requestPromise({
         method: 'POST',
-        uri: 'http://localhost:4001/delphi/leader/update',
+        uri: 'http://localhost:4001/leader/update',
         body: {
             ip:"123", hostname:"232", managerToken:"123"
         },
@@ -109,7 +109,7 @@ const testSwarmServer = ()=>{
 
     requestPromise({
         method: 'POST',
-        uri: 'http://localhost:4001/delphi/manager/join',
+        uri: 'http://localhost:4001/manager/join',
         body: {
             ip:"123", hostname:"232",
         },
@@ -120,7 +120,7 @@ const testSwarmServer = ()=>{
 
     requestPromise({
         method: 'POST',
-        uri: 'http://localhost:4001/delphi/manager/leave',
+        uri: 'http://localhost:4001/manager/leave',
         body: {
             hostname:"232",
         },

@@ -24,8 +24,7 @@ const app = express()
 const cors = require('cors')
 const WebSocket = require('ws')
 const config = require('./app/config.json')
-const COMPANY = 'delphi'
-const companyConfig = require('./config/orgs.json')[COMPANY]
+const companyConfig = require('./config/orgs.json')
 const channelsConfig = companyConfig.channels
 const chaincodesConfig = require('./config/chaincode.json')
 const CONFIGTXDir = companyConfig.docker.volumes.CONFIGTX.dir
@@ -96,13 +95,13 @@ ws.on('connection', (ws, req) => {
 				if (invalidChaincodeId) return errorHandle(invalidChaincodeId, ws)
 				switch (pathSplit[2]) {
 					case 'invoke':
-						messageCB = require('./express/ws-chaincode').invoke({ COMPANY, chaincodeId }, ws)
+						messageCB = require('./express/ws-chaincode').invoke({ chaincodeId }, ws)
 						break
 					case 'instantiate':
-						messageCB = require('./express/ws-chaincode').instantiate({ COMPANY, chaincodeId }, ws)
+						messageCB = require('./express/ws-chaincode').instantiate({ chaincodeId }, ws)
 						break
 					case 'upgrade':
-						messageCB = require('./express/ws-chaincode').upgrade({ COMPANY, chaincodeId }, ws)
+						messageCB = require('./express/ws-chaincode').upgrade({ chaincodeId }, ws)
 						break
 					default:
 
@@ -116,7 +115,7 @@ ws.on('connection', (ws, req) => {
 
 })
 
-const invalid = require('./express/formValid').invalid(COMPANY)
+const invalid = require('./express/formValid').invalid()
 const errorCodeMap = require('./express/errorCodeMap.json')
 const errorSyntaxHandle = (err, res) => {
 	let status = 500

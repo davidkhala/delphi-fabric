@@ -27,17 +27,15 @@ public class testMain {
             Map<String, String> msps = new HashMap<>();
             msps.put("BU", "BUMSP");
             msps.put("PM", "PMMSP");
-            String company = "delphi";
-
 
             ClassLoader classLoader = ClassLoader.getSystemClassLoader();
 
             JsonObject orgsJson = new JsonParser().parse(new FileReader(new File(classLoader.getResource("orgs.json").getFile()))).getAsJsonObject();
 
-            String cryptoRoot = orgsJson.getAsJsonObject(company).getAsJsonObject("docker").getAsJsonObject("volumes")
+            String cryptoRoot = orgsJson.getAsJsonObject("docker").getAsJsonObject("volumes")
                     .getAsJsonObject("MSPROOT").getAsJsonPrimitive("dir").getAsString();
 
-            String configTxRoot = orgsJson.getAsJsonObject(company).getAsJsonObject("docker").getAsJsonObject("volumes")
+            String configTxRoot = orgsJson.getAsJsonObject("docker").getAsJsonObject("volumes")
                     .getAsJsonObject("CONFIGTX").getAsJsonPrimitive("dir").getAsString();
             File channelFile = new File(configTxRoot, "delphi.tx");
             File genesisBlockFile = new File(configTxRoot, "delphi.block");

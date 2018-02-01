@@ -2,12 +2,10 @@
   "swarmServer": {
     "port": 4001
   },
-  "delphi": {
-    "leaderNode": {
-      "hostname": "ubuntu",
-      "managerToken": "docker swarm join --token SWMTKN-1-3vgv9jebyhdqzid9o5zcyufeciahegbew7mtbfykfpjfk73jbn-e4p28p30jxv1eu5o2lcvcaa2d 192.168.0.167:2377",
-      "ip": "192.168.0.167"
-    },
-    "managerNodes": {}
-  }
+  "leaderNode": {
+    "hostname": "ubuntu",
+    "managerToken": "docker swarm join --token SWMTKN-1-3vgv9jebyhdqzid9o5zcyufeciahegbew7mtbfykfpjfk73jbn-e4p28p30jxv1eu5o2lcvcaa2d 192.168.0.167:2377",
+    "ip": "192.168.0.167"
+  },
+  "managerNodes": {}
 }

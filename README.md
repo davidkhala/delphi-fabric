@@ -134,7 +134,7 @@ test invoke chaincode by user identity
 **steps**
 
 0. enable ca in config  
- make sure in ``config/orgs.json``:``.delphi.orgs.${orgName}.ca.enable`` is true.  
+ make sure in ``config/orgs.json``:``.orgs.${orgName}.ca.enable`` is true.  
  here we chose ``BU`` as the orgName 
   
 1. run steps 1-4 in section **test on single host**
@@ -182,3 +182,4 @@ govendor: to import third-party package in vendor folder
 - stress test in nodejs
 - test: whether chaincode upgrade will reset data?
 - function new() -> classify
+- await: fabric-kafka haven't release 1.1.0-alpha

@@ -15,8 +15,7 @@ const caHelper = require('./caHelper')
 const globalConfig = require('../config/orgs.json')
 const ClientUtil = require('./util/client')
 
-const COMPANY = 'delphi'
-const companyConfig = globalConfig[COMPANY]
+const companyConfig = globalConfig
 const CRYPTO_CONFIG_DIR = companyConfig.docker.volumes.MSPROOT.dir
 const COMPANY_DOMAIN = companyConfig.domain
 const orgsConfig = companyConfig.orgs

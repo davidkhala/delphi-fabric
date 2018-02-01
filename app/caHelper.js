@@ -2,8 +2,8 @@ const helper = require('./helper')
 
 const globalConfig = require('../config/orgs.json')
 const caUtil = require('./util/ca')
-const setCAAdmin = (client, { COMPANY = 'delphi', orgName, TLS }, caService = getCaService({ orgName, TLS })) => {
-	const companyConfig = globalConfig[COMPANY]
+const setCAAdmin = (client, { orgName, TLS }, caService = getCaService({ orgName, TLS })) => {
+	const companyConfig = globalConfig
 	const orgsConfig = companyConfig.orgs
 	const caConfig = orgsConfig[orgName].ca
 
@@ -20,8 +20,8 @@ const setCAAdmin = (client, { COMPANY = 'delphi', orgName, TLS }, caService = ge
 			})
 }
 
-const getCaService = ({ orgName, COMPANY = 'delphi', TLS }) => {
-	const orgConfig = globalConfig[COMPANY].orgs[orgName]
+const getCaService = ({ orgName, TLS }) => {
+	const orgConfig = globalConfig.orgs[orgName]
 	const ca_port = TLS ? orgConfig.ca.tlsca.portHost : orgConfig.ca.portHost
 	const caHost = 'localhost'
 	const caProtocol = TLS ? 'https://' : 'http://'

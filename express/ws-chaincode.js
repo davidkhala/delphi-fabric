@@ -20,9 +20,9 @@ const errorHandle = (err, ws, errCB) => {
 
 }
 const { reducer } = require('../app/util/chaincode')
-exports.invoke = ({ COMPANY, chaincodeId }, ws) => {
+exports.invoke = ({ chaincodeId }, ws) => {
 	const { invoke } = require('../app/invoke-chaincode.js')
-	const invalid = require('./formValid').invalid(COMPANY)
+	const invalid = require('./formValid').invalid()
 	return (message) => {
 		logger.debug('==================== INVOKE CHAINCODE ==================')
 		const { fcn, args: argsString, orgName, peerIndex, channelName } = JSON.parse(message)
@@ -66,8 +66,8 @@ exports.invoke = ({ COMPANY, chaincodeId }, ws) => {
 
 	}
 }
-exports.instantiate = ({ COMPANY, chaincodeId }, ws) => {
-	const invalid = require('./formValid').invalid(COMPANY)
+exports.instantiate = ({ chaincodeId }, ws) => {
+	const invalid = require('./formValid').invalid()
 
 	const { instantiate } = require('../app/instantiate-chaincode')
 	return (message) => {
@@ -111,8 +111,8 @@ exports.instantiate = ({ COMPANY, chaincodeId }, ws) => {
 		})
 	}
 }
-exports.upgrade = ({ COMPANY, chaincodeId }, ws) => {
-	const invalid = require('./formValid').invalid(COMPANY)
+exports.upgrade = ({  chaincodeId }, ws) => {
+	const invalid = require('./formValid').invalid()
 
 	const { upgrade } = require('../app/instantiate-chaincode')
 	return (message) => {

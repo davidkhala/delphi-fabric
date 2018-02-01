@@ -4,11 +4,10 @@ CURRENT="$(dirname $(readlink -f ${BASH_SOURCE}))"
 
 CONFIG_DIR="$CURRENT/config"
 COMPOSE_FILE="$CONFIG_DIR/docker-swarm.yaml"
-COMPANY="delphi"
 CONFIG_JSON="$CONFIG_DIR/orgs.json"
 
-swarmNetwork=$(jq -r ".$COMPANY.docker.network" ${CONFIG_JSON})
-volumesConfig=$(jq -r ".$COMPANY.docker.volumes" $CONFIG_JSON)
+swarmNetwork=$(jq -r ".docker.network" ${CONFIG_JSON})
+volumesConfig=$(jq -r ".docker.volumes" $CONFIG_JSON)
 CONFIGTXDir=$(echo $volumesConfig | jq -r ".CONFIGTX.dir")
 MSPROOTDir=$(echo $volumesConfig | jq -r ".MSPROOT.dir")
 CONFIGTXVolume=$(echo $volumesConfig | jq -r ".CONFIGTX.swarm")
