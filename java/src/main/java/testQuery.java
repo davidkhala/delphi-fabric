@@ -71,6 +71,6 @@ public class testQuery {
         adminUser.setEnrollment(adminMSPRoot);
         client.setUserContext(adminUser);
 
-        return ChannelUtil.createOrGetChannel(client, channelName, "grpc://localhost:7250", channelFile);
+        return ChannelUtil.createOrGetChannel(client, channelName, "grpc://localhost:7050", channelFile);
     }
 }

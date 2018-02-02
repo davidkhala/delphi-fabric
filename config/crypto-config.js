@@ -4,10 +4,9 @@ const path = require('path')
 const CURRENT = __dirname
 const yaml = require('js-yaml')
 exports.gen = ({
-                   COMPANY,
                    cryptoConfigFile = path.resolve(CURRENT, 'crypto-config.yaml')
                }) => {
-    const companyConfig = globalConfig[COMPANY]
+    const companyConfig = globalConfig
     const COMPANY_DOMAIN = companyConfig.domain
     const ordererConfig = companyConfig.orderer
     const orgsConfig = companyConfig.orgs
@@ -17,10 +16,15 @@ exports.gen = ({
     const OrdererOrgs = [{
         Name: 'OrdererCrytoName',
         Domain: COMPANY_DOMAIN,
-        Specs: [
-            {Hostname: ordererConfig.container_name}
-        ]
+        Specs: [{Hostname: ordererConfig.solo.container_name}]
     }]
+    if(ordererConfig.type ==="kafka"){
+        const Specs = Object.keys(globalConfig.orderer.kafka.orderers).map((ordererHost)=>{
+            return {Hostname: ordererHost}
+        });
+        OrdererOrgs[0].Specs = Specs
+    }
+
     const PeerOrgs = []
     for (let orgName in orgsConfig) {
         const orgConfig = orgsConfig[orgName]

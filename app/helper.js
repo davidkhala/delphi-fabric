@@ -100,17 +100,36 @@ exports.prepareChannel = (channelName, client, isRenew) => {
         if (client._channels[channelname]) return client._channels[channelname];
     }
 
-    const channel = client.newChannel(channelname);//NOTE throw exception is exist
-    const orderer_hostName_full = `${ordererConfig.container_name}.${COMPANY_DOMAIN}`;
-    const orderer_tls_cacerts = path.resolve(CRYPTO_CONFIG_DIR,
-        'ordererOrganizations', COMPANY_DOMAIN, 'orderers', orderer_hostName_full, 'tls', 'ca.crt');
-    const orderer_url = `${GPRC_protocol}localhost:${ordererConfig.portMap[0].host}`;
+    const channel = client.newChannel(channelname);//NOTE throw exception if exist
+    const newOrderer = (ordererName,ordererSingleConfig)=>{
+        const orderer_url = `${GPRC_protocol}localhost:${ordererSingleConfig.portMap[7050]}`;
+        let orderer
+        if(companyConfig.TLS){
+            const orderer_hostName_full = `${ordererName}.${COMPANY_DOMAIN}`;
+            const orderer_tls_cacerts = path.resolve(CRYPTO_CONFIG_DIR,
+                'ordererOrganizations', COMPANY_DOMAIN, 'orderers', orderer_hostName_full, 'tls', 'ca.crt');
+            orderer = new Orderer(orderer_url, {
+                pem: fs.readFileSync(orderer_tls_cacerts).toString(),
+                'ssl-target-name-override': orderer_hostName_full,
+            });
+        }else {
+            orderer = new Orderer(orderer_url);
+        }
+        return orderer
+    }
+    if(ordererConfig.type==='kafka'){
+        const ordererConfigs = ordererConfig.kafka.orderers;
+        for(let ordererName in ordererConfigs){
+            const ordererSingleConfig =ordererConfigs[orderer];
+            newOrderer(ordererName,ordererSingleConfig)
+            channel.addOrderer(orderer);
+        }
 
-    const orderer = new Orderer(orderer_url, {
-        pem: fs.readFileSync(orderer_tls_cacerts).toString(),
-        'ssl-target-name-override': orderer_hostName_full,
-    });
-    channel.addOrderer(orderer);
+    }else {
+        newOrderer(ordererConfig.solo.container_name,ordererConfig.solo)
+        channel.addOrderer(orderer);
+    }
+
     for (let orgName in channelConfig.orgs) {
         const orgConfigInChannel = channelConfig.orgs[orgName];
         for (let peerIndex of orgConfigInChannel.peerIndexes) {

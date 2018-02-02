@@ -7,12 +7,14 @@ const errJson = (json, {errCode, errMessage} = {errCode: 'success', errMessage: 
 };
 exports.errJson = errJson;
 
-const onErr = (res, then) => {
+const onErr = (res) => {
     return (err) => {
-        res.send(err);
-        if (then) {
-            then(err);
+        let status = 400;
+        if(err.action==="onOpen"){
+            // {"msg":"onOpen","state":"failed","err":"Error: already connected"}
+            status = 409
         }
+        res.status(status).send(err);
     };
 };
 exports.onErr = onErr;

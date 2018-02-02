@@ -53,7 +53,7 @@ public class testMain {
             Peer peer0ENG = client.newPeer("d", "grpc://localhost:8051");
 
 
-            Channel channel = ChannelUtil.createOrGetChannel(client, channelName, "grpc://localhost:7250", channelFile);
+            Channel channel = ChannelUtil.createOrGetChannel(client, channelName, "grpc://localhost:7050", channelFile);
 
             System.out.println("channel created");
 

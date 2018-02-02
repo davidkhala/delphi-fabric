@@ -1,29 +1,6 @@
 {
-  "kafka": {
-    "K": 4,
-    "Z": 3,
-    "M": 2,
-    "N": 3,
-    "rule": "1<M<N<K,K>=4,Orderer.AbsoluteMaxBytes < replica.fetch.max.bytes <= message.max.bytes",
-    "zookeepers": [
-      "zookeeper0",
-      "zookeeper1",
-      "zookeeper2"
-    ],
-    "orderers": [
-      "orderer0",
-      "orderer1",
-      "orderer2"
-    ],
-    "kafkas": [
-      "kafka0",
-      "kafka1",
-      "kafka2",
-      "kafka3"
-    ]
-  },
   "domain": "Delphi.com",
-  "TLS": true,
+  "TLS": false,
   "docker": {
     "fabricTag": "1.1.0-preview",
     "network": "delphiNetwork",
@@ -41,17 +18,64 @@
     }
   },
   "orderer": {
+    "type": "kafka",
     "genesis_block": {
       "file": "delphi.block",
       "profile": "delphiGenesis"
     },
-    "container_name": "orderContainerName",
-    "portMap": [
-      {
-        "host": 7250,
-        "container": 7050
+    "solo": {
+      "container_name": "orderContainerName",
+      "portMap": {
+        "7050": 7050
       }
-    ],
+    },
+    "kafka": {
+      "M": 2,
+      "N": 3,
+      "rule": "1<M<N<K,K>=4,Orderer.AbsoluteMaxBytes < replica.fetch.max.bytes <= message.max.bytes",
+      "zookeepers": {
+        "zookeeper0": {
+          "MY_ID": 0
+        },
+        "zookeeper1": {
+          "MY_ID": 1
+        },
+        "zookeeper2": {
+          "MY_ID": 2
+        }
+      },
+      "kafkas": {
+        "kafka0": {
+          "BROKER_ID": 0
+        },
+        "kafka1": {
+          "BROKER_ID": 1
+        },
+        "kafka2": {
+          "BROKER_ID": 2
+        },
+        "kafka3": {
+          "BROKER_ID": 3
+        }
+      },
+      "orderers": {
+        "orderer0": {
+          "portMap": {
+            "7050": 7050
+          }
+        },
+        "orderer1": {
+          "portMap": {
+            "7050": 8050
+          }
+        },
+        "orderer2": {
+          "portMap": {
+            "7050": 9050
+          }
+        }
+      }
+    },
     "MSP": {
       "name": "OrdererMSPName",
       "id": "OrdererMSP"

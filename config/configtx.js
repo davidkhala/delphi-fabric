@@ -1,33 +1,35 @@
-const globalConfig = require('./orgs.json')
-const fs = require('fs')
-const path = require('path')
-const CURRENT = __dirname
-const yaml = require('js-yaml')
+const globalConfig = require('./orgs.json');
+const fs = require('fs');
+const path = require('path');
+const CURRENT = __dirname;
+const yaml = require('js-yaml');
 exports.gen = ({
                    consortiumName = "SampleConsortium",
-                   COMPANY, MSPROOT,
-                   PROFILE_BLOCK = `${COMPANY}Genesis`,
+                   MSPROOT,
+                   PROFILE_BLOCK = `delphiGenesis`,
                    configtxFile = path.resolve(CURRENT, 'configtx.yaml')
 
                }) => {
-    const companyConfig = globalConfig[COMPANY]
-    const channelsConfig = companyConfig.channels
-    const COMPANY_DOMAIN = companyConfig.domain
-    const ordererConfig = companyConfig.orderer
-    const ordererContainerPort = ordererConfig.portMap[0].container
+    const companyConfig = globalConfig;
+    const channelsConfig = companyConfig.channels;
+    const COMPANY_DOMAIN = companyConfig.domain;
+    const ordererConfig = companyConfig.orderer;
 
 //	refresh configtxFile
-    fs.unlinkSync(configtxFile)
+    if (fs.existsSync(configtxFile)) {
+        fs.unlinkSync(configtxFile);
+    }
 
 
     const blockProfileConfig = {
         Orderer: {
             OrdererType: 'solo',
-            Addresses: [`${ordererConfig.container_name}:${ordererContainerPort}`],
+
+            Addresses: [`${ordererConfig.solo.container_name}:${ordererConfig.solo.portMap[7050]}`],
             BatchTimeout: '2s',
             BatchSize: {
                 MaxMessageCount: 10,
-                AbsoluteMaxBytes: '99 MB',
+                AbsoluteMaxBytes: '10 MB',//TODO 99 MB
                 PreferredMaxBytes: '512 KB'
             },
             Organizations: [
@@ -37,13 +39,23 @@ exports.gen = ({
                 }
             ]
         }
+    };
+    if (companyConfig.orderer.type === "kafka") {
+        blockProfileConfig.Orderer.OrdererType = "kafka";
+
+        blockProfileConfig.Orderer.Addresses = Object.keys(globalConfig.orderer.kafka.orderers)
+            .map((orderer) => `${orderer}:7050`);
+
+        blockProfileConfig.Orderer.Kafka = {
+            Brokers: Object.keys(globalConfig.orderer.kafka.kafkas).map((kafka) => `${kafka}:9092`)
+        };
     }
-    const orgsConfig = companyConfig.orgs
-    const Organizations = []
+    const orgsConfig = companyConfig.orgs;
+    const Organizations = [];
 
     const OrganizationBuilder = (orgName) => {
-        const orgConfig = orgsConfig[orgName]
-        const anchorPeerConfig = orgConfig.peers[0]
+        const orgConfig = orgsConfig[orgName];
+        const anchorPeerConfig = orgConfig.peers[0];
         return {
             Name: orgConfig.MSP.name,
             ID: orgConfig.MSP.id,
@@ -52,38 +64,38 @@ exports.gen = ({
                 Host: anchorPeerConfig.container_name,
                 Port: 7051
             }]
-        }
-    }
+        };
+    };
     for (let orgName in orgsConfig) {
-        Organizations.push(OrganizationBuilder(orgName))
+        Organizations.push(OrganizationBuilder(orgName));
     }
     blockProfileConfig.Consortiums = {
         [consortiumName]: {
             Organizations
         }
-    }
+    };
 
     const Profiles = {
         [PROFILE_BLOCK]: blockProfileConfig
-    }
+    };
     //Write channel profiles
-    const channelsProfileConfig = {}
+    const channelsProfileConfig = {};
     for (let channelName in channelsConfig) {
-        const channelConfig = channelsConfig[channelName]
-        const PROFILE_CHANNEL = channelName
-        const Organizations = []
+        const channelConfig = channelsConfig[channelName];
+        const PROFILE_CHANNEL = channelName;
+        const Organizations = [];
         for (let orgName in channelConfig.orgs) {
-            Organizations.push(OrganizationBuilder(orgName))
+            Organizations.push(OrganizationBuilder(orgName));
         }
         Profiles[PROFILE_CHANNEL] = {
             Consortium: consortiumName,
             Application: {
                 Organizations
             }
-        }
+        };
 
     }
 
-    fs.writeFileSync(configtxFile, yaml.safeDump({Profiles}, {lineWidth: 180}))
+    fs.writeFileSync(configtxFile, yaml.safeDump({Profiles}, {lineWidth: 180}));
 
-}
+};
