@@ -101,32 +101,31 @@ exports.prepareChannel = (channelName, client, isRenew) => {
     }
 
     const channel = client.newChannel(channelname);//NOTE throw exception if exist
-    const newOrderer = (ordererName,ordererSingleConfig)=>{
+    const newOrderer = (ordererName, ordererSingleConfig) => {
         const orderer_url = `${GPRC_protocol}localhost:${ordererSingleConfig.portMap[7050]}`;
-        let orderer
-        if(companyConfig.TLS){
+        if (companyConfig.TLS) {
             const orderer_hostName_full = `${ordererName}.${COMPANY_DOMAIN}`;
             const orderer_tls_cacerts = path.resolve(CRYPTO_CONFIG_DIR,
                 'ordererOrganizations', COMPANY_DOMAIN, 'orderers', orderer_hostName_full, 'tls', 'ca.crt');
-            orderer = new Orderer(orderer_url, {
+            return new Orderer(orderer_url, {
                 pem: fs.readFileSync(orderer_tls_cacerts).toString(),
                 'ssl-target-name-override': orderer_hostName_full,
             });
-        }else {
-            orderer = new Orderer(orderer_url);
+        } else {
+            return new Orderer(orderer_url);
         }
-        return orderer
-    }
-    if(ordererConfig.type==='kafka'){
+
+    };
+    if (ordererConfig.type === 'kafka') {
         const ordererConfigs = ordererConfig.kafka.orderers;
-        for(let ordererName in ordererConfigs){
-            const ordererSingleConfig =ordererConfigs[orderer];
-            newOrderer(ordererName,ordererSingleConfig)
+        for (let ordererName in ordererConfigs) {
+            const ordererSingleConfig = ordererConfigs[ordererName];
+            const orderer = newOrderer(ordererName, ordererSingleConfig);
             channel.addOrderer(orderer);
         }
 
-    }else {
-        newOrderer(ordererConfig.solo.container_name,ordererConfig.solo)
+    } else {
+        const orderer = newOrderer(ordererConfig.solo.container_name, ordererConfig.solo);
         channel.addOrderer(orderer);
     }
 
@@ -195,10 +194,6 @@ const rawAdminUsername = 'adminName';
 const objects = {};
 
 objects.user = {
-    clear: (client) => {
-        client._userContext = null;
-        client.setCryptoSuite(null);
-    },
     tlsCreate: (tlsDir, username, orgName, mspid = getMspID(orgName), skipPersistence = false, client) => {
         const privateKey = path.join(tlsDir, 'server.key');
         const signedCert = path.join(tlsDir, 'server.crt');
@@ -272,8 +267,8 @@ objects.user = {
             if (user) return client.setUserContext(user, false);
             return objects.user.mspCreate(client, {keystoreDir, signcertFile, username, orgName});
         }),
-    select: (keystoreDir, signcertFile, username, orgName, client) => {
-        objects.user.clear(client);
+    select: (keystoreDir, signcertFile, username, orgName) => {
+        const client = ClientUtil.new();
         return objects.user.createIfNotExist(keystoreDir, signcertFile, username, orgName, client);
     },
 
@@ -283,7 +278,7 @@ const formatUsername = (username, orgName) => `${username}@${orgName}.${COMPANY_
 
 objects.user.admin = {
     orderer: {
-        select: (client, ordererContainerName = 'ordererContainerName') => {
+        select: (ordererContainerName = 'ordererContainerName') => {
 
             const rawOrdererUsername = 'ordererAdminName';
 
@@ -293,7 +288,7 @@ objects.user.admin = {
                 'ordererOrganizations', COMPANY_DOMAIN, 'users', `Admin@${COMPANY_DOMAIN}`, 'msp', 'signcerts',
                 `Admin@${COMPANY_DOMAIN}-cert.pem`);
             const ordererMSPID = ordererConfig.MSP.id;
-            objects.user.clear(client);
+            const client = ClientUtil.new();
 
             return objects.user.get(rawOrdererUsername, ordererContainerName, client).then(user => {
                 if (user) return client.setUserContext(user, false);
@@ -322,8 +317,8 @@ objects.user.admin = {
         if (user) return client.setUserContext(user, false);
         return objects.user.admin.create(orgName, client);
     }),
-    select: (orgName, client) => {
-        objects.user.clear(client);
+    select: (orgName) => {
+        const client = ClientUtil.new();
         return objects.user.admin.createIfNotExist(orgName, client).then(() => Promise.resolve(client));
     },
 };
@@ -366,7 +361,7 @@ exports.chaincodeProposalAdapter = (actionString, validator) => {
     };
 };
 
-exports.helperConfig = Object.assign({}, {GPRC_protocol}, globalConfig);
+exports.globalConfig = globalConfig;
 exports.gen_tls_cacerts = gen_tls_cacerts;
 exports.preparePeer = preparePeer;
 exports.newPeer = newPeer;

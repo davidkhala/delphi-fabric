@@ -37,8 +37,7 @@ exports.invoke = ({ chaincodeId }, ws) => {
 		const invalidArgs = invalid.args({ args })
 		if (invalidArgs) return errorHandle(invalidArgs, ws)
 
-		const client = ClientUtil.new()
-		helper.getOrgAdmin(orgName, client).then(() => {
+		helper.getOrgAdmin(orgName).then((client) => {
 			const channel = helper.prepareChannel(channelName, client)
 			const peers = helper.newPeers([peerIndex], orgName)
 			return invoke(channel, peers, {
@@ -85,8 +84,7 @@ exports.instantiate = ({ chaincodeId }, ws) => {
 
 		const invalidArgs = invalid.args({ args })
 		if (invalidArgs) return errorHandle(invalidArgs, ws)
-		const client = ClientUtil.new()
-		return helper.getOrgAdmin(orgName, client).then(() => {
+		return helper.getOrgAdmin(orgName).then((client) => {
 			const channel = helper.prepareChannel(channelName, client)
 			const peers = helper.newPeers([peerIndex], orgName)
 			return instantiate(channel, undefined, {
@@ -128,8 +126,7 @@ exports.upgrade = ({  chaincodeId }, ws) => {
 
 		const invalidArgs = invalid.args({ args })
 		if (invalidArgs) return errorHandle(invalidArgs, ws)
-		const client = ClientUtil.new()
-		helper.getOrgAdmin(orgName, client).then(() => {
+		helper.getOrgAdmin(orgName).then((client) => {
 			const channel = helper.prepareChannel(channelName, client)
 			const peers = helper.newPeers([peerIndex], orgName)
 			return upgrade(channel, undefined, {

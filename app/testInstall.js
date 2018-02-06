@@ -17,18 +17,17 @@ const channelName = 'delphiChannel'
 const deploy = (orgName, peerIndexes) => {
 	const peers = helper.newPeers(peerIndexes, orgName)
 
-	return helper.getOrgAdmin(orgName, client).then(() => {
+	return helper.getOrgAdmin(orgName).then((client) => {
 		return install(peers, { chaincodeId, chaincodePath, chaincodeVersion }, client)
 	})
 }
-const client = ClientUtil.new()
 
 deploy('BU', [0, 1]).then(() => deploy('PM', [0])
 ).then(() => deploy('ENG', [0])
 ).then(() => {
 	const orgName = 'BU'
 	const peers = helper.newPeers([0], orgName)
-	return helper.getOrgAdmin(orgName, client).then(() => {
+	return helper.getOrgAdmin(orgName).then((client) => {
 		const channel = helper.prepareChannel(channelName, client, true)
 		return instantiate(channel, peers, { chaincodeId, chaincodeVersion, args: instantiate_args })
 	})

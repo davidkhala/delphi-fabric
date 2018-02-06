@@ -1,59 +1,73 @@
-const fs = require('fs')
-const helper = require('./helper.js')
-const logger = require('./util/logger').new('create-Channel')
-const multiSign = require('./util/multiSign').signs
-const ClientUtil = require('./util/client')
-//Attempt to send a request to the orderer with the sendCreateChain method
-//"../artifacts/channel/mychannel.tx"
-const createChannel = (channelName, channelConfigFile, orgNames) => {
-	logger.debug('====== Creating Channel ======')
-	logger.debug({ channelName, channelConfigFile, orgNames })
+const fs = require('fs');
+const helper = require('./helper.js');
+const logger = require('./util/logger').new('create-Channel');
+const multiSign = require('./util/multiSign').signs;
+const Sleep = require('sleep')
+/**
+ *
+ * @param client client of committer
+ * @param channelName
+ * @param channelConfigFile
+ * @param {string[]} orgNames orgName array of endorsers
+ * @returns {PromiseLike<T> | Promise<T>}
+ */
+const createChannel = (client, channelName, channelConfigFile, orgNames) => {
+    logger.debug('====== Creating Channel ======');
+    logger.debug({channelName, channelConfigFile, orgNames});
 
-	const client = ClientUtil.new()
-	const clientSwitchPromises = []
-	for (let orgName of orgNames) {
-		const switchPromise = () => {
-			return helper.getOrgAdmin(orgName,client)
-		}
-		clientSwitchPromises.push(switchPromise)
-	}
-	const channelConfig_envelop = fs.readFileSync(channelConfigFile)
 
-	// extract the channel config bytes from the envelope to be signed
-	const channelConfig = client.extractChannelConfig(channelConfig_envelop)
-	logger.debug({ channelConfig })
-	return multiSign(client, clientSwitchPromises, channelConfig).then(signatures => {
-		const channel = helper.prepareChannel(channelName,client,true)
-		const txId = client.newTransactionID()
-		const request = {
-			config: channelConfig,
-			signatures,
-			name: channelName.toLowerCase(),
-			orderer: channel.getOrderers()[0],
-			txId
-		}
-		logger.debug('signatures', signatures.length)
-		const loopGetChannel = () => {
-			return channel.initialize().catch(err => {
-				if (err.toString().includes('Invalid results returned ::NOT_FOUND')) {
-					logger.warn('loopGetChannel', 'try...')
-					return loopGetChannel()
-				}
-				return err
-			})
-		}
-		//NOTE before channel created, channel.getGenesisBlock() return:Error: Invalid results returned ::NOT_FOUND
-		return client.createChannel(request).then((results) => {
-			logger.debug('channel created', results)
-			return loopGetChannel().then((channelConfig) => {
-				logger.info('channel initialized')
-				//NOTE channel.getGenesisBlock({txId:client.newTransactionID()}) ready here
-				return channelConfig
-			})
+    const clientSwitchPromises = [];
+    for (let orgName of orgNames) {
+        const switchPromise = helper.getOrgAdmin(orgName);
+        clientSwitchPromises.push(switchPromise);
+    }
+    const channelConfig_envelop = fs.readFileSync(channelConfigFile);
 
-		})
+    // extract the channel config bytes from the envelope to be signed
+    const channelConfig = client.extractChannelConfig(channelConfig_envelop);
+    logger.debug({channelConfig});
+    return multiSign(clientSwitchPromises, channelConfig).then(signatures => {
+        const channel = helper.prepareChannel(channelName, client, true);
+        const txId = client.newTransactionID();
+        const request = {
+            config: channelConfig,
+            signatures,
+            name: channelName.toLowerCase(),
+            orderer: channel.getOrderers()[0],
+            txId
+        };
+        logger.debug('signatures', signatures.length);
+        const loopGetChannel = () => {
+            logger.debug('loopGetChannel', 'try...');
+            return channel.initialize().catch(err => {
+                if (err.toString().includes('Invalid results returned ::NOT_FOUND')) {
+                    const wait = 100
+                    logger.warn('loopGetChannel', `wait ${wait}ms`);
+                    Sleep.msleep(100);
+                    return loopGetChannel();
+                }
+                if (err.toString().includes('Invalid results returned ::SERVICE_UNAVAILABLE') &&
+                    helper.globalConfig.orderer.type === 'kafka') {
+                    const wait = 100
+                    logger.warn('loopGetChannel', `wait ${wait}ms in kafka mode`);
+                    Sleep.msleep(100);
+                    return loopGetChannel();
+                }
+                return Promise.reject(err);
+            });
+        };
+        //NOTE before channel created, channel.getGenesisBlock() return:Error: Invalid results returned ::NOT_FOUND
+        return client.createChannel(request).then((results) => {
+            logger.debug('channel created', results);
+            return loopGetChannel().then((channelConfig) => {
+                logger.info('channel initialized');
+                //NOTE channel.getGenesisBlock({txId:client.newTransactionID()}) ready here
+                return channelConfig;
+            });
 
-	})
-}
+        });
 
-exports.create = createChannel
+    });
+};
+
+exports.create = createChannel;

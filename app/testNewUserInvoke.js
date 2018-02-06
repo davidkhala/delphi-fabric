@@ -54,7 +54,7 @@ const setCAUser = (client, { username, orgName, TLS }) => {
 
 						//fixme bug design in CryptoSuite_ECDSA_AES.importKey
 
-						helper.userAction.clear(client)
+						const client = ClientUtil.new();
 						return caUtil.user.build(helper.formatUsername(username, orgName), result, MSPID).then((user) => {
 
 							return client.setUserContext(user, true)

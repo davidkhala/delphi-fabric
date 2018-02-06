@@ -10,9 +10,9 @@ exports.errJson = errJson;
 const onErr = (res) => {
     return (err) => {
         let status = 400;
-        if(err.action==="onOpen"){
+        if (err.action === "onOpen") {
             // {"msg":"onOpen","state":"failed","err":"Error: already connected"}
-            status = 409
+            status = 409;
         }
         res.status(status).send(err);
     };

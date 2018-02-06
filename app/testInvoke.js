@@ -14,8 +14,8 @@ const channelName = 'delphiChannel'
 const ClientUtil = require('./util/client')
 
 const peers = helper.newPeers(peerIndexes, orgName)
-const client = ClientUtil.new()
-helper.getOrgAdmin(orgName, client).then(() => {
+
+helper.getOrgAdmin(orgName).then((client) => {
 	const channel = helper.prepareChannel(channelName, client, true)
 	return invoke(channel, peers, { chaincodeId, fcn, args })
 }).then(reducer).then(_ => logger.info(_))

@@ -1,39 +1,39 @@
 const express = require('express');
 const router = express.Router();
-const {newLogger} = require('./webSocketCommon')
-const logger = newLogger('patient')
+const {newLogger} = require('./webSocketCommon');
+const logger = newLogger('patient');
 const {
     errJson, newWS, send, setOnMessage, trimHKID, errCase, claimListHandler, onErr
 } = require('./medicalCommon');
 
 const connectionPool = {};
 router.use((req, res, next) => {
-    const route = "patient"
-    logger.debug(route,'recv request', req.url, req.body);
-    logger.debug(route,'connectionPool', Object.keys(connectionPool));
+    const route = "patient";
+    logger.debug(route, 'recv request', req.url, req.body);
+    logger.debug(route, 'connectionPool', Object.keys(connectionPool));
     const {HKID} = req.body;
 
-    const trimmed = trimHKID(HKID)
+    const trimmed = trimHKID(HKID);
     if (!trimmed) {
-        res.send(errCase.invalidParam("HKID"))
-        return
+        res.send(errCase.invalidParam("HKID"));
+        return;
     }
     const wsID = trimmed;
 
     if (!connectionPool[wsID]) {
-        const ws = newWS({wsID, route})
-        connectionPool[wsID] = ws
+        const ws = newWS({wsID, route});
+        connectionPool[wsID] = ws;
 
         ws.on('close', event => {
-            logger.error(route,'closeEvent',`delete connectionPool[${wsID}]`);
-            delete connectionPool[wsID]
+            logger.error(route, 'closeEvent', `delete connectionPool[${wsID}]`);
+            delete connectionPool[wsID];
         });
     }
 
-    res.locals.ws = connectionPool[wsID]
+    res.locals.ws = connectionPool[wsID];
 
 
-    next()
+    next();
 });
 
 router.post('/policy/view', (req, res) => {
@@ -50,11 +50,11 @@ router.post('/policy/view', (req, res) => {
                 return {
                     insurerID: insurerId, IPN: policyNum,
                     startTime, endTime, maxPaymentAmount: maxAmount
-                }
-            })
-        res.send(errJson({policies}, message))
+                };
+            });
+        res.send(errJson({policies}, message));
     }, onErr(res));
-    send(ws, {fn: 'getPolicyRecords'})
+    send(ws, {fn: 'getPolicyRecords'});
 
 });
 
@@ -68,11 +68,11 @@ router.post('/visit_registration/create', (req, res) => {
 
     setOnMessage(ws, (message) => {
 
-        res.send(message)
+        res.send(message);
     }, onErr(res));
-    const insurers = (Array.isArray(policies)?policies:JSON.parse(policies)).map(({IPN, insurerID}) => {
-        return {insurerId: insurerID, policyNum: IPN}
-    })
+    const insurers = (Array.isArray(policies) ? policies : JSON.parse(policies)).map(({IPN, insurerID}) => {
+        return {insurerId: insurerID, policyNum: IPN};
+    });
 
     send(ws,
         {
@@ -83,7 +83,7 @@ router.post('/visit_registration/create', (req, res) => {
                 insurers
             }]
         }
-    )
+    );
 
 });
 
@@ -95,9 +95,9 @@ router.post('/voucher_claim/consent', (req, res) => {
     const {ws} = res.locals;
 
     setOnMessage(ws, (message) => {
-        res.send(message)
+        res.send(message);
     }, onErr(res));
-    send(ws, {fn: 'setVoucherConsentRecords', args: [{claimId: claimID}]})
+    send(ws, {fn: 'setVoucherConsentRecords', args: [{claimId: claimID}]});
 
 
 });

@@ -142,10 +142,9 @@ const upgrade = (channel, richPeers = channel.getPeers(), {chaincodeId, chaincod
         }
         const promises = [];
         for (let peer of richPeers) {
-            const eventHubClient = ClientUtil.new();
             const peerOrgName = peer.peerConfig.orgName;
-            const txPromise = helper.getOrgAdmin(peerOrgName, eventHubClient).then(() => {
-                const eventHub = helper.bindEventHub(peer, eventHubClient);
+            const txPromise = helper.getOrgAdmin(peerOrgName).then((client) => {
+                const eventHub = helper.bindEventHub(peer, client);
                 return eventHelper.txEventPromise(eventHub, {txId, eventWaitTime}, ({tx, code}) => {
                     logger.debug('newTxEvent', {tx, code});
                     return {valid: code === 'VALID', interrupt: true};

@@ -4,6 +4,7 @@ const fs = require('fs');
 const User = require('fabric-client/lib/User');
 const Client = require('fabric-client');
 const path = require('path');
+const logger = require('./logger').new('Client');
 
 /**
  * alternative to client.createUser, for old version only
@@ -69,7 +70,6 @@ const createUser = (client, opts) => {
 exports.createUser = createUser;
 module.exports.setDefaultCryptoSuite = (client, {path} = {path: Utils.getDefaultKeyStorePath()}) => {
     const newCryptoSuite = BaseClient.newCryptoSuite();
-    console.log({path})
     newCryptoSuite.setCryptoKeyStore(BaseClient.newCryptoKeyStore(undefined, {path}));
     client.setCryptoSuite(newCryptoSuite);
     return client.getCryptoSuite();
@@ -78,8 +78,9 @@ module.exports.setDefaultCryptoSuite = (client, {path} = {path: Utils.getDefault
 exports.new = () => {
     const client = new Client();
     const cryptoKeyStorePath = path.join(path.dirname(__dirname), 'cryptoKeyStore');
-
-    module.exports.setDefaultCryptoSuite(client,
-        fs.statSync(cryptoKeyStorePath).isDirectory() ? {path: cryptoKeyStorePath} : undefined);
+    const opt={
+        path:cryptoKeyStorePath
+    }
+    module.exports.setDefaultCryptoSuite(client, opt);
     return client;
 };

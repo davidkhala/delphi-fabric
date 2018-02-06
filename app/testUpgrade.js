@@ -22,7 +22,7 @@ const updateInstallAll = (chaincodeInfo) => {
 	}).then(() => {
 		const orgName = 'ENG'
 		const peerIndexes = [0]
-		return helper.getOrgAdmin(orgName, client).then(() => {
+		return helper.getOrgAdmin(orgName).then((client) => {
 			const peers = helper.newPeers(peerIndexes, orgName)
 			return UpdateInstall(peers, { chaincodeId }, client)
 		})
@@ -32,7 +32,7 @@ const updateInstallAll = (chaincodeInfo) => {
 		const ChaincodeUtil = require('./util/chaincode')
 		const chaincodeVersion = ChaincodeUtil.nextVersion(chaincodeInfo.version)
 		const orgName = 'BU'
-		return helper.getOrgAdmin(orgName, client).then(() => {
+		return helper.getOrgAdmin(orgName).then((client) => {
 			const channel = helper.prepareChannel(channelName, client, true)
 			const peers = helper.newPeers([0], orgName)
 			return Upgrade(channel, peers, { chaincodeId, chaincodeVersion, args })
@@ -46,7 +46,7 @@ const updateInstallAll = (chaincodeInfo) => {
 const client = ClientUtil.new()
 const Query = require('./query')
 
-helper.getOrgAdmin('BU', client).then(() => {
+helper.getOrgAdmin('BU').then((client) => {
 	const testPeer = helper.newPeers([0], 'BU')[0]
 	const channel = helper.prepareChannel(channelName, client, true)
 
