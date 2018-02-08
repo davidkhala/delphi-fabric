@@ -46,6 +46,37 @@ router.post('/policy/create', (req, res) => {
         args: [{policyNum: IPN, patientId: trimmed, startTime, endTime, maxAmount: maxPaymentAmount}]
     });
 });
+router.post('/policy/view', (req, res) => {
+    const {HKID, IPN} = req.body;
+    const {ws} = res.locals;
+
+    let trimmed = undefined;
+    if (HKID) {
+        trimmed = trimHKID(HKID);
+        if (!trimmed) {
+            res.send(errCase.invalidParam("HKID"));
+            return;
+        }
+    }
+
+    setOnMessage(ws, (message) => {
+        const {resp} = message;
+        const policies = resp
+            .filter(({policyNum}) => !IPN || (IPN === policyNum))
+            .filter(({patientId}) => !trimmed || (trimmed === patientId))
+            .map(({patientId, insurerId, policyNum, startTime, endTime, maxAmount}) => {
+                return {
+                    patientId,
+                    insurerID: insurerId, IPN: policyNum,
+                    startTime, endTime, maxPaymentAmount: maxAmount
+                };
+            });
+        res.send(errJson({policies}, message));
+    }, onErr(res));
+    send(ws, {fn: 'getPolicyRecords'});
+});
+
+
 router.post('/voucher_claim/list', claimListHandler);
 router.post('/voucher_claim/pay', (req, res) => {
     const {claimID, IPN, HKID, paymentAmount, time} = req.body;

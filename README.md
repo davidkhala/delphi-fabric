@@ -165,15 +165,17 @@ govendor: to import third-party package in vendor folder
   - my sample chaincodes have been migrated to ``github.com/davidkhala/chaincode``
   
 
+## Finished
 
+- kafka on local 
+- use npm:js-yaml to write YAML files instead of https://github.com/mikefarah/yq
     
 ## TODO
 - java sdk and docker-swarm: keep update
 - endorsement policy config
 - test backup and recover
-- kafka
+- kafka on swarm: migrate orderer first
 - cooperate with official network_config.json 
-- refactor: use npm:js-yaml to write more nodejs, less linux 
 - chaincode version string format
 - chaincode uninstall
 - use path.resolve to replace `${path}/filename`
@@ -183,3 +185,4 @@ govendor: to import third-party package in vendor folder
 - test: whether chaincode upgrade will reset data?
 - function new() -> classify
 - await: fabric-kafka haven't release 1.1.0-alpha
+- ?update system channel ``testchainid`` 

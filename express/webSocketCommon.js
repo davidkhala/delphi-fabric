@@ -14,7 +14,7 @@ const wsMethods = ['open', 'message', 'close', 'error'];
 exports.clearEventListener = (ws, method, listener) => {
     if (wsMethods.find((_) => _ === method)) {
         const listeners = ws.listeners(method);
-        logger.debug('clearEventListener', method, listener ? `of single on size:${listeners.length}` : 'batch');
+        logger.debug('clearEventListener', method, listener ? 'of specific listener' : 'batch','original size',listeners.length);
         for (let listenerEach of listeners) {
             if (listener) {
                 if (listenerEach === listener) {

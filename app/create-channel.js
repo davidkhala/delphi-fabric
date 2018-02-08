@@ -2,16 +2,17 @@ const fs = require('fs');
 const helper = require('./helper.js');
 const logger = require('./util/logger').new('create-Channel');
 const multiSign = require('./util/multiSign').signs;
-const Sleep = require('sleep')
+const Sleep = require('sleep');
 /**
  *
  * @param client client of committer
  * @param channelName
  * @param channelConfigFile
  * @param {string[]} orgNames orgName array of endorsers
+ * @param {string} ordererUrl such like 'grpc://localhost:7050'; if not specified, we will use channel.getOrderers()[0]
  * @returns {PromiseLike<T> | Promise<T>}
  */
-const createChannel = (client, channelName, channelConfigFile, orgNames) => {
+const createChannel = (client, channelName, channelConfigFile, orgNames, ordererUrl) => {
     logger.debug('====== Creating Channel ======');
     logger.debug({channelName, channelConfigFile, orgNames});
 
@@ -29,11 +30,17 @@ const createChannel = (client, channelName, channelConfigFile, orgNames) => {
     return multiSign(clientSwitchPromises, channelConfig).then(signatures => {
         const channel = helper.prepareChannel(channelName, client, true);
         const txId = client.newTransactionID();
+        const orderers = channel.getOrderers();
+        logger.debug(orderers.length,'orderers in channel',channelName);
+        const orderer = ordererUrl ? orderers.find((orderer) => {
+            logger.debug(orderer.getUrl(),ordererUrl)
+            return orderer.getUrl() === ordererUrl;
+        }) : orderers[0];
         const request = {
             config: channelConfig,
             signatures,
             name: channelName.toLowerCase(),
-            orderer: channel.getOrderers()[0],
+            orderer,
             txId
         };
         logger.debug('signatures', signatures.length);
@@ -41,14 +48,14 @@ const createChannel = (client, channelName, channelConfigFile, orgNames) => {
             logger.debug('loopGetChannel', 'try...');
             return channel.initialize().catch(err => {
                 if (err.toString().includes('Invalid results returned ::NOT_FOUND')) {
-                    const wait = 100
+                    const wait = 100;
                     logger.warn('loopGetChannel', `wait ${wait}ms`);
                     Sleep.msleep(100);
                     return loopGetChannel();
                 }
                 if (err.toString().includes('Invalid results returned ::SERVICE_UNAVAILABLE') &&
                     helper.globalConfig.orderer.type === 'kafka') {
-                    const wait = 100
+                    const wait = 100;
                     logger.warn('loopGetChannel', `wait ${wait}ms in kafka mode`);
                     Sleep.msleep(100);
                     return loopGetChannel();
