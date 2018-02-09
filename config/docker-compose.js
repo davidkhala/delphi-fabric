@@ -8,6 +8,71 @@ const logger = require('../app/util/logger').new('compose-gen');
 const swarmServiceName = (serviceName) => {
     return serviceName.replace(/\./g, '-');
 };
+const addOrdererService = (services, {ordererConfig, ordererEachConfig, volumeConfig}, {
+    ordererName, COMPANY_DOMAIN, IMAGE_TAG,
+    ORDERER_GENERAL_TLS_ROOTCAS,
+    kafkaServices, TLS, swarmType = 'local',
+    CONFIGTX = '/etc/hyperledger/configtx',
+    MSPROOT = '/etc/hyperledger/crypto-config',
+}) => {
+
+    const CONFIGTXVolume = volumeConfig.CONFIGTX[swarmType];
+    const MSPROOTVolume = volumeConfig.MSPROOT[swarmType];
+    const BLOCK_FILE = ordererConfig.genesis_block.file;
+    let ordererServiceName = ordererName;
+    const ORDERER_STRUCTURE = `ordererOrganizations/${COMPANY_DOMAIN}/orderers/${ordererServiceName}.${COMPANY_DOMAIN}`;
+    const ordererService = {
+        image: `hyperledger/fabric-orderer:${IMAGE_TAG}`,
+        command: 'orderer',
+        ports: [`${ordererEachConfig.portMap[7050]}:7050`],
+        volumes: [
+            `${CONFIGTXVolume}:${CONFIGTX}`,
+            `${MSPROOTVolume}:${MSPROOT}`],
+        environment: [
+            'ORDERER_GENERAL_LOGLEVEL=debug',
+            'ORDERER_GENERAL_LISTENADDRESS=0.0.0.0',// TODO useless checking
+            `ORDERER_GENERAL_TLS_ENABLED=${TLS}`,
+            'ORDERER_GENERAL_GENESISMETHOD=file',
+            `ORDERER_GENERAL_GENESISFILE=${CONFIGTX}/${BLOCK_FILE}`,
+//  NOTE remove ORDERER_GENERAL_GENESISFILE: panic: Unable to bootstrap orderer. Error reading genesis block file: open /etc/hyperledger/fabric/genesisblock: no such file or directory
+// NOTE when ORDERER_GENERAL_GENESISMETHOD=provisional  ORDERER_GENERAL_GENESISPROFILE=SampleNoConsortium -> panic: No system chain found.  If bootstrapping, does your system channel contain a consortiums group definition
+            `ORDERER_GENERAL_LOCALMSPID=${ordererConfig.MSP.id}`,// FIXME hardcode MSP name
+            `ORDERER_GENERAL_LOCALMSPDIR=${MSPROOT}/${ORDERER_STRUCTURE}/msp`,
+            'GODEBUG=netdns=go' // aliyun only
+
+        ],
+        networks: {
+            default: {
+                aliases: [ordererServiceName]
+            }
+        }
+    };
+    if (swarmType === 'swarm') {
+        ordererServiceName = swarmServiceName(ordererServiceName);
+        //TODO network map service here
+
+    } else {
+        ordererService.container_name = ordererServiceName;
+    }
+    if (Array.isArray(kafkaServices)) {
+        ordererService.environment = [
+            ...ordererService.environment,
+            'ORDERER_KAFKA_RETRY_SHORTINTERVAL=1s',
+            'ORDERER_KAFKA_RETRY_SHORTTOTAL=30s',
+            'ORDERER_KAFKA_VERBOSE=true'
+        ];
+        ordererService.depends_on = kafkaServices;
+    }
+
+    if (TLS) {
+        ordererService.environment = [...ordererService.environment,
+            `ORDERER_GENERAL_TLS_PRIVATEKEY=${MSPROOT}/${ORDERER_STRUCTURE}/tls/server.key`,
+            `ORDERER_GENERAL_TLS_CERTIFICATE=${MSPROOT}/${ORDERER_STRUCTURE}/tls/server.crt`,
+            `ORDERER_GENERAL_TLS_ROOTCAS=[${ORDERER_GENERAL_TLS_ROOTCAS}${container.dir.MSPROOT}/${ORDERER_STRUCTURE}/tls/ca.crt]`
+        ];
+    }
+    services[ordererServiceName] = ordererService;
+};
 exports.gen = ({
                    MSPROOT,
                    arch = 'x86_64',
@@ -25,7 +90,6 @@ exports.gen = ({
     const orgsConfig = companyConfig.orgs;
     const COMPANY_DOMAIN = companyConfig.domain;
     const ordererConfig = companyConfig.orderer;
-    const BLOCK_FILE = ordererConfig.genesis_block.file;
     const CONFIGTXVolume = volumeConfig.CONFIGTX[type];
     const MSPROOTVolume = volumeConfig.MSPROOT[type];
     // const ordererContainerPort = ordererConfig.portMap[0].container
@@ -86,9 +150,9 @@ exports.gen = ({
                 ports.push(`${entry.host}:${entry.container}`);
             }
             const peerService = {
-                depends_on: companyConfig.orderer.type === "kafka"?
+                depends_on: companyConfig.orderer.type === "kafka" ?
                     Object.keys(companyConfig.orderer.kafka.orderers)
-                    :[companyConfig.orderer.solo.container_name]  ,
+                    : [companyConfig.orderer.solo.container_name],
                 image: `hyperledger/fabric-peer:${IMAGE_TAG}`,
                 command: 'peer node start',
                 environment,
@@ -206,60 +270,17 @@ exports.gen = ({
 
 
     if (companyConfig.orderer.type === "kafka") {
-        const ordererConfigs = companyConfig.orderer.kafka.orderers
-        const kafkaConfigs = companyConfig.orderer.kafka.kafkas
+        const ordererConfigs = companyConfig.orderer.kafka.orderers;
+        const kafkaConfigs = companyConfig.orderer.kafka.kafkas;
         const zkConfigs = companyConfig.orderer.kafka.zookeepers;
-        for (let orderer in ordererConfigs) {
-            const ordererSingleConfig = ordererConfigs[orderer];
-            let ordererServiceName = `${orderer}`;
-            const ORDERER_STRUCTURE = `ordererOrganizations/${COMPANY_DOMAIN}/orderers/${orderer}.${COMPANY_DOMAIN}`;
-            const ordererService = {
-                image: `hyperledger/fabric-orderer:${IMAGE_TAG}`,
-                command: 'orderer',
-                ports: [`${ordererSingleConfig.portMap[7050]}:7050`],
-                volumes: [
-                    `${CONFIGTXVolume}:${container.dir.CONFIGTX}`,
-                    `${MSPROOTVolume}:${container.dir.MSPROOT}`],
-                environment: [
-                    'ORDERER_KAFKA_RETRY_SHORTINTERVAL=1s',
-                    'ORDERER_KAFKA_RETRY_SHORTTOTAL=30s',
-                    'ORDERER_KAFKA_VERBOSE=true',
-                    'ORDERER_GENERAL_LOGLEVEL=debug',
-                    'ORDERER_GENERAL_LISTENADDRESS=0.0.0.0',// TODO useless checking
-                    `ORDERER_GENERAL_TLS_ENABLED=${TLS}`,
-                    'ORDERER_GENERAL_GENESISMETHOD=file',
-                    `ORDERER_GENERAL_GENESISFILE=${container.dir.CONFIGTX}/${BLOCK_FILE}`,
-//  NOTE remove ORDERER_GENERAL_GENESISFILE: panic: Unable to bootstrap orderer. Error reading genesis block file: open /etc/hyperledger/fabric/genesisblock: no such file or directory
-// NOTE when ORDERER_GENERAL_GENESISMETHOD=provisional  ORDERER_GENERAL_GENESISPROFILE=SampleNoConsortium -> panic: No system chain found.  If bootstrapping, does your system channel contain a consortiums group definition
-                    `ORDERER_GENERAL_LOCALMSPID=${companyConfig.orderer.MSP.id}`,
-                    `ORDERER_GENERAL_LOCALMSPDIR=${container.dir.MSPROOT}/${ORDERER_STRUCTURE}/msp`,
-                    'GODEBUG=netdns=go' // aliyun only
+        for (let ordererName in ordererConfigs) {
+            const ordererEachConfig = ordererConfigs[ordererName];
 
-                ],
-                depends_on: Object.keys(kafkaConfigs),
-                networks: {
-                    default: {
-                        aliases: [orderer]
-                    }
-                }
-            };
-            if (type === 'swarm') {
-                ordererServiceName = swarmServiceName(ordererServiceName);
-                //TODO network map service here
-
-            } else {
-                ordererService.container_name = orderer;
-            }
-
-            if (TLS) {
-                ordererService.environment.push(
-                    `ORDERER_GENERAL_TLS_PRIVATEKEY=${container.dir.MSPROOT}/${ORDERER_STRUCTURE}/tls/server.key`);
-                ordererService.environment.push(
-                    `ORDERER_GENERAL_TLS_CERTIFICATE=${container.dir.MSPROOT}/${ORDERER_STRUCTURE}/tls/server.crt`);
-                ordererService.environment.push(`ORDERER_GENERAL_TLS_ROOTCAS=[${ORDERER_GENERAL_TLS_ROOTCAS}${container.dir.MSPROOT}/${ORDERER_STRUCTURE}/tls/ca.crt]`);
-            }
-
-            services[ordererServiceName] = ordererService;
+            addOrdererService(services, {ordererConfig, ordererEachConfig, volumeConfig}, {
+                ordererName, COMPANY_DOMAIN, TLS, IMAGE_TAG,
+                swarmType: type, ORDERER_GENERAL_TLS_ROOTCAS,
+                kafkaServices: Object.keys(kafkaConfigs)
+            });
 
         }
 
@@ -316,53 +337,13 @@ exports.gen = ({
                 container_name: kafka
             };
         }
-    }else {
-        const ordererSingleConfig = companyConfig.orderer.solo;
-        let ordererServiceName = `${ordererSingleConfig.container_name}`;
-        const ORDERER_STRUCTURE = `ordererOrganizations/${COMPANY_DOMAIN}/orderers/${ordererServiceName}.${COMPANY_DOMAIN}`;
-        const ordererService = {
-            image: `hyperledger/fabric-orderer:${IMAGE_TAG}`,
-            command: 'orderer',
-            ports: [`${ordererSingleConfig.portMap[7050]}:7050`],
-            volumes: [
-                `${CONFIGTXVolume}:${container.dir.CONFIGTX}`,
-                `${MSPROOTVolume}:${container.dir.MSPROOT}`],
-            environment: [
-                'ORDERER_GENERAL_LOGLEVEL=debug',
-                'ORDERER_GENERAL_LISTENADDRESS=0.0.0.0',// TODO useless checking
-                `ORDERER_GENERAL_TLS_ENABLED=${TLS}`,
-                'ORDERER_GENERAL_GENESISMETHOD=file',
-                `ORDERER_GENERAL_GENESISFILE=${container.dir.CONFIGTX}/${BLOCK_FILE}`,
-//  NOTE remove ORDERER_GENERAL_GENESISFILE: panic: Unable to bootstrap orderer. Error reading genesis block file: open /etc/hyperledger/fabric/genesisblock: no such file or directory
-// NOTE when ORDERER_GENERAL_GENESISMETHOD=provisional  ORDERER_GENERAL_GENESISPROFILE=SampleNoConsortium -> panic: No system chain found.  If bootstrapping, does your system channel contain a consortiums group definition
-                `ORDERER_GENERAL_LOCALMSPID=${companyConfig.orderer.MSP.id}`,// FIXME hardcode MSP name
-                `ORDERER_GENERAL_LOCALMSPDIR=${container.dir.MSPROOT}/${ORDERER_STRUCTURE}/msp`,
-                'GODEBUG=netdns=go' // aliyun only
-
-            ],
-            networks: {
-                default: {
-                    aliases: [ordererServiceName]
-                }
-            }
-        };
-        if (type === 'swarm') {
-            ordererServiceName = swarmServiceName(ordererServiceName);
-            //TODO network map service here
-
-        } else {
-            ordererService.container_name = ordererServiceName;
-        }
-
-        if (TLS) {
-            ordererService.environment.push(
-                `ORDERER_GENERAL_TLS_PRIVATEKEY=${container.dir.MSPROOT}/${ORDERER_STRUCTURE}/tls/server.key`);
-            ordererService.environment.push(
-                `ORDERER_GENERAL_TLS_CERTIFICATE=${container.dir.MSPROOT}/${ORDERER_STRUCTURE}/tls/server.crt`);
-            ordererService.environment.push(`ORDERER_GENERAL_TLS_ROOTCAS=[${ORDERER_GENERAL_TLS_ROOTCAS}${container.dir.MSPROOT}/${ORDERER_STRUCTURE}/tls/ca.crt]`);
-        }
-
-        services[ordererServiceName] = ordererService;
+    } else {
+        const ordererEachConfig = companyConfig.orderer.solo;
+        addOrdererService(services, {ordererConfig, ordererEachConfig, volumeConfig}, {
+            ordererName: ordererEachConfig.container_name, COMPANY_DOMAIN, TLS, IMAGE_TAG,
+            swarmType: type, ORDERER_GENERAL_TLS_ROOTCAS,
+            kafkaServices: undefined
+        });
     }
 
 
