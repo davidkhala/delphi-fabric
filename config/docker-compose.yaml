@@ -11,8 +11,10 @@ networks:
 services:
   peer0.BU.Delphi.com:
     depends_on:
-      - OrdererServiceName.Delphi.com
-    image: 'hyperledger/fabric-peer:x86_64-1.1.0-alpha'
+      - orderer0
+      - orderer1
+      - orderer2
+    image: 'hyperledger/fabric-peer:x86_64-1.1.0-preview'
     command: peer node start
     environment:
       - 'CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock'
@@ -24,14 +26,11 @@ services:
       - 'CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.BU.Delphi.com:7051'
       - CORE_PEER_LOCALMSPID=BUMSP
       - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/BU.Delphi.com/peers/peer0.BU.Delphi.com/msp
-      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_ENABLED=false
       - CORE_PEER_ID=peer0.BU.Delphi.com
       - 'CORE_PEER_ADDRESS=peer0.BU.Delphi.com:7051'
       - CORE_CHAINCODE_EXECUTETIMEOUT=180s
       - GODEBUG=netdns=go
-      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/crypto-config/peerOrganizations/BU.Delphi.com/peers/peer0.BU.Delphi.com/tls/server.key
-      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/crypto-config/peerOrganizations/BU.Delphi.com/peers/peer0.BU.Delphi.com/tls/server.crt
-      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/crypto-config/peerOrganizations/BU.Delphi.com/peers/peer0.BU.Delphi.com/tls/ca.crt
     ports:
       - '7051:7051'
       - '7053:7053'
@@ -43,8 +42,10 @@ services:
       - default
   peer1.BU.Delphi.com:
     depends_on:
-      - OrdererServiceName.Delphi.com
-    image: 'hyperledger/fabric-peer:x86_64-1.1.0-alpha'
+      - orderer0
+      - orderer1
+      - orderer2
+    image: 'hyperledger/fabric-peer:x86_64-1.1.0-preview'
     command: peer node start
     environment:
       - 'CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock'
@@ -56,14 +57,11 @@ services:
       - 'CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.BU.Delphi.com:7051'
       - CORE_PEER_LOCALMSPID=BUMSP
       - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/BU.Delphi.com/peers/peer1.BU.Delphi.com/msp
-      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_ENABLED=false
       - CORE_PEER_ID=peer1.BU.Delphi.com
       - 'CORE_PEER_ADDRESS=peer1.BU.Delphi.com:7051'
       - CORE_CHAINCODE_EXECUTETIMEOUT=180s
       - GODEBUG=netdns=go
-      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/crypto-config/peerOrganizations/BU.Delphi.com/peers/peer1.BU.Delphi.com/tls/server.key
-      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/crypto-config/peerOrganizations/BU.Delphi.com/peers/peer1.BU.Delphi.com/tls/server.crt
-      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/crypto-config/peerOrganizations/BU.Delphi.com/peers/peer1.BU.Delphi.com/tls/ca.crt
     ports:
       - '7061:7051'
       - '7063:7053'
@@ -73,8 +71,8 @@ services:
     container_name: BUContainer1
     networks:
       - default
-  tlsca.BU.Delphi.com:
-    image: 'hyperledger/fabric-ca:x86_64-1.1.0-alpha'
+  ca.BU.Delphi.com:
+    image: 'hyperledger/fabric-ca:x86_64-1.1.0-preview'
     command: sh -c 'fabric-ca-server start -d'
     volumes:
       - '/home/davidliu/Documents/delphi-fabric/config/crypto-config/peerOrganizations/BU.Delphi.com/ca:/etc/hyperledger/fabric-ca-server'
@@ -83,13 +81,15 @@ services:
     environment:
       - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
       - GODEBUG=netdns=go
-    container_name: tlsca.BU.Delphi.com
+    container_name: ca.BU.Delphi.com
     networks:
       - default
   peer0.ENG.Delphi.com:
     depends_on:
-      - OrdererServiceName.Delphi.com
-    image: 'hyperledger/fabric-peer:x86_64-1.1.0-alpha'
+      - orderer0
+      - orderer1
+      - orderer2
+    image: 'hyperledger/fabric-peer:x86_64-1.1.0-preview'
     command: peer node start
     environment:
       - 'CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock'
@@ -101,14 +101,11 @@ services:
       - 'CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.ENG.Delphi.com:7051'
       - CORE_PEER_LOCALMSPID=ENGMSP
       - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/ENG.Delphi.com/peers/peer0.ENG.Delphi.com/msp
-      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_ENABLED=false
       - CORE_PEER_ID=peer0.ENG.Delphi.com
       - 'CORE_PEER_ADDRESS=peer0.ENG.Delphi.com:7051'
       - CORE_CHAINCODE_EXECUTETIMEOUT=180s
       - GODEBUG=netdns=go
-      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/crypto-config/peerOrganizations/ENG.Delphi.com/peers/peer0.ENG.Delphi.com/tls/server.key
-      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/crypto-config/peerOrganizations/ENG.Delphi.com/peers/peer0.ENG.Delphi.com/tls/server.crt
-      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/crypto-config/peerOrganizations/ENG.Delphi.com/peers/peer0.ENG.Delphi.com/tls/ca.crt
     ports:
       - '8051:7051'
       - '8053:7053'
@@ -120,8 +117,10 @@ services:
       - default
   peer0.PM.Delphi.com:
     depends_on:
-      - OrdererServiceName.Delphi.com
-    image: 'hyperledger/fabric-peer:x86_64-1.1.0-alpha'
+      - orderer0
+      - orderer1
+      - orderer2
+    image: 'hyperledger/fabric-peer:x86_64-1.1.0-preview'
     command: peer node start
     environment:
       - 'CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock'
@@ -133,14 +132,11 @@ services:
       - 'CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.PM.Delphi.com:7051'
       - CORE_PEER_LOCALMSPID=PMMSP
       - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/PM.Delphi.com/peers/peer0.PM.Delphi.com/msp
-      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_ENABLED=false
       - CORE_PEER_ID=peer0.PM.Delphi.com
       - 'CORE_PEER_ADDRESS=peer0.PM.Delphi.com:7051'
       - CORE_CHAINCODE_EXECUTETIMEOUT=180s
       - GODEBUG=netdns=go
-      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/crypto-config/peerOrganizations/PM.Delphi.com/peers/peer0.PM.Delphi.com/tls/server.key
-      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/crypto-config/peerOrganizations/PM.Delphi.com/peers/peer0.PM.Delphi.com/tls/server.crt
-      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/crypto-config/peerOrganizations/PM.Delphi.com/peers/peer0.PM.Delphi.com/tls/ca.crt
     ports:
       - '9051:7051'
       - '9053:7053'
@@ -150,27 +146,223 @@ services:
     container_name: PMContainerName
     networks:
       - default
-  OrdererServiceName.Delphi.com:
-    image: 'hyperledger/fabric-orderer:x86_64-1.1.0-alpha'
+  orderer0:
+    image: 'hyperledger/fabric-orderer:x86_64-1.1.0-preview'
     command: orderer
     ports:
-      - '7250:7050'
+      - '7050:7050'
     volumes:
       - 'CONFIGTX_local:/etc/hyperledger/configtx'
       - 'MSPROOT_local:/etc/hyperledger/crypto-config'
     environment:
+      - ORDERER_KAFKA_RETRY_SHORTINTERVAL=1s
+      - ORDERER_KAFKA_RETRY_SHORTTOTAL=30s
+      - ORDERER_KAFKA_VERBOSE=true
       - ORDERER_GENERAL_LOGLEVEL=debug
       - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
-      - ORDERER_GENERAL_TLS_ENABLED=true
+      - ORDERER_GENERAL_TLS_ENABLED=false
       - ORDERER_GENERAL_GENESISMETHOD=file
       - ORDERER_GENERAL_GENESISFILE=/etc/hyperledger/configtx/delphi.block
       - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
-      - ORDERER_GENERAL_LOCALMSPDIR=/etc/hyperledger/crypto-config/ordererOrganizations/Delphi.com/orderers/orderContainerName.Delphi.com/msp
+      - ORDERER_GENERAL_LOCALMSPDIR=/etc/hyperledger/crypto-config/ordererOrganizations/Delphi.com/orderers/orderer0.Delphi.com/msp
       - GODEBUG=netdns=go
-      - ORDERER_GENERAL_TLS_PRIVATEKEY=/etc/hyperledger/crypto-config/ordererOrganizations/Delphi.com/orderers/orderContainerName.Delphi.com/tls/server.key
-      - ORDERER_GENERAL_TLS_CERTIFICATE=/etc/hyperledger/crypto-config/ordererOrganizations/Delphi.com/orderers/orderContainerName.Delphi.com/tls/server.crt
-      - >-
-        ORDERER_GENERAL_TLS_ROOTCAS=[/etc/hyperledger/crypto-config/ordererOrganizations/Delphi.com/orderers/orderContainerName.Delphi.com/tls/ca.crt,/etc/hyperledger/crypto-config/peerOrganizations/BU.Delphi.com/tlsca/tlsca.BU.Delphi.com-cert.pem]
-    container_name: orderContainerName
+    depends_on:
+      - kafka0
+      - kafka1
+      - kafka2
+      - kafka3
     networks:
-      - default
+      default:
+        aliases:
+          - orderer0
+    container_name: orderer0
+  orderer1:
+    image: 'hyperledger/fabric-orderer:x86_64-1.1.0-preview'
+    command: orderer
+    ports:
+      - '8050:7050'
+    volumes:
+      - 'CONFIGTX_local:/etc/hyperledger/configtx'
+      - 'MSPROOT_local:/etc/hyperledger/crypto-config'
+    environment:
+      - ORDERER_KAFKA_RETRY_SHORTINTERVAL=1s
+      - ORDERER_KAFKA_RETRY_SHORTTOTAL=30s
+      - ORDERER_KAFKA_VERBOSE=true
+      - ORDERER_GENERAL_LOGLEVEL=debug
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_TLS_ENABLED=false
+      - ORDERER_GENERAL_GENESISMETHOD=file
+      - ORDERER_GENERAL_GENESISFILE=/etc/hyperledger/configtx/delphi.block
+      - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
+      - ORDERER_GENERAL_LOCALMSPDIR=/etc/hyperledger/crypto-config/ordererOrganizations/Delphi.com/orderers/orderer1.Delphi.com/msp
+      - GODEBUG=netdns=go
+    depends_on:
+      - kafka0
+      - kafka1
+      - kafka2
+      - kafka3
+    networks:
+      default:
+        aliases:
+          - orderer1
+    container_name: orderer1
+  orderer2:
+    image: 'hyperledger/fabric-orderer:x86_64-1.1.0-preview'
+    command: orderer
+    ports:
+      - '9050:7050'
+    volumes:
+      - 'CONFIGTX_local:/etc/hyperledger/configtx'
+      - 'MSPROOT_local:/etc/hyperledger/crypto-config'
+    environment:
+      - ORDERER_KAFKA_RETRY_SHORTINTERVAL=1s
+      - ORDERER_KAFKA_RETRY_SHORTTOTAL=30s
+      - ORDERER_KAFKA_VERBOSE=true
+      - ORDERER_GENERAL_LOGLEVEL=debug
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_TLS_ENABLED=false
+      - ORDERER_GENERAL_GENESISMETHOD=file
+      - ORDERER_GENERAL_GENESISFILE=/etc/hyperledger/configtx/delphi.block
+      - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
+      - ORDERER_GENERAL_LOCALMSPDIR=/etc/hyperledger/crypto-config/ordererOrganizations/Delphi.com/orderers/orderer2.Delphi.com/msp
+      - GODEBUG=netdns=go
+    depends_on:
+      - kafka0
+      - kafka1
+      - kafka2
+      - kafka3
+    networks:
+      default:
+        aliases:
+          - orderer2
+    container_name: orderer2
+  zookeeper0:
+    image: 'hyperledger/fabric-zookeeper:x86_64-1.1.0-preview'
+    ports:
+      - 2181
+      - 2888
+      - 3888
+    environment:
+      - ZOO_MY_ID=0
+      - 'ZOO_SERVERS=server.0=zookeeper0:2888:3888 server.1=zookeeper1:2888:3888 server.2=zookeeper2:2888:3888 '
+    networks:
+      default:
+        aliases:
+          - zookeeper0
+    container_name: zookeeper0
+  zookeeper1:
+    image: 'hyperledger/fabric-zookeeper:x86_64-1.1.0-preview'
+    ports:
+      - 2181
+      - 2888
+      - 3888
+    environment:
+      - ZOO_MY_ID=1
+      - 'ZOO_SERVERS=server.0=zookeeper0:2888:3888 server.1=zookeeper1:2888:3888 server.2=zookeeper2:2888:3888 '
+    networks:
+      default:
+        aliases:
+          - zookeeper1
+    container_name: zookeeper1
+  zookeeper2:
+    image: 'hyperledger/fabric-zookeeper:x86_64-1.1.0-preview'
+    ports:
+      - 2181
+      - 2888
+      - 3888
+    environment:
+      - ZOO_MY_ID=2
+      - 'ZOO_SERVERS=server.0=zookeeper0:2888:3888 server.1=zookeeper1:2888:3888 server.2=zookeeper2:2888:3888 '
+    networks:
+      default:
+        aliases:
+          - zookeeper2
+    container_name: zookeeper2
+  kafka0:
+    image: 'hyperledger/fabric-kafka:x86_64-1.1.0-preview'
+    environment:
+      - KAFKA_BROKER_ID=0
+      - 'KAFKA_ZOOKEEPER_CONNECT=zookeeper0:2181,zookeeper1:2181,zookeeper2:2181'
+      - KAFKA_LOG_RETENTION_MS=-1
+      - KAFKA_MESSAGE_MAX_BYTES=103809024
+      - KAFKA_REPLICA_FETCH_MAX_BYTES=103809024
+      - KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE=false
+      - KAFKA_DEFAULT_REPLICATION_FACTOR=3
+      - KAFKA_MIN_INSYNC_REPLICAS=2
+    ports:
+      - 9092
+    depends_on:
+      - zookeeper0
+      - zookeeper1
+      - zookeeper2
+    networks:
+      default:
+        aliases:
+          - kafka0
+    container_name: kafka0
+  kafka1:
+    image: 'hyperledger/fabric-kafka:x86_64-1.1.0-preview'
+    environment:
+      - KAFKA_BROKER_ID=1
+      - 'KAFKA_ZOOKEEPER_CONNECT=zookeeper0:2181,zookeeper1:2181,zookeeper2:2181'
+      - KAFKA_LOG_RETENTION_MS=-1
+      - KAFKA_MESSAGE_MAX_BYTES=103809024
+      - KAFKA_REPLICA_FETCH_MAX_BYTES=103809024
+      - KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE=false
+      - KAFKA_DEFAULT_REPLICATION_FACTOR=3
+      - KAFKA_MIN_INSYNC_REPLICAS=2
+    ports:
+      - 9092
+    depends_on:
+      - zookeeper0
+      - zookeeper1
+      - zookeeper2
+    networks:
+      default:
+        aliases:
+          - kafka1
+    container_name: kafka1
+  kafka2:
+    image: 'hyperledger/fabric-kafka:x86_64-1.1.0-preview'
+    environment:
+      - KAFKA_BROKER_ID=2
+      - 'KAFKA_ZOOKEEPER_CONNECT=zookeeper0:2181,zookeeper1:2181,zookeeper2:2181'
+      - KAFKA_LOG_RETENTION_MS=-1
+      - KAFKA_MESSAGE_MAX_BYTES=103809024
+      - KAFKA_REPLICA_FETCH_MAX_BYTES=103809024
+      - KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE=false
+      - KAFKA_DEFAULT_REPLICATION_FACTOR=3
+      - KAFKA_MIN_INSYNC_REPLICAS=2
+    ports:
+      - 9092
+    depends_on:
+      - zookeeper0
+      - zookeeper1
+      - zookeeper2
+    networks:
+      default:
+        aliases:
+          - kafka2
+    container_name: kafka2
+  kafka3:
+    image: 'hyperledger/fabric-kafka:x86_64-1.1.0-preview'
+    environment:
+      - KAFKA_BROKER_ID=3
+      - 'KAFKA_ZOOKEEPER_CONNECT=zookeeper0:2181,zookeeper1:2181,zookeeper2:2181'
+      - KAFKA_LOG_RETENTION_MS=-1
+      - KAFKA_MESSAGE_MAX_BYTES=103809024
+      - KAFKA_REPLICA_FETCH_MAX_BYTES=103809024
+      - KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE=false
+      - KAFKA_DEFAULT_REPLICATION_FACTOR=3
+      - KAFKA_MIN_INSYNC_REPLICAS=2
+    ports:
+      - 9092
+    depends_on:
+      - zookeeper0
+      - zookeeper1
+      - zookeeper2
+    networks:
+      default:
+        aliases:
+          - kafka3
+    container_name: kafka3
