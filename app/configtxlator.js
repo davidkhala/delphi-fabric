@@ -5,7 +5,6 @@ const path = require('path')
 const fs = require('fs')
 const agent = require('./util/agent2configtxlator')
 const ClientUtil = require('./util/client')
-const client = ClientUtil.new()
 
 const format_tlscacert = (adminMSPDir, org_domain) => path.join(adminMSPDir, 'tlscacerts',
     `tlsca.${org_domain}-cert.pem`)
@@ -40,15 +39,15 @@ const signChannelConfig = (channel, configUpdate_proto) => {
 
     const proto = new Buffer(configUpdate_proto, 'binary')
     const signatures = []
-    const signFunc = () => {
+    const signFunc = (client) => {
         logger.debug('signature identity', client.getUserContext().getName())
         signatures.push(client.signChannelConfig(proto))
     }
-    let promise = helper.userAction.admin.orderer.select(client).then(signFunc)
+    let promise = helper.userAction.admin.orderer.select().then(signFunc)
 
     for (let orgName in channel.orgs) {
         promise = promise.then(() => {
-            return helper.userAction.admin.select(orgName, client).then(signFunc)
+            return helper.userAction.admin.select(orgName).then(signFunc)
         })
     }
 

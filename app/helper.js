@@ -296,7 +296,7 @@ objects.user.admin = {
                     keystoreDir, signcertFile, username: rawOrdererUsername, orgName: ordererContainerName,
                     mspid: ordererMSPID,
                 });
-            });
+            }).then(()=>Promise.resolve(client));
         },
     }
     ,

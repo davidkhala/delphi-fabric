@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-
+set -e
 # require channel exist
 # node ./app/testChannel.js
 
