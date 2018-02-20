@@ -150,7 +150,7 @@ const getStateDBCachePath = () => {
     return nodeConfig.stateDBCacheDir;
 };
 
-const preparePeers = (peerIndexes, orgName) => {
+exports.newPeers= (peerIndexes, orgName) => {
 
 // work as a data adapter, containerNames: array --> orgname,peerIndex,peerConfig for each newPeer
     const targets = [];
@@ -365,7 +365,6 @@ exports.globalConfig = globalConfig;
 exports.gen_tls_cacerts = gen_tls_cacerts;
 exports.preparePeer = preparePeer;
 exports.newPeer = newPeer;
-exports.newPeers = preparePeers;
 exports.userAction = objects.user;
 exports.bindEventHub = bindEventHub;
 exports.getOrgAdmin = objects.user.admin.select;

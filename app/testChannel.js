@@ -1,6 +1,5 @@
 const createChannel = require('./create-channel').create;
 const joinChannel = require('./join-channel').joinChannel;
-const ClientUtil = require('./util/client');
 
 const helper = require('./helper');
 const logger = require('./util/logger').new('testChannel');
@@ -18,7 +17,7 @@ const joinAllfcn = () => {
         const {peerIndexes} = channelConfig.orgs[orgName];
         const peers = helper.newPeers(peerIndexes, orgName);
 
-        promise = promise.then(() => helper.getOrgAdmin(orgName, ClientUtil.new())).then((client) => {
+        promise = promise.then(() => helper.getOrgAdmin(orgName)).then((client) => {
 
             const channel = helper.prepareChannel(channelName, client);
             return joinChannel(channel, peers);
@@ -40,6 +39,9 @@ helper.getOrgAdmin('BU').then((client) => {
     } else {
         return Promise.reject(err);
     }
+}).then((data)=>{
+    logger.info('joinAll.then',data);
+
 }).catch((err) => {
     logger.error('joinChannel Error', err);
     return Promise.reject(err);

@@ -3,6 +3,7 @@ const helper = require('./helper.js');
 const logger = require('./util/logger').new('create-Channel');
 const multiSign = require('./util/multiSign').signs;
 const Sleep = require('sleep');
+const OrdererUtil = require('./util/orderer');
 /**
  *
  * @param client client of committer
@@ -32,10 +33,7 @@ const createChannel = (client, channelName, channelConfigFile, orgNames, orderer
         const txId = client.newTransactionID();
         const orderers = channel.getOrderers();
         logger.debug(orderers.length,'orderers in channel',channelName);
-        const orderer = ordererUrl ? orderers.find((orderer) => {
-            logger.debug(orderer.getUrl(),ordererUrl)
-            return orderer.getUrl() === ordererUrl;
-        }) : orderers[0];
+        const orderer = OrdererUtil.find({orderers,ordererUrl});
         const request = {
             config: channelConfig,
             signatures,
@@ -47,6 +45,7 @@ const createChannel = (client, channelName, channelConfigFile, orgNames, orderer
         const loopGetChannel = () => {
             logger.debug('loopGetChannel', 'try...');
             return channel.initialize().catch(err => {
+                //NOTE before channel created successfully, channel.getGenesisBlock() return:Error: Invalid results returned ::NOT_FOUND
                 if (err.toString().includes('Invalid results returned ::NOT_FOUND')) {
                     const wait = 100;
                     logger.warn('loopGetChannel', `wait ${wait}ms`);
@@ -63,7 +62,7 @@ const createChannel = (client, channelName, channelConfigFile, orgNames, orderer
                 return Promise.reject(err);
             });
         };
-        //NOTE before channel created, channel.getGenesisBlock() return:Error: Invalid results returned ::NOT_FOUND
+        //as in jsdoc: Note that this is not the confirmation of successful creation of the channel. The client application must poll the orderer to discover whether the channel has been created completely or not.
         return client.createChannel(request).then((results) => {
             logger.debug('channel created', results);
             return loopGetChannel().then((channelConfig) => {

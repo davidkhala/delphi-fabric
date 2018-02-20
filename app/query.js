@@ -17,7 +17,7 @@ exports.chain = (peer, channel) => channel.queryInfo(peer)
         return Promise.resolve(message);
     });
 exports.chaincodes = {
-    installed: (peer, client) => client.queryInstalledChaincodes(peer),// FIXME:peer or [peer]
+    installed: (peer, client) => client.queryInstalledChaincodes(peer),// FIXME:clumsy design in fabric peer or [peer]
     instantiated: (peer, channel) => channel.queryInstantiatedChaincodes(peer)
 };
 exports.block = {
@@ -26,7 +26,7 @@ exports.block = {
     height: (peer, channel, blockNumber) => channel.queryBlock(parseInt(blockNumber), peer)
 };
 exports.channel = {
-    joined: (peer, client) => client.queryChannels(peer) //FIXME peer or [peer]bug design here:Failed Channels Query. Error: Error: Too many results returned	at /fabric-client/lib/Client.js:786:29
+    joined: (peer, client) => client.queryChannels(peer) //FIXME peer or [peer] bug design here:Failed Channels Query. Error: Error: Too many results returned	at /fabric-client/lib/Client.js:786:29
 
 };
 exports.tx = (peer, channel, txId) => channel.queryTransaction(txId, peer);

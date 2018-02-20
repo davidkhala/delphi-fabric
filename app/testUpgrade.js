@@ -14,7 +14,7 @@ const UpdateInstall = require('./install-chaincode').updateInstall
 const updateInstallAll = (chaincodeInfo) => {
 	const orgName = 'BU'
 	const peerIndexes = [0]
-	return helper.getOrgAdmin(orgName, client).then(() => {
+	return helper.getOrgAdmin(orgName).then((client) => {
 
 		const peers = helper.newPeers(peerIndexes, orgName)
 		return UpdateInstall(peers, { chaincodeId }, client)

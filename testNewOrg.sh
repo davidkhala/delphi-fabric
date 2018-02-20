@@ -10,7 +10,7 @@ CRYPTO_UPDATE_CONFIG="$config_dir/crypto-config-update.yaml"
 CONFIG_JSON="$config_dir/orgs.json"
 CONFIG_chaincode="$config_dir/chaincode.json"
 
-
+fcn=$1
 orgName="AM"
 MSPName="${orgName}MSPName"
 MSPID="${orgName}MSP"
@@ -44,20 +44,10 @@ chaincodeVersion='v0'
 #NOTE docker will auto prune dead chaincode container: timeout setting in CORE_CHAINCODE_DEPLOYTIMEOUT
 chaincodeContainerPattern="dev-$peerDomainName-$chaincodeId-$chaincodeVersion"
 function down() {
-	if [ -n "$(docker ps -aq --filter name=$peerContainerName)" ]; then
-		docker network disconnect $dockerNetworkName $peerContainerName
-		#docker container rm -f:  Force the removal of a running container (uses SIGKILL)
-		docker container rm -f $peerContainerName
-	fi
-	./common/bin-manage/configtxlator/runConfigtxlator.sh down
-	if [ -n "$(docker ps -aq --filter name=$chaincodeContainerPattern)" ]; then
-		docker container rm -f $chaincodeContainerPattern
-	fi
+	pause
+
+    ./common/bin-manage/configtxlator/runConfigtxlator.sh down
 	rm -rf $newDir
-	chaincodeImage=$(docker images | grep "${chaincodeContainerPattern,,}" | awk '{print($1)}')
-	if [ -n "$chaincodeImage" ]; then
-		docker image rm $chaincodeImage
-	fi
 }
 function up() {
     node -e "require('./config/crypto-config.js').newOrg({
@@ -66,7 +56,21 @@ function up() {
     CRYPTO_UPDATE_CONFIG:'${CRYPTO_UPDATE_CONFIG}'
     })"
 	# TODO use fabric-ca for key generate
-	./common/bin-manage/cryptogen/runCryptogen.sh -i $CRYPTO_UPDATE_CONFIG -o $CRYPTO_CONFIG_DIR -a
+	if [ ! -d "$newDir" ]; then
+	    echo "$newDir" not exists, creating
+	    ./common/bin-manage/cryptogen/runCryptogen.sh -i $CRYPTO_UPDATE_CONFIG -o $CRYPTO_CONFIG_DIR -a
+    else
+        echo "$newDir" exists, skipping
+    fi
+
+    ./common/bin-manage/configtxlator/runConfigtxlator.sh start
+    resume
+
+}
+
+function resume(){
+#TODO to make testNewOrg.sh re-runnable
+
 
 	CMD="peer node start"
 
@@ -102,24 +106,31 @@ function up() {
 		$image $CMD
 	#NOTE docker network connect --alias => to fix: Error trying to connect to local peer: context deadline exceeded
 	docker network connect --alias $peerDomainName $dockerNetworkName $peerContainerName
-	./common/bin-manage/configtxlator/runConfigtxlator.sh start
+
 	# set peerPort if it is auto-gen
 	peerPort=$(./common/docker/utils/docker.sh viewContainerPort $peerContainerName 7051)
 	eventHubPort=$(./common/docker/utils/docker.sh viewContainerPort $peerContainerName 7053)
 	node -e "require('./app/testConfigtxlator.js').addOrg('${orgName}', '${MSPName}', '${MSPID}', 'BUMSPName', '${adminUserMspDir}', '${org_domain}','${peerPort}','${eventHubPort}','${peerDomainName}'
     ,'${chaincodePath}','${chaincodeId}','${chaincodeVersion}','${chaincode_args}')"
-#    addOrg TypeError: Cannot read property 'MSP' of undefined
-#    at getMspID (/home/davidliu/Documents/delphi-fabric/app/helper.js:158:35)
-#    at Object.mspCreate (/home/davidliu/Documents/delphi-fabric/app/helper.js:197:60)
-#    at Object.create (/home/davidliu/Documents/delphi-fabric/app/helper.js:292:23)
-#    at objects.user.admin.get.then.user (/home/davidliu/Documents/delphi-fabric/app/helper.js:296:29)
+
 
 }
-
-if [ "$1" == "up" ]; then
-	up
-elif [ "$1" == "down" ]; then
-	down
+function pause(){
+	if [ -n "$(docker ps -aq --filter name=$peerContainerName)" ]; then
+		docker network disconnect $dockerNetworkName $peerContainerName
+		#docker container rm -f:  Force the removal of a running container (uses SIGKILL)
+		docker container rm -f $peerContainerName
+	fi
+	if [ -n "$(docker ps -aq --filter name=$chaincodeContainerPattern)" ]; then
+		docker container rm -f $chaincodeContainerPattern
+	fi
+	chaincodeImage=$(docker images | grep "${chaincodeContainerPattern,,}" | awk '{print($1)}')
+	if [ -n "$chaincodeImage" ]; then
+		docker image rm $chaincodeImage
+	fi
+}
+if [ -n "$fcn" ]; then
+	$fcn
 else
 	down
 	up

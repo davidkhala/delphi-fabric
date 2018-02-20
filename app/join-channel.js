@@ -1,6 +1,6 @@
 const helper = require('./helper.js');
 const logger = require('./util/logger').new('Join-Channel');
-const eventHelper = require('./util/eventHub');
+const EventHubUtil = require('./util/eventHub');
 
 //we could let peers from different org to join channel in 1 request
 const joinChannel = (channel, peers, client) => {
@@ -20,9 +20,11 @@ const joinChannel = (channel, peers, client) => {
             block: genesis_block
         };
 
-        const promises = [];
+        const promises = [];//NOTE listener should be set before channel.join
+        let interrupted = false;
         for (let peer of peers) {
             const blockEventPromise = peer.peerConfig.eventHub.clientPromise.then((client) => {
+                if (interrupted) return Promise.resolve({interrupted});//FIXME promise still running after later resolve
                 const eventHub = helper.bindEventHub(peer, client);//using same client
                 const validator = ({block}) => {
                     logger.debug('new block event arrived', eventHub._ep, block);
@@ -37,7 +39,7 @@ const joinChannel = (channel, peers, client) => {
                     }
                     return {valid: false, interrupt: false};
                 };
-                return eventHelper.blockEventPromise(eventHub, {eventWaitTime}, validator);
+                return EventHubUtil.blockEventPromise(eventHub, {eventWaitTime}, validator);
             });
 
             promises.push(blockEventPromise);
@@ -62,6 +64,7 @@ const joinChannel = (channel, peers, client) => {
             }
             if (joinedBefore.length === data.length) {
                 //when all joined before
+                interrupted = true;
                 return Promise.resolve(data);
             } else {
                 return Promise.all(promises);
