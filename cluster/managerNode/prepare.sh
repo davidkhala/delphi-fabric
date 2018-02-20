@@ -20,8 +20,8 @@ fi
 $root/cluster/prepare.sh
 
 
-CONFIGTX_nfs="/home/david/Documents/nfs/CONFIGTX"
-MSPROOT_nfs="/home/david/Documents/nfs/MSPROOT"
+CONFIGTX_nfs="$HOME/Documents/nfs/CONFIGTX"
+MSPROOT_nfs="$HOME/Documents/nfs/MSPROOT"
 
 mkdir -p $CONFIGTX_nfs
 mkdir -p $MSPROOT_nfs
