@@ -27,7 +27,6 @@ const CRYPTO_CONFIG_DIR = companyConfig.docker.volumes.MSPROOT.dir;
 const channelsConfig = companyConfig.channels;
 const COMPANY_DOMAIN = companyConfig.domain;
 const chaincodeConfig = require('../config/chaincode.json');
-const Client = require('fabric-client');
 const sdkUtils = require('fabric-client/lib/utils');
 const nodeConfig = require('./config.json');
 const ClientUtil = require('./util/client');

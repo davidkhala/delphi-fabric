@@ -15,7 +15,6 @@ const channelsConfig = companyConfig.channels;
 const orgsConfig = companyConfig.orgs;
 const CONFIGTXDir = companyConfig.docker.volumes.CONFIGTX.dir;
 
-const helper = require('../app/helper.js');
 
 const port = swarmConfig.port;
 
@@ -67,24 +66,23 @@ app.post('/manager/join', (req, res) => {
     const {ip, hostname} = req.body;
     logger.debug('manager join', {ip, hostname});
 
-
     const oldConfig = require(swarmJsonPath);
-    if(oldConfig.managerNodes[hostname]){
-        oldConfig.managerNodes[hostname].ip = ip ;
-    }else {
-        oldConfig.managerNodes[hostname] = {ip};
+    if (oldConfig.managerNodes[ip]) {
+        oldConfig.managerNodes[ip].hostname = hostname;
+    } else {
+        oldConfig.managerNodes[ip] = {hostname};
     }
 
     const content = writeFilePretty(oldConfig);
 
-    res.json(content);
+    res.json(oldConfig.managerNodes[ip]);
 
 });
 app.post('/manager/leave', (req, res) => {
-    const {hostname} = req.body;
-    logger.debug('manager leave', {hostname});
+    const {ip} = req.body;
+    logger.debug('manager leave', {ip});
     const oldConfig = require(swarmJsonPath);
-    delete oldConfig.managerNodes[hostname];
+    delete oldConfig.managerNodes[ip];
     const content = writeFilePretty(oldConfig);
 
     res.json(content);

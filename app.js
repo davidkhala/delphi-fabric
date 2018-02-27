@@ -31,7 +31,6 @@ const CONFIGTXDir = companyConfig.docker.volumes.CONFIGTX.dir
 
 const wsCommon = require('./express/webSocketCommon')
 const helper = require('./app/helper.js')
-const ClientUtil = require('./app/util/client')
 const createChannel = require('./app/create-channel').create
 const joinChannel = require('./app/join-channel').joinChannel
 
