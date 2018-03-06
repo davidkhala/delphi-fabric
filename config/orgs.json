@@ -2,18 +2,18 @@
   "domain": "Delphi.com",
   "TLS": false,
   "docker": {
-    "fabricTag": "1.1.0-preview",
+    "fabricTag": "1.1.0-alpha",
     "network": "delphiNetwork",
     "volumes": {
       "CONFIGTX": {
         "local": "CONFIGTX_local",
         "swarm": "CONFIGTX_swarm",
-        "dir": "/home/davidliu/Documents/delphi-fabric/config/configtx"
+        "dir": "/home/david/Documents/delphi-fabric/config/configtx"
       },
       "MSPROOT": {
         "local": "MSPROOT_local",
         "swarm": "MSPROOT_swarm",
-        "dir": "/home/davidliu/Documents/delphi-fabric/config/crypto-config/"
+        "dir": "/home/david/Documents/delphi-fabric/config/crypto-config/"
       }
     }
   },
