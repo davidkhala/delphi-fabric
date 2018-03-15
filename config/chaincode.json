@@ -1,5 +1,5 @@
 {
-  "GOPATH": "/home/david/go/",
+  "GOPATH": "/home/david/go",
   "chaincodes": {
     "delphiChaincode": {
       "path": "github.com/davidkhala/chaincode/golang/delphi"

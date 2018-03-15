@@ -28,10 +28,10 @@ If any problem found when running ``install.sh``, like hanging in ``npm install`
    * docker-ce 17.12.0-ce (API version 1.35)
    * docker-compose 1.14.0 
    * golang 1.9.2 : align with docker version
-   * node 6.12.3, npm 3.10.10: npm install卡死的话，可以考虑添加淘宝的源 
+   * node 8.10, npm 5.6 : npm install卡死的话，可以考虑添加淘宝的源 
         - ``$ npm config set registry  https://registry.npm.taobao.org/``
    * java 1.8.0_151 (测试java-sdk用)
-   * jq 1.5.1：一个用命令行解析json的工具 https://stedolan.github.io/jq/
+   * jq 1.5：一个用命令行解析json的工具 https://stedolan.github.io/jq/
    * moreutils 0.57-1 : 工具集，ubuntu或类似系统专用。我们用到其中sponge工具，用于结合jq 将pipeline里面的内容inline更新到源文件里
    
 -----
