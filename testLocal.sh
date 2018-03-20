@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 set -e
+ABSPATH=$(cd $(dirname ${BASH_SOURCE}); pwd)
+echo $ABSPATH
 CURRENT="$(dirname $(readlink -f ${BASH_SOURCE}))"
 
 CONFIG_DIR="$CURRENT/config"
