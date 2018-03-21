@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -e
-CURRENT="$(dirname $(readlink -f ${BASH_SOURCE}))"
+CURRENT=$(cd $(dirname ${BASH_SOURCE}); pwd)
 
 CONFIG_DIR="$CURRENT/config"
 COMPOSE_FILE="$CONFIG_DIR/docker-swarm.yaml"

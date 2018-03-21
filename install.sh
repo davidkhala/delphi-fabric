@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -e
-CURRENT="$(dirname $(readlink -f ${BASH_SOURCE}))"
+CURRENT=$(cd $(dirname ${BASH_SOURCE}); pwd)
 fcn=$1
 
 function cn() {

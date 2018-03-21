@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-CURRENT="$(dirname $(readlink -f $BASH_SOURCE))"
+CURRENT=$(cd $(dirname ${BASH_SOURCE}); pwd)
 CONFIG_DIR="$(dirname $CURRENT)/config/"
 CONFIG_JSON="$CONFIG_DIR/orgs.json"
 

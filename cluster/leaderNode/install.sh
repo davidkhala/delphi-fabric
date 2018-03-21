@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -e
-CURRENT="$(dirname $(readlink -f ${BASH_SOURCE}))"
+CURRENT=$(cd $(dirname ${BASH_SOURCE}); pwd)
 root=$(dirname $(dirname $CURRENT))
 
 $root/install.sh

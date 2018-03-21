@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -e
-CURRENT="$(dirname $(readlink -f ${BASH_SOURCE}))"
+CURRENT=$(cd $(dirname ${BASH_SOURCE}); pwd)
 config_dir="$CURRENT/config"
 COMPOSE_FILE="$config_dir/docker-compose.yaml"
 CONFIG_JSON="$config_dir/orgs.json"

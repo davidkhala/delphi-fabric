@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-CURRENT="$(dirname $(readlink -f ${BASH_SOURCE}))"
+CURRENT=$(cd $(dirname ${BASH_SOURCE}); pwd)
 
 FILTER="dev"
 commonDir="$(dirname $CURRENT)/common"

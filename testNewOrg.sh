@@ -3,7 +3,7 @@ set -e
 # require channel exist
 # node ./app/testChannel.js
 
-CURRENT="$(dirname $(readlink -f ${BASH_SOURCE}))"
+CURRENT=$(cd $(dirname ${BASH_SOURCE}); pwd)
 config_dir="$CURRENT/config"
 CRYPTO_CONFIG_DIR="$config_dir/crypto-config/"
 CRYPTO_UPDATE_CONFIG="$config_dir/crypto-config-update.yaml"
