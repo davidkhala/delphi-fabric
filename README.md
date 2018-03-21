@@ -177,6 +177,7 @@ govendor: to import third-party package in vendor folder
 - kafka on swarm: migrate orderer first
 - cooperate with official network_config.json 
 - chaincode version string format
+- javascript chaincode
 - chaincode uninstall
 - use path.resolve to replace `${path}/filename`
 - /common/docker/install.sh ::suDocker problem: gpasswd -a $USER docker <The user object here is 'root' when sudo, not the original 'david'>
@@ -186,3 +187,4 @@ govendor: to import third-party package in vendor folder
 - function new() -> classify
 - await: fabric-kafka haven't release 1.1.0-alpha
 - ?update system channel ``testchainid`` 
+- there is a trend to use golang/dep instead of govendor https://gerrit.hyperledger.org/r/#/c/19113/

@@ -4,7 +4,7 @@ const joinChannel = require('./join-channel').joinChannel;
 const helper = require('./helper');
 const logger = require('./util/logger').new('testChannel');
 const channelName = 'delphiChannel';
-
+const Sleep = require('sleep');
 
 const companyConfig = require('../config/orgs.json');
 const channelConfig = companyConfig.channels[channelName];
@@ -20,7 +20,18 @@ const joinAllfcn = () => {
         promise = promise.then(() => helper.getOrgAdmin(orgName)).then((client) => {
 
             const channel = helper.prepareChannel(channelName, client);
-            return joinChannel(channel, peers);
+            const loopJoinChannel = ()=>{
+                return joinChannel(channel, peers).catch(err=>{
+                    if(err.toString().includes('Invalid results returned ::NOT_FOUND')){
+                        logger.warn('loopJoinChannel...')
+                        Sleep.msleep(1000);
+                        return loopJoinChannel()
+                    }
+                    else return Promise.reject(err)
+                });
+            }
+            return loopJoinChannel();
+
         });
     }
 
@@ -40,11 +51,12 @@ helper.getOrgAdmin('BU').then((client) => {
         return Promise.reject(err);
     }
 }).then((data)=>{
-    logger.info('joinAll.then',data);
+    logger.info('final success',data);
 
 }).catch((err) => {
-    logger.error('joinChannel Error', err);
+    logger.error('final Error', err);
     return Promise.reject(err);
 });
+
 
 
