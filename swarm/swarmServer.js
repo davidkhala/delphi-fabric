@@ -35,6 +35,7 @@ app.use('/config', require('../express/configExpose'));
 app.get('/config/swarm', (req, res) => {
     res.json(require(swarmJsonPath));
 });
+//FIXME async will not prompt error!!!
 app.get('/leader', async (req, res) => {
     logger.debug('leader list');
     const connection = await new FabricCouchDB({url, name: swarmDoc});

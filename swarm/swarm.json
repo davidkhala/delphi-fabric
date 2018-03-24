@@ -2,7 +2,7 @@
   "swarmServer": {
     "port": 4001,
     "couchDB": {
-      "url": "http://0.0.0.0:5984"
+      "url": "http://192.168.0.158:5984"
     }
   }
 }
