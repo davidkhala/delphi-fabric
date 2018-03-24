@@ -25,6 +25,14 @@ exports.manager = {
         }))
     }
 };
+exports.leader = {
+    update: async (serverBaseUrl, {ip, hostname, managerToken}) => {
+        return await requestPromise(requestBuilder({
+            uri:`${serverBaseUrl}/leader/update`,
+            body:{ip,hostname,managerToken}
+        }))
+    }
+}
 exports.volume = {
     get: async (baseUrl, {key}) => {
         return await requestPromise(requestBuilder({

@@ -2,9 +2,8 @@
 set -e
 CURRENT=$(cd $(dirname ${BASH_SOURCE}); pwd)
 root="$(dirname $(dirname $CURRENT))"
-CONFIG_DIR="$root/config/"
 
-SWARM_CONFIG="$CONFIG_DIR/swarm.json"
+SWARM_CONFIG="$root/swarm/swarm.json"
 
 advertiseAddr="$1"
 if [ -z $advertiseAddr ];then
@@ -21,9 +20,10 @@ fi
 
 swarmServerPort=$(jq ".swarmServer.port" $SWARM_CONFIG)
 swarmBaseUrl=${swarmServerIP}:${swarmServerPort}
-if ! curl -s http://$swarmBaseUrl/| jq -r ".errCode";then
-    echo touch swarmServer and got invalid response
+if ! curl -s http://$swarmBaseUrl/ ;then
+    echo no response from swarmServer $swarmBaseUrl
     exit 1
+else echo
 fi
 
 if ! ip addr show | grep "inet ${advertiseAddr}";then
@@ -39,7 +39,7 @@ $utilsDir/swarm.sh createIfNotExist $advertiseAddr
 thisHostName=$($root/common/ubuntu/hostname.sh get)
 
 joinToken=$($root/common/docker/utils/swarm.sh managerToken)
-curl -X POST http://${swarmBaseUrl}/leader/update -d {"ip":${advertiseAddr},"hostname":${thisHostName}, "managerToken":${joinToken}} -H "Content-Type: application/json"
+node -e "require('$root/swarm/swarmServerClient').leader.update('http://$swarmBaseUrl', {ip:'$advertiseAddr', hostname:'$thisHostName', managerToken:'$joinToken'})"
 
 $root/cluster/prepare.sh
 
