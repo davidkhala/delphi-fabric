@@ -2,7 +2,7 @@
   "domain": "Delphi.com",
   "TLS": false,
   "docker": {
-    "fabricTag": "1.1.0-alpha",
+    "fabricTag": "1.1.0",
     "network": "delphiNetwork",
     "volumes": {
       "CONFIGTX": {
@@ -16,7 +16,7 @@
     }
   },
   "orderer": {
-    "type": "kafka",
+    "type": "solo",
     "genesis_block": {
       "file": "delphi.block",
       "profile": "delphiGenesis"

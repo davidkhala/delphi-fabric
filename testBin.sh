@@ -6,11 +6,10 @@ config_dir="$CURRENT/config"
 CONFIG_JSON=$config_dir/orgs.json
 CRYPTO_CONFIG_FILE="$config_dir/crypto-config.yaml"
 configtx_file="$config_dir/configtx.yaml"
-MSPROOT="$config_dir/crypto-config/"
-
+MSPROOT=$(jq -r ".docker.volumes.MSPROOT.dir" $CONFIG_JSON )
 companyConfig=$(jq "." $CONFIG_JSON)
 channelsConfig=$(echo $companyConfig | jq ".channels")
-CONFIGTX_DIR="$config_dir/configtx"
+CONFIGTX_DIR=$(jq -r ".docker.volumes.CONFIGTX.dir" $CONFIG_JSON)
 mkdir -p $CONFIGTX_DIR
 
 
@@ -32,7 +31,7 @@ fi
 node -e "require('./config/crypto-config.js').gen({})"
 $CURRENT/common/bin-manage/cryptogen/runCryptogen.sh -i "$CRYPTO_CONFIG_FILE" -o "$MSPROOT"
 
-jq ".docker.volumes.MSPROOT.dir=\"$MSPROOT\"" $CONFIG_JSON | sponge $CONFIG_JSON
+
 
 # NOTE IMPORTANT for node-sdk: clean stateDBcacheDir, otherwise cached crypto material will leads to Bad request:
 # TODO more subtle control to do in nodejs
@@ -56,7 +55,6 @@ for channelName in $channelNames; do
 	./common/bin-manage/configtxgen/runConfigtxgen.sh channel create $channelFile -p $channelName -i $config_dir -c ${channelName,,}
     #NOTE Capital char in Channel name is not supported  [channel: delphiChannel] Rejecting broadcast of config message from 172.18.0.1:36954 because of error: initializing configtx manager failed: Bad channel id: channel ID 'delphiChannel' contains illegal characters
 done
-jq ".docker.volumes.CONFIGTX.dir=\"$CONFIGTX_DIR\"" $CONFIG_JSON | sponge $CONFIG_JSON
 
 chaincodeJSON=$config_dir/chaincode.json
 GOPATH=$(go env GOPATH)

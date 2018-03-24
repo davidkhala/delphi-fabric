@@ -37,7 +37,7 @@ app.get('/config/swarm', (req, res) => {
 });
 //FIXME async will not prompt error!!!
 app.get('/leader', async (req, res) => {
-    logger.debug('leader list');
+    logger.debug('leader info');
     const connection = await new FabricCouchDB({url, name: swarmDoc});
     const value = await connection.getValue(leaderKey);
     res.json(value);
