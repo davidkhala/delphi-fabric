@@ -169,7 +169,7 @@ govendor: to import third-party package in vendor folder
 
 - kafka on local 
 - use npm:js-yaml to write YAML files instead of https://github.com/mikefarah/yq
-    
+- chaincode upgrade will not reset data    
 ## TODO
 - java sdk and docker-swarm: keep update
 - endorsement policy config
@@ -180,11 +180,10 @@ govendor: to import third-party package in vendor folder
 - javascript chaincode
 - chaincode uninstall
 - use path.resolve to replace `${path}/filename`
-- /common/docker/install.sh ::suDocker problem: gpasswd -a $USER docker <The user object here is 'root' when sudo, not the original 'david'>
+- docker volume plugin
 - swarm mode : network server to manage ip:hostname and deploy constraints
 - stress test in nodejs
-- test: whether chaincode upgrade will reset data?
 - function new() -> classify
-- await: fabric-kafka haven't release 1.1.0-alpha
+- wait: fabric-kafka haven't release 1.1.0-alpha
 - ?update system channel ``testchainid`` 
 - there is a trend to use golang/dep instead of govendor https://gerrit.hyperledger.org/r/#/c/19113/

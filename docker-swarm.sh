@@ -10,8 +10,8 @@ swarmNetwork=$(jq -r ".docker.network" ${CONFIG_JSON})
 volumesConfig=$(jq -r ".docker.volumes" $CONFIG_JSON)
 CONFIGTXDir=$(echo $volumesConfig | jq -r ".CONFIGTX.dir")
 MSPROOTDir=$(echo $volumesConfig | jq -r ".MSPROOT.dir")
-CONFIGTXVolume=$(echo $volumesConfig | jq -r ".CONFIGTX.swarm")
-MSPROOTVolume=$(echo $volumesConfig | jq -r ".MSPROOT.swarm")
+CONFIGTXVolume="CONFIGTX_swarm" #FIXME
+MSPROOTVolume="MSPROOT_swarm" #FIXME
 function createVolume() {
 #     TODO move this out
 	./common/docker/utils/volume.sh createLocal $MSPROOTVolume $MSPROOTDir

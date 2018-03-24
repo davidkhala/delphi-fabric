@@ -6,56 +6,62 @@ root="$(dirname $(dirname $CURRENT))"
 ubuntuDir="$root/common/ubuntu"
 utilsDir="$root/common/docker/utils"
 CONFIG_DIR="$root/config"
-CONFIG_JSON="$CONFIG_DIR/orgs.json"
-SWARM_CONFIG="$CONFIG_DIR/swarm.json"
 
+SWARM_CONFIG="$root/swarm/swarm.json"
 
-# change hostName
-nodeHostName=$1 # "fabric-swarm-manager"
+swarmServerIP="$1"
+nodeHostName=$2 # new hostname
+
+if [ -z $swarmServerIP ];then
+    echo empty swarmServerIP [1st parameter]
+    exit 1
+fi
+
+swarmServerPort=$(jq ".swarmServer.port" $SWARM_CONFIG)
+swarmBaseUrl=${swarmServerIP}:${swarmServerPort}
+
+if ! curl -s http://$swarmBaseUrl/ ;then
+    echo no response from swarmServer $swarmBaseUrl
+    exit 1
+else echo
+fi
+
 if [ -n "$nodeHostName" ];then
     $ubuntuDir/hostname.sh change $nodeHostName
 fi
 
-
-$root/cluster/prepare.sh
+CONFIG_JSON=$(curl -s http://$swarmBaseUrl/config/orgs)
+fabricTag=$(echo $CONFIG_JSON| jq -r ".docker.fabricTag")
+$root/cluster/prepare.sh pull $fabricTag
 
 
 CONFIGTX_nfs="$HOME/Documents/nfs/CONFIGTX"
 MSPROOT_nfs="$HOME/Documents/nfs/MSPROOT"
+CONFIGTX_volumeName="CONFIGTX_swarm"
+MSPROOT_volumeName="MSPROOT_swarm"
 
 mkdir -p $CONFIGTX_nfs
 mkdir -p $MSPROOT_nfs
-mainNodeID=$(jq -r ".leaderNode.hostname" $SWARM_CONFIG) # TODO to query network map server
 
-# NOTE using node labels to fetch directory information
-CONFIGTX_DIR=$($utilsDir/swarm.sh getNodeLabels $mainNodeID | jq -r ".CONFIGTX")
+leaderInfo=$(curl -s http://${swarmBaseUrl}/leader)
 
-MSPROOT_DIR=$($utilsDir/swarm.sh getNodeLabels $mainNodeID | jq -r ".MSPROOT")
-thisIP=$($utilsDir/swarm.sh getNodeIP $mainNodeID)
-if [ ! "$MSPROOT_DIR" == "null" ]; then
-    echo mountClient $MSPROOT_nfs $thisIP $MSPROOT_DIR
-	$ubuntuDir/nfs.sh mountClient $MSPROOT_nfs $thisIP $MSPROOT_DIR
-else
-	echo label MSPROOT_DIR not exist in node $mainNodeID . exit
-	exit 1
-fi
-if [ ! "$CONFIGTX_DIR" == "null" ]; then
-    echo mountClient $CONFIGTX_nfs $thisIP $CONFIGTX_DIR
-	$ubuntuDir/nfs.sh mountClient $CONFIGTX_nfs $thisIP $CONFIGTX_DIR
-else
-	echo label CONFIGTX_DIR not exist in node $mainNodeID . exit
-	exit 1
-fi
+joinToken=$(echo $leaderInfo| jq -r ".managerToken")
+$joinToken # try to join
 
-volumesConfig=$(jq -r ".docker.volumes" $CONFIG_JSON)
-CONFIGTX_swarm=$(echo $volumesConfig | jq -r ".CONFIGTX.swarm")
-MSPROOT_swarm=$(echo $volumesConfig | jq -r ".MSPROOT.swarm")
+CONFIGTX_DIR=$(curl -X POST http://${swarmBaseUrl}/volume/get -d '{"key":"CONFIGTX"}' -H "Content-Type: application/json")
+
+MSPROOT_DIR=$(curl -X POST http://${swarmBaseUrl}/volume/get -d '{"key":"MSPROOT"}' -H "Content-Type: application/json")
+
+mainNodeIP=$(echo $leaderInfo | jq -r ".ip")
+echo mountClient[MSPROOT] $MSPROOT_nfs $mainNodeIP $MSPROOT_DIR
+$ubuntuDir/nfs.sh mountClient $MSPROOT_nfs $mainNodeIP $MSPROOT_DIR
+echo mountClient[CONFIGTX] $CONFIGTX_nfs $mainNodeIP $CONFIGTX_DIR
+$ubuntuDir/nfs.sh mountClient $CONFIGTX_nfs $mainNodeIP $CONFIGTX_DIR
+
 $root/cluster/clean.sh
 docker volume prune --force
-$utilsDir/volume.sh createLocal $CONFIGTX_swarm $CONFIGTX_nfs
-$utilsDir/volume.sh createLocal $MSPROOT_swarm $MSPROOT_nfs
-
-
+$utilsDir/volume.sh createLocal $CONFIGTX_volumeName $CONFIGTX_nfs
+$utilsDir/volume.sh createLocal $MSPROOT_volumeName $MSPROOT_nfs
 
 
 

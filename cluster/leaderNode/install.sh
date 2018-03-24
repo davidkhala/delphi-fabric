@@ -9,4 +9,4 @@ $root/common/ubuntu/nfs.sh installHost
 
 # finally
 sudo apt-get upgrade -y
-sudo apt autoremove
+sudo apt autoremove -y

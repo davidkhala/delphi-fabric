@@ -1,23 +1,25 @@
 #!/usr/bin/env bash
 
 CURRENT=$(cd $(dirname ${BASH_SOURCE}); pwd)
-CONFIG_DIR="$(dirname $CURRENT)/config/"
-CONFIG_JSON="$CONFIG_DIR/orgs.json"
-
-#   please tracing https://github.com/moby/moby/issues/30951
-VERSION=$(jq -r ".docker.fabricTag" $CONFIG_JSON)
-IMAGE_TAG="x86_64-$VERSION"
-utilsDir=$(dirname $CURRENT)/common/docker/utils/
-$utilsDir/docker.sh pullIfNotExist hyperledger/fabric-ccenv:$IMAGE_TAG
-$utilsDir/docker.sh pullIfNotExist hyperledger/fabric-orderer:$IMAGE_TAG
-$utilsDir/docker.sh pullIfNotExist hyperledger/fabric-peer:$IMAGE_TAG
-
+fcn=$1
+remain_params=""
+for ((i = 2; i <= ${#}; i++)); do
+	j=${!i}
+	remain_params="$remain_params $j"
+done
+function pull(){
+    local fabricTag=$1;
+    local IMAGE_TAG="x86_64-$fabricTag"
+    utilsDir=$(dirname $CURRENT)/common/docker/utils/
+    $utilsDir/docker.sh pullIfNotExist hyperledger/fabric-ccenv:$IMAGE_TAG
+    $utilsDir/docker.sh pullIfNotExist hyperledger/fabric-orderer:$IMAGE_TAG
+    $utilsDir/docker.sh pullIfNotExist hyperledger/fabric-peer:$IMAGE_TAG
+}
 function pullKafka(){
+    local fabricTag=$1;
+    local IMAGE_TAG="x86_64-$fabricTag"
     $utilsDir/docker.sh pullIfNotExist hyperledger/fabric-kafka:$IMAGE_TAG
 	$utilsDir/docker.sh pullIfNotExist hyperledger/fabric-zookeeper:$IMAGE_TAG
 }
-kafkaMode=$(jq -r ".orderer.type" $CONFIG_JSON)
-if [ "$kafkaMode" == "kafka" ];then
-    pullKafka
-fi
+$fcn $remain_params
 

@@ -7,12 +7,10 @@
     "volumes": {
       "CONFIGTX": {
         "local": "CONFIGTX_local",
-        "swarm": "CONFIGTX_swarm",
         "dir": "/home/david/Documents/delphi-fabric/config/configtx"
       },
       "MSPROOT": {
         "local": "MSPROOT_local",
-        "swarm": "MSPROOT_swarm",
         "dir": "/home/david/Documents/delphi-fabric/config/crypto-config/"
       }
     }
