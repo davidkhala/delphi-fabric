@@ -8,7 +8,7 @@ const logger = require('../app/util/logger').new('compose-gen');
 const swarmServiceName = (serviceName) => {
     return serviceName.replace(/\./g, '-');
 };
-const addOrdererService = (services, {ordererConfig, ordererEachConfig, volumeConfig}, {
+const addOrdererService = (services, {ordererConfig, ordererEachConfig, MSPROOTVolume, CONFIGTXVolume}, {
     ordererName, COMPANY_DOMAIN, IMAGE_TAG,
     ORDERER_GENERAL_TLS_ROOTCAS,
     kafkaServices, TLS, swarmType = 'local',
@@ -16,8 +16,6 @@ const addOrdererService = (services, {ordererConfig, ordererEachConfig, volumeCo
     MSPROOT = '/etc/hyperledger/crypto-config',
 }) => {
 
-    const CONFIGTXVolume = volumeConfig.CONFIGTX[swarmType];
-    const MSPROOTVolume = volumeConfig.MSPROOT[swarmType];
     const BLOCK_FILE = ordererConfig.genesis_block.file;
     let ordererServiceName = ordererName;
     const ORDERER_STRUCTURE = `ordererOrganizations/${COMPANY_DOMAIN}/orderers/${ordererServiceName}.${COMPANY_DOMAIN}`;
@@ -77,10 +75,10 @@ exports.gen = ({
                    MSPROOT,
                    arch = 'x86_64',
                    COMPOSE_FILE = path.resolve(CURRENT, 'docker-compose.yaml'),
-                   type = 'local',
+                   type = 'local', volumeName
                }) => {
 
-    logger.debug({MSPROOT, arch, COMPOSE_FILE, type});
+    logger.debug({MSPROOT, arch, COMPOSE_FILE, type, volumeName});
 
     const companyConfig = globalConfig;
     const {TLS, docker: {fabricTag, volumes: volumeConfig, network}} = companyConfig;
@@ -90,8 +88,8 @@ exports.gen = ({
     const orgsConfig = companyConfig.orgs;
     const COMPANY_DOMAIN = companyConfig.domain;
     const ordererConfig = companyConfig.orderer;
-    const CONFIGTXVolume = volumeConfig.CONFIGTX[type];
-    const MSPROOTVolume = volumeConfig.MSPROOT[type];
+    const CONFIGTXVolume = volumeName.CONFIGTX;
+    const MSPROOTVolume = volumeName.MSPROOT;
     // const ordererContainerPort = ordererConfig.portMap[0].container
     const container =
         {
@@ -171,7 +169,7 @@ exports.gen = ({
                         aliases: [peerDomain]
                     }
                 };
-                //TODO network map service here
+                peerService.environment.push("CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052")
                 peerService.deploy = {
                     placement: {
                         constraints: peerConfig.swarm.constraints
@@ -238,10 +236,10 @@ exports.gen = ({
             const caService = {
                 image: `hyperledger/fabric-ca:${IMAGE_TAG}`,
                 command: 'sh -c \'fabric-ca-server start -d\'',
-                volumes: [`${CAVolume}:${container.dir.CA_HOME}`],
+                volumes: [`${MSPROOTVolume}:${container.dir.CA_HOME}`],
                 ports: [`${caConfig.portHost}:7054`],
                 environment: [
-                    `FABRIC_CA_HOME=${container.dir.CA_HOME}`,
+                    `FABRIC_CA_HOME=${container.dir.CA_HOME}/peerOrganizations/${orgDomain}/ca`,
                     'GODEBUG=netdns=go'//NOTE aliyun only
                 ]
             };
@@ -276,7 +274,7 @@ exports.gen = ({
         for (let ordererName in ordererConfigs) {
             const ordererEachConfig = ordererConfigs[ordererName];
 
-            addOrdererService(services, {ordererConfig, ordererEachConfig, volumeConfig}, {
+            addOrdererService(services, {ordererConfig, ordererEachConfig, CONFIGTXVolume, MSPROOTVolume}, {
                 ordererName, COMPANY_DOMAIN, TLS, IMAGE_TAG,
                 swarmType: type, ORDERER_GENERAL_TLS_ROOTCAS,
                 kafkaServices: Object.keys(kafkaConfigs)
@@ -339,7 +337,7 @@ exports.gen = ({
         }
     } else {
         const ordererEachConfig = companyConfig.orderer.solo;
-        addOrdererService(services, {ordererConfig, ordererEachConfig, volumeConfig}, {
+        addOrdererService(services, {ordererConfig, ordererEachConfig, CONFIGTXVolume, MSPROOTVolume}, {
             ordererName: ordererEachConfig.container_name, COMPANY_DOMAIN, TLS, IMAGE_TAG,
             swarmType: type, ORDERER_GENERAL_TLS_ROOTCAS,
             kafkaServices: undefined

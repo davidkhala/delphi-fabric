@@ -29,7 +29,7 @@ exports.gen = ({
             BatchTimeout: '2s',
             BatchSize: {
                 MaxMessageCount: 10,
-                AbsoluteMaxBytes: '10 MB',//TODO 99 MB
+                AbsoluteMaxBytes: '99 MB',
                 PreferredMaxBytes: '512 KB'
             },
             Organizations: [

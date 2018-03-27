@@ -2,7 +2,7 @@
   "domain": "Delphi.com",
   "TLS": false,
   "docker": {
-    "fabricTag": "1.0.2",
+    "fabricTag": "1.1.0",
     "network": "delphiNetwork",
     "volumes": {
       "CONFIGTX": {
@@ -155,7 +155,7 @@
       ],
       "userCount": 0,
       "ca": {
-        "enable": true,
+        "enable": false,
         "admin": {
           "name": "CAadmin",
           "pass": "passwd"

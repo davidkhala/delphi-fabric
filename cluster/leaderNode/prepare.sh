@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -e -x
+set -e
 CURRENT=$(cd $(dirname ${BASH_SOURCE}); pwd)
 root="$(dirname $(dirname $CURRENT))"
 
@@ -29,7 +29,10 @@ CONFIG_JSON=$(curl -s ${swarmBaseUrl}/config/orgs)
 ### setup swarm
 utilsDir=$root/common/docker/utils
 
-$utilsDir/swarm.sh createIfNotExist $advertiseAddr
+if ! $utilsDir/swarm.sh create $advertiseAddr;then
+    echo ...perhaps swarm existing already of failure
+    $utilsDir/swarm.sh view
+fi
 
 thisHostName=$($root/common/ubuntu/hostname.sh get)
 
