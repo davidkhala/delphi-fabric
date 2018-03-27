@@ -2,15 +2,13 @@
   "domain": "Delphi.com",
   "TLS": false,
   "docker": {
-    "fabricTag": "1.1.0",
+    "fabricTag": "1.0.2",
     "network": "delphiNetwork",
     "volumes": {
       "CONFIGTX": {
-        "local": "CONFIGTX_local",
         "dir": "/home/david/Documents/delphi-fabric/config/configtx"
       },
       "MSPROOT": {
-        "local": "MSPROOT_local",
         "dir": "/home/david/Documents/delphi-fabric/config/crypto-config/"
       }
     }
@@ -121,7 +119,7 @@
         {
           "swarm": {
             "constraints": [
-              "node.hostname == ubuntu"
+              "node.hostname == admin-soc"
             ]
           },
           "container_name": "BUContainerName",
@@ -139,7 +137,7 @@
         {
           "swarm": {
             "constraints": [
-              "node.hostname == ubuntu"
+              "node.hostname == admin-soc"
             ]
           },
           "container_name": "BUContainer1",
@@ -177,7 +175,7 @@
         {
           "swarm": {
             "constraints": [
-              "node.hostname == fabric-swarm-manager"
+              "node.hostname == admin-soc"
             ]
           },
           "container_name": "ENGContainerName",
@@ -215,7 +213,7 @@
         {
           "swarm": {
             "constraints": [
-              "node.hostname == fabric-swarm-manager"
+              "node.hostname == admin-soc"
             ]
           },
           "container_name": "PMContainerName",

@@ -11,8 +11,8 @@ networks:
 services:
   peer0-BU-Delphi-com:
     depends_on:
-      - OrdererServiceName-Delphi-com
-    image: 'hyperledger/fabric-peer:x86_64-1.1.0-preview'
+      - orderContainerName
+    image: 'hyperledger/fabric-peer:x86_64-1.0.2'
     command: peer node start
     environment:
       - 'CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock'
@@ -24,13 +24,11 @@ services:
       - 'CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.BU.Delphi.com:7051'
       - CORE_PEER_LOCALMSPID=BUMSP
       - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/BU.Delphi.com/peers/peer0.BU.Delphi.com/msp
-      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_ENABLED=false
       - CORE_PEER_ID=peer0.BU.Delphi.com
       - 'CORE_PEER_ADDRESS=peer0.BU.Delphi.com:7051'
+      - CORE_CHAINCODE_EXECUTETIMEOUT=180s
       - GODEBUG=netdns=go
-      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/crypto-config/peerOrganizations/BU.Delphi.com/peers/peer0.BU.Delphi.com/tls/server.key
-      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/crypto-config/peerOrganizations/BU.Delphi.com/peers/peer0.BU.Delphi.com/tls/server.crt
-      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/crypto-config/peerOrganizations/BU.Delphi.com/peers/peer0.BU.Delphi.com/tls/ca.crt
     ports:
       - '7051:7051'
       - '7053:7053'
@@ -44,11 +42,11 @@ services:
     deploy:
       placement:
         constraints:
-          - node.hostname == ubuntu
+          - node.hostname == admin-soc
   peer1-BU-Delphi-com:
     depends_on:
-      - OrdererServiceName-Delphi-com
-    image: 'hyperledger/fabric-peer:x86_64-1.1.0-preview'
+      - orderContainerName
+    image: 'hyperledger/fabric-peer:x86_64-1.0.2'
     command: peer node start
     environment:
       - 'CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock'
@@ -60,13 +58,11 @@ services:
       - 'CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.BU.Delphi.com:7051'
       - CORE_PEER_LOCALMSPID=BUMSP
       - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/BU.Delphi.com/peers/peer1.BU.Delphi.com/msp
-      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_ENABLED=false
       - CORE_PEER_ID=peer1.BU.Delphi.com
       - 'CORE_PEER_ADDRESS=peer1.BU.Delphi.com:7051'
+      - CORE_CHAINCODE_EXECUTETIMEOUT=180s
       - GODEBUG=netdns=go
-      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/crypto-config/peerOrganizations/BU.Delphi.com/peers/peer1.BU.Delphi.com/tls/server.key
-      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/crypto-config/peerOrganizations/BU.Delphi.com/peers/peer1.BU.Delphi.com/tls/server.crt
-      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/crypto-config/peerOrganizations/BU.Delphi.com/peers/peer1.BU.Delphi.com/tls/ca.crt
     ports:
       - '7061:7051'
       - '7063:7053'
@@ -80,25 +76,25 @@ services:
     deploy:
       placement:
         constraints:
-          - node.hostname == ubuntu
-  tlsca-BU-Delphi-com:
-    image: 'hyperledger/fabric-ca:x86_64-1.1.0-preview'
+          - node.hostname == admin-soc
+  ca-BU-Delphi-com:
+    image: 'hyperledger/fabric-ca:x86_64-1.0.2'
     command: sh -c 'fabric-ca-server start -d'
     volumes:
-      - '/home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/BU.Delphi.com/ca:/etc/hyperledger/fabric-ca-server'
+      - 'MSPROOT_swarm:/etc/hyperledger/fabric-ca-server'
     ports:
       - '7054:7054'
     environment:
-      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server/peerOrganizations/BU.Delphi.com/ca
       - GODEBUG=netdns=go
     networks:
       default:
         aliases:
-          - tlsca.BU.Delphi.com
+          - ca.BU.Delphi.com
   peer0-ENG-Delphi-com:
     depends_on:
-      - OrdererServiceName-Delphi-com
-    image: 'hyperledger/fabric-peer:x86_64-1.1.0-preview'
+      - orderContainerName
+    image: 'hyperledger/fabric-peer:x86_64-1.0.2'
     command: peer node start
     environment:
       - 'CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock'
@@ -110,13 +106,11 @@ services:
       - 'CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.ENG.Delphi.com:7051'
       - CORE_PEER_LOCALMSPID=ENGMSP
       - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/ENG.Delphi.com/peers/peer0.ENG.Delphi.com/msp
-      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_ENABLED=false
       - CORE_PEER_ID=peer0.ENG.Delphi.com
       - 'CORE_PEER_ADDRESS=peer0.ENG.Delphi.com:7051'
+      - CORE_CHAINCODE_EXECUTETIMEOUT=180s
       - GODEBUG=netdns=go
-      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/crypto-config/peerOrganizations/ENG.Delphi.com/peers/peer0.ENG.Delphi.com/tls/server.key
-      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/crypto-config/peerOrganizations/ENG.Delphi.com/peers/peer0.ENG.Delphi.com/tls/server.crt
-      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/crypto-config/peerOrganizations/ENG.Delphi.com/peers/peer0.ENG.Delphi.com/tls/ca.crt
     ports:
       - '8051:7051'
       - '8053:7053'
@@ -130,11 +124,11 @@ services:
     deploy:
       placement:
         constraints:
-          - node.hostname == fabric-swarm-manager
+          - node.hostname == admin-soc
   peer0-PM-Delphi-com:
     depends_on:
-      - OrdererServiceName-Delphi-com
-    image: 'hyperledger/fabric-peer:x86_64-1.1.0-preview'
+      - orderContainerName
+    image: 'hyperledger/fabric-peer:x86_64-1.0.2'
     command: peer node start
     environment:
       - 'CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock'
@@ -146,13 +140,11 @@ services:
       - 'CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.PM.Delphi.com:7051'
       - CORE_PEER_LOCALMSPID=PMMSP
       - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/PM.Delphi.com/peers/peer0.PM.Delphi.com/msp
-      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_ENABLED=false
       - CORE_PEER_ID=peer0.PM.Delphi.com
       - 'CORE_PEER_ADDRESS=peer0.PM.Delphi.com:7051'
+      - CORE_CHAINCODE_EXECUTETIMEOUT=180s
       - GODEBUG=netdns=go
-      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/crypto-config/peerOrganizations/PM.Delphi.com/peers/peer0.PM.Delphi.com/tls/server.key
-      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/crypto-config/peerOrganizations/PM.Delphi.com/peers/peer0.PM.Delphi.com/tls/server.crt
-      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/crypto-config/peerOrganizations/PM.Delphi.com/peers/peer0.PM.Delphi.com/tls/ca.crt
     ports:
       - '9051:7051'
       - '9053:7053'
@@ -166,28 +158,24 @@ services:
     deploy:
       placement:
         constraints:
-          - node.hostname == fabric-swarm-manager
-  OrdererServiceName-Delphi-com:
-    image: 'hyperledger/fabric-orderer:x86_64-1.1.0-preview'
+          - node.hostname == admin-soc
+  orderContainerName:
+    image: 'hyperledger/fabric-orderer:x86_64-1.0.2'
     command: orderer
     ports:
-      - '7250:7050'
+      - '7050:7050'
     volumes:
       - 'CONFIGTX_swarm:/etc/hyperledger/configtx'
       - 'MSPROOT_swarm:/etc/hyperledger/crypto-config'
     environment:
       - ORDERER_GENERAL_LOGLEVEL=debug
       - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
-      - ORDERER_GENERAL_TLS_ENABLED=true
+      - ORDERER_GENERAL_TLS_ENABLED=false
       - ORDERER_GENERAL_GENESISMETHOD=file
       - ORDERER_GENERAL_GENESISFILE=/etc/hyperledger/configtx/delphi.block
       - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
       - ORDERER_GENERAL_LOCALMSPDIR=/etc/hyperledger/crypto-config/ordererOrganizations/Delphi.com/orderers/orderContainerName.Delphi.com/msp
       - GODEBUG=netdns=go
-      - ORDERER_GENERAL_TLS_PRIVATEKEY=/etc/hyperledger/crypto-config/ordererOrganizations/Delphi.com/orderers/orderContainerName.Delphi.com/tls/server.key
-      - ORDERER_GENERAL_TLS_CERTIFICATE=/etc/hyperledger/crypto-config/ordererOrganizations/Delphi.com/orderers/orderContainerName.Delphi.com/tls/server.crt
-      - >-
-        ORDERER_GENERAL_TLS_ROOTCAS=[/etc/hyperledger/crypto-config/ordererOrganizations/Delphi.com/orderers/orderContainerName.Delphi.com/tls/ca.crt,/etc/hyperledger/crypto-config/peerOrganizations/BU.Delphi.com/tlsca/tlsca.BU.Delphi.com-cert.pem]
     networks:
       default:
         aliases:

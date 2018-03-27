@@ -12,7 +12,7 @@ SWARM_CONFIG="$root/swarm/swarm.json"
 nodeHostName=$2 # new hostname
 
 
-swarmServerIP=$(jq ".swarmServer.url" $SWARM_CONFIG)
+swarmServerIP=$(jq -r ".swarmServer.url" $SWARM_CONFIG)
 swarmServerPort=$(jq ".swarmServer.port" $SWARM_CONFIG)
 swarmBaseUrl=${swarmServerIP}:${swarmServerPort}
 
