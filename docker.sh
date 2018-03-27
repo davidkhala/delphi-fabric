@@ -12,8 +12,6 @@ function down() {
     # NOTE deprecated: docker-compose -f $COMPOSE_FILE --project-name $projectName [action] :projectName is useless when setting network
 	docker-compose -f $COMPOSE_FILE down
 	./cluster/clean.sh
-	docker network prune --force
-
 }
 function up() {
     docker network create $dockerNetworkName

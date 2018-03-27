@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -e
+set -e -x
 CURRENT=$(cd $(dirname ${BASH_SOURCE}); pwd)
 root="$(dirname $(dirname $CURRENT))"
 
@@ -48,5 +48,6 @@ $root/common/ubuntu/nfs.sh startHost
 node -e "require('$root/swarm/swarmServerClient').volume.set('$swarmBaseUrl',{key:'CONFIGTX',value:'$CONFIGTX_DIR'})"
 node -e "require('$root/swarm/swarmServerClient').volume.set('$swarmBaseUrl',{key:'MSPROOT',value:'$MSPROOT_DIR'})"
 
-$root/cluster/prepare.sh
+fabricTag=$(echo $CONFIG_JSON| jq -r ".docker.fabricTag")
+$root/cluster/prepare.sh pull $fabricTag
 

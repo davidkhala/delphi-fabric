@@ -12,5 +12,4 @@ $root/common/install.sh
 $root/common/ubuntu/nfs.sh installClient
 
 # finally
-sudo apt-get upgrade -y
 sudo apt autoremove -y

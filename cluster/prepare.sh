@@ -14,6 +14,7 @@ function pull(){
     $utilsDir/docker.sh pullIfNotExist hyperledger/fabric-ccenv:$IMAGE_TAG
     $utilsDir/docker.sh pullIfNotExist hyperledger/fabric-orderer:$IMAGE_TAG
     $utilsDir/docker.sh pullIfNotExist hyperledger/fabric-peer:$IMAGE_TAG
+    $utilsDir/docker.sh pullIfNotExist hyperledger/fabric-ca:$IMAGE_TAG
 }
 function pullKafka(){
     local fabricTag=$1;

@@ -7,8 +7,8 @@ CONFIG_JSON=$CONFIG_DIR/orgs.json
 
 volumesConfig=$(jq -r ".docker.volumes" $CONFIG_JSON)
 
-CONFIGTXVolume=$(echo $volumesConfig | jq -r ".CONFIGTX.local")
-MSPROOTVolume=$(echo $volumesConfig | jq -r ".MSPROOT.local")
+CONFIGTXVolume=CONFIGTX_local
+MSPROOTVolume=MSPROOT_local
 
 VERSION=$(jq -r ".docker.fabricTag" $CONFIG_JSON)
 IMAGE_TAG="x86_64-$VERSION"
@@ -29,4 +29,4 @@ CONFIGTX_DIR=$(echo $volumesConfig|jq -r ".CONFIGTX.dir") # update in testBin.sh
 ./common/docker/utils/volume.sh createLocal $CONFIGTXVolume $CONFIGTX_DIR
 
 ./common/docker/utils/docker.sh pullIfNotExist hyperledger/fabric-ccenv:$IMAGE_TAG
-node -e "require('./config/docker-compose').gen({'MSPROOT':'$MSPROOT_DIR','COMPOSE_FILE':'$COMPOSE_FILE','type': 'local'})"
+node -e "require('./config/docker-compose').gen({MSPROOT:'$MSPROOT_DIR',COMPOSE_FILE:'$COMPOSE_FILE',type: 'local',volumeName:{CONFIGTX:'$CONFIGTXVolume',MSPROOT:'$MSPROOTVolume'}})"
