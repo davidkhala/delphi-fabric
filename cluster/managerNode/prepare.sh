@@ -31,8 +31,8 @@ fabricTag=$(echo $CONFIG_JSON| jq -r ".docker.fabricTag")
 $root/cluster/prepare.sh pull $fabricTag
 
 
-CONFIGTX_nfs="$HOME/Documents/nfs/CONFIGTX"
-MSPROOT_nfs="$HOME/Documents/nfs/MSPROOT"
+CONFIGTX_nfs="$HOME/Documents/nfs/CONFIGTX/"
+MSPROOT_nfs="$HOME/Documents/nfs/MSPROOT/"
 CONFIGTX_volumeName="CONFIGTX_swarm"
 MSPROOT_volumeName="MSPROOT_swarm"
 
@@ -42,8 +42,10 @@ mkdir -p $MSPROOT_nfs
 leaderInfo=$(curl -s ${swarmBaseUrl}/leader)
 
 joinToken=$(echo $leaderInfo| jq -r ".managerToken")
-if ! $utilsDir/swarm.sh belongTo "$joinToken" ;then
-    $joinToken # try to join
+echo joinToken |$joinToken|
+if ! $joinToken ;then
+     echo ... perhaps joined already.
+     $utilsDir/swarm.sh view
 fi
 
 CONFIGTX_DIR=$(eval echo $(curl -s -X POST ${swarmBaseUrl}/volume/get -d '{"key":"CONFIGTX"}' -H "Content-Type: application/json"))
