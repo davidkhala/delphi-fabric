@@ -185,6 +185,7 @@ exports.gen = ({
         const caConfig = orgConfig.ca;
         if (caConfig.enable) {
 
+            const FABRIC_CA_HOME=`${container.dir.CA_HOME}/peerOrganizations/${orgDomain}/ca`
             const CAVolume = path.join(MSPROOT, 'peerOrganizations', orgDomain, 'ca');
             const caServerConfigFile = path.resolve(CAVolume, 'fabric-ca-server-config.yaml');
             if (fs.existsSync(caServerConfigFile)) {
@@ -214,8 +215,8 @@ exports.gen = ({
                         }]
                 },
                 ca: {
-                    certfile: `${container.dir.CA_HOME}/ca.${orgDomain}-cert.pem`,
-                    keyfile: `${container.dir.CA_HOME}/${path.basename(caPrivateKey)}`
+                    certfile: `${FABRIC_CA_HOME}/ca.${orgDomain}-cert.pem`,
+                    keyfile: `${FABRIC_CA_HOME}/${path.basename(caPrivateKey)}`
                 }
             };
 
@@ -226,8 +227,8 @@ exports.gen = ({
                 ORDERER_GENERAL_TLS_ROOTCAS += `${container.dir.MSPROOT}/peerOrganizations/${orgDomain}/tlsca/tlsca.${orgDomain}-cert.pem,`;
                 caContainerName = `tlsca.${orgDomain}`;
                 caServerConfig.tls = {
-                    certfile: `${container.dir.CA_HOME}/ca.${orgDomain}-cert.pem`,
-                    keyfile: `${container.dir.CA_HOME}/${path.basename(caPrivateKey)}`
+                    certfile: `${FABRIC_CA_HOME}/ca.${orgDomain}-cert.pem`,
+                    keyfile: `${FABRIC_CA_HOME}/${path.basename(caPrivateKey)}`
                 };
             } else {
                 caContainerName = `ca.${orgDomain}`;
@@ -239,7 +240,7 @@ exports.gen = ({
                 volumes: [`${MSPROOTVolume}:${container.dir.CA_HOME}`],
                 ports: [`${caConfig.portHost}:7054`],
                 environment: [
-                    `FABRIC_CA_HOME=${container.dir.CA_HOME}/peerOrganizations/${orgDomain}/ca`,
+                    `FABRIC_CA_HOME=${FABRIC_CA_HOME}`,
                     'GODEBUG=netdns=go'//NOTE aliyun only
                 ]
             };

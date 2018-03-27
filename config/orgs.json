@@ -155,7 +155,7 @@
       ],
       "userCount": 0,
       "ca": {
-        "enable": false,
+        "enable": true,
         "admin": {
           "name": "CAadmin",
           "pass": "passwd"
