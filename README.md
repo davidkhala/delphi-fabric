@@ -94,29 +94,29 @@ test Swarm mode
 -----------------------
 
 assume we have two physical machine, take ip `192.168.0.167` as *leader*, ip `192.168.0.144` as *manager*
-0. Prepare:  
-    0. swarm configuration service server(SCSS)
-        1. SCSS is used to monitoring cluster status(ip,hostname), docker-swarm join-token,docker volume path to share and other global information.    
+
+0. Prepare: swarm configuration service server(SCSS)
+  - SCSS is used to monitoring cluster status(ip,hostname), docker-swarm join-token,docker volume path to share and other global information.    
         
         > SCSS using couchdb as state persistent mechanism.  
         To install couchdb on your target machine run:   
         ```$ ./install.sh couchdb```
-        2. Fauxton is installed along with couchdb as admin portal. [http://localhost:5984/_utils/]  
-            make sure to setting "Main Config" -- "chttpd" -- "bind_address" ==> 0.0.0.0                         
-    1. run SCSS: ``node ./swarm/swarmServer.js`` in a new terminal
-    2. if you have run through above 'single host test', you should clean your environment before start. For example, run `$ ./docker.sh down`
-    3. on *leader*, run `$ cluster/leaderNode/install.sh`
-    4. on *leader*, run `$ cluster/leaderNode/prepare.sh 192.168.0.167`
+  - Fauxton is installed along with couchdb as admin portal. [http://localhost:5984/_utils/]  
+          make sure to setting "Main Config" -- "chttpd" -- "bind_address" ==> 0.0.0.0                         
+  - run SCSS: ``node ./swarm/swarmServer.js`` in a new terminal
+2. if you have run through above 'single host test', you should clean your environment before start. For example, run `$ ./docker.sh down`
+3. on *leader*, run `$ cluster/leaderNode/install.sh`
+4. on *leader*, run `$ cluster/leaderNode/prepare.sh 192.168.0.167`
       > parameter *192.168.0.167* work as `advertiseAddr` in docker swarm
-    5. on *manager*, run `$ cluster/managerNode/install.sh` and then `$ cluster/managerNode/prepare.sh`
-1. health-check swarm across nodes(1 node means 1 physical machine),
+5. on *manager*, run `$ cluster/managerNode/install.sh` and then `$ cluster/managerNode/prepare.sh`
+6. health-check swarm across nodes(1 node means 1 physical machine),
     (if there is network problem, 'nmap' is a recommended network probing tools:`apt install nmap`)
 
  - On both *leader* and *manager*, check if joining swarm success by `docker node ls` (*means current node)
- > ID                            HOSTNAME               STATUS              AVAILABILITY        MANAGER STATUS  
- > lhpmolwzw60dclsjmr4suufno *   ubuntu                   Ready               Active              Leader
- > tatl890bgusrzww4x5w1ktvjk     fabric-swarm-manager                Ready               Active              Reachable
-2. on *leader* run ./testSwarm.sh
+    > ID                            HOSTNAME               STATUS              AVAILABILITY        MANAGER STATUS  
+    > lhpmolwzw60dclsjmr4suufno *   ubuntu                   Ready               Active              Leader
+    > tatl890bgusrzww4x5w1ktvjk     fabric-swarm-manager                Ready               Active              Reachable
+7. on *leader* run ./testSwarm.sh
     it includes:
      - re-create crypto material and block file
      - re-create local docker volume
