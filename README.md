@@ -93,9 +93,9 @@ __Steps:__
 test Swarm mode
 -----------------------
 
-assume we have two physical machine,with main hostName 'ubuntu' with ip `192.168.0.167`,'fabric-swarm-manager' with ip `192.168.0.144`  
+assume we have two physical machine, take ip `192.168.0.167` as *leader*, ip `192.168.0.144` as *manager*
 0. Prepare:  
-    1. swarm configuration service server(SCSS)  
+    0. swarm configuration service server(SCSS)
         1. SCSS is used to monitoring cluster status(ip,hostname), docker-swarm join-token,docker volume path to share and other global information.    
         
         > SCSS using couchdb as state persistent mechanism.  
@@ -103,31 +103,26 @@ assume we have two physical machine,with main hostName 'ubuntu' with ip `192.168
         ```$ ./install.sh couchdb```
         2. Fauxton is installed along with couchdb as admin portal. [http://localhost:5984/_utils/]  
             make sure to setting "Main Config" -- "chttpd" -- "bind_address" ==> 0.0.0.0                         
-    1. if you have run through above 'single host test', you should clean your environment before start. For example, run `$ ./docker.sh down`
-    2. on 'ubuntu', run `$ cluster/leaderNode/install.sh` and then `$ cluster/leaderNode/prepare.sh`
-    3. on 'fabric-swarm-manager', run `$ cluster/managerNode/install.sh` and then `$ cluster/managerNode/prepare.sh`
-1. build up swarm across nodes(1 node means 1 physical machine),   
-    my solution is
-    
- - On 'ubuntu',run 'docker swarm init'(if you have multiple network adapter, option `--advertise-addr 192.168.0.167` is needed for specify which ip is used to identify this machine)
-   
- - On 'ubuntu', run 'docker swarm join-token manager' to print a message like
- >To add a manager to this swarm, run the following command:  
- >     docker swarm join --token SWMTKN-1-3vgv9jebyhdqzid9o5zcyufeciahegbew7mtbfykfpjfk73jbn-e4p28p30jxv1eu5o2lcvcaa2d 192.168.0.167:2377
- - On 'fabric-swarm-manager', run above printed message `docker swarm join --token SWMTKN-1-3vgv9jebyhdqzid9o5zcyufeciahegbew7mtbfykfpjfk73jbn-e4p28p30jxv1eu5o2lcvcaa2d 192.168.0.167:2377` to join swarm  
+    1. run SCSS: ``node ./swarm/swarmServer.js`` in a new terminal
+    2. if you have run through above 'single host test', you should clean your environment before start. For example, run `$ ./docker.sh down`
+    3. on *leader*, run `$ cluster/leaderNode/install.sh`
+    4. on *leader*, run `$ cluster/leaderNode/prepare.sh 192.168.0.167`
+      > parameter *192.168.0.167* work as `advertiseAddr` in docker swarm
+    5. on *manager*, run `$ cluster/managerNode/install.sh` and then `$ cluster/managerNode/prepare.sh`
+1. health-check swarm across nodes(1 node means 1 physical machine),
     (if there is network problem, 'nmap' is a recommended network probing tools:`apt install nmap`)
- - On 'ubuntu' or 'fabric-swarm-manager', check if joining swarm success by `docker node ls` (*means current node)
+
+ - On both *leader* and *manager*, check if joining swarm success by `docker node ls` (*means current node)
  > ID                            HOSTNAME               STATUS              AVAILABILITY        MANAGER STATUS  
  > lhpmolwzw60dclsjmr4suufno *   ubuntu                   Ready               Active              Leader
  > tatl890bgusrzww4x5w1ktvjk     fabric-swarm-manager                Ready               Active              Reachable
-2. run ./testSwarm.sh   
+2. on *leader* run ./testSwarm.sh
     it includes:
-     - addLabels to node 'ubuntu' as a metadata of NFS shared path
+     - re-create crypto material and block file
+     - re-create local docker volume
      - generate compose-file for swarm
-3. run ./docker-swarm.sh to deploy service   
-    TODO: I will optimize this later about preparing and cleaning of swarm             
-4.   run `$ node app/testChannel.js`
-     to create-channel and join-channel 
+3. on *leader* run ./docker-swarm.sh to deploy service
+4. run `$ node app/testChannel.js` to create-channel and join-channel
 5. `$ node app/testInstall.js` to install chaincode and instantiate chaincode
 6. `$ node app/testInvoke.js` to invoke chaincode        
  
