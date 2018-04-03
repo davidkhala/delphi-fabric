@@ -6,12 +6,11 @@ const helper = require('./helper')
 
 const logger = require('./util/logger').new('testInvoke')
 const chaincodeId = 'adminChaincode'
-const fcn = 'read'
-const args = ['project', 'Blockchain Hyperledger Demonstration']
+const fcn = ''
+const args = []
 const peerIndexes = [0]
 const orgName = 'PM'
 const channelName = 'delphiChannel'
-const ClientUtil = require('./util/client')
 
 const peers = helper.newPeers(peerIndexes, orgName)
 

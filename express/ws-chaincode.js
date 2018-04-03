@@ -1,5 +1,4 @@
 const helper = require('../app/helper.js')
-const ClientUtil = require('../app/util/client')
 const logger = require('../app/util/logger').new('ws-chaincode')
 
 const errorHandle = (err, ws, errCB) => {

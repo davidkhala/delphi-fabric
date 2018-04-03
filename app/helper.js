@@ -41,7 +41,7 @@ const gen_tls_cacerts = (orgName, peerIndex) => {
     const tls_cacerts = `${CRYPTO_CONFIG_DIR}/peerOrganizations/${org_domain}/peers/${peer_hostName_full}/tls/ca.crt`;
     return {org_domain, peer_hostName_full, tls_cacerts};
 };
-const newPeer = ({peerPort, tls_cacerts, peer_hostName_full}) => {
+exports.newPeer = ({peerPort, tls_cacerts, peer_hostName_full}) => {
     if (companyConfig.TLS) {
         return require('./util/peer').new({peerPort, tls_cacerts, peer_hostName_full});
     } else {
@@ -66,7 +66,7 @@ const preparePeer = (orgName, peerIndex, peerConfig) => {
         logger.warn(`Could not find port mapped to 7051 for peer host==${peer_hostName_full}`);
         throw new Error(`Could not find port mapped to 7051 for peer host==${peer_hostName_full}`);
     }
-    const peer = newPeer({peerPort, tls_cacerts, peer_hostName_full});
+    const peer = module.exports.newPeer({peerPort, tls_cacerts, peer_hostName_full});
     //NOTE append more info
     peer.peerConfig = peerConfig;
 
@@ -363,7 +363,6 @@ exports.chaincodeProposalAdapter = (actionString, validator) => {
 exports.globalConfig = globalConfig;
 exports.gen_tls_cacerts = gen_tls_cacerts;
 exports.preparePeer = preparePeer;
-exports.newPeer = newPeer;
 exports.userAction = objects.user;
 exports.bindEventHub = bindEventHub;
 exports.getOrgAdmin = objects.user.admin.select;

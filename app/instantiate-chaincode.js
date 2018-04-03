@@ -105,11 +105,11 @@ exports.upgradeToCurrent = (channel, richPeer, {chaincodeId, args, fcn}, client 
         // 	vscc: '' } ]
 
         const chaincodeVersion = ChaincodeUtil.nextVersion(version);
-        return upgrade(channel, [richPeer], {chaincodeId, args, chaincodeVersion, fcn}, client);
+        return module.exports.upgrade(channel, [richPeer], {chaincodeId, args, chaincodeVersion, fcn}, client);
     });
 };
-const upgrade = (channel, richPeers = channel.getPeers(), {chaincodeId, chaincodeVersion, args, fcn},
-                 client = channel._clientContext) => {
+exports.upgrade = (channel, richPeers = channel.getPeers(), {chaincodeId, chaincodeVersion, args, fcn},
+                   client = channel._clientContext) => {
 
     const logger = require('./util/logger').new('upgrade-chaincode');
     const {eventWaitTime} = channel;
@@ -160,5 +160,3 @@ const upgrade = (channel, richPeers = channel.getPeers(), {chaincodeId, chaincod
         //	NOTE result parser is not required here, because the payload in proposalresponse is in form of garbled characters.
     });
 };
-
-exports.upgrade = upgrade;

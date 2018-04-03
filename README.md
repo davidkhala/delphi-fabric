@@ -92,8 +92,17 @@ __Steps:__
 
 test Swarm mode
 -----------------------
+
 assume we have two physical machine,with main hostName 'ubuntu' with ip `192.168.0.167`,'fabric-swarm-manager' with ip `192.168.0.144`  
 0. Prepare:  
+    1. swarm configuration service server(SCSS)  
+        1. SCSS is used to monitoring cluster status(ip,hostname), docker-swarm join-token,docker volume path to share and other global information.    
+        
+        > SCSS using couchdb as state persistent mechanism.  
+        To install couchdb on your target machine run:   
+        ```$ ./install.sh couchdb```
+        2. Fauxton is installed along with couchdb as admin portal. [http://localhost:5984/_utils/]  
+            make sure to setting "Main Config" -- "chttpd" -- "bind_address" ==> 0.0.0.0                         
     1. if you have run through above 'single host test', you should clean your environment before start. For example, run `$ ./docker.sh down`
     2. on 'ubuntu', run `$ cluster/leaderNode/install.sh` and then `$ cluster/leaderNode/prepare.sh`
     3. on 'fabric-swarm-manager', run `$ cluster/managerNode/install.sh` and then `$ cluster/managerNode/prepare.sh`
@@ -181,6 +190,7 @@ govendor: to import third-party package in vendor folder
 - chaincode uninstall
 - use path.resolve to replace `${path}/filename`
 - docker volume plugin
+- current design: local volume will not be clean in docker.down
 - swarm mode : network server to manage ip:hostname and deploy constraints
 - stress test in nodejs
 - function new() -> classify
