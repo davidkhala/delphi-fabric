@@ -89,7 +89,9 @@ ws.on('connection', (ws, req) => {
     ws.on('message', messageCB)
 
 });
-app.use('/chaincode', require('./express/http-chaincode'))
+app.use('/chaincode', require('./express/http-chaincode'));
+app.use('/hash',require('./express/hashFile'));
+
 
 const invalid = require('./express/formValid').invalid();
 const errorCodeMap = require('./express/errorCodeMap.json');

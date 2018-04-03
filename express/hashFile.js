@@ -1,8 +1,18 @@
 const express = require('express');
 const router = express.Router();
-const logger = require('../app/util/logger').new('http-chaincode');
+const logger = require('../app/util/logger').new('hash record');
+
+
+const Multer = require('multer');
+const cache = Multer({dest: 'cache/'});
+
+const fs = require('fs');
+const hashAlgo = require('fabric-client/lib/hash').sha2_256;
+
 const helper = require('../app/helper.js');
 const invalid = require('./formValid').invalid();
+const {reducer} = require('../app/util/chaincode');
+
 
 const errorHandle = (err, res) => {
     const errorCodeMap = require('./errorCodeMap.json');
@@ -17,14 +27,37 @@ const errorHandle = (err, res) => {
     res.status(status).json({error: err.toString()})
 
 };
-const {reducer} = require('../app/util/chaincode');
-router.post('/invoke', (req, res) => {
-    const {chaincodeId, fcn, args: argsString, orgName, peerIndex, channelName} = req.body;
+router.post('/write', cache.array('files'), (req, res) => {
+    // req.files is array of `photos` files
+    // req.body will contain the text fields, if there were any
+    const {id, plain, toHash} = req.body;
+    logger.debug('insert', {id, plain, toHash});
+
+    const files = req.files;
+
+    const fileHashs = files.map(({size, path}) => {
+        const startTime = new Date().getTime();
+        const data = fs.readFileSync(path);
+        const hashData = hashAlgo(data);
+        const endTime = new Date().getTime();
+        logger.debug('hashing file',path, {size},  `consumed, ${endTime - startTime}ms`);
+        fs.unlinkSync(path);
+        return hashData;
+    });
+    const textHash = hashAlgo(toHash);
+
+    const value = `${plain}|${textHash}|${fileHashs.join("|")}`;
+    const {chaincodeId, fcn, args, orgName, peerIndex, channelName} = {
+        chaincodeId: 'hashChaincode',
+        fcn: 'write',
+        args: [id, value],
+        orgName: 'BU',
+        peerIndex: 0,
+        channelName: 'delphiChannel'
+    };
     const {invoke} = require('../app/invoke-chaincode.js');
 
-    logger.debug('==================== INVOKE CHAINCODE ==================');
-    const args = argsString ? JSON.parse(argsString) : [];
-    logger.debug({chaincodeId, fcn, args, orgName, peerIndex, channelName});
+    logger.debug({chaincodeId, fcn, orgName, peerIndex, channelName});
     const invalidPeer = invalid.peer({peerIndex, orgName});
     if (invalidPeer) return errorHandle(invalidPeer, res);
 
@@ -55,16 +88,24 @@ router.post('/invoke', (req, res) => {
         })
     })
 
+
 });
-router.post('/instantiate', (req, res) => {
-    const {instantiate} = require('../app/instantiate-chaincode');
-    logger.debug('==================== INSTANTIATE CHAINCODE ==================');
+router.post('/delete',(req,res)=>{
+    const {id} = req.body;
+    logger.debug('delete', {id});
 
-    const {chaincodeId, chaincodeVersion, channelName, fcn, args: argsString, peerIndex, orgName} = req.body;
+    const {chaincodeId, fcn, args, orgName, peerIndex, channelName} = {
+        chaincodeId: 'hashChaincode',
+        fcn: 'delete',
+        args: [],
+        orgName: 'BU',
+        peerIndex: 0,
+        channelName: 'delphiChannel'
+    };
+    const {invoke} = require('../app/invoke-chaincode.js');
 
-    logger.debug({channelName, chaincodeId, chaincodeVersion, fcn, argsString, peerIndex, orgName});
-    const args = argsString ? JSON.parse(argsString) : [];
-    const invalidPeer = invalid.peer({orgName, peerIndex});
+    logger.debug({chaincodeId, fcn, orgName, peerIndex, channelName});
+    const invalidPeer = invalid.peer({peerIndex, orgName});
     if (invalidPeer) return errorHandle(invalidPeer, res);
 
     const invalidChannelName = invalid.channelName({channelName});
@@ -72,49 +113,19 @@ router.post('/instantiate', (req, res) => {
 
     const invalidArgs = invalid.args({args});
     if (invalidArgs) return errorHandle(invalidArgs, res);
-    return helper.getOrgAdmin(orgName).then((client) => {
-        const channel = helper.prepareChannel(channelName, client);
-        const peers = helper.newPeers([peerIndex], orgName);
-        return instantiate(channel, undefined, {
-            chaincodeId, chaincodeVersion, fcn,
-            args
-        }).then((_) => {
-            logger.debug(_);
-            res.json({data: `instantiate request has been processed successfully `})
-        }).catch(err => {
-            const {proposalResponses} = err;
-            if (proposalResponses) {
-                errorHandle(proposalResponses, res)
-            } else {
-                errorHandle(err, res)
-            }
-        })
-    })
-});
-router.post('/upgrade', (req, res) => {
-    const {upgrade} = require('../app/instantiate-chaincode');
-    logger.debug('==================== upgrade CHAINCODE ==================');
 
-    const {chaincodeId, chaincodeVersion, channelName, fcn, args: argsString, peerIndex, orgName} = req.body;
-    const args = argsString ? JSON.parse(argsString) : [];
-    logger.debug({channelName, chaincodeId, chaincodeVersion, fcn, args, peerIndex, orgName});
-    const invalidPeer = invalid.peer({orgName, peerIndex});
-    if (invalidPeer) return errorHandle(invalidPeer, res);
-    const invalidChannelName = invalid.channelName({channelName});
-    if (invalidChannelName) return errorHandle(invalidChannelName, res);
-
-    const invalidArgs = invalid.args({args});
-    if (invalidArgs) return errorHandle(invalidArgs, res);
     helper.getOrgAdmin(orgName).then((client) => {
         const channel = helper.prepareChannel(channelName, client);
         const peers = helper.newPeers([peerIndex], orgName);
-        return upgrade(channel, undefined, {
-            chaincodeId, chaincodeVersion, fcn,
+        return invoke(channel, peers, {
+            chaincodeId, fcn,
             args
-        }).then((_) => {
-            logger.debug(_);
-            res.json({data: `upgrade request has been processed successfully `})
+        }).then((message) => {
+            const data = reducer(message);
+            res.json({data: data.responses})
+
         }).catch(err => {
+            logger.error(err);
             const {proposalResponses} = err;
             if (proposalResponses) {
                 errorHandle(proposalResponses, res)
@@ -124,4 +135,51 @@ router.post('/upgrade', (req, res) => {
         })
     })
 });
+router.post('/read',(req,res)=>{
+    const {id} = req.body;
+    logger.debug('read', {id});
+
+    const {chaincodeId, fcn, args, orgName, peerIndex, channelName} = {
+        chaincodeId: 'hashChaincode',
+        fcn: 'read',
+        args: [],
+        orgName: 'BU',
+        peerIndex: 0,
+        channelName: 'delphiChannel'
+    };
+    const {invoke} = require('../app/invoke-chaincode.js');
+
+    logger.debug({chaincodeId, fcn, orgName, peerIndex, channelName});
+    const invalidPeer = invalid.peer({peerIndex, orgName});
+    if (invalidPeer) return errorHandle(invalidPeer, res);
+
+    const invalidChannelName = invalid.channelName({channelName});
+    if (invalidChannelName) return errorHandle(invalidChannelName, res);
+
+    const invalidArgs = invalid.args({args});
+    if (invalidArgs) return errorHandle(invalidArgs, res);
+
+    helper.getOrgAdmin(orgName).then((client) => {
+        const channel = helper.prepareChannel(channelName, client);
+        const peers = helper.newPeers([peerIndex], orgName);
+        return invoke(channel, peers, {
+            chaincodeId, fcn,
+            args
+        }).then((message) => {
+            const data = reducer(message);
+            res.json({data: data.responses})
+
+        }).catch(err => {
+            logger.error(err);
+            const {proposalResponses} = err;
+            if (proposalResponses) {
+                errorHandle(proposalResponses, res)
+            } else {
+                errorHandle(err, res)
+            }
+        })
+    })
+});
+
+
 module.exports = router;

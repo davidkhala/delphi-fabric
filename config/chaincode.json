@@ -9,6 +9,9 @@
     },
     "vendorChaincode": {
       "path": "github.com/davidkhala/chaincode/golang/vendorCC"
+    },
+    "hashChaincode": {
+      "path": "github.com/davidkhala/chaincode/golang/hashChaincode"
     }
   }
 }
