@@ -86,7 +86,7 @@ exports.gen = ({
     logger.debug({MSPROOT, arch, COMPOSE_FILE, type, volumeName});
 
     const companyConfig = globalConfig;
-    const {TLS, docker: {fabricTag,thirdPartyTag, volumes: volumeConfig, network}} = companyConfig;
+    const {TLS, docker: {fabricTag, thirdPartyTag, volumes: volumeConfig, network}} = companyConfig;
     const IMAGE_TAG = `${arch}-${fabricTag}`;
 
     const IMAGE_TAG_3rdParty = `${arch}-${thirdPartyTag}`;
@@ -191,7 +191,7 @@ exports.gen = ({
         const caConfig = orgConfig.ca;
         if (caConfig.enable) {
 
-            const FABRIC_CA_HOME=`${container.dir.CA_HOME}/peerOrganizations/${orgDomain}/ca`
+            const FABRIC_CA_HOME = `${container.dir.CA_HOME}/peerOrganizations/${orgDomain}/ca`
             const CAVolume = path.join(MSPROOT, 'peerOrganizations', orgDomain, 'ca');
             const caServerConfigFile = path.resolve(CAVolume, 'fabric-ca-server-config.yaml');
             if (fs.existsSync(caServerConfigFile)) {
@@ -290,30 +290,38 @@ exports.gen = ({
         }
 
 
-        let ZOO_SERVERS = 'ZOO_SERVERS=';
         let KAFKA_ZOOKEEPER_CONNECT = 'KAFKA_ZOOKEEPER_CONNECT=';
         for (let zookeeper in zkConfigs) {
-            const zkConfig = zkConfigs[zookeeper];
-            ZOO_SERVERS += `server.${zkConfig.MY_ID}=${zookeeper}:2888:3888 `;
             KAFKA_ZOOKEEPER_CONNECT += `${zookeeper}:2181,`;
         }
         KAFKA_ZOOKEEPER_CONNECT = KAFKA_ZOOKEEPER_CONNECT.substring(0, KAFKA_ZOOKEEPER_CONNECT.length - 1);
         for (let zookeeper in zkConfigs) {
             const zkConfig = zkConfigs[zookeeper];
+            let ZOO_SERVERS = 'ZOO_SERVERS=';
             services[zookeeper] = {
                 image: `hyperledger/fabric-zookeeper:${IMAGE_TAG_3rdParty}`,
                 ports: [2181, 2888, 3888],
-                environment: [`ZOO_MY_ID=${zkConfig.MY_ID}`,
-                    ZOO_SERVERS]
-                ,
+                environment: [`ZOO_MY_ID=${zkConfig.MY_ID}`],
                 networks: {
                     default: {
                         aliases:
                             [zookeeper]
                     }
-                },
-                container_name: zookeeper
+                }
+
             };
+            if (type === 'local') {
+                services[zookeeper].container_name = zookeeper
+            }
+            for (let zookeeper in zkConfigs) {
+                const zkConfig2 = zkConfigs[zookeeper];
+                if (type === 'swarm' && zkConfig === zkConfig2) {
+                    ZOO_SERVERS += `server.${zkConfig2.MY_ID}=0.0.0.0:2888:3888 `;
+                } else {
+                    ZOO_SERVERS += `server.${zkConfig2.MY_ID}=${zookeeper}:2888:3888 `;
+                }
+            }
+            services[zookeeper].environment.push(ZOO_SERVERS)
         }
         for (let kafka in kafkaConfigs) {
             const kafkaConfig = kafkaConfigs[kafka];
@@ -339,8 +347,12 @@ exports.gen = ({
                             [kafka]
                     }
                 },
-                container_name: kafka
             };
+            if (type === 'swarm') {
+
+            } else {
+                services[kafka].container_name = kafka
+            }
         }
     } else {
         const ordererEachConfig = companyConfig.orderer.solo;

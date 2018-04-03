@@ -11,7 +11,9 @@ networks:
 services:
   peer0-BU-Delphi-com:
     depends_on:
-      - orderContainerName
+      - orderer0
+      - orderer1
+      - orderer2
     image: 'hyperledger/fabric-peer:x86_64-1.1.0'
     command: peer node start
     environment:
@@ -43,10 +45,12 @@ services:
     deploy:
       placement:
         constraints:
-          - node.hostname == admin-soc
+          - node.hostname==admin-soc
   peer1-BU-Delphi-com:
     depends_on:
-      - orderContainerName
+      - orderer0
+      - orderer1
+      - orderer2
     image: 'hyperledger/fabric-peer:x86_64-1.1.0'
     command: peer node start
     environment:
@@ -78,10 +82,26 @@ services:
     deploy:
       placement:
         constraints:
-          - node.hostname == admin-soc
+          - node.hostname==admin-soc
+  ca-BU-Delphi-com:
+    image: 'hyperledger/fabric-ca:x86_64-1.1.0'
+    command: sh -c 'fabric-ca-server start -d'
+    volumes:
+      - 'MSPROOT_swarm:/etc/hyperledger/fabric-ca-server'
+    ports:
+      - '7054:7054'
+    environment:
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server/peerOrganizations/BU.Delphi.com/ca
+      - GODEBUG=netdns=go
+    networks:
+      default:
+        aliases:
+          - ca.BU.Delphi.com
   peer0-ENG-Delphi-com:
     depends_on:
-      - orderContainerName
+      - orderer0
+      - orderer1
+      - orderer2
     image: 'hyperledger/fabric-peer:x86_64-1.1.0'
     command: peer node start
     environment:
@@ -113,10 +133,12 @@ services:
     deploy:
       placement:
         constraints:
-          - node.hostname == admin-soc
+          - node.hostname==admin-soc
   peer0-PM-Delphi-com:
     depends_on:
-      - orderContainerName
+      - orderer0
+      - orderer1
+      - orderer2
     image: 'hyperledger/fabric-peer:x86_64-1.1.0'
     command: peer node start
     environment:
@@ -148,8 +170,8 @@ services:
     deploy:
       placement:
         constraints:
-          - node.hostname == admin-soc
-  orderContainerName:
+          - node.hostname==admin-soc
+  orderer0:
     image: 'hyperledger/fabric-orderer:x86_64-1.1.0'
     command: orderer
     ports:
@@ -164,9 +186,210 @@ services:
       - ORDERER_GENERAL_GENESISMETHOD=file
       - ORDERER_GENERAL_GENESISFILE=/etc/hyperledger/configtx/delphi.block
       - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
-      - ORDERER_GENERAL_LOCALMSPDIR=/etc/hyperledger/crypto-config/ordererOrganizations/Delphi.com/orderers/orderContainerName.Delphi.com/msp
+      - ORDERER_GENERAL_LOCALMSPDIR=/etc/hyperledger/crypto-config/ordererOrganizations/Delphi.com/orderers/orderer0.Delphi.com/msp
       - GODEBUG=netdns=go
+      - ORDERER_KAFKA_RETRY_SHORTINTERVAL=1s
+      - ORDERER_KAFKA_RETRY_SHORTTOTAL=30s
+      - ORDERER_KAFKA_VERBOSE=true
     networks:
       default:
         aliases:
-          - orderContainerName
+          - orderer0
+    deploy:
+      placement:
+        constraints:
+          - node.role==manager
+    depends_on:
+      - kafka0
+      - kafka1
+      - kafka2
+      - kafka3
+  orderer1:
+    image: 'hyperledger/fabric-orderer:x86_64-1.1.0'
+    command: orderer
+    ports:
+      - '8050:7050'
+    volumes:
+      - 'CONFIGTX_swarm:/etc/hyperledger/configtx'
+      - 'MSPROOT_swarm:/etc/hyperledger/crypto-config'
+    environment:
+      - ORDERER_GENERAL_LOGLEVEL=debug
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_TLS_ENABLED=false
+      - ORDERER_GENERAL_GENESISMETHOD=file
+      - ORDERER_GENERAL_GENESISFILE=/etc/hyperledger/configtx/delphi.block
+      - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
+      - ORDERER_GENERAL_LOCALMSPDIR=/etc/hyperledger/crypto-config/ordererOrganizations/Delphi.com/orderers/orderer1.Delphi.com/msp
+      - GODEBUG=netdns=go
+      - ORDERER_KAFKA_RETRY_SHORTINTERVAL=1s
+      - ORDERER_KAFKA_RETRY_SHORTTOTAL=30s
+      - ORDERER_KAFKA_VERBOSE=true
+    networks:
+      default:
+        aliases:
+          - orderer1
+    deploy:
+      placement:
+        constraints:
+          - node.hostname==admin-soc
+    depends_on:
+      - kafka0
+      - kafka1
+      - kafka2
+      - kafka3
+  orderer2:
+    image: 'hyperledger/fabric-orderer:x86_64-1.1.0'
+    command: orderer
+    ports:
+      - '9050:7050'
+    volumes:
+      - 'CONFIGTX_swarm:/etc/hyperledger/configtx'
+      - 'MSPROOT_swarm:/etc/hyperledger/crypto-config'
+    environment:
+      - ORDERER_GENERAL_LOGLEVEL=debug
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_TLS_ENABLED=false
+      - ORDERER_GENERAL_GENESISMETHOD=file
+      - ORDERER_GENERAL_GENESISFILE=/etc/hyperledger/configtx/delphi.block
+      - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
+      - ORDERER_GENERAL_LOCALMSPDIR=/etc/hyperledger/crypto-config/ordererOrganizations/Delphi.com/orderers/orderer2.Delphi.com/msp
+      - GODEBUG=netdns=go
+      - ORDERER_KAFKA_RETRY_SHORTINTERVAL=1s
+      - ORDERER_KAFKA_RETRY_SHORTTOTAL=30s
+      - ORDERER_KAFKA_VERBOSE=true
+    networks:
+      default:
+        aliases:
+          - orderer2
+    deploy:
+      placement:
+        constraints:
+          - node.role==manager
+    depends_on:
+      - kafka0
+      - kafka1
+      - kafka2
+      - kafka3
+  zookeeper0:
+    image: 'hyperledger/fabric-zookeeper:x86_64-0.4.6'
+    ports:
+      - 2181
+      - 2888
+      - 3888
+    environment:
+      - ZOO_MY_ID=0
+      - 'ZOO_SERVERS=server.0=0.0.0.0:2888:3888 server.1=zookeeper1:2888:3888 server.2=zookeeper2:2888:3888 '
+    networks:
+      default:
+        aliases:
+          - zookeeper0
+  zookeeper1:
+    image: 'hyperledger/fabric-zookeeper:x86_64-0.4.6'
+    ports:
+      - 2181
+      - 2888
+      - 3888
+    environment:
+      - ZOO_MY_ID=1
+      - 'ZOO_SERVERS=server.0=zookeeper0:2888:3888 server.1=0.0.0.0:2888:3888 server.2=zookeeper2:2888:3888 '
+    networks:
+      default:
+        aliases:
+          - zookeeper1
+  zookeeper2:
+    image: 'hyperledger/fabric-zookeeper:x86_64-0.4.6'
+    ports:
+      - 2181
+      - 2888
+      - 3888
+    environment:
+      - ZOO_MY_ID=2
+      - 'ZOO_SERVERS=server.0=zookeeper0:2888:3888 server.1=zookeeper1:2888:3888 server.2=0.0.0.0:2888:3888 '
+    networks:
+      default:
+        aliases:
+          - zookeeper2
+  kafka0:
+    image: 'hyperledger/fabric-kafka:x86_64-0.4.6'
+    environment:
+      - KAFKA_BROKER_ID=0
+      - 'KAFKA_ZOOKEEPER_CONNECT=zookeeper0:2181,zookeeper1:2181,zookeeper2:2181'
+      - KAFKA_LOG_RETENTION_MS=-1
+      - KAFKA_MESSAGE_MAX_BYTES=103809024
+      - KAFKA_REPLICA_FETCH_MAX_BYTES=103809024
+      - KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE=false
+      - KAFKA_DEFAULT_REPLICATION_FACTOR=3
+      - KAFKA_MIN_INSYNC_REPLICAS=2
+    ports:
+      - 9092
+    depends_on:
+      - zookeeper0
+      - zookeeper1
+      - zookeeper2
+    networks:
+      default:
+        aliases:
+          - kafka0
+  kafka1:
+    image: 'hyperledger/fabric-kafka:x86_64-0.4.6'
+    environment:
+      - KAFKA_BROKER_ID=1
+      - 'KAFKA_ZOOKEEPER_CONNECT=zookeeper0:2181,zookeeper1:2181,zookeeper2:2181'
+      - KAFKA_LOG_RETENTION_MS=-1
+      - KAFKA_MESSAGE_MAX_BYTES=103809024
+      - KAFKA_REPLICA_FETCH_MAX_BYTES=103809024
+      - KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE=false
+      - KAFKA_DEFAULT_REPLICATION_FACTOR=3
+      - KAFKA_MIN_INSYNC_REPLICAS=2
+    ports:
+      - 9092
+    depends_on:
+      - zookeeper0
+      - zookeeper1
+      - zookeeper2
+    networks:
+      default:
+        aliases:
+          - kafka1
+  kafka2:
+    image: 'hyperledger/fabric-kafka:x86_64-0.4.6'
+    environment:
+      - KAFKA_BROKER_ID=2
+      - 'KAFKA_ZOOKEEPER_CONNECT=zookeeper0:2181,zookeeper1:2181,zookeeper2:2181'
+      - KAFKA_LOG_RETENTION_MS=-1
+      - KAFKA_MESSAGE_MAX_BYTES=103809024
+      - KAFKA_REPLICA_FETCH_MAX_BYTES=103809024
+      - KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE=false
+      - KAFKA_DEFAULT_REPLICATION_FACTOR=3
+      - KAFKA_MIN_INSYNC_REPLICAS=2
+    ports:
+      - 9092
+    depends_on:
+      - zookeeper0
+      - zookeeper1
+      - zookeeper2
+    networks:
+      default:
+        aliases:
+          - kafka2
+  kafka3:
+    image: 'hyperledger/fabric-kafka:x86_64-0.4.6'
+    environment:
+      - KAFKA_BROKER_ID=3
+      - 'KAFKA_ZOOKEEPER_CONNECT=zookeeper0:2181,zookeeper1:2181,zookeeper2:2181'
+      - KAFKA_LOG_RETENTION_MS=-1
+      - KAFKA_MESSAGE_MAX_BYTES=103809024
+      - KAFKA_REPLICA_FETCH_MAX_BYTES=103809024
+      - KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE=false
+      - KAFKA_DEFAULT_REPLICATION_FACTOR=3
+      - KAFKA_MIN_INSYNC_REPLICAS=2
+    ports:
+      - 9092
+    depends_on:
+      - zookeeper0
+      - zookeeper1
+      - zookeeper2
+    networks:
+      default:
+        aliases:
+          - kafka3
