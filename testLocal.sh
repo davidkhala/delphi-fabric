@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -e
-CURRENT=$(cd $(dirname ${BASH_SOURCE}); pwd)
+CURRENT=$(cd $(dirname ${BASH_SOURCE}) && pwd)
 
 CONFIG_DIR="$CURRENT/config"
 CONFIG_JSON=$CONFIG_DIR/orgs.json
@@ -22,8 +22,8 @@ if [ -f "$COMPOSE_FILE" ]; then
 fi
 
 docker volume prune --force
-MSPROOT_DIR=$(echo $volumesConfig| jq -r ".MSPROOT.dir") # update in testBin.sh
-CONFIGTX_DIR=$(echo $volumesConfig|jq -r ".CONFIGTX.dir") # update in testBin.sh
+MSPROOT_DIR=$(echo $volumesConfig | jq -r ".MSPROOT.dir")   # update in testBin.sh
+CONFIGTX_DIR=$(echo $volumesConfig | jq -r ".CONFIGTX.dir") # update in testBin.sh
 
 ./common/docker/utils/volume.sh createLocal $MSPROOTVolume $MSPROOT_DIR
 ./common/docker/utils/volume.sh createLocal $CONFIGTXVolume $CONFIGTX_DIR

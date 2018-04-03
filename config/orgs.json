@@ -3,6 +3,7 @@
   "TLS": false,
   "docker": {
     "fabricTag": "1.1.0",
+    "thirdPartyTag":"0.4.6",
     "network": "delphiNetwork",
     "volumes": {
       "CONFIGTX": {
@@ -14,7 +15,7 @@
     }
   },
   "orderer": {
-    "type": "solo",
+    "type": "kafka",
     "genesis_block": {
       "file": "delphi.block",
       "profile": "delphiGenesis"
@@ -56,16 +57,31 @@
       },
       "orderers": {
         "orderer0": {
+          "swarm": {
+            "constraints": [
+              "node.hostname==admin-soc"
+            ]
+          },
           "portMap": {
             "7050": 7050
           }
         },
         "orderer1": {
+          "swarm": {
+            "constraints": [
+              "node.hostname==admin-soc"
+            ]
+          },
           "portMap": {
             "7050": 8050
           }
         },
         "orderer2": {
+          "swarm": {
+            "constraints": [
+              "node.hostname==admin-soc"
+            ]
+          },
           "portMap": {
             "7050": 9050
           }
@@ -119,7 +135,7 @@
         {
           "swarm": {
             "constraints": [
-              "node.hostname == admin-soc"
+              "node.hostname==admin-soc"
             ]
           },
           "container_name": "BUContainerName",
@@ -137,7 +153,7 @@
         {
           "swarm": {
             "constraints": [
-              "node.hostname == admin-soc"
+              "node.hostname==admin-soc"
             ]
           },
           "container_name": "BUContainer1",
@@ -175,7 +191,7 @@
         {
           "swarm": {
             "constraints": [
-              "node.hostname == admin-soc"
+              "node.hostname==admin-soc"
             ]
           },
           "container_name": "ENGContainerName",
@@ -213,7 +229,7 @@
         {
           "swarm": {
             "constraints": [
-              "node.hostname == admin-soc"
+              "node.hostname==admin-soc"
             ]
           },
           "container_name": "PMContainerName",

@@ -48,6 +48,11 @@ const addOrdererService = (services, {ordererConfig, ordererEachConfig, MSPROOTV
     if (swarmType === 'swarm') {
         ordererServiceName = swarmServiceName(ordererServiceName);
         //TODO network map service here
+        ordererService.deploy = {
+            placement: {
+                constraints: ordererEachConfig.swarm.constraints
+            }
+        };
 
     } else {
         ordererService.container_name = ordererServiceName;
@@ -81,9 +86,10 @@ exports.gen = ({
     logger.debug({MSPROOT, arch, COMPOSE_FILE, type, volumeName});
 
     const companyConfig = globalConfig;
-    const {TLS, docker: {fabricTag, volumes: volumeConfig, network}} = companyConfig;
+    const {TLS, docker: {fabricTag,thirdPartyTag, volumes: volumeConfig, network}} = companyConfig;
     const IMAGE_TAG = `${arch}-${fabricTag}`;
 
+    const IMAGE_TAG_3rdParty = `${arch}-${thirdPartyTag}`;
     const dockerSock = '/host/var/run/docker.sock';
     const orgsConfig = companyConfig.orgs;
     const COMPANY_DOMAIN = companyConfig.domain;
@@ -295,7 +301,7 @@ exports.gen = ({
         for (let zookeeper in zkConfigs) {
             const zkConfig = zkConfigs[zookeeper];
             services[zookeeper] = {
-                image: `hyperledger/fabric-zookeeper:${IMAGE_TAG}`,
+                image: `hyperledger/fabric-zookeeper:${IMAGE_TAG_3rdParty}`,
                 ports: [2181, 2888, 3888],
                 environment: [`ZOO_MY_ID=${zkConfig.MY_ID}`,
                     ZOO_SERVERS]
@@ -312,7 +318,7 @@ exports.gen = ({
         for (let kafka in kafkaConfigs) {
             const kafkaConfig = kafkaConfigs[kafka];
             services[kafka] = {
-                image: `hyperledger/fabric-kafka:${IMAGE_TAG}`,
+                image: `hyperledger/fabric-kafka:${IMAGE_TAG_3rdParty}`,
 
                 environment: [
                     `KAFKA_BROKER_ID=${kafkaConfig.BROKER_ID}`,

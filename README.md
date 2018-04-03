@@ -95,7 +95,7 @@ test Swarm mode
 
 assume we have two physical machine, take ip `192.168.0.167` as *leader*, ip `192.168.0.144` as *manager*
 
-0. Prepare: swarm configuration service server(SCSS)
+1. Prepare: swarm configuration service server(SCSS)
   - SCSS is used to monitoring cluster status(ip,hostname), docker-swarm join-token,docker volume path to share and other global information.    
         
         > SCSS using couchdb as state persistent mechanism.  
@@ -121,10 +121,10 @@ assume we have two physical machine, take ip `192.168.0.167` as *leader*, ip `19
      - re-create crypto material and block file
      - re-create local docker volume
      - generate compose-file for swarm
-3. on *leader* run ./docker-swarm.sh to deploy service
-4. run `$ node app/testChannel.js` to create-channel and join-channel
-5. `$ node app/testInstall.js` to install chaincode and instantiate chaincode
-6. `$ node app/testInvoke.js` to invoke chaincode        
+8. on *leader* run ./docker-swarm.sh to deploy service
+9. run `$ node app/testChannel.js` to create-channel and join-channel
+10. `$ node app/testInstall.js` to install chaincode and instantiate chaincode
+11. `$ node app/testInvoke.js` to invoke chaincode        
  
  
 ### CA service
@@ -173,7 +173,8 @@ govendor: to import third-party package in vendor folder
 
 - kafka on local 
 - use npm:js-yaml to write YAML files instead of https://github.com/mikefarah/yq
-- chaincode upgrade will not reset data    
+- chaincode upgrade will not reset data
+- thirdPartyTag for kafka, zookeeper, couchdb...
 ## TODO
 - java sdk and docker-swarm: keep update
 - endorsement policy config
@@ -189,6 +190,5 @@ govendor: to import third-party package in vendor folder
 - swarm mode : network server to manage ip:hostname and deploy constraints
 - stress test in nodejs
 - function new() -> classify
-- wait: fabric-kafka haven't release 1.1.0-alpha
-- ?update system channel ``testchainid`` 
+- ?update system channel ``testchainid``
 - there is a trend to use golang/dep instead of govendor https://gerrit.hyperledger.org/r/#/c/19113/

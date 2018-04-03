@@ -3,7 +3,7 @@ set -e
 # require channel exist
 # node ./app/testChannel.js
 
-CURRENT=$(cd $(dirname ${BASH_SOURCE}); pwd)
+CURRENT=$(cd $(dirname ${BASH_SOURCE}) && pwd)
 config_dir="$CURRENT/config"
 CRYPTO_CONFIG_DIR="$config_dir/crypto-config/"
 CRYPTO_UPDATE_CONFIG="$config_dir/crypto-config-update.yaml"
@@ -46,31 +46,30 @@ chaincodeContainerPattern="dev-$peerDomainName-$chaincodeId-$chaincodeVersion"
 function down() {
 	pause
 
-    ./common/bin-manage/configtxlator/runConfigtxlator.sh down
+	./common/bin-manage/configtxlator/runConfigtxlator.sh down
 	rm -rf $newDir
 }
 function up() {
-    node -e "require('./config/crypto-config.js').newOrg({
+	node -e "require('./config/crypto-config.js').newOrg({
     Name:'${orgName}',
     Domain:'${orgName}.${COMPANY_DOMAIN}',
     CRYPTO_UPDATE_CONFIG:'${CRYPTO_UPDATE_CONFIG}'
     })"
 	# TODO use fabric-ca for key generate
 	if [ ! -d "$newDir" ]; then
-	    echo "$newDir" not exists, creating
-	    ./common/bin-manage/cryptogen/runCryptogen.sh -i $CRYPTO_UPDATE_CONFIG -o $CRYPTO_CONFIG_DIR -a
-    else
-        echo "$newDir" exists, skipping
-    fi
+		echo "$newDir" not exists, creating
+		./common/bin-manage/cryptogen/runCryptogen.sh -i $CRYPTO_UPDATE_CONFIG -o $CRYPTO_CONFIG_DIR -a
+	else
+		echo "$newDir" exists, skipping
+	fi
 
-    ./common/bin-manage/configtxlator/runConfigtxlator.sh start
-    resume
+	./common/bin-manage/configtxlator/runConfigtxlator.sh start
+	resume
 
 }
 
-function resume(){
-#TODO to make testNewOrg.sh re-runnable
-
+function resume() {
+	#TODO to make testNewOrg.sh re-runnable
 
 	CMD="peer node start"
 
@@ -113,9 +112,9 @@ function resume(){
 	node -e "require('./app/testConfigtxlator.js').addOrg('${orgName}', '${MSPName}', '${MSPID}', 'BUMSPName', '${adminUserMspDir}', '${org_domain}','${peerPort}','${eventHubPort}','${peerDomainName}'
     ,'${chaincodePath}','${chaincodeId}','${chaincodeVersion}','${chaincode_args}')"
 
-
 }
-function pause(){
+
+function pause() {
 	if [ -n "$(docker ps -aq --filter name=$peerContainerName)" ]; then
 		docker network disconnect $dockerNetworkName $peerContainerName
 		#docker container rm -f:  Force the removal of a running container (uses SIGKILL)
