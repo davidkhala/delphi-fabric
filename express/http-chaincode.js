@@ -64,18 +64,22 @@ router.post('/instantiate', (req, res) => {
 
     logger.debug({channelName, chaincodeId, chaincodeVersion, fcn, argsString, peerIndex, orgName});
     const args = argsString ? JSON.parse(argsString) : [];
-    const invalidPeer = invalid.peer({orgName, peerIndex});
-    if (invalidPeer) return errorHandle(invalidPeer, res);
 
     const invalidChannelName = invalid.channelName({channelName});
     if (invalidChannelName) return errorHandle(invalidChannelName, res);
 
     const invalidArgs = invalid.args({args});
     if (invalidArgs) return errorHandle(invalidArgs, res);
+
+    let peers = undefined;
+    if (orgName && peerIndex) {
+        const invalidPeer = invalid.peer({orgName, peerIndex});
+        if (invalidPeer) return errorHandle(invalidPeer, res);
+        peers = helper.newPeers([peerIndex], orgName);
+    }
     return helper.getOrgAdmin(orgName).then((client) => {
         const channel = helper.prepareChannel(channelName, client);
-        const peers = helper.newPeers([peerIndex], orgName);
-        return instantiate(channel, undefined, {
+        return instantiate(channel, peers, {
             chaincodeId, chaincodeVersion, fcn,
             args
         }).then((_) => {
@@ -98,17 +102,21 @@ router.post('/upgrade', (req, res) => {
     const {chaincodeId, chaincodeVersion, channelName, fcn, args: argsString, peerIndex, orgName} = req.body;
     const args = argsString ? JSON.parse(argsString) : [];
     logger.debug({channelName, chaincodeId, chaincodeVersion, fcn, args, peerIndex, orgName});
-    const invalidPeer = invalid.peer({orgName, peerIndex});
-    if (invalidPeer) return errorHandle(invalidPeer, res);
     const invalidChannelName = invalid.channelName({channelName});
     if (invalidChannelName) return errorHandle(invalidChannelName, res);
 
     const invalidArgs = invalid.args({args});
     if (invalidArgs) return errorHandle(invalidArgs, res);
+
+    let peers = undefined;
+    if (orgName && peerIndex) {
+        const invalidPeer = invalid.peer({orgName, peerIndex});
+        if (invalidPeer) return errorHandle(invalidPeer, res);
+        peers = helper.newPeers([peerIndex], orgName);
+    }
     helper.getOrgAdmin(orgName).then((client) => {
         const channel = helper.prepareChannel(channelName, client);
-        const peers = helper.newPeers([peerIndex], orgName);
-        return upgrade(channel, undefined, {
+        return upgrade(channel, peers, {
             chaincodeId, chaincodeVersion, fcn,
             args
         }).then((_) => {
