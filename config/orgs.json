@@ -1,9 +1,9 @@
 {
-  "domain": "Delphi.com",
+  "domain": "Teeking.com",
   "TLS": false,
   "docker": {
     "fabricTag": "1.1.0",
-    "thirdPartyTag":"0.4.6",
+    "thirdPartyTag": "0.4.6",
     "network": "delphiNetwork",
     "volumes": {
       "CONFIGTX": {
@@ -15,7 +15,7 @@
     }
   },
   "orderer": {
-    "type": "kafka",
+    "type": "solo",
     "genesis_block": {
       "file": "delphi.block",
       "profile": "delphiGenesis"
@@ -98,47 +98,39 @@
       "file": "delphi.tx",
       "eventWaitTime": 30000,
       "orgs": {
-        "BU": {
-          "peerIndexes": [
-            0,
-            1
-          ]
-        },
-        "PM": {
+        "SUPPLY": {
           "peerIndexes": [
             0
           ]
         },
-        "ENG": {
+        "CAR": {
           "peerIndexes": [
             0
           ]
-        }
-      }
-    },
-    "BUChannel": {
-      "eventWaitTime": 30000,
-      "file": "bu.tx",
-      "orgs": {
-        "BU": {
+        },
+        "FACTORY": {
           "peerIndexes": [
-            0,
-            1
+            0
+          ]
+        },
+        "TK": {
+          "peerIndexes": [
+            0
           ]
         }
       }
     }
   },
   "orgs": {
-    "BU": {
+    "SUPPLY": {
       "peers": [
         {
           "swarm": {
             "constraints": [
-              "node.hostname==admin-soc"
+              "node.role==leader"
             ]
           },
-          "container_name": "BUContainerName",
+          "container_name": "SupplyChain",
           "portMap": [
             {
               "host": 7051,
@@ -146,24 +138,6 @@
             },
             {
               "host": 7053,
-              "container": 7053
-            }
-          ]
-        },
-        {
-          "swarm": {
-            "constraints": [
-              "node.hostname==admin-soc"
-            ]
-          },
-          "container_name": "BUContainer1",
-          "portMap": [
-            {
-              "host": 7061,
-              "container": 7051
-            },
-            {
-              "host": 7063,
               "container": 7053
             }
           ]
@@ -182,19 +156,19 @@
         }
       },
       "MSP": {
-        "name": "BUMSPName",
-        "id": "BUMSP"
+        "name": "SUPPLYMSPName",
+        "id": "SUPPLYMSP"
       }
     },
-    "ENG": {
+    "CAR": {
       "peers": [
         {
           "swarm": {
             "constraints": [
-              "node.hostname==admin-soc"
+              "node.role==manager"
             ]
           },
-          "container_name": "ENGContainerName",
+          "container_name": "Car",
           "portMap": [
             {
               "host": 8051,
@@ -220,19 +194,19 @@
         }
       },
       "MSP": {
-        "name": "ENGMSPName",
-        "id": "ENGMSP"
+        "name": "CARMSPName",
+        "id": "CARMSP"
       }
     },
-    "PM": {
+    "FACTORY": {
       "peers": [
         {
           "swarm": {
             "constraints": [
-              "node.hostname==admin-soc"
+              "node.role==manager"
             ]
           },
-          "container_name": "PMContainerName",
+          "container_name": "Factory",
           "portMap": [
             {
               "host": 9051,
@@ -258,8 +232,46 @@
         }
       },
       "MSP": {
-        "name": "PMMSPName",
-        "id": "PMMSP"
+        "name": "FACTORYMSPName",
+        "id": "FACTORYMSP"
+      }
+    },
+    "TK": {
+      "peers": [
+        {
+          "swarm": {
+            "constraints": [
+              "node.role==manager"
+            ]
+          },
+          "container_name": "Tk",
+          "portMap": [
+            {
+              "host": 6051,
+              "container": 7051
+            },
+            {
+              "host": 6053,
+              "container": 7053
+            }
+          ]
+        }
+      ],
+      "userCount": 0,
+      "ca": {
+        "enable": false,
+        "admin": {
+          "name": "CAadmin",
+          "pass": "passwd"
+        },
+        "portHost": 6054,
+        "tlsca": {
+          "portHost": 6055
+        }
+      },
+      "MSP": {
+        "name": "TkMSPName",
+        "id": "TkMSP"
       }
     }
   }

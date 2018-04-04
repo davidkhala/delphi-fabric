@@ -4,65 +4,67 @@ Profiles:
       OrdererType: solo
       Addresses:
         - 'orderContainerName:7050'
-      BatchTimeout: 2s
+      BatchTimeout: 1s
       BatchSize:
-        MaxMessageCount: 10
+        MaxMessageCount: 1
         AbsoluteMaxBytes: 99 MB
         PreferredMaxBytes: 512 KB
       Organizations:
         - Name: OrdererMSPName
           ID: OrdererMSP
-          MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/ordererOrganizations/Delphi.com/msp
+          MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/ordererOrganizations/Teeking.com/msp
     Consortiums:
       SampleConsortium:
         Organizations:
-          - Name: BUMSPName
-            ID: BUMSP
-            MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/BU.Delphi.com/msp
+          - Name: SUPPLYMSPName
+            ID: SUPPLYMSP
+            MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/SUPPLY.Teeking.com/msp
             AnchorPeers:
-              - Host: BUContainerName
+              - Host: SupplyChain
                 Port: 7051
-          - Name: ENGMSPName
-            ID: ENGMSP
-            MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/ENG.Delphi.com/msp
+          - Name: CARMSPName
+            ID: CARMSP
+            MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/CAR.Teeking.com/msp
             AnchorPeers:
-              - Host: ENGContainerName
+              - Host: Car
                 Port: 7051
-          - Name: PMMSPName
-            ID: PMMSP
-            MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/PM.Delphi.com/msp
+          - Name: FACTORYMSPName
+            ID: FACTORYMSP
+            MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/FACTORY.Teeking.com/msp
             AnchorPeers:
-              - Host: PMContainerName
+              - Host: Factory
+                Port: 7051
+          - Name: TkMSPName
+            ID: TkMSP
+            MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/TK.Teeking.com/msp
+            AnchorPeers:
+              - Host: Tk
                 Port: 7051
   delphiChannel:
     Consortium: SampleConsortium
     Application:
       Organizations:
-        - Name: BUMSPName
-          ID: BUMSP
-          MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/BU.Delphi.com/msp
+        - Name: SUPPLYMSPName
+          ID: SUPPLYMSP
+          MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/SUPPLY.Teeking.com/msp
           AnchorPeers:
-            - Host: BUContainerName
+            - Host: SupplyChain
               Port: 7051
-        - Name: PMMSPName
-          ID: PMMSP
-          MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/PM.Delphi.com/msp
+        - Name: CARMSPName
+          ID: CARMSP
+          MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/CAR.Teeking.com/msp
           AnchorPeers:
-            - Host: PMContainerName
+            - Host: Car
               Port: 7051
-        - Name: ENGMSPName
-          ID: ENGMSP
-          MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/ENG.Delphi.com/msp
+        - Name: FACTORYMSPName
+          ID: FACTORYMSP
+          MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/FACTORY.Teeking.com/msp
           AnchorPeers:
-            - Host: ENGContainerName
+            - Host: Factory
               Port: 7051
-  BUChannel:
-    Consortium: SampleConsortium
-    Application:
-      Organizations:
-        - Name: BUMSPName
-          ID: BUMSP
-          MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/BU.Delphi.com/msp
+        - Name: TkMSPName
+          ID: TkMSP
+          MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/TK.Teeking.com/msp
           AnchorPeers:
-            - Host: BUContainerName
+            - Host: Tk
               Port: 7051
