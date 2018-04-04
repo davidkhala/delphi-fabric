@@ -13,7 +13,8 @@ const helper = require('../app/helper.js');
 const invalid = require('./formValid').invalid();
 const {reducer} = require('../app/util/chaincode');
 
-
+const channelName = 'allChannel';
+const chaincodeId = 'hashChaincode';
 const errorHandle = (err, res) => {
     const errorCodeMap = require('./errorCodeMap.json');
 
@@ -28,11 +29,13 @@ const errorHandle = (err, res) => {
 
 };
 router.post('/write', cache.array('files'), (req, res) => {
-    // req.files is array of `photos` files
-    // req.body will contain the text fields, if there were any
     const {id, plain, toHash} = req.body;
-    logger.debug('insert', {id, plain, toHash});
+    let {party} = req.body;
+    if (!party) party = 'TK';
+    logger.debug('write', {id, plain, toHash, party});
 
+    if (!id) return errorHandle(`id is ${id}`, res);
+    if (!party) return errorHandle(`party is ${party}`, res);
     const files = req.files;
 
     const fileHashs = files.map(({size, path}) => {
@@ -47,13 +50,11 @@ router.post('/write', cache.array('files'), (req, res) => {
     const textHash = hashAlgo(toHash);
 
     const value = `${plain}|${textHash}|${fileHashs.join("|")}`;
-    const {chaincodeId, fcn, args, orgName, peerIndex, channelName} = {
-        chaincodeId: 'hashChaincode',
+    const {fcn, args, orgName, peerIndex} = {
         fcn: 'write',
         args: [id, value],
-        orgName: 'BU',
+        orgName: party,
         peerIndex: 0,
-        channelName: 'delphiChannel'
     };
     const {invoke} = require('../app/invoke-chaincode.js');
 
@@ -92,16 +93,17 @@ router.post('/write', cache.array('files'), (req, res) => {
 });
 router.post('/delete', (req, res) => {
     const {id} = req.body;
-    logger.debug('delete', {id});
+    let {party} = req.body;
+    if (!party) party = 'TK';
+    logger.debug('delete', {id, party});
 
     if (!id) return errorHandle(`id is ${id}`, res);
-    const {chaincodeId, fcn, args, orgName, peerIndex, channelName} = {
-        chaincodeId: 'hashChaincode',
+    if (!party) return errorHandle(`party is ${party}`, res);
+    const {fcn, args, orgName, peerIndex} = {
         fcn: 'delete',
         args: [id],
-        orgName: 'BU',
+        orgName: party,
         peerIndex: 0,
-        channelName: 'delphiChannel'
     };
     const {invoke} = require('../app/invoke-chaincode.js');
 
@@ -138,17 +140,18 @@ router.post('/delete', (req, res) => {
 });
 router.post('/read', (req, res) => {
     const {id} = req.body;
-    logger.debug('read', {id});
+    let {party} = req.body;
+    if (!party) party = 'TK';
+    logger.debug('read', {id, party});
 
     if (!id) return errorHandle(`id is ${id}`, res);
+    if (!party) return errorHandle(`party is ${party}`, res);
 
-    const {chaincodeId, fcn, args, orgName, peerIndex, channelName} = {
-        chaincodeId: 'hashChaincode',
+    const {fcn, args, orgName, peerIndex} = {
         fcn: 'read',
         args: [id],
-        orgName: 'BU',
+        orgName: party,
         peerIndex: 0,
-        channelName: 'delphiChannel'
     };
     const {invoke} = require('../app/invoke-chaincode.js');
 
