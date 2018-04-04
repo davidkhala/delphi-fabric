@@ -40,7 +40,7 @@ Profiles:
             AnchorPeers:
               - Host: Tk
                 Port: 7051
-  delphiChannel:
+  allChannel:
     Consortium: SampleConsortium
     Application:
       Organizations:

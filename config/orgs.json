@@ -94,8 +94,8 @@
     }
   },
   "channels": {
-    "delphiChannel": {
-      "file": "delphi.tx",
+    "allChannel": {
+      "file": "all.tx",
       "eventWaitTime": 30000,
       "orgs": {
         "SUPPLY": {
