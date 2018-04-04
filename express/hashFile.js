@@ -40,7 +40,7 @@ router.post('/write', cache.array('files'), (req, res) => {
         const data = fs.readFileSync(path);
         const hashData = hashAlgo(data);
         const endTime = new Date().getTime();
-        logger.debug('hashing file',path, {size},  `consumed, ${endTime - startTime}ms`);
+        logger.debug('hashing file', path, {size}, `consumed, ${endTime - startTime}ms`);
         fs.unlinkSync(path);
         return hashData;
     });
@@ -90,14 +90,15 @@ router.post('/write', cache.array('files'), (req, res) => {
 
 
 });
-router.post('/delete',(req,res)=>{
+router.post('/delete', (req, res) => {
     const {id} = req.body;
     logger.debug('delete', {id});
 
+    if (!id) return errorHandle(`id is ${id}`, res);
     const {chaincodeId, fcn, args, orgName, peerIndex, channelName} = {
         chaincodeId: 'hashChaincode',
         fcn: 'delete',
-        args: [],
+        args: [id],
         orgName: 'BU',
         peerIndex: 0,
         channelName: 'delphiChannel'
@@ -135,14 +136,16 @@ router.post('/delete',(req,res)=>{
         })
     })
 });
-router.post('/read',(req,res)=>{
+router.post('/read', (req, res) => {
     const {id} = req.body;
     logger.debug('read', {id});
+
+    if (!id) return errorHandle(`id is ${id}`, res);
 
     const {chaincodeId, fcn, args, orgName, peerIndex, channelName} = {
         chaincodeId: 'hashChaincode',
         fcn: 'read',
-        args: [],
+        args: [id],
         orgName: 'BU',
         peerIndex: 0,
         channelName: 'delphiChannel'

@@ -59,7 +59,7 @@
         "orderer0": {
           "swarm": {
             "constraints": [
-              "node.hostname==admin-soc"
+              "node.role==manager"
             ]
           },
           "portMap": {
@@ -79,7 +79,7 @@
         "orderer2": {
           "swarm": {
             "constraints": [
-              "node.hostname==admin-soc"
+              "node.role==manager"
             ]
           },
           "portMap": {
