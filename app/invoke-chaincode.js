@@ -25,29 +25,29 @@ exports.invoke= (channel, richPeers, { chaincodeId, fcn, args }, client = channe
 		targets: richPeers //optional: use channel.getPeers() as default
 	};
 	return channel.sendTransactionProposal(request).
-			then(helper.chaincodeProposalAdapter('invoke')).
-			then(({ nextRequest, errCounter }) => {
-				const { proposalResponses } = nextRequest;
+		then(helper.chaincodeProposalAdapter('invoke')).
+		then(({ nextRequest, errCounter }) => {
+			const { proposalResponses } = nextRequest;
 
-				if (errCounter >0) {
-					return Promise.reject({ proposalResponses })
-				}
-				const promises = [];
+			if (errCounter >0) {
+				return Promise.reject({ proposalResponses });
+			}
+			const promises = [];
 
-				for (let peer of richPeers) {
-					const eventhub = helper.bindEventHub(peer, client);
-					const txPromise = eventHelper.txEventPromise(eventhub, { txId, eventWaitTime }, ({ tx, code }) => {
-						return { valid: code === 'VALID', interrupt: true }
-					});
-					promises.push(txPromise)
-				}
+			for (let peer of richPeers) {
+				const eventhub = helper.bindEventHub(peer, client);
+				const txPromise = eventHelper.txEventPromise(eventhub, { txId, eventWaitTime }, ({ tx, code }) => {
+					return { valid: code === 'VALID', interrupt: true };
+				});
+				promises.push(txPromise);
+			}
 
-				return channel.sendTransaction(nextRequest).then((/*{ status: 'SUCCESS' }*/) => {
-					return Promise.all(promises).then((txEventResponses) =>
-							resultWrapper(txEventResponses,{proposalResponses})
-					)
-				})
-			})
+			return channel.sendTransaction(nextRequest).then((/*{ status: 'SUCCESS' }*/) => {
+				return Promise.all(promises).then((txEventResponses) =>
+					resultWrapper(txEventResponses,{proposalResponses})
+				);
+			});
+		});
 
 };
 
@@ -64,6 +64,6 @@ exports.query= (channel, peers, { chaincodeId, fcn, args }, client = channel._cl
 		targets: peers //optional: use channel.getPeers() as default
 	};
 
-	return channel.queryByChaincode(request).then(results=>results.map(e=>e.toString()))
+	return channel.queryByChaincode(request).then(results=>results.map(e=>e.toString()));
 
 };

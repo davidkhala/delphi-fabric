@@ -1,7 +1,7 @@
-const logger = require('./util/logger').new('testAPP')
+const logger = require('./util/logger').new('testAPP');
 
-const requestPromise = require('request-promise-native')
-const channelName = 'delphiChannel'
+const requestPromise = require('request-promise-native');
+const channelName = 'delphiChannel';
 const testQuery = {
 	channelJoined: () => {
 		requestPromise({
@@ -12,8 +12,8 @@ const testQuery = {
 			},
 			json: true
 		}).then(result => {
-			logger.debug(result)
-		})
+			logger.debug(result);
+		});
 	},
 	chaincodeInstantiate: () => {
 		requestPromise({
@@ -25,8 +25,8 @@ const testQuery = {
 			},
 			json: true
 		}).then(result => {
-			logger.debug(result)
-		})
+			logger.debug(result);
+		});
 	},
 	chaincodeInstalled: () => {
 		requestPromise({
@@ -37,8 +37,8 @@ const testQuery = {
 			},
 			json: true
 		}).then(result => {
-			logger.debug(result)
-		})
+			logger.debug(result);
+		});
 	},
 	chainHeight: () => {
 		requestPromise({
@@ -50,13 +50,13 @@ const testQuery = {
 			},
 			json: true
 		}).then(result => {
-			logger.debug(result)
-			const { pretty: { currentBlockHash ,height} } = result
+			logger.debug(result);
+			const { pretty: { currentBlockHash ,height} } = result;
 			return testQuery.blockByHash(currentBlockHash).then(() => {
-				logger.debug("--todo query by height")
-				return testQuery.blockByHeight(height-1)
-			})
-		})
+				logger.debug('--todo query by height');
+				return testQuery.blockByHeight(height-1);
+			});
+		});
 	},
 	blockByHeight: (height) => {
 		requestPromise({
@@ -68,9 +68,9 @@ const testQuery = {
 			},
 			json: true
 		}).then(result => {
-			logger.debug(result)
-			return Promise.resolve(result)
-		})
+			logger.debug(result);
+			return Promise.resolve(result);
+		});
 	},
 	blockByHash: (hashHex) => {
 		return requestPromise({
@@ -83,51 +83,51 @@ const testQuery = {
 			},
 			json: true
 		}).then(result => {
-			logger.debug(result)
-			return Promise.resolve(result)
-		})
+			logger.debug(result);
+			return Promise.resolve(result);
+		});
 	}
-}
+};
 
 
-testQuery.chaincodeInstalled()
-testQuery.chaincodeInstantiate()
-testQuery.channelJoined()
-testQuery.chainHeight()
+testQuery.chaincodeInstalled();
+testQuery.chaincodeInstantiate();
+testQuery.channelJoined();
+testQuery.chainHeight();
 
 const testSwarmServer = ()=>{
-    requestPromise({
-        method: 'POST',
-        uri: 'http://localhost:4001/leader/update',
-        body: {
-            ip:"123", hostname:"232", managerToken:"123"
-        },
-        json: true
-    }).then(result => {
-        logger.debug(result)
-    })
+	requestPromise({
+		method: 'POST',
+		uri: 'http://localhost:4001/leader/update',
+		body: {
+			ip:'123', hostname:'232', managerToken:'123'
+		},
+		json: true
+	}).then(result => {
+		logger.debug(result);
+	});
 
-    requestPromise({
-        method: 'POST',
-        uri: 'http://localhost:4001/manager/join',
-        body: {
-            ip:"123", hostname:"232",
-        },
-        json: true
-    }).then(result => {
-        logger.debug(result)
-    })
+	requestPromise({
+		method: 'POST',
+		uri: 'http://localhost:4001/manager/join',
+		body: {
+			ip:'123', hostname:'232',
+		},
+		json: true
+	}).then(result => {
+		logger.debug(result);
+	});
 
-    requestPromise({
-        method: 'POST',
-        uri: 'http://localhost:4001/manager/leave',
-        body: {
-            hostname:"232",
-        },
-        json: true
-    }).then(result => {
-        logger.debug(result)
-    })
-}
+	requestPromise({
+		method: 'POST',
+		uri: 'http://localhost:4001/manager/leave',
+		body: {
+			hostname:'232',
+		},
+		json: true
+	}).then(result => {
+		logger.debug(result);
+	});
+};
 
-testSwarmServer()
+testSwarmServer();
