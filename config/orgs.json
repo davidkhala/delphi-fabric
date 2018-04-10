@@ -7,18 +7,18 @@
     "network": "delphiNetwork",
     "volumes": {
       "CONFIGTX": {
-        "dir": "/home/david/Documents/delphi-fabric/config/configtx"
+        "dir": "/home/fabric2/Documents/delphi-fabric/config/configtx"
       },
       "MSPROOT": {
-        "dir": "/home/david/Documents/delphi-fabric/config/crypto-config/"
+        "dir": "/home/fabric2/Documents/delphi-fabric/config/crypto-config/"
       }
     }
   },
   "orderer": {
     "type": "solo",
     "genesis_block": {
-      "file": "delphi.block",
-      "profile": "delphiGenesis"
+      "file": "tk.block",
+      "profile": "TeekingGenesis"
     },
     "solo": {
       "container_name": "orderContainerName",
@@ -59,7 +59,7 @@
         "orderer0": {
           "swarm": {
             "constraints": [
-              "node.role==manager"
+              "node.role==leader"
             ]
           },
           "portMap": {
@@ -69,7 +69,7 @@
         "orderer1": {
           "swarm": {
             "constraints": [
-              "node.hostname==admin-soc"
+              "node.role==leader"
             ]
           },
           "portMap": {
@@ -79,7 +79,7 @@
         "orderer2": {
           "swarm": {
             "constraints": [
-              "node.role==manager"
+              "node.role==leader"
             ]
           },
           "portMap": {
@@ -127,7 +127,7 @@
         {
           "swarm": {
             "constraints": [
-              "node.role==leader"
+              "node.role==manager"
             ]
           },
           "container_name": "SupplyChain",
@@ -241,7 +241,7 @@
         {
           "swarm": {
             "constraints": [
-              "node.role==manager"
+              "node.role==leader"
             ]
           },
           "container_name": "Tk",
