@@ -47,7 +47,6 @@ const addOrdererService = (services, {ordererConfig, ordererEachConfig, MSPROOTV
 	};
 	if (swarmType === 'swarm') {
 		ordererServiceName = swarmServiceName(ordererServiceName);
-		//TODO network map service here
 		ordererService.deploy = {
 			placement: {
 				constraints: ordererEachConfig.swarm.constraints

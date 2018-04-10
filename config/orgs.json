@@ -4,7 +4,7 @@
   "docker": {
     "fabricTag": "1.1.0",
     "thirdPartyTag": "0.4.6",
-    "network": "delphiNetwork",
+    "network": "TeekingNetwork",
     "volumes": {
       "CONFIGTX": {
         "dir": "/home/fabric2/Documents/delphi-fabric/config/configtx"
@@ -15,7 +15,7 @@
     }
   },
   "orderer": {
-    "type": "solo",
+    "type": "swarm",
     "genesis_block": {
       "file": "tk.block",
       "profile": "TeekingGenesis"
@@ -24,6 +24,10 @@
       "container_name": "orderContainerName",
       "portMap": {
         "7050": 7050
+      },
+      "swarm": {
+        "constraints": [
+        ]
       }
     },
     "kafka": {
@@ -59,7 +63,6 @@
         "orderer0": {
           "swarm": {
             "constraints": [
-              "node.role==leader"
             ]
           },
           "portMap": {
@@ -69,7 +72,6 @@
         "orderer1": {
           "swarm": {
             "constraints": [
-              "node.role==leader"
             ]
           },
           "portMap": {
@@ -79,7 +81,6 @@
         "orderer2": {
           "swarm": {
             "constraints": [
-              "node.role==leader"
             ]
           },
           "portMap": {
@@ -241,7 +242,6 @@
         {
           "swarm": {
             "constraints": [
-              "node.role==leader"
             ]
           },
           "container_name": "Tk",

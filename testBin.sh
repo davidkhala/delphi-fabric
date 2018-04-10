@@ -37,10 +37,9 @@ stateDBCacheDir=$(jq -r '.stateDBCacheDir' $nodeAppConfigJson)
 rm -rf $stateDBCacheDir
 echo clear stateDBCacheDir $stateDBCacheDir
 
-node -e "require('./config/configtx.js').gen({\"MSPROOT\":\"$MSPROOT\"})"
-
 BLOCK_FILE=$(echo $companyConfig | jq -r ".orderer.genesis_block.file")
 PROFILE_BLOCK=$(echo $companyConfig | jq -r ".orderer.genesis_block.profile")
+node -e "require('./config/configtx.js').gen({MSPROOT:'${MSPROOT}',PROFILE_BLOCK:'${PROFILE_BLOCK}'})"
 
 ./common/bin-manage/configtxgen/runConfigtxgen.sh block create "$CONFIGTX_DIR/$BLOCK_FILE" -p $PROFILE_BLOCK -i $config_dir
 

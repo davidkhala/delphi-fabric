@@ -151,7 +151,7 @@ services:
       - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
       - ORDERER_GENERAL_TLS_ENABLED=false
       - ORDERER_GENERAL_GENESISMETHOD=file
-      - ORDERER_GENERAL_GENESISFILE=/etc/hyperledger/configtx/delphi.block
+      - ORDERER_GENERAL_GENESISFILE=/etc/hyperledger/configtx/tk.block
       - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
       - ORDERER_GENERAL_LOCALMSPDIR=/etc/hyperledger/crypto-config/ordererOrganizations/Teeking.com/orderers/orderContainerName.Teeking.com/msp
       - GODEBUG=netdns=go
