@@ -6,30 +6,37 @@ const yaml = require('js-yaml');
 exports.gen = ({
 	cryptoConfigFile = path.resolve(CURRENT, 'crypto-config.yaml')
 }) => {
-	const companyConfig = globalConfig;
-	const COMPANY_DOMAIN = companyConfig.domain;
-	const ordererConfig = companyConfig.orderer;
-	const orgsConfig = companyConfig.orgs;
+	const COMPANY_DOMAIN = globalConfig.domain;
+	const ordererConfig = globalConfig.orderer;
+	const orgsConfig = globalConfig.orgs;
 	if(fs.existsSync(cryptoConfigFile)){
 		fs.unlinkSync(cryptoConfigFile);
 	}
-	const OrdererOrgs = [{
-		Name: 'OrdererCrytoName',
-		Domain: COMPANY_DOMAIN,
-		Specs: [{Hostname: ordererConfig.solo.container_name}]
-	}];
+	const OrdererOrgs = [];
 	if(ordererConfig.type ==='kafka'){
-		const Specs = Object.keys(globalConfig.orderer.kafka.orderers).map((ordererHost)=>{
-			return {Hostname: ordererHost};
+		for(const ordererOrgName in globalConfig.orderer.kafka.orgs){
+			const ordererOrgConfig = globalConfig.orderer.kafka.orgs[ordererOrgName];
+
+			const Specs = Object.keys(ordererOrgConfig.orderers).map((ordererHost)=>{
+				return {Hostname: ordererHost};
+			});
+			OrdererOrgs.push({
+				Domain:ordererOrgName,
+				Specs,
+			});
+		}
+
+	}else {
+		OrdererOrgs.push({
+			Domain: COMPANY_DOMAIN,
+			Specs: [{Hostname: ordererConfig.solo.container_name}]
 		});
-		OrdererOrgs[0].Specs = Specs;
 	}
 
 	const PeerOrgs = [];
-	for (let orgName in orgsConfig) {
+	for (const orgName in orgsConfig) {
 		const orgConfig = orgsConfig[orgName];
 		PeerOrgs.push({
-			Name: orgName,
 			Domain: `${orgName}.${COMPANY_DOMAIN}`,
 			Template: {
 				Start: 0,

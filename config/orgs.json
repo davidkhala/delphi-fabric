@@ -11,23 +11,34 @@
       },
       "MSPROOT": {
         "dir": "/home/fabric2/Documents/delphi-fabric/config/crypto-config/"
+      },
+      "CACRYPTOROOT": {
+        "dir": "/home/david/Documents/delphi-fabric/config/ca-crypto-config/"
       }
     }
   },
   "orderer": {
-    "type": "swarm",
+    "type": "kafka",
     "genesis_block": {
       "file": "tk.block",
       "profile": "TeekingGenesis"
     },
     "solo": {
       "container_name": "orderContainerName",
-      "portMap": {
-        "7050": 7050
-      },
+      "portHost": 7050,
       "swarm": {
         "constraints": [
         ]
+      },
+      "ca": {
+        "portHost": 7450,
+        "tlsca": {
+          "portHost": 7455
+        }
+      },
+      "MSP": {
+        "name": "OrdererMSPName",
+        "id": "OrdererMSP"
       }
     },
     "kafka": {
@@ -59,39 +70,43 @@
           "BROKER_ID": 3
         }
       },
-      "orderers": {
-        "orderer0": {
-          "swarm": {
-            "constraints": [
-            ]
+      "orgs": {
+        "TK.Teeking.com": {
+          "MSP": {
+            "name": "TkMSPName",
+            "id": "TkMSP"
           },
-          "portMap": {
-            "7050": 7050
-          }
-        },
-        "orderer1": {
-          "swarm": {
-            "constraints": [
-            ]
+          "ca": {
+            "portHost": 7450,
+            "tlsca": {
+              "portHost": 7455
+            }
           },
-          "portMap": {
-            "7050": 8050
-          }
-        },
-        "orderer2": {
-          "swarm": {
-            "constraints": [
-            ]
-          },
-          "portMap": {
-            "7050": 9050
+          "orderers": {
+            "orderer0": {
+              "swarm": {
+                "constraints": [
+                ]
+              },
+              "portHost": 7050
+            },
+            "orderer1": {
+              "swarm": {
+                "constraints": [
+                ]
+              },
+              "portHost": 8050
+            },
+            "orderer2": {
+              "swarm": {
+                "constraints": [
+                ]
+              },
+              "portMap": 9050
+            }
           }
         }
       }
-    },
-    "MSP": {
-      "name": "OrdererMSPName",
-      "id": "OrdererMSP"
     }
   },
   "channels": {
@@ -151,9 +166,9 @@
           "name": "CAadmin",
           "pass": "passwd"
         },
-        "portHost": 7054,
+        "portHost": 6054,
         "tlsca": {
-          "portHost": 7055
+          "portHost": 6055
         }
       },
       "MSP": {
@@ -264,9 +279,9 @@
           "name": "CAadmin",
           "pass": "passwd"
         },
-        "portHost": 6054,
+        "portHost": 7054,
         "tlsca": {
-          "portHost": 6055
+          "portHost": 7055
         }
       },
       "MSP": {

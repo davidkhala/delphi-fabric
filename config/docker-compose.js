@@ -5,24 +5,34 @@ const CURRENT = __dirname;
 const yaml = require('js-yaml');
 const helper = require('../app/helper');
 const logger = require('../app/util/logger').new('compose-gen');
+const container =
+	{
+		dir: {
+			CONFIGTX: '/etc/hyperledger/configtx',
+			MSPROOT: '/etc/hyperledger/crypto-config',
+			CA_HOME: '/etc/hyperledger/fabric-ca-server'
+		}
+	};
+const dockerSock = '/host/var/run/docker.sock';
+
 const swarmServiceName = (serviceName) => {
 	return serviceName.replace(/\./g, '-');
 };
-const addOrdererService = (services, {ordererConfig, ordererEachConfig, MSPROOTVolume, CONFIGTXVolume}, {
+const addOrdererService = (services, {BLOCK_FILE, mspId, ordererEachConfig, MSPROOTVolume, CONFIGTXVolume}, {
 	ordererName, COMPANY_DOMAIN, IMAGE_TAG,
 	ORDERER_GENERAL_TLS_ROOTCAS,
-	kafkaServices, TLS, swarmType = 'local',
+	kafkaServices, swarmType = 'local',
 	CONFIGTX = '/etc/hyperledger/configtx',
 	MSPROOT = '/etc/hyperledger/crypto-config',
 }) => {
 
-	const BLOCK_FILE = ordererConfig.genesis_block.file;
+	const {TLS} = globalConfig;
 	let ordererServiceName = ordererName;
 	const ORDERER_STRUCTURE = `ordererOrganizations/${COMPANY_DOMAIN}/orderers/${ordererServiceName}.${COMPANY_DOMAIN}`;
 	const ordererService = {
 		image: `hyperledger/fabric-orderer:${IMAGE_TAG}`,
 		command: 'orderer',
-		ports: [`${ordererEachConfig.portMap[7050]}:7050`],
+		ports: [`${ordererEachConfig.portHost}:7050`],
 		volumes: [
 			`${CONFIGTXVolume}:${CONFIGTX}`,
 			`${MSPROOTVolume}:${MSPROOT}`],
@@ -34,7 +44,7 @@ const addOrdererService = (services, {ordererConfig, ordererEachConfig, MSPROOTV
 			`ORDERER_GENERAL_GENESISFILE=${CONFIGTX}/${BLOCK_FILE}`,
 			//  NOTE remove ORDERER_GENERAL_GENESISFILE: panic: Unable to bootstrap orderer. Error reading genesis block file: open /etc/hyperledger/fabric/genesisblock: no such file or directory
 			// NOTE when ORDERER_GENERAL_GENESISMETHOD=provisional  ORDERER_GENERAL_GENESISPROFILE=SampleNoConsortium -> panic: No system chain found.  If bootstrapping, does your system channel contain a consortiums group definition
-			`ORDERER_GENERAL_LOCALMSPID=${ordererConfig.MSP.id}`,// FIXME hardcode MSP name
+			`ORDERER_GENERAL_LOCALMSPID=${mspId}`,// FIXME hardcode MSP name
 			`ORDERER_GENERAL_LOCALMSPDIR=${MSPROOT}/${ORDERER_STRUCTURE}/msp`,
 			'GODEBUG=netdns=go' // aliyun only
 
@@ -75,12 +85,13 @@ const addOrdererService = (services, {ordererConfig, ordererEachConfig, MSPROOTV
 	}
 	services[ordererServiceName] = ordererService;
 };
+
 exports.gen = ({
-	MSPROOT,
-	arch = 'x86_64',
-	COMPOSE_FILE = path.resolve(CURRENT, 'docker-compose.yaml'),
-	type = 'local', volumeName
-}) => {
+				   MSPROOT,
+				   arch = 'x86_64',
+				   COMPOSE_FILE = path.resolve(CURRENT, 'docker-compose.yaml'),
+				   type = 'local', volumeName
+			   }) => {
 
 	logger.debug({MSPROOT, arch, COMPOSE_FILE, type, volumeName});
 
@@ -89,21 +100,13 @@ exports.gen = ({
 	const IMAGE_TAG = `${arch}-${fabricTag}`;
 
 	const IMAGE_TAG_3rdParty = `${arch}-${thirdPartyTag}`;
-	const dockerSock = '/host/var/run/docker.sock';
 	const orgsConfig = companyConfig.orgs;
 	const COMPANY_DOMAIN = companyConfig.domain;
 	const ordererConfig = companyConfig.orderer;
 	const CONFIGTXVolume = volumeName.CONFIGTX;
 	const MSPROOTVolume = volumeName.MSPROOT;
 	// const ordererContainerPort = ordererConfig.portMap[0].container
-	const container =
-        {
-        	dir: {
-        		CONFIGTX: '/etc/hyperledger/configtx',
-        		MSPROOT: '/etc/hyperledger/crypto-config',
-        		CA_HOME: '/etc/hyperledger/fabric-ca-server'
-        	}
-        };
+
 	if (fs.existsSync(COMPOSE_FILE)) {
 		fs.unlinkSync(COMPOSE_FILE);
 	}
@@ -114,48 +117,45 @@ exports.gen = ({
 	let ORDERER_GENERAL_TLS_ROOTCAS = '';
 
 
-	for (let orgName in orgsConfig) {
+	for (const orgName in orgsConfig) {
 		const orgConfig = orgsConfig[orgName];
 		const orgDomain = `${orgName}.${COMPANY_DOMAIN}`;
 		const peersConfig = orgConfig.peers;
 
-		for (let peerIndex in peersConfig) {
+		for (const peerIndex in peersConfig) {
 			const peerDomain = `peer${peerIndex}.${orgDomain}`;
 			const peerConfig = peersConfig[peerIndex];
 
 			const PEER_STRUCTURE = `peerOrganizations/${orgDomain}/peers/${peerDomain}`;
 			const environment =
-                [
-                	`CORE_VM_ENDPOINT=unix://${dockerSock}`,
-                	`CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=${network}`,
-                	'CORE_LOGGING_LEVEL=DEBUG',
-                	'CORE_LEDGER_HISTORY_ENABLEHISTORYDATABASE=true',
-                	'CORE_PEER_GOSSIP_USELEADERELECTION=true',
-                	'CORE_PEER_GOSSIP_ORGLEADER=false',
-                	`CORE_PEER_GOSSIP_EXTERNALENDPOINT=${peerDomain}:7051`, // FIXME take care!
-                	`CORE_PEER_LOCALMSPID=${orgConfig.MSP.id}`,
-                	`CORE_PEER_MSPCONFIGPATH=${container.dir.MSPROOT}/${PEER_STRUCTURE}/msp`,
-                	`CORE_PEER_TLS_ENABLED=${TLS}`,
-                	`CORE_PEER_ID=${peerDomain}`,
-                	`CORE_PEER_ADDRESS=${peerDomain}:7051`,
-                	'CORE_CHAINCODE_EXECUTETIMEOUT=180s',
+				[
+					`CORE_VM_ENDPOINT=unix://${dockerSock}`,
+					`CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=${network}`,
+					'CORE_LOGGING_LEVEL=DEBUG',
+					'CORE_LEDGER_HISTORY_ENABLEHISTORYDATABASE=true',
+					'CORE_PEER_GOSSIP_USELEADERELECTION=true',
+					'CORE_PEER_GOSSIP_ORGLEADER=false',
+					`CORE_PEER_GOSSIP_EXTERNALENDPOINT=${peerDomain}:7051`, // FIXME take care!
+					`CORE_PEER_LOCALMSPID=${orgConfig.MSP.id}`,
+					`CORE_PEER_MSPCONFIGPATH=${container.dir.MSPROOT}/${PEER_STRUCTURE}/msp`,
+					`CORE_PEER_TLS_ENABLED=${TLS}`,
+					`CORE_PEER_ID=${peerDomain}`,
+					`CORE_PEER_ADDRESS=${peerDomain}:7051`,
+					'CORE_CHAINCODE_EXECUTETIMEOUT=180s',
 
-                	'GODEBUG=netdns=go'//NOTE aliyun only
-                ];
+					'GODEBUG=netdns=go'//NOTE aliyun only
+				];
 			if (TLS) {
 				environment.push(`CORE_PEER_TLS_KEY_FILE=${container.dir.MSPROOT}/${PEER_STRUCTURE}/tls/server.key`);
 				environment.push(`CORE_PEER_TLS_CERT_FILE=${container.dir.MSPROOT}/${PEER_STRUCTURE}/tls/server.crt`);
 				environment.push(`CORE_PEER_TLS_ROOTCERT_FILE=${container.dir.MSPROOT}/${PEER_STRUCTURE}/tls/ca.crt`);
 			}
 			const ports = [];
-			for (let portIndex in peerConfig.portMap) {
+			for (const portIndex in peerConfig.portMap) {
 				const entry = peerConfig.portMap[portIndex];
 				ports.push(`${entry.host}:${entry.container}`);
 			}
 			const peerService = {
-				depends_on: companyConfig.orderer.type === 'kafka' ?
-					Object.keys(companyConfig.orderer.kafka.orderers)
-					: [companyConfig.orderer.solo.container_name],
 				image: `hyperledger/fabric-peer:${IMAGE_TAG}`,
 				command: 'peer node start',
 				environment,
@@ -164,6 +164,18 @@ exports.gen = ({
 					`/run/docker.sock:${dockerSock}`,
 					`${MSPROOTVolume}:${container.dir.MSPROOT}`]
 			};
+			if (companyConfig.orderer.type === 'kafka') {
+				const depends_on = [];
+				for (const ordererOrgName in companyConfig.orderer.kafka.orgs) {
+					const ordererOrgConfig = companyConfig.orderer.kafka.orgs[ordererOrgName];
+					for (const ordererName in ordererOrgConfig.orderers) {
+						depends_on.push(ordererName);
+					}
+				}
+				peerService.depends_on = depends_on;
+			} else {
+				peerService.depends_on = [companyConfig.orderer.solo.container_name];
+			}
 
 			let peerServiceName = peerDomain;
 
@@ -188,7 +200,7 @@ exports.gen = ({
 
 		}
 		const caConfig = orgConfig.ca;
-		if (caConfig.enable) {
+		if (caConfig.enable || type === 'swarm') {
 
 			const FABRIC_CA_HOME = `${container.dir.CA_HOME}/peerOrganizations/${orgDomain}/ca`;
 			const CAVolume = path.join(MSPROOT, 'peerOrganizations', orgDomain, 'ca');
@@ -197,33 +209,33 @@ exports.gen = ({
 				fs.unlinkSync(caServerConfigFile);
 			}
 			const caPrivateKey = helper.findKeyfiles(CAVolume)[0];
-			const caServerConfig = {
-				affiliations: {
-					[orgName]: ['client', 'user', 'peer']
-				},
-				tls: {
-					enabled: TLS
-				},
-				registry: {
-					identities: [
-						{
-							type: 'client',
-							name: caConfig.admin.name,
-							pass: caConfig.admin.pass,
-							maxenrollments: -1,
-							attrs: {
-								'hf.Registrar.Roles': 'client,user,peer',
-								'hf.Revoker': true,
-								'hf.Registrar.DelegateRoles': 'client,user',
-								'hf.Registrar.Attributes': '*'
-							}
-						}]
-				},
-				ca: {
-					certfile: `${FABRIC_CA_HOME}/ca.${orgDomain}-cert.pem`,
-					keyfile: `${FABRIC_CA_HOME}/${path.basename(caPrivateKey)}`
-				}
-			};
+			// const caServerConfig = {
+			// 	affiliations: {
+			// 		[orgName]: ['client', 'user', 'peer']
+			// 	},
+			// 	tls: {
+			// 		enabled: TLS
+			// 	},
+			// 	registry: {
+			// 		identities: [
+			// 			{
+			// 				type: 'client',
+			// 				name: caConfig.admin.name,
+			// 				pass: caConfig.admin.pass,
+			// 				maxenrollments: -1,
+			// 				attrs: {
+			// 					'hf.Registrar.Roles': 'client,user,peer',
+			// 					'hf.Revoker': true,
+			// 					'hf.Registrar.DelegateRoles': 'client,user',
+			// 					'hf.Registrar.Attributes': '*'
+			// 				}
+			// 			}]
+			// 	},
+			// 	ca: {
+			// 		certfile: `${FABRIC_CA_HOME}/ca.${orgDomain}-cert.pem`,
+			// 		keyfile: `${FABRIC_CA_HOME}/${path.basename(caPrivateKey)}`
+			// 	}
+			// };
 
 			let caContainerName;
 
@@ -231,21 +243,20 @@ exports.gen = ({
 				//    FIXME? tlsca? what is this for
 				ORDERER_GENERAL_TLS_ROOTCAS += `${container.dir.MSPROOT}/peerOrganizations/${orgDomain}/tlsca/tlsca.${orgDomain}-cert.pem,`;
 				caContainerName = `tlsca.${orgDomain}`;
-				caServerConfig.tls = {
-					certfile: `${FABRIC_CA_HOME}/ca.${orgDomain}-cert.pem`,
-					keyfile: `${FABRIC_CA_HOME}/${path.basename(caPrivateKey)}`
-				};
+				// caServerConfig.tls = {
+				// 	certfile: `${FABRIC_CA_HOME}/ca.${orgDomain}-cert.pem`,
+				// 	keyfile: `${FABRIC_CA_HOME}/${path.basename(caPrivateKey)}`
+				// };
 			} else {
 				caContainerName = `ca.${orgDomain}`;
 
 			}
 			const caService = {
 				image: `hyperledger/fabric-ca:${IMAGE_TAG}`,
-				command: 'sh -c \'fabric-ca-server start -d\'',
-				volumes: [`${MSPROOTVolume}:${container.dir.CA_HOME}`],
+				command: `sh -c 'fabric-ca-server start -d -b ${caConfig.admin.name}:${caConfig.admin.pass}'`,
+				volumes: [`./caExpose:${container.dir.CA_HOME}`],//FIXME local debug only
 				ports: [`${caConfig.portHost}:7054`],
 				environment: [
-					`FABRIC_CA_HOME=${FABRIC_CA_HOME}`,
 					'GODEBUG=netdns=go'//NOTE aliyun only
 				]
 			};
@@ -266,7 +277,7 @@ exports.gen = ({
 
 			}
 			services[caServiceName] = caService;
-			fs.writeFileSync(caServerConfigFile, yaml.safeDump(caServerConfig, {lineWidth: 180}));
+			// fs.writeFileSync(caServerConfigFile, yaml.safeDump(caServerConfig, {lineWidth: 180}));
 
 		}
 
@@ -274,27 +285,32 @@ exports.gen = ({
 
 
 	if (companyConfig.orderer.type === 'kafka') {
-		const ordererConfigs = companyConfig.orderer.kafka.orderers;
 		const kafkaConfigs = companyConfig.orderer.kafka.kafkas;
 		const zkConfigs = companyConfig.orderer.kafka.zookeepers;
-		for (let ordererName in ordererConfigs) {
-			const ordererEachConfig = ordererConfigs[ordererName];
+		const BLOCK_FILE = companyConfig.orderer.genesis_block.file;
+		for (const ordererOrgName in companyConfig.orderer.kafka.orgs) {
+			const ordererOrgConfig = companyConfig.orderer.kafka.orgs[ordererOrgName];
+			const mspId = ordererOrgConfig.MSP.id;
+			for (const ordererName in ordererOrgConfig.orderers) {
+				const ordererEachConfig = ordererOrgConfig.orderers[ordererName];
 
-			addOrdererService(services, {ordererConfig, ordererEachConfig, CONFIGTXVolume, MSPROOTVolume}, {
-				ordererName, COMPANY_DOMAIN, TLS, IMAGE_TAG,
-				swarmType: type, ORDERER_GENERAL_TLS_ROOTCAS,
-				kafkaServices: Object.keys(kafkaConfigs)
-			});
 
+				addOrdererService(services, {BLOCK_FILE, mspId, ordererEachConfig, CONFIGTXVolume, MSPROOTVolume}, {
+					ordererName, COMPANY_DOMAIN, IMAGE_TAG,
+					swarmType: type, ORDERER_GENERAL_TLS_ROOTCAS,
+					kafkaServices: Object.keys(kafkaConfigs)
+				});
+
+			}
 		}
 
 
 		let KAFKA_ZOOKEEPER_CONNECT = 'KAFKA_ZOOKEEPER_CONNECT=';
-		for (let zookeeper in zkConfigs) {
+		for (const zookeeper in zkConfigs) {
 			KAFKA_ZOOKEEPER_CONNECT += `${zookeeper}:2181,`;
 		}
 		KAFKA_ZOOKEEPER_CONNECT = KAFKA_ZOOKEEPER_CONNECT.substring(0, KAFKA_ZOOKEEPER_CONNECT.length - 1);
-		for (let zookeeper in zkConfigs) {
+		for (const zookeeper in zkConfigs) {
 			const zkConfig = zkConfigs[zookeeper];
 			let ZOO_SERVERS = 'ZOO_SERVERS=';
 			services[zookeeper] = {
@@ -304,7 +320,7 @@ exports.gen = ({
 				networks: {
 					default: {
 						aliases:
-                            [zookeeper]
+							[zookeeper]
 					}
 				}
 
@@ -312,7 +328,7 @@ exports.gen = ({
 			if (type === 'local') {
 				services[zookeeper].container_name = zookeeper;
 			}
-			for (let zookeeper in zkConfigs) {
+			for (const zookeeper in zkConfigs) {
 				const zkConfig2 = zkConfigs[zookeeper];
 				if (type === 'swarm' && zkConfig === zkConfig2) {
 					ZOO_SERVERS += `server.${zkConfig2.MY_ID}=0.0.0.0:2888:3888 `;
@@ -322,7 +338,7 @@ exports.gen = ({
 			}
 			services[zookeeper].environment.push(ZOO_SERVERS);
 		}
-		for (let kafka in kafkaConfigs) {
+		for (const kafka in kafkaConfigs) {
 			const kafkaConfig = kafkaConfigs[kafka];
 			services[kafka] = {
 				image: `hyperledger/fabric-kafka:${IMAGE_TAG_3rdParty}`,
@@ -343,7 +359,7 @@ exports.gen = ({
 				networks: {
 					default: {
 						aliases:
-                            [kafka]
+							[kafka]
 					}
 				},
 			};
@@ -355,8 +371,10 @@ exports.gen = ({
 		}
 	} else {
 		const ordererEachConfig = companyConfig.orderer.solo;
-		addOrdererService(services, {ordererConfig, ordererEachConfig, CONFIGTXVolume, MSPROOTVolume}, {
-			ordererName: ordererEachConfig.container_name, COMPANY_DOMAIN, TLS, IMAGE_TAG,
+		const BLOCK_FILE = companyConfig.orderer.genesis_block.file;
+		const mspId = companyConfig.orderer.solo.MSP.id;
+		addOrdererService(services, {BLOCK_FILE, mspId, ordererEachConfig, CONFIGTXVolume, MSPROOTVolume}, {
+			ordererName: ordererEachConfig.container_name, COMPANY_DOMAIN, IMAGE_TAG,
 			swarmType: type, ORDERER_GENERAL_TLS_ROOTCAS,
 			kafkaServices: undefined
 		});
@@ -385,4 +403,162 @@ exports.gen = ({
 
 	}, {lineWidth: 180}));
 
+};
+
+exports.genCAs = ({
+					  arch = 'x86_64',
+					  COMPOSE_FILE = path.resolve(CURRENT, 'docker-ca-compose.yaml')
+				  }) => {
+	logger.debug({arch, COMPOSE_FILE});
+
+	const {docker: {fabricTag, network}, orderer: {type}} = globalConfig;
+	const IMAGE_TAG = `${arch}-${fabricTag}`;
+
+	const peerOrgsConfig = globalConfig.orgs;
+
+	const COMPANY_DOMAIN = globalConfig.domain;
+
+	if (fs.existsSync(COMPOSE_FILE)) {
+		fs.unlinkSync(COMPOSE_FILE);
+	}
+
+	const services = {};
+	if (type === 'kafka') {
+		for (const ordererOrg in globalConfig.orderer.kafka.orgs) {
+			const ordererOrgConfig = globalConfig.orderer.kafka.orgs[ordererOrg];
+			for (const ordererName in ordererOrgConfig.orderers) {
+				if (ordererName !== 'orderer0') continue;//FIXME debug only
+				const caConfig = ordererOrgConfig.ca;
+				module.exports.addCA(services, {caConfig}, {orgDomain: ordererOrg, IMAGE_TAG});
+			}
+
+		}
+	} else {
+		const {ca, container_name} = globalConfig.orderer.solo;
+		module.exports.addCA(services, {caConfig: ca}, {orgDomain: container_name, IMAGE_TAG});
+	}
+
+	for (const orgName in peerOrgsConfig) {
+		if (orgName !== 'TK') continue;//FIXME debug only
+		const orgConfig = peerOrgsConfig[orgName];
+		const caConfig = orgConfig.ca;
+
+		const orgDomain = `${orgName}.${COMPANY_DOMAIN}`;
+
+		module.exports.addCA(services, {caConfig}, {orgDomain, IMAGE_TAG});
+	}
+
+	fs.writeFileSync(COMPOSE_FILE, yaml.safeDump({
+		//only version 3 support network setting
+		version: '3', //ERROR: Version in "/home/david/Documents/delphi-fabric/config/docker-compose.yaml" is invalid - it should be a string.
+		networks: {
+			default: {
+				external: {
+					name: network
+				}
+			}
+		},
+		services
+	}, {lineWidth: 180}));
+};
+/**
+ * config less ca server
+ * @param services
+ * @param caConfig
+ * @param orgDomain
+ * @param TLS
+ * @param IMAGE_TAG
+ */
+exports.addCA = (services, {caConfig}, {orgDomain, IMAGE_TAG}) => {
+	const {TLS} = globalConfig;
+	let caContainerName;
+
+	if (TLS) {
+		caContainerName = `tlsca.${orgDomain}`;
+	} else {
+		caContainerName = `ca.${orgDomain}`;
+	}
+	const caService = {
+		image: `hyperledger/fabric-ca:${IMAGE_TAG}`,
+		command: 'sh -c "fabric-ca-server start -d -b admin:passwd"',
+		ports: [`${caConfig.portHost}:7054`],
+		environment: [
+			'GODEBUG=netdns=go',//NOTE aliyun only
+		]
+	};
+	let caServiceName = caContainerName;
+	caService.networks = {
+		default: {
+			aliases: [caContainerName]
+		}
+	};
+	caServiceName = swarmServiceName(caServiceName);
+
+	services[caServiceName] = caService;
+};
+
+
+exports.addPeer = (services, {peerConfig, peerIndex, orgDomain, orgConfig}, {MSPROOTVolume, network, TLS, IMAGE_TAG, depends_on, swarmType}) => {
+	const peerDomain = `peer${peerIndex}.${orgDomain}`;
+
+	const PEER_STRUCTURE = `peerOrganizations/${orgDomain}/peers/${peerDomain}`;
+	const environment =
+		[
+			`CORE_VM_ENDPOINT=unix://${dockerSock}`,
+			`CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=${network}`,
+			'CORE_LOGGING_LEVEL=DEBUG',
+			'CORE_LEDGER_HISTORY_ENABLEHISTORYDATABASE=true',
+			'CORE_PEER_GOSSIP_USELEADERELECTION=true',
+			'CORE_PEER_GOSSIP_ORGLEADER=false',
+			`CORE_PEER_GOSSIP_EXTERNALENDPOINT=${peerDomain}:7051`, // FIXME take care!
+			`CORE_PEER_LOCALMSPID=${orgConfig.MSP.id}`,
+			`CORE_PEER_MSPCONFIGPATH=${container.dir.MSPROOT}/${PEER_STRUCTURE}/msp`,
+			`CORE_PEER_TLS_ENABLED=${TLS}`,
+			`CORE_PEER_ID=${peerDomain}`,
+			`CORE_PEER_ADDRESS=${peerDomain}:7051`,
+			'CORE_CHAINCODE_EXECUTETIMEOUT=180s',
+
+			'GODEBUG=netdns=go'//NOTE aliyun only
+		];
+	if (TLS) {
+		environment.push(`CORE_PEER_TLS_KEY_FILE=${container.dir.MSPROOT}/${PEER_STRUCTURE}/tls/server.key`);
+		environment.push(`CORE_PEER_TLS_CERT_FILE=${container.dir.MSPROOT}/${PEER_STRUCTURE}/tls/server.crt`);
+		environment.push(`CORE_PEER_TLS_ROOTCERT_FILE=${container.dir.MSPROOT}/${PEER_STRUCTURE}/tls/ca.crt`);
+	}
+	const ports = [];
+	for (const portIndex in peerConfig.portMap) {
+		const entry = peerConfig.portMap[portIndex];
+		ports.push(`${entry.host}:${entry.container}`);
+	}
+	const peerService = {
+		depends_on,
+		image: `hyperledger/fabric-peer:${IMAGE_TAG}`,
+		command: 'peer node start',
+		environment,
+		ports,
+		volumes: [
+			`/run/docker.sock:${dockerSock}`,
+			`${MSPROOTVolume}:${container.dir.MSPROOT}`]
+	};
+
+	let peerServiceName = peerDomain;
+
+	if (swarmType === 'swarm') {
+		peerServiceName = swarmServiceName(peerServiceName);
+		peerService.networks = {
+			default: {
+				aliases: [peerDomain]
+			}
+		};
+		peerService.environment.push('CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052');
+		peerService.deploy = {
+			placement: {
+				constraints: peerConfig.swarm.constraints
+			}
+		};
+	} else {
+		peerService.container_name = peerConfig.container_name;
+		peerService.networks = ['default'];
+	}
+	services[peerServiceName] = peerService;
 };

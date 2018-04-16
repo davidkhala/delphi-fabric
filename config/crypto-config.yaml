@@ -1,34 +1,31 @@
 PeerOrgs:
-  - Name: SUPPLY
-    Domain: SUPPLY.Teeking.com
+  - Domain: SUPPLY.Teeking.com
     Template:
       Start: 0
       Count: 1
     Users:
       Count: 0
-  - Name: CAR
-    Domain: CAR.Teeking.com
+  - Domain: CAR.Teeking.com
     Template:
       Start: 0
       Count: 1
     Users:
       Count: 0
-  - Name: FACTORY
-    Domain: FACTORY.Teeking.com
+  - Domain: FACTORY.Teeking.com
     Template:
       Start: 0
       Count: 1
     Users:
       Count: 0
-  - Name: TK
-    Domain: TK.Teeking.com
+  - Domain: TK.Teeking.com
     Template:
       Start: 0
       Count: 1
     Users:
       Count: 0
 OrdererOrgs:
-  - Name: OrdererCrytoName
-    Domain: Teeking.com
+  - Domain: TK.Teeking.com
     Specs:
-      - Hostname: orderContainerName
+      - Hostname: orderer0
+      - Hostname: orderer1
+      - Hostname: orderer2

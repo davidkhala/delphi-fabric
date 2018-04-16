@@ -28,123 +28,123 @@ const errorHandle = (err, res) => {
 	res.status(status).json({error: err.toString()});
 
 };
-router.use((req, res, next) => {
-	const user = req.body;
-	if (!user) return errorHandle(`user is ${user}`, res);
-	const {username, password, token} = user;
+
+const userMiddleware = (req, res, next) => {
+	const {username, password, token} = req.body;
 	const oauthClient = require('./oauth2Client').passwordGrant;
 
+	let promise = Promise.resolve();
 	if (!token) {
 		if (!username || !password) {
-			return errorHandle(`missing user identity  ${user}`, res);
+			return errorHandle('missing user identity ', res);
 		}
-		oauthClient.getToken({username, password})
+		promise = promise.then(()=>oauthClient.getToken({username, password}))
 			.then(accessToken => {
 				res.locals.accessToken = accessToken.accessToken.accessToken;
 				next();
-				return Promise.resolve(accessToken.accessToken.accessToken);
+				return Promise.resolve(accessToken);
 			});
 	} else {
 		//TODO request TK platform to authenticate token
-		oauthClient.verify(token).then(result => {
+		promise= promise.then(()=>oauthClient.verify(token)).then(result => {
 			if (result) {
 				res.locals.accessToken = token;
 				next();
+				return Promise.resolve(result);
 			}
 		});
-
-
 	}
-});
+	promise.catch(err => {
+		res.status(400).send(err);
+	});
+};
 const Request = require('request');
-router.post('/write', cache.array('files'), (req, res) => {
+const peerIndex = 0;
+router.post('/write', cache.array('files'), userMiddleware, (req, res) => {
 	const {id, plain, toHash} = req.body;
-	const {accessToken} = req.locals;
-	let {org} = req.body;
-	logger.debug('write', {id, plain, toHash, org});
+	const {accessToken} = res.locals;
+	const {org: orgName} = req.body;
+	logger.debug('write', {id, plain, toHash, orgName});
 
 	if (!id) return errorHandle(`id is ${id}`, res);
-	if (!org) return errorHandle(`org is ${org}`, res);
+	if (!orgName) return errorHandle(`org is ${orgName}`, res);
+
+	const invalidPeer = invalid.peer({peerIndex, orgName});
+	if (invalidPeer) return errorHandle(invalidPeer, res);
 	const files = req.files;
 
-	const promise = Promise.resolve();
+	let promise = Promise.resolve();
 
 	const fileStreams = files.map(({path}) => {
 		return fs.createReadStream(path);
 	});
 	const formData = {
-		// Pass a simple key-value pair
-		my_field: 'my_value',
-		// Pass data via Buffers
-		my_buffer: new Buffer([1, 2, 3]),
-		// Pass multiple values /w an Array
+		accessToken,
 		files: fileStreams,
 	};
-	Request.post({url: 'http://service.com/upload', formData: formData}, (err, resp, body) => {
-		if (err) {
-			return logger.error('upload failed:', err);
-		}
-		logger.debug('Upload successful!  Server responded with:', body);
-	});
 
+	promise = promise.then(() => new Promise((resolve, reject) => {
 
-	const textHash = hashAlgo(toHash);
-
-	const value = `${plain}|${textHash}|${fileHashs.join('|')}`;
-	const {fcn, args, orgName, peerIndex} = {
-		fcn: 'write',
-		args: [id, value],
-		orgName: org,
-		peerIndex: 0,
-	};
-	const {invoke} = require('../app/invoke-chaincode.js');
-
-	logger.debug({chaincodeId, fcn, orgName, peerIndex, channelName});
-	const invalidPeer = invalid.peer({peerIndex, orgName});
-	if (invalidPeer) return errorHandle(invalidPeer, res);
-
-	const invalidChannelName = invalid.channelName({channelName});
-	if (invalidChannelName) return errorHandle(invalidChannelName, res);
-
-	const invalidArgs = invalid.args({args});
-	if (invalidArgs) return errorHandle(invalidArgs, res);
-
-	promise.then(() => helper.getOrgAdmin(orgName)).then((client) => {
-		const channel = helper.prepareChannel(channelName, client);
-		const peers = helper.newPeers([peerIndex], orgName);
-		return invoke(channel, peers, {
-			chaincodeId, fcn,
-			args
-		}).then((message) => {
-			const data = reducer(message);
-			res.json({data: data.responses});
-
-		}).catch(err => {
-			logger.error(err);
-			const {proposalResponses} = err;
-			if (proposalResponses) {
-				errorHandle(proposalResponses, res);
-			} else {
-				errorHandle(err, res);
+		Request.post({url: 'http://service.com/upload', formData}, (err, resp, body) => {
+			if (err) {
+				reject(err);
 			}
+			logger.debug('Upload successful!  Server responded with:', body);
+			const formData = {
+				accessToken, plain, toHash
+			};
+			Request.post({url: 'http://sql', formData}, (err, resp, body) => {
+				if (err) {
+					reject(err);
+				}
+				logger.debug('sql server response with:', body);
+				const {value} = body;
+				const fcn = 'write';
+				const args = [id, value];
+
+				logger.debug({chaincodeId, fcn, orgName, peerIndex, channelName});
+				const invalidArgs = invalid.args({args});
+				if (invalidArgs) reject(invalidArgs);
+
+				resolve({fcn, args});
+			});
+		});
+	})).then(({fcn,args}) => {
+		const {invoke} = require('../app/invoke-chaincode.js');
+		return helper.getOrgAdmin(orgName).then((client) => {
+			const channel = helper.prepareChannel(channelName, client);
+			const peers = helper.newPeers([peerIndex], orgName);
+			return invoke(channel, peers, {
+				chaincodeId, fcn,
+				args
+			}).then((message) => {
+				const data = reducer(message);
+				res.json({data: data.responses});
+
+			});
 		});
 	});
 
+	promise.catch(err => {
+		logger.error(err);
+		const {proposalResponses} = err;
+		if (proposalResponses) {
+			errorHandle(proposalResponses, res);
+		} else {
+			errorHandle(err, res);
+		}
+	});
 
 });
 router.post('/delete', (req, res) => {
 	const {id} = req.body;
-	let {org} = req.body;
-	logger.debug('delete', {id, org});
+	const {org: orgName} = req.body;
+	logger.debug('delete', {id, orgName});
 
 	if (!id) return errorHandle(`id is ${id}`, res);
-	if (!org) return errorHandle(`org is ${org}`, res);
-	const {fcn, args, orgName, peerIndex} = {
-		fcn: 'delete',
-		args: [id],
-		orgName: org,
-		peerIndex: 0,
-	};
+	if (!orgName) return errorHandle(`org is ${orgName}`, res);
+	const fcn = 'delete';
+	const args = [id];
 	const {invoke} = require('../app/invoke-chaincode.js');
 
 	logger.debug({chaincodeId, fcn, orgName, peerIndex, channelName});
@@ -180,19 +180,16 @@ router.post('/delete', (req, res) => {
 });
 router.post('/read', (req, res) => {
 	const {id} = req.body;
-	const {org} = req.body;
-	logger.debug('read', {id, org});
+	const {org: orgName} = req.body;
+	logger.debug('read', {id, orgName});
 
 	if (!id) return errorHandle(`id is ${id}`, res);
-	if (!org) return errorHandle(`org is ${org}`, res);
+	if (!orgName) return errorHandle(`org is ${orgName}`, res);
 
-	const {fcn, args, orgName, peerIndex} = {
-		fcn: 'read',
-		args: [id],
-		orgName: org,
-		peerIndex: 0,
-	};
-	if (org === 'TK') {
+	const fcn = 'read';
+
+	const args = [id];
+	if (orgName === 'TK') {
 		let {delegatedOrg} = req.body;
 		if (!delegatedOrg) {
 			delegatedOrg = 'TK';

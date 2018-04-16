@@ -18,7 +18,6 @@
 const logger = require('./util/logger').new('Helper');
 const path = require('path');
 const fs = require('fs-extra');
-const caUtil = require('./util/ca');
 const globalConfig = require('../config/orgs.json');
 
 const companyConfig = globalConfig;
@@ -54,7 +53,7 @@ const preparePeer = (orgName, peerIndex, peerConfig) => {
 	const {peer_hostName_full, tls_cacerts} = gen_tls_cacerts(orgName, peerIndex);
 	let peerPort;
 	let eventHubPort;
-	for (let portMapEach of peerConfig.portMap) {
+	for (const portMapEach of peerConfig.portMap) {
 		if (portMapEach.container === 7051) {
 			peerPort = portMapEach.host;
 		}
@@ -81,8 +80,8 @@ const preparePeer = (orgName, peerIndex, peerConfig) => {
 
 const ordererConfig = companyConfig.orderer;
 
+const OrdererUtil = require('./util/orderer');
 /**
- * FIXME assume we have only one orderer
 
  * @param client
  * @param channelName
@@ -100,37 +99,41 @@ exports.prepareChannel = (channelName, client, isRenew) => {
 	}
 
 	const channel = client.newChannel(channelname);//NOTE throw exception if exist
-	const newOrderer = (ordererName, ordererSingleConfig) => {
-		const orderer_url = `${GPRC_protocol}localhost:${ordererSingleConfig.portMap[7050]}`;
+	const newOrderer = (ordererName,domain, ordererSingleConfig) => {
+
+		const ordererPort = ordererSingleConfig.portHost;
 		if (companyConfig.TLS) {
-			const orderer_hostName_full = `${ordererName}.${COMPANY_DOMAIN}`;
-			const orderer_tls_cacerts = path.resolve(CRYPTO_CONFIG_DIR,
-				'ordererOrganizations', COMPANY_DOMAIN, 'orderers', orderer_hostName_full, 'tls', 'ca.crt');
-			return new Orderer(orderer_url, {
-				pem: fs.readFileSync(orderer_tls_cacerts).toString(),
-				'ssl-target-name-override': orderer_hostName_full,
+			const orderer_hostName_full = `${ordererName}.${domain}`;
+			const tls_cacerts = path.resolve(CRYPTO_CONFIG_DIR,
+				'ordererOrganizations', domain, 'orderers', orderer_hostName_full, 'tls', 'ca.crt');
+			return OrdererUtil.new({
+				ordererPort,
+				tls_cacerts,
+				orderer_hostName_full
 			});
 		} else {
-			return new Orderer(orderer_url);
+			return OrdererUtil.new({ordererPort});
 		}
 
 	};
 	if (ordererConfig.type === 'kafka') {
-		const ordererConfigs = ordererConfig.kafka.orderers;
-		for (let ordererName in ordererConfigs) {
-			const ordererSingleConfig = ordererConfigs[ordererName];
-			const orderer = newOrderer(ordererName, ordererSingleConfig);
-			channel.addOrderer(orderer);
-		}
+		for (const ordererOrgName in ordererConfig.kafka.orgs){
+			const ordererOrgConfig = ordererConfig.kafka.orgs[ordererOrgName];
+			for(const ordererName in ordererOrgConfig.orderers){
+				const ordererSingleConfig = ordererOrgConfig.orderers[ordererName];
+				const orderer = newOrderer(ordererName,ordererOrgName, ordererSingleConfig);
+				channel.addOrderer(orderer);
+			}
 
+		}
 	} else {
-		const orderer = newOrderer(ordererConfig.solo.container_name, ordererConfig.solo);
+		const orderer = newOrderer(ordererConfig.solo.container_name,COMPANY_DOMAIN, ordererConfig.solo);
 		channel.addOrderer(orderer);
 	}
 
-	for (let orgName in channelConfig.orgs) {
+	for (const orgName in channelConfig.orgs) {
 		const orgConfigInChannel = channelConfig.orgs[orgName];
-		for (let peerIndex of orgConfigInChannel.peerIndexes) {
+		for (const peerIndex of orgConfigInChannel.peerIndexes) {
 			const peerConfig = orgsConfig[orgName].peers[peerIndex];
 
 			const peer = preparePeer(orgName, peerIndex, peerConfig);
@@ -149,12 +152,12 @@ const getStateDBCachePath = () => {
 	return nodeConfig.stateDBCacheDir;
 };
 
-exports.newPeers= (peerIndexes, orgName) => {
+exports.newPeers = (peerIndexes, orgName) => {
 
 // work as a data adapter, containerNames: array --> orgname,peerIndex,peerConfig for each newPeer
 	const targets = [];
 	// find the peer that match the urls
-	for (let index of peerIndexes) {
+	for (const index of peerIndexes) {
 
 		const peerConfig = orgsConfig[orgName].peers[index];
 		if (!peerConfig) continue;
@@ -214,7 +217,7 @@ objects.user = {
 		}
 	},
 	mspCreate: (client,
-		{keystoreDir, signcertFile, username, orgName, mspid = getMspID(orgName), skipPersistence = false}) => {
+				{keystoreDir, signcertFile, username, orgName, mspid = getMspID(orgName), skipPersistence = false}) => {
 		const keyFile = getKeyFilesInDir(keystoreDir)[0];
 		// NOTE:(jsdoc) This allows applications to use pre-existing crypto materials (private keys and certificates) to construct user objects with signing capabilities
 		// NOTE In client.createUser option, two types of cryptoContent is supported:
@@ -239,12 +242,12 @@ objects.user = {
 		}
 	},
 	/**
-     * search in stateStore first, if not exist, then query state db to get cached user object
-     * @param username
-     * @param orgName
-     * @param client
-     * @return {Promise.<TResult>}
-     */
+	 * search in stateStore first, if not exist, then query state db to get cached user object
+	 * @param username
+	 * @param orgName
+	 * @param client
+	 * @return {Promise.<TResult>}
+	 */
 	get: (username, orgName, client) => {
 		const newKVS = () => sdkUtils.newKeyValueStore({
 			path: getStateDBCachePath(orgName),
@@ -274,7 +277,7 @@ objects.user = {
 };
 exports.formatPeerName = (peerName, orgName) => `${peerName}.${orgName}.${COMPANY_DOMAIN}`;
 const formatUsername = (username, orgName) => `${username}@${orgName}.${COMPANY_DOMAIN}`;
-
+exports.formatOrdererUsername = (username) => `${username}@${COMPANY_DOMAIN}`;
 objects.user.admin = {
 	orderer: {
 		select: (ordererContainerName = 'ordererContainerName') => {
@@ -295,7 +298,7 @@ objects.user.admin = {
 					keystoreDir, signcertFile, username: rawOrdererUsername, orgName: ordererContainerName,
 					mspid: ordererMSPID,
 				});
-			}).then(()=>Promise.resolve(client));
+			}).then(() => Promise.resolve(client));
 		},
 	}
 	,
@@ -335,7 +338,7 @@ exports.chaincodeProposalAdapter = (actionString, validator) => {
 
 		let errCounter = 0; // NOTE logic: reject only when all bad
 		let swallowCounter = 0;
-		for (let i in responses) {
+		for (const i in responses) {
 			const proposalResponse = responses[i];
 			const {isValid, isSwallowed} = _validator(proposalResponse);
 			if (isValid) {
