@@ -102,7 +102,7 @@
                 "constraints": [
                 ]
               },
-              "portMap": 9050
+              "portHost": 9050
             }
           }
         }
