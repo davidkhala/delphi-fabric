@@ -22,7 +22,7 @@ const globalConfig = require('../config/orgs.json');
 
 const companyConfig = globalConfig;
 const orgsConfig = companyConfig.orgs;
-const CRYPTO_CONFIG_DIR = companyConfig.docker.volumes.MSPROOT.dir;
+const CRYPTO_CONFIG_DIR = companyConfig.docker.volumes.CACRYPTOROOT.dir;
 const channelsConfig = companyConfig.channels;
 const COMPANY_DOMAIN = companyConfig.domain;
 const chaincodeConfig = require('../config/chaincode.json');
@@ -99,7 +99,7 @@ exports.prepareChannel = (channelName, client, isRenew) => {
 	}
 
 	const channel = client.newChannel(channelname);//NOTE throw exception if exist
-	const newOrderer = (ordererName,domain, ordererSingleConfig) => {
+	const newOrderer = (ordererName, domain, ordererSingleConfig) => {
 
 		const ordererPort = ordererSingleConfig.portHost;
 		if (companyConfig.TLS) {
@@ -117,17 +117,17 @@ exports.prepareChannel = (channelName, client, isRenew) => {
 
 	};
 	if (ordererConfig.type === 'kafka') {
-		for (const ordererOrgName in ordererConfig.kafka.orgs){
+		for (const ordererOrgName in ordererConfig.kafka.orgs) {
 			const ordererOrgConfig = ordererConfig.kafka.orgs[ordererOrgName];
-			for(const ordererName in ordererOrgConfig.orderers){
+			for (const ordererName in ordererOrgConfig.orderers) {
 				const ordererSingleConfig = ordererOrgConfig.orderers[ordererName];
-				const orderer = newOrderer(ordererName,ordererOrgName, ordererSingleConfig);
+				const orderer = newOrderer(ordererName, ordererOrgName, ordererSingleConfig);
 				channel.addOrderer(orderer);
 			}
 
 		}
 	} else {
-		const orderer = newOrderer(ordererConfig.solo.container_name,COMPANY_DOMAIN, ordererConfig.solo);
+		const orderer = newOrderer(ordererConfig.solo.container_name, COMPANY_DOMAIN, ordererConfig.solo);
 		channel.addOrderer(orderer);
 	}
 
@@ -192,7 +192,7 @@ const getKeyFilesInDir = (dir) => {
 	return files.filter((fileName) => fileName.endsWith('_sk')).map((fileName) => path.resolve(dir, fileName));
 };
 
-const rawAdminUsername = 'adminName';
+const rawAdminUsername = globalConfig.cryptogenSkip ? 'admin' : 'Admin';
 const objects = {};
 
 objects.user = {
@@ -225,7 +225,7 @@ objects.user = {
 		// 2. cryptoContent: {		privateKeyPEM: keyFileContent,signedCertPEM: certFileContent}
 
 		const createUserOpt = {
-			username: formatUsername(username, orgName),
+			username,
 			mspid,
 			cryptoContent: {privateKey: keyFile, signedCert: signcertFile},
 			skipPersistence,
@@ -267,7 +267,11 @@ objects.user = {
 	createIfNotExist: (keystoreDir, signcertFile, username, orgName, client) =>
 		objects.user.get(username, orgName, client).then(user => {
 			if (user) return client.setUserContext(user, false);
-			return objects.user.mspCreate(client, {keystoreDir, signcertFile, username, orgName});
+			return objects.user.mspCreate(client, {
+				keystoreDir, signcertFile,
+				username: formatUsername(username, orgName)
+				, orgName
+			});
 		}),
 	select: (keystoreDir, signcertFile, username, orgName) => {
 		const client = ClientUtil.new();
@@ -277,25 +281,25 @@ objects.user = {
 };
 exports.formatPeerName = (peerName, orgName) => `${peerName}.${orgName}.${COMPANY_DOMAIN}`;
 const formatUsername = (username, orgName) => `${username}@${orgName}.${COMPANY_DOMAIN}`;
-exports.formatOrdererUsername = (username) => `${username}@${COMPANY_DOMAIN}`;
 objects.user.admin = {
 	orderer: {
 		select: (ordererContainerName = 'ordererContainerName') => {
 
-			const rawOrdererUsername = 'ordererAdminName';
-
+			const ordererUser_name_full = `${rawAdminUsername}@${COMPANY_DOMAIN}`;
 			const keystoreDir = path.join(CRYPTO_CONFIG_DIR,
-				'ordererOrganizations', COMPANY_DOMAIN, 'users', `Admin@${COMPANY_DOMAIN}`, 'msp', 'keystore');
+				'ordererOrganizations', COMPANY_DOMAIN, 'users', ordererUser_name_full, 'msp', 'keystore');
 			const signcertFile = path.join(CRYPTO_CONFIG_DIR,
-				'ordererOrganizations', COMPANY_DOMAIN, 'users', `Admin@${COMPANY_DOMAIN}`, 'msp', 'signcerts',
-				`Admin@${COMPANY_DOMAIN}-cert.pem`);
+				'ordererOrganizations', COMPANY_DOMAIN, 'users', ordererUser_name_full, 'msp', 'signcerts',
+				`${ordererUser_name_full}-cert.pem`);
 			const ordererMSPID = ordererConfig.MSP.id;
 			const client = ClientUtil.new();
 
-			return objects.user.get(rawOrdererUsername, ordererContainerName, client).then(user => {
+			return objects.user.get(ordererUser_name_full, ordererContainerName, client).then(user => {
 				if (user) return client.setUserContext(user, false);
 				return objects.user.mspCreate(client, {
-					keystoreDir, signcertFile, username: rawOrdererUsername, orgName: ordererContainerName,
+					keystoreDir, signcertFile,
+					username: ordererUser_name_full,
+					orgName: COMPANY_DOMAIN,
 					mspid: ordererMSPID,
 				});
 			}).then(() => Promise.resolve(client));
@@ -306,14 +310,21 @@ objects.user.admin = {
 	create: (orgName, client) => {
 
 		const org_domain = `${orgName}.${COMPANY_DOMAIN}`;// BU.Delphi.com
-		const keystoreDir = path.join(CRYPTO_CONFIG_DIR, 'peerOrganizations', org_domain, 'users', `Admin@${org_domain}`,
+
+
+		const admin_name_full = `${rawAdminUsername}@${org_domain}`;
+		const keystoreDir = path.join(CRYPTO_CONFIG_DIR, 'peerOrganizations', org_domain, 'users', admin_name_full,
 			'msp', 'keystore');
 
 		const signcertFile = path.join(CRYPTO_CONFIG_DIR,
-			'peerOrganizations', org_domain, 'users', `Admin@${org_domain}`, 'msp', 'signcerts',
-			`Admin@${org_domain}-cert.pem`);
+			'peerOrganizations', org_domain, 'users', admin_name_full, 'msp', 'signcerts',
+			`${admin_name_full}-cert.pem`);
 
-		return objects.user.mspCreate(client, {keystoreDir, signcertFile, username: rawAdminUsername, orgName});
+		return objects.user.mspCreate(client, {
+			keystoreDir, signcertFile,
+			username: formatUsername(rawAdminUsername, orgName),
+			orgName
+		});
 	},
 	createIfNotExist: (orgName, client) => objects.user.admin.get(orgName, client).then(user => {
 		if (user) return client.setUserContext(user, false);

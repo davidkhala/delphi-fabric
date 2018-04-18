@@ -18,7 +18,7 @@ const createChannel = (client, channelName, channelConfigFile, orgNames, orderer
 
 
 	const clientSwitchPromises = [];
-	for (let orgName of orgNames) {
+	for (const orgName of orgNames) {
 		const switchPromise = helper.getOrgAdmin(orgName);
 		clientSwitchPromises.push(switchPromise);
 	}

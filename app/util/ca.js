@@ -10,11 +10,6 @@ const user = {
 	toMSP: ({key, certificate, rootCertificate}, mspDir, {username, domain}) => {
 		_toMSP({key, certificate, rootCertificate}, mspDir, {name: username, delimiter: '@', domain});
 	},
-	enroll: (caService, {username, password}) =>
-		enroll(caService, {
-			enrollmentID: username,
-			enrollmentSecret: password
-		}),
 	admin: {
 		toMSP: ({key, certificate, rootCertificate}, mspDir, {adminName, domain}) => {
 			const admincerts = path.join(mspDir, 'admincerts');
@@ -22,7 +17,8 @@ const user = {
 			fs.writeFileSync(path.join(admincerts, `${adminName}@${domain}-cert.pem`), certificate);
 			user.toMSP({key, certificate, rootCertificate}, mspDir, {username: adminName, domain});
 		}
-	}
+	},
+
 };
 exports.peer = {
 	/**
@@ -100,16 +96,31 @@ const pkcs11_key = {
 };
 
 const _toMSP = ({key, certificate, rootCertificate}, mspDirName, {name, delimiter, domain}) => {
-	const cacertsDir = path.join(mspDirName, 'cacerts');
-	const keystoreDir = path.join(mspDirName, 'keystore');
-	const signcertsDir = path.join(mspDirName, 'signcerts');
-	fsExtra.ensureDirSync(cacertsDir);
-	fsExtra.ensureDirSync(keystoreDir);
-	fsExtra.ensureDirSync(signcertsDir);
-	fs.writeFileSync(path.join(cacertsDir, `ca.${domain}-cert.pem`), rootCertificate);
-	pkcs11_key.toKeystore(key, keystoreDir);
-	fs.writeFileSync(path.join(signcertsDir, `${name}${delimiter}${domain}-cert.pem`), certificate);
-
+	if(certificate){
+		const signcertsDir = path.resolve(mspDirName, 'signcerts');
+		fsExtra.ensureDirSync(signcertsDir);
+		fs.writeFileSync(path.resolve(signcertsDir, `${name}${delimiter}${domain}-cert.pem`), certificate);
+	}
+	if(key){
+		const keystoreDir = path.resolve(mspDirName, 'keystore');
+		fsExtra.ensureDirSync(keystoreDir);
+		pkcs11_key.toKeystore(key, keystoreDir);
+	}
+	if(rootCertificate){
+		const cacertsDir = path.resolve(mspDirName, 'cacerts');
+		fsExtra.ensureDirSync(cacertsDir);
+		fs.writeFileSync(path.resolve(cacertsDir, `ca.${domain}-cert.pem`), rootCertificate);
+	}
+};
+exports.org = {
+	toMSP :({certificate, rootCertificate},mspDir,{name,domain})=>{
+		const cacertsDir = path.resolve(mspDir, 'cacerts');
+		const admincertsDir = path.resolve(mspDir, 'admincerts');
+		fsExtra.ensureDirSync(cacertsDir);
+		fsExtra.ensureDirSync(admincertsDir);
+		fs.writeFileSync(path.resolve(cacertsDir, `ca.${domain}-cert.pem`), rootCertificate);
+		fs.writeFileSync(path.resolve(admincertsDir, `${name}@${domain}-cert.pem`), certificate);
+	}
 };
 const _toTLS = ({key, certificate, rootCertificate}, tlsDir) => {
 	fsExtra.ensureDirSync(tlsDir);

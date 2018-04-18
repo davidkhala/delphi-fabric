@@ -13,8 +13,8 @@ Profiles:
         PreferredMaxBytes: 512 KB
       Organizations:
         - Name: TkMSPName
-          ID: TkMSP
-          MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/ordererOrganizations/TK.Teeking.com/msp
+          ID: TkConsensusMSP
+          MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/TKConsensus.Teeking.com/msp
       Kafka:
         Brokers:
           - 'kafka0:9092'
@@ -26,25 +26,25 @@ Profiles:
         Organizations:
           - Name: SUPPLYMSPName
             ID: SUPPLYMSP
-            MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/SUPPLY.Teeking.com/msp
+            MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/SUPPLY.Teeking.com/msp
             AnchorPeers:
               - Host: SupplyChain
                 Port: 7051
           - Name: CARMSPName
             ID: CARMSP
-            MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/CAR.Teeking.com/msp
+            MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/CAR.Teeking.com/msp
             AnchorPeers:
               - Host: Car
                 Port: 7051
           - Name: FACTORYMSPName
             ID: FACTORYMSP
-            MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/FACTORY.Teeking.com/msp
+            MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/FACTORY.Teeking.com/msp
             AnchorPeers:
               - Host: Factory
                 Port: 7051
           - Name: TkMSPName
             ID: TkMSP
-            MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/TK.Teeking.com/msp
+            MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/TK.Teeking.com/msp
             AnchorPeers:
               - Host: Tk
                 Port: 7051
@@ -54,25 +54,25 @@ Profiles:
       Organizations:
         - Name: SUPPLYMSPName
           ID: SUPPLYMSP
-          MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/SUPPLY.Teeking.com/msp
+          MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/SUPPLY.Teeking.com/msp
           AnchorPeers:
             - Host: SupplyChain
               Port: 7051
         - Name: CARMSPName
           ID: CARMSP
-          MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/CAR.Teeking.com/msp
+          MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/CAR.Teeking.com/msp
           AnchorPeers:
             - Host: Car
               Port: 7051
         - Name: FACTORYMSPName
           ID: FACTORYMSP
-          MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/FACTORY.Teeking.com/msp
+          MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/FACTORY.Teeking.com/msp
           AnchorPeers:
             - Host: Factory
               Port: 7051
         - Name: TkMSPName
           ID: TkMSP
-          MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/TK.Teeking.com/msp
+          MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/TK.Teeking.com/msp
           AnchorPeers:
             - Host: Tk
               Port: 7051

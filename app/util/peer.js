@@ -25,8 +25,7 @@ exports.new = ({peerPort, tls_cacerts, pem, peer_hostName_full, host}) => {
 const fsExtra = require('fs-extra');
 const path = require('path');
 const pathUtil = require('./path');
-exports.formatPeerName = (peerName, domain) => `${peerName}.${domain}`;
-exports.loadFromLocal = (peerMspRoot, {peer_hostName_full, peerPort}) => {
+exports.cryptoExistLocal = (peerMspRoot, {peer_hostName_full})=>{
 	fsExtra.ensureDirSync(peerMspRoot);
 
 	const keystoreDir = path.resolve(peerMspRoot, 'keystore');
@@ -37,14 +36,17 @@ exports.loadFromLocal = (peerMspRoot, {peer_hostName_full, peerPort}) => {
 
 	if (!fs.existsSync(keystoreDir)) return;
 	const keyFile = pathUtil.findKeyfiles(keystoreDir)[0];
-	// NOTE:(jsdoc) This allows applications to use pre-existing crypto materials (private keys and certificates) to construct user objects with signing capabilities
-	// NOTE In client.createUser option, two types of cryptoContent is supported:
-	// 1. cryptoContent: {		privateKey: keyFilePath,signedCert: certFilePath}
-	// 2. cryptoContent: {		privateKeyPEM: keyFileContent,signedCertPEM: certFileContent}
 
 	if (!fs.existsSync(keyFile)) return;
 	if (!fs.existsSync(signcertFile)) return;
+	return {signcertFile};
+}
+exports.loadFromLocal = (peerMspRoot, {peer_hostName_full, peerPort}) => {
+	const exist = module.exports.cryptoExistLocal(peerMspRoot,{peer_hostName_full});
+	if(exist){
+		const {signcertFile} = exist;
+		return module.exports.new({peerPort, tls_cacerts: signcertFile, peer_hostName_full});
+	}
 
-
-	return module.exports.new({peerPort, tls_cacerts: signcertFile, peer_hostName_full});
 };
+exports.formatPeerName = (peerName, domain) => `${peerName}.${domain}`;

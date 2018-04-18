@@ -3,7 +3,7 @@ const joinChannel = require('./join-channel').joinChannel;
 
 const helper = require('./helper');
 const logger = require('./util/logger').new('testChannel');
-const channelName = 'delphiChannel';
+const channelName = 'allChannel';
 const Sleep = require('sleep');
 
 const companyConfig = require('../config/orgs.json');
@@ -13,7 +13,7 @@ const joinAllfcn = () => {
 
 	let promise = Promise.resolve();
 
-	for (let orgName in  channelConfig.orgs) {
+	for (const orgName in  channelConfig.orgs) {
 		const {peerIndexes} = channelConfig.orgs[orgName];
 		const peers = helper.newPeers(peerIndexes, orgName);
 
@@ -39,12 +39,13 @@ const joinAllfcn = () => {
 };
 //E0905 10:07:20.462272826    7262 ssl_transport_security.c:947] Handshake failed with fatal error SSL_ERROR_SSL: error:14090086:SSL routines:ssl3_get_server_certificate:certificate verify failed.
 
-helper.getOrgAdmin('BU').then((client) => {
-	return createChannel(client, channelName, channelConfigFile, ['BU', 'PM'], 'grpc://localhost:7050');
+helper.getOrgAdmin('TK').then((client) => {
+	return createChannel(client, channelName, channelConfigFile, ['TK', 'SUPPLY'], 'grpc://localhost:7050');
 }).then(() => {
 	return joinAllfcn();
 }).catch(err => {
-	if (err.toString().includes('Error: BAD_REQUEST')) {
+	if (err.toString().includes('Error: BAD_REQUEST')||
+		err.status.includes('BAD_REQUEST')) {
 		//existing swallow
 		return joinAllfcn();
 	} else {

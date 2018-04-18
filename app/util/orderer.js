@@ -29,7 +29,7 @@ exports.new = ({ordererPort, tls_cacerts, pem, orderer_hostName_full, host}) => 
 	}
 
 };
-exports.loadFromLocal= (ordererMspRoot, {orderer_hostName_full, ordererPort}) => {
+exports.cryptoExistLocal = (ordererMspRoot,{orderer_hostName_full})=>{
 	fsExtra.ensureDirSync(ordererMspRoot);
 
 	const keystoreDir = path.resolve(ordererMspRoot, 'keystore');
@@ -43,7 +43,14 @@ exports.loadFromLocal= (ordererMspRoot, {orderer_hostName_full, ordererPort}) =>
 
 	if (!fs.existsSync(keyFile)) return;
 	if (!fs.existsSync(signcertFile)) return;
+	return {signcertFile};
+}
+exports.loadFromLocal= (ordererMspRoot, {orderer_hostName_full, ordererPort}) => {
+	const isExist = module.exports.cryptoExistLocal(ordererMspRoot,{orderer_hostName_full});
 
-
-	return module.exports.new({ordererPort, tls_cacerts: signcertFile, orderer_hostName_full});
+	if(isExist){
+		const {signcertFile} = isExist;
+		return module.exports.new({ordererPort, tls_cacerts: signcertFile, orderer_hostName_full});
+	}
+	return false;
 };

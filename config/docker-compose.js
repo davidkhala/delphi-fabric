@@ -19,7 +19,7 @@ const swarmServiceName = (serviceName) => {
 	return serviceName.replace(/\./g, '-');
 };
 const addOrdererService = (services, {BLOCK_FILE, mspId, ordererEachConfig, MSPROOTVolume, CONFIGTXVolume}, {
-	ordererName, COMPANY_DOMAIN, IMAGE_TAG,
+	ordererName, domain, IMAGE_TAG,
 	ORDERER_GENERAL_TLS_ROOTCAS,
 	kafkaServices, swarmType = 'local',
 	CONFIGTX = '/etc/hyperledger/configtx',
@@ -28,7 +28,7 @@ const addOrdererService = (services, {BLOCK_FILE, mspId, ordererEachConfig, MSPR
 
 	const {TLS} = globalConfig;
 	let ordererServiceName = ordererName;
-	const ORDERER_STRUCTURE = `ordererOrganizations/${COMPANY_DOMAIN}/orderers/${ordererServiceName}.${COMPANY_DOMAIN}`;
+	const ORDERER_STRUCTURE = `ordererOrganizations/${domain}/orderers/${ordererServiceName}.${domain}`;
 	const ordererService = {
 		image: `hyperledger/fabric-orderer:${IMAGE_TAG}`,
 		command: 'orderer',
@@ -44,7 +44,7 @@ const addOrdererService = (services, {BLOCK_FILE, mspId, ordererEachConfig, MSPR
 			`ORDERER_GENERAL_GENESISFILE=${CONFIGTX}/${BLOCK_FILE}`,
 			//  NOTE remove ORDERER_GENERAL_GENESISFILE: panic: Unable to bootstrap orderer. Error reading genesis block file: open /etc/hyperledger/fabric/genesisblock: no such file or directory
 			// NOTE when ORDERER_GENERAL_GENESISMETHOD=provisional  ORDERER_GENERAL_GENESISPROFILE=SampleNoConsortium -> panic: No system chain found.  If bootstrapping, does your system channel contain a consortiums group definition
-			`ORDERER_GENERAL_LOCALMSPID=${mspId}`,// FIXME hardcode MSP name
+			`ORDERER_GENERAL_LOCALMSPID=${mspId}`,
 			`ORDERER_GENERAL_LOCALMSPDIR=${MSPROOT}/${ORDERER_STRUCTURE}/msp`,
 			'GODEBUG=netdns=go' // aliyun only
 
@@ -296,7 +296,7 @@ exports.gen = ({
 
 
 				addOrdererService(services, {BLOCK_FILE, mspId, ordererEachConfig, CONFIGTXVolume, MSPROOTVolume}, {
-					ordererName, COMPANY_DOMAIN, IMAGE_TAG,
+					ordererName, domain:ordererOrgName, IMAGE_TAG,
 					swarmType: type, ORDERER_GENERAL_TLS_ROOTCAS,
 					kafkaServices: Object.keys(kafkaConfigs)
 				});
@@ -374,7 +374,7 @@ exports.gen = ({
 		const BLOCK_FILE = companyConfig.orderer.genesis_block.file;
 		const mspId = companyConfig.orderer.solo.MSP.id;
 		addOrdererService(services, {BLOCK_FILE, mspId, ordererEachConfig, CONFIGTXVolume, MSPROOTVolume}, {
-			ordererName: ordererEachConfig.container_name, COMPANY_DOMAIN, IMAGE_TAG,
+			ordererName: ordererEachConfig.container_name, domain:COMPANY_DOMAIN, IMAGE_TAG,
 			swarmType: type, ORDERER_GENERAL_TLS_ROOTCAS,
 			kafkaServices: undefined
 		});
@@ -426,12 +426,8 @@ exports.genCAs = ({
 	if (type === 'kafka') {
 		for (const ordererOrg in globalConfig.orderer.kafka.orgs) {
 			const ordererOrgConfig = globalConfig.orderer.kafka.orgs[ordererOrg];
-			for (const ordererName in ordererOrgConfig.orderers) {
-				if (ordererName !== 'orderer0') continue;//FIXME debug only
-				const caConfig = ordererOrgConfig.ca;
-				module.exports.addCA(services, {caConfig}, {orgDomain: ordererOrg, IMAGE_TAG});
-			}
-
+			const caConfig = ordererOrgConfig.ca;
+			module.exports.addCA(services, {caConfig}, {orgDomain: ordererOrg, IMAGE_TAG});
 		}
 	} else {
 		const {ca, container_name} = globalConfig.orderer.solo;
@@ -439,7 +435,6 @@ exports.genCAs = ({
 	}
 
 	for (const orgName in peerOrgsConfig) {
-		if (orgName !== 'TK') continue;//FIXME debug only
 		const orgConfig = peerOrgsConfig[orgName];
 		const caConfig = orgConfig.ca;
 
@@ -484,7 +479,8 @@ exports.addCA = (services, {caConfig}, {orgDomain, IMAGE_TAG}) => {
 		ports: [`${caConfig.portHost}:7054`],
 		environment: [
 			'GODEBUG=netdns=go',//NOTE aliyun only
-		]
+		],
+		container_name:caContainerName
 	};
 	let caServiceName = caContainerName;
 	caService.networks = {
@@ -498,6 +494,7 @@ exports.addCA = (services, {caConfig}, {orgDomain, IMAGE_TAG}) => {
 };
 
 
+//FIXME deprecated??
 exports.addPeer = (services, {peerConfig, peerIndex, orgDomain, orgConfig}, {MSPROOTVolume, network, TLS, IMAGE_TAG, depends_on, swarmType}) => {
 	const peerDomain = `peer${peerIndex}.${orgDomain}`;
 

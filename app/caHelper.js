@@ -19,7 +19,8 @@ fs.ensureDirSync(ordererUsersDir);
 fs.ensureDirSync(path.resolve(caMSPROOT, 'peerOrganizations'));
 
 
-exports.getOrdererAdmin = ({ordererName}, caService = getOrdererCaService({ordererName})) => {
+
+exports.getOrdererAdmin = ({ordererName}, caService = getOrdererCaService(ordererName)) => {
 
 	const MSPID = globalConfig.orderer.MSP.id;
 
@@ -41,7 +42,7 @@ exports.getOrdererAdmin = ({ordererName}, caService = getOrdererCaService({order
 };
 
 //TODO
-exports.enrollOrderer = ({ordererName,ordererPort},caService = getOrdererCaService({ordererName}))=>{
+exports.enrollOrderer = ({ordererName,ordererPort},caService = getOrdererCaService(ordererName))=>{
 
 	const orderer_hostName_full = peerUtil.formatPeerName(ordererName,domain);
 	const ordererMSPRoot = path.resolve(orderersDir,orderer_hostName_full,'msp');
@@ -79,12 +80,13 @@ const setCAAdminUser = ({orgName}, caService = getCaService({orgName})) => {
 	});
 };
 
-const getOrdererCaService = ({ordererName}) => {
+const getOrdererCaService = (ordererOrgName) => {
 	const {TLS} = globalConfig;
 	let ordererConfig;
 	if (globalConfig.orderer.type === 'kafka') {
-		if(!ordererName) throw new Error('missing ordererName in kafka mode');
-		ordererConfig = globalConfig.orderer.kafka.orderers[ordererName];
+		if(!ordererOrgName) throw new Error('missing ordererOrgName in kafka mode');
+		ordererConfig = globalConfig.orderer.kafka.orgs[ordererOrgName];
+		if(!ordererConfig) throw new Error(`missing config of ${ordererOrgName} in kafka mode`);
 	} else {
 		ordererConfig = globalConfig.orderer.solo;
 	}
@@ -96,6 +98,7 @@ const getOrdererCaService = ({ordererName}) => {
 	return caUtil.new(caUrl);
 
 };
+exports.getOrdererCaService = getOrdererCaService;
 const getCaService = ({orgName}) => {
 	const orgConfig = globalConfig.orgs[orgName];
 	const {TLS} = globalConfig;

@@ -1,16 +1,17 @@
 {
   "domain": "Teeking.com",
   "TLS": false,
+  "cryptogenSkip":true,
   "docker": {
     "fabricTag": "1.1.0",
     "thirdPartyTag": "0.4.6",
     "network": "TeekingNetwork",
     "volumes": {
       "CONFIGTX": {
-        "dir": "/home/fabric2/Documents/delphi-fabric/config/configtx"
+        "dir": "/home/david/Documents/delphi-fabric/config/configtx"
       },
       "MSPROOT": {
-        "dir": "/home/fabric2/Documents/delphi-fabric/config/crypto-config/"
+        "dir": "/home/david/Documents/delphi-fabric/config/crypto-config/"
       },
       "CACRYPTOROOT": {
         "dir": "/home/david/Documents/delphi-fabric/config/ca-crypto-config/"
@@ -71,10 +72,10 @@
         }
       },
       "orgs": {
-        "TK.Teeking.com": {
+        "TKConsensus.Teeking.com": {
           "MSP": {
             "name": "TkMSPName",
-            "id": "TkMSP"
+            "id": "TkConsensusMSP"
           },
           "ca": {
             "portHost": 7450,
@@ -161,7 +162,7 @@
       ],
       "userCount": 0,
       "ca": {
-        "enable": true,
+        "enable": false,
         "admin": {
           "name": "CAadmin",
           "pass": "passwd"

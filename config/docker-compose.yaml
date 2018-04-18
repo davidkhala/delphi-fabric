@@ -40,18 +40,6 @@ services:
     container_name: SupplyChain
     networks:
       - default
-  ca.SUPPLY.Teeking.com:
-    image: 'hyperledger/fabric-ca:x86_64-1.1.0'
-    command: 'sh -c ''fabric-ca-server start -d -b CAadmin:passwd'''
-    volumes:
-      - './caExpose:/etc/hyperledger/fabric-ca-server'
-    ports:
-      - '6054:7054'
-    environment:
-      - GODEBUG=netdns=go
-    container_name: ca.SUPPLY.Teeking.com
-    networks:
-      - default
   peer0.CAR.Teeking.com:
     image: 'hyperledger/fabric-peer:x86_64-1.1.0'
     command: peer node start
@@ -159,8 +147,8 @@ services:
       - ORDERER_GENERAL_TLS_ENABLED=false
       - ORDERER_GENERAL_GENESISMETHOD=file
       - ORDERER_GENERAL_GENESISFILE=/etc/hyperledger/configtx/tk.block
-      - ORDERER_GENERAL_LOCALMSPID=TkMSP
-      - ORDERER_GENERAL_LOCALMSPDIR=/etc/hyperledger/crypto-config/ordererOrganizations/Teeking.com/orderers/orderer0.Teeking.com/msp
+      - ORDERER_GENERAL_LOCALMSPID=TkConsensusMSP
+      - ORDERER_GENERAL_LOCALMSPDIR=/etc/hyperledger/crypto-config/ordererOrganizations/TKConsensus.Teeking.com/orderers/orderer0.TKConsensus.Teeking.com/msp
       - GODEBUG=netdns=go
       - ORDERER_KAFKA_RETRY_SHORTINTERVAL=1s
       - ORDERER_KAFKA_RETRY_SHORTTOTAL=30s
@@ -189,8 +177,8 @@ services:
       - ORDERER_GENERAL_TLS_ENABLED=false
       - ORDERER_GENERAL_GENESISMETHOD=file
       - ORDERER_GENERAL_GENESISFILE=/etc/hyperledger/configtx/tk.block
-      - ORDERER_GENERAL_LOCALMSPID=TkMSP
-      - ORDERER_GENERAL_LOCALMSPDIR=/etc/hyperledger/crypto-config/ordererOrganizations/Teeking.com/orderers/orderer1.Teeking.com/msp
+      - ORDERER_GENERAL_LOCALMSPID=TkConsensusMSP
+      - ORDERER_GENERAL_LOCALMSPDIR=/etc/hyperledger/crypto-config/ordererOrganizations/TKConsensus.Teeking.com/orderers/orderer1.TKConsensus.Teeking.com/msp
       - GODEBUG=netdns=go
       - ORDERER_KAFKA_RETRY_SHORTINTERVAL=1s
       - ORDERER_KAFKA_RETRY_SHORTTOTAL=30s
@@ -209,7 +197,7 @@ services:
     image: 'hyperledger/fabric-orderer:x86_64-1.1.0'
     command: orderer
     ports:
-      - 'undefined:7050'
+      - '9050:7050'
     volumes:
       - 'CONFIGTX_local:/etc/hyperledger/configtx'
       - 'MSPROOT_local:/etc/hyperledger/crypto-config'
@@ -219,8 +207,8 @@ services:
       - ORDERER_GENERAL_TLS_ENABLED=false
       - ORDERER_GENERAL_GENESISMETHOD=file
       - ORDERER_GENERAL_GENESISFILE=/etc/hyperledger/configtx/tk.block
-      - ORDERER_GENERAL_LOCALMSPID=TkMSP
-      - ORDERER_GENERAL_LOCALMSPDIR=/etc/hyperledger/crypto-config/ordererOrganizations/Teeking.com/orderers/orderer2.Teeking.com/msp
+      - ORDERER_GENERAL_LOCALMSPID=TkConsensusMSP
+      - ORDERER_GENERAL_LOCALMSPDIR=/etc/hyperledger/crypto-config/ordererOrganizations/TKConsensus.Teeking.com/orderers/orderer2.TKConsensus.Teeking.com/msp
       - GODEBUG=netdns=go
       - ORDERER_KAFKA_RETRY_SHORTINTERVAL=1s
       - ORDERER_KAFKA_RETRY_SHORTTOTAL=30s
