@@ -395,9 +395,9 @@ exports.gen = ({
 };
 
 exports.genCAs = ({
-					  arch = 'x86_64',
-					  COMPOSE_FILE = path.resolve(CURRENT, 'docker-ca-compose.yaml')
-				  }) => {
+	arch = 'x86_64',
+	COMPOSE_FILE = path.resolve(CURRENT, 'docker-ca-compose.yaml')
+}) => {
 	logger.debug({arch, COMPOSE_FILE});
 
 	const {docker: {fabricTag, network}, orderer: {type}} = globalConfig;
@@ -464,7 +464,7 @@ exports.addCA = (services, {caConfig}, {orgDomain, IMAGE_TAG}) => {
 	}
 	const caService = {
 		image: `hyperledger/fabric-ca:${IMAGE_TAG}`,
-		command: 'sh -c "fabric-ca-server start -d -b admin:passwd"',
+		command: 'fabric-ca-server start -d -b admin:passwd',
 		ports: [`${caConfig.portHost}:7054`],
 		environment: [
 			'GODEBUG=netdns=go',//NOTE aliyun only

@@ -160,13 +160,7 @@
           ]
         }
       ],
-      "userCount": 0,
       "ca": {
-        "enable": false,
-        "admin": {
-          "name": "CAadmin",
-          "pass": "passwd"
-        },
         "portHost": 6054,
         "tlsca": {
           "portHost": 6055
@@ -198,13 +192,7 @@
           ]
         }
       ],
-      "userCount": 0,
       "ca": {
-        "enable": false,
-        "admin": {
-          "name": "CAadmin",
-          "pass": "passwd"
-        },
         "portHost": 8054,
         "tlsca": {
           "portHost": 8055
@@ -236,13 +224,7 @@
           ]
         }
       ],
-      "userCount": 0,
       "ca": {
-        "enable": false,
-        "admin": {
-          "name": "CAadmin",
-          "pass": "passwd"
-        },
         "portHost": 9054,
         "tlsca": {
           "portHost": 9055
@@ -273,13 +255,8 @@
           ]
         }
       ],
-      "userCount": 0,
+
       "ca": {
-        "enable": false,
-        "admin": {
-          "name": "CAadmin",
-          "pass": "passwd"
-        },
         "portHost": 7054,
         "tlsca": {
           "portHost": 7055

@@ -6,7 +6,7 @@ networks:
 services:
   ca-TKConsensus-Teeking-com:
     image: 'hyperledger/fabric-ca:x86_64-1.1.0'
-    command: 'sh -c "fabric-ca-server start -d -b admin:passwd"'
+    command: 'fabric-ca-server start -d -b admin:passwd'
     ports:
       - '7450:7054'
     environment:
@@ -18,7 +18,7 @@ services:
           - ca.TKConsensus.Teeking.com
   ca-SUPPLY-Teeking-com:
     image: 'hyperledger/fabric-ca:x86_64-1.1.0'
-    command: 'sh -c "fabric-ca-server start -d -b admin:passwd"'
+    command: 'fabric-ca-server start -d -b admin:passwd'
     ports:
       - '6054:7054'
     environment:
@@ -30,7 +30,7 @@ services:
           - ca.SUPPLY.Teeking.com
   ca-CAR-Teeking-com:
     image: 'hyperledger/fabric-ca:x86_64-1.1.0'
-    command: 'sh -c "fabric-ca-server start -d -b admin:passwd"'
+    command: 'fabric-ca-server start -d -b admin:passwd'
     ports:
       - '8054:7054'
     environment:
@@ -42,7 +42,7 @@ services:
           - ca.CAR.Teeking.com
   ca-FACTORY-Teeking-com:
     image: 'hyperledger/fabric-ca:x86_64-1.1.0'
-    command: 'sh -c "fabric-ca-server start -d -b admin:passwd"'
+    command: 'fabric-ca-server start -d -b admin:passwd'
     ports:
       - '9054:7054'
     environment:
@@ -54,7 +54,7 @@ services:
           - ca.FACTORY.Teeking.com
   ca-TK-Teeking-com:
     image: 'hyperledger/fabric-ca:x86_64-1.1.0'
-    command: 'sh -c "fabric-ca-server start -d -b admin:passwd"'
+    command: 'fabric-ca-server start -d -b admin:passwd'
     ports:
       - '7054:7054'
     environment:

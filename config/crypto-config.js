@@ -43,7 +43,7 @@ exports.gen = ({
 				Count: orgConfig.peers.length
 			},
 			Users: {
-				Count: orgConfig.userCount
+				Count: 0
 			}
 		});
 	}

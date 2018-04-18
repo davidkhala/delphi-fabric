@@ -12,7 +12,7 @@ const chaincodePath = chaincodeConfig.chaincodes[chaincodeId].path;
 const instantiate_args = [];
 
 const chaincodeVersion = 'v0';
-const channelName = 'delphiChannel';
+const channelName = 'allChannel';
 //only one time, one org could deploy
 const deploy = (orgName, peerIndexes) => {
 	const peers = helper.newPeers(peerIndexes, orgName);
@@ -22,10 +22,10 @@ const deploy = (orgName, peerIndexes) => {
 	});
 };
 
-deploy('BU', [0, 1]).then(() => deploy('PM', [0])
-).then(() => deploy('ENG', [0])
+deploy('TK', [0, 1]).then(() => deploy('CAR', [0])
+).then(() => deploy('FACTORY', [0]).then(()=>deploy('SUPPLY',[0]))
 ).then(() => {
-	const orgName = 'BU';
+	const orgName = 'TK';
 	const peers = helper.newPeers([0], orgName);
 	return helper.getOrgAdmin(orgName).then((client) => {
 		const channel = helper.prepareChannel(channelName, client, true);
