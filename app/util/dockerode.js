@@ -3,6 +3,7 @@ const Docker = require('dockerode');
 const dockerUtil = require('../../common/docker/nodejs/dockerode-util');
 const docker = new Docker();
 const logger = require('./logger').new('dockerode');
+const peerUtil = require('./peer');
 const testUbuntu = () => {
 	const testImage = 'ubuntu:16.04';
 
@@ -11,17 +12,17 @@ const testUbuntu = () => {
 		return docker.run(testImage, ['bash', '-c', 'uname -a'], process.stdout).then((container) => {
 			console.log(container.output.StatusCode);
 			return container.remove();
-		}).then(function(data) {
+		}).then((data) => {
 			console.log('container removed');
-		}).catch(function(err) {
+		}).catch((err) => {
 			console.log(err);
 		});
 	});
 };
 
 exports.runNewCA = ({
-	ca: { container_name, port, networkName }, version, arch = 'x86_64',
-	config: { CAHome, containerCAHome }
+	ca: {container_name, port, networkName}, version, arch = 'x86_64',
+	config: {CAHome, containerCAHome}
 }) => {
 
 	const imageTag = `${arch}-${version}`;
@@ -67,7 +68,7 @@ exports.runNewCA = ({
 	// ports:
 	// 		- 7055:7054
 };
-exports.uninstallChaincode = ({ container_name, chaincodeId, chaincodeVersion }) => {
+exports.uninstallChaincode = ({container_name, chaincodeId, chaincodeVersion}) => {
 	const container = docker.getContainer(container_name);
 	const options = {
 		Cmd: ['rm', '-rf', `/var/hyperledger/production/chaincodes/${chaincodeId}.${chaincodeVersion}`]
@@ -79,38 +80,29 @@ exports.uninstallChaincode = ({ container_name, chaincodeId, chaincodeVersion })
 
 // 	docker exec $PEER_CONTAINER rm -rf /var/hyperledger/production/chaincodes/$CHAINCODE_NAME.$VERSION
 };
-//TODO for testNewOrgs
-const runNewPeer = ({
-	peer: { container_name, port, eventHubPort, networkName }, version, arch = 'x86_64',
-	msp: { id, configPath, containerConfigPath }, domain,
+exports.runNewPeer = ({
+	peer: {container_name, port, eventHubPort, network, imageTag},
+	msp: {
+		id,  volumeName,
+		configPath
+	}, peer_hostName_full,
 	tls
 }) => {
-	const imageTag = `${arch}-${version}`;
-
-	const tlsParams = tls ? [
-		`CORE_PEER_TLS_KEY_FILE=${tls.serverKey}`,
-		`CORE_PEER_TLS_CERT_FILE=${tls.serverCrt}`,
-		`CORE_PEER_TLS_ROOTCERT_FILE=${tls.caCrt}`] : [];
-
 	const image = `hyperledger/fabric-peer:${imageTag}`;
 	const cmd = ['peer', 'node', 'start'];
-	const Env = [
-		'CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock',
-		'CORE_LOGGING_LEVEL=DEBUG',
-		'CORE_LEDGER_HISTORY_ENABLEHISTORYDATABASE=true',
-		`CORE_PEER_GOSSIP_EXTERNALENDPOINT=${container_name}:7051`,
-		`CORE_PEER_LOCALMSPID=${id}`,
-		`CORE_PEER_MSPCONFIGPATH=${containerConfigPath}`,
-		`CORE_PEER_ID=${domain}`,
-		`CORE_PEER_ADDRESS=${domain}:7051`].concat(tlsParams);
+	const Env = peerUtil.envBuilder({network,msp:{
+		configPath,id,peer_hostName_full
+	},tls});
 
 	const createOptions = {
 		name: container_name,
 		Env,
 		Volumes: {
 			'/host/var/run/docker.sock': {},
-			[containerConfigPath]: {}
+			[peerUtil.container.MSPROOT]: {}
 		},
+		Cmd:cmd,
+		Image:image,
 		ExposedPorts: {
 			'7051': {},
 			'7053': {}
@@ -118,7 +110,7 @@ const runNewPeer = ({
 		Hostconfig: {
 			Binds: [
 				'/run/docker.sock:/host/var/run/docker.sock',
-				`${configPath}:${containerConfigPath}`],
+				`${volumeName}:${peerUtil.container.MSPROOT}`],
 			PortBindings: {
 				'7051': [
 					{
@@ -131,10 +123,8 @@ const runNewPeer = ({
 					}
 				]
 			},
-			NetworkMode: networkName
+			NetworkMode: network
 		}
 	};
-	return docker.run(image, cmd, undefined, createOptions).then((err, data, container) => {
-		console.log(data.StatusCode);
-	});
+	return dockerUtil.startContainer(createOptions);
 };

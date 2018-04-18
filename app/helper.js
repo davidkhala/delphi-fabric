@@ -31,22 +31,16 @@ const nodeConfig = require('./config.json');
 const ClientUtil = require('./util/client');
 const EventHubUtil = require('./util/eventHub');
 const Orderer = require('fabric-client/lib/Orderer');
+const peerUtil = require('./util/peer');
 
 // set up the client and channel objects for each org
-const GPRC_protocol = companyConfig.TLS ? 'grpcs://' : 'grpc://';  // FIXME: assume using TLS
 const gen_tls_cacerts = (orgName, peerIndex) => {
 	const org_domain = `${orgName}.${COMPANY_DOMAIN}`;// bu.delphi.com
 	const peer_hostName_full = `peer${peerIndex}.${org_domain}`;
 	const tls_cacerts = `${CRYPTO_CONFIG_DIR}/peerOrganizations/${org_domain}/peers/${peer_hostName_full}/tls/ca.crt`;
 	return {org_domain, peer_hostName_full, tls_cacerts};
 };
-exports.newPeer = ({peerPort, tls_cacerts, peer_hostName_full}) => {
-	if (companyConfig.TLS) {
-		return require('./util/peer').new({peerPort, tls_cacerts, peer_hostName_full});
-	} else {
-		return require('./util/peer').new({peerPort, peer_hostName_full});
-	}
-};
+
 
 // peerConfig: "portMap": [{	"host": 8051,		"container": 7051},{	"host": 8053,		"container": 7053}]
 const preparePeer = (orgName, peerIndex, peerConfig) => {
@@ -65,7 +59,7 @@ const preparePeer = (orgName, peerIndex, peerConfig) => {
 		logger.warn(`Could not find port mapped to 7051 for peer host==${peer_hostName_full}`);
 		throw new Error(`Could not find port mapped to 7051 for peer host==${peer_hostName_full}`);
 	}
-	const peer = module.exports.newPeer({peerPort, tls_cacerts, peer_hostName_full});
+	const peer = peerUtil.new({peerPort, tls_cacerts, peer_hostName_full});
 	//NOTE append more info
 	peer.peerConfig = peerConfig;
 

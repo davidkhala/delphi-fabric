@@ -28,8 +28,8 @@ services:
       - CORE_CHAINCODE_EXECUTETIMEOUT=180s
       - GODEBUG=netdns=go
     ports:
-      - '7051:7051'
-      - '7053:7053'
+      - '6051:7051'
+      - '6053:7053'
     volumes:
       - '/run/docker.sock:/host/var/run/docker.sock'
       - 'MSPROOT_local:/etc/hyperledger/crypto-config'
@@ -121,8 +121,8 @@ services:
       - CORE_CHAINCODE_EXECUTETIMEOUT=180s
       - GODEBUG=netdns=go
     ports:
-      - '6051:7051'
-      - '6053:7053'
+      - '7051:7051'
+      - '7053:7053'
     volumes:
       - '/run/docker.sock:/host/var/run/docker.sock'
       - 'MSPROOT_local:/etc/hyperledger/crypto-config'

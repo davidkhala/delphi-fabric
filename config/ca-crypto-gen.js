@@ -12,9 +12,9 @@ exports.initAdmin = (url = 'http://localhost:7054', {mspId, domain}, usersDir) =
 	const enrollmentSecret = 'passwd';
 	const caService = caUtil.new(url);
 
-	const ordererUserFull = userUtil.formatUsername(enrollmentID, domain);
+	const userFull = userUtil.formatUsername(enrollmentID, domain);
 	if (usersDir) {
-		const userMSPRoot = path.resolve(usersDir, ordererUserFull, 'msp');
+		const userMSPRoot = path.resolve(usersDir, userFull, 'msp');
 		return userUtil.loadFromLocal(userMSPRoot, undefined, {username: enrollmentID, domain, mspId}).then((user) => {
 			if (user) {
 				logger.info('orderer admin found in local');
@@ -25,12 +25,12 @@ exports.initAdmin = (url = 'http://localhost:7054', {mspId, domain}, usersDir) =
 				const base = path.dirname(usersDir);//parent
 				const orgMSPDir =path.resolve(base,'msp');
 				caUtil.org.toMSP(result,orgMSPDir,{name:enrollmentID,domain});
-				return userUtil.build(ordererUserFull, result, mspId);
+				return userUtil.build(userFull, result, mspId);
 			});
 		});
 	} else {
 		return caService.enroll({enrollmentID, enrollmentSecret}).then((result) => {
-			return userUtil.build(ordererUserFull, result, mspId);
+			return userUtil.build(userFull, result, mspId);
 		});
 	}
 
@@ -94,7 +94,18 @@ exports.genOrderer = (url = 'http://localhost:7054', orderersDir, {ordererName, 
 		});
 
 };
-
+/**
+ *
+ * @param url
+ * @param peersDir
+ * @param peerName
+ * @param domain
+ * @param mspId
+ * @param peerPort
+ * @param affiliationRoot
+ * @param usersDir required to allign admin cert
+ * @returns {*}
+ */
 exports.genPeer = (url, peersDir, {peerName, domain, mspId, peerPort, affiliationRoot = domain}, usersDir) => {
 	const caService = caUtil.new(url);
 
@@ -106,13 +117,13 @@ exports.genPeer = (url, peersDir, {peerName, domain, mspId, peerPort, affiliatio
 		const peer = peerUtil.loadFromLocal(peerMSPRoot, {peer_hostName_full, peerPort});
 		if (peer) {
 			logger.info(`crypto exist in ${peerMSPRoot}`);
-			return peer;
+			return Promise.resolve(peer);
 		}
 	} else {
 		const isExist = peerUtil.cryptoExistLocal(peerMSPRoot, {peer_hostName_full});
 		if (isExist) {
 			logger.info(`crypto exist in ${peerMSPRoot}`);
-			return true;
+			return Promise.resolve();
 		}
 	}
 

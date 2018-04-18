@@ -8,6 +8,8 @@ java/out/
 java/src/test/
 config/configtx/*
 config/crypto-config/
+config/ca-crypto-config/
 config/logs/
 dist/
 node_modules/
+app/cryptoKeyStore

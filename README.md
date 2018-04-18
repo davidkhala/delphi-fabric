@@ -195,3 +195,4 @@ govendor: to import third-party package in vendor folder
 - Bug design: since multiple priv-file creation is witnessed, investigate problem of state store, crypto-store
 - how about each org has 1 orderer,1 peer and 1 ca before the previous 2
 - migrates to use dockerode in everywhere and clean up existing dockerode code
+- why files in app/cryptoKeyStore keeping generated

@@ -3,7 +3,7 @@ const logger = require('./util/logger').new('Join-Channel');
 const EventHubUtil = require('./util/eventHub');
 
 //we could let peers from different org to join channel in 1 request
-const joinChannel = (channel, peers, client) => {
+exports.joinChannel = (channel, peers, client) => {
 	logger.debug({channelName: channel.getName(), peersSize: peers.length});
 
 	if (client) {
@@ -22,7 +22,7 @@ const joinChannel = (channel, peers, client) => {
 
 		const promises = [];//NOTE listener should be set before channel.join
 		let interrupted = false;
-		for (let peer of peers) {
+		for (const peer of peers) {
 			const blockEventPromise = peer.peerConfig.eventHub.clientPromise.then((client) => {
 				if (interrupted) return Promise.resolve({interrupted});//FIXME promise still running after later resolve
 				const eventHub = helper.bindEventHub(peer, client);//using same client
@@ -51,9 +51,9 @@ const joinChannel = (channel, peers, client) => {
 			//FIXME bug design in fabric: error message occurred in Promise.resolve/then
 			const joinedBefore = [];
 			const joinedBeforeSymptom = '(status: 500, message: Cannot create ledger from genesis block, due to LedgerID already exists)';
-			for (let dataEntry of data) {
+			for (const dataEntry of data) {
 				if (dataEntry instanceof Error) {
-					//swallow 'joined before' error: Error: chaincode error (status: 500, message: Cannot create ledger from genesis block, due to LedgerID already exists)
+					//swallow 'joined before' error
 					if (dataEntry.toString().includes(joinedBeforeSymptom)) {
 						logger.warn('swallow when existence');
 						joinedBefore.push(dataEntry);
@@ -72,4 +72,3 @@ const joinChannel = (channel, peers, client) => {
 		});
 	});
 };
-exports.joinChannel = joinChannel;

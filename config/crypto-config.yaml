@@ -24,7 +24,7 @@ PeerOrgs:
     Users:
       Count: 0
 OrdererOrgs:
-  - Domain: TK.Teeking.com
+  - Domain: TKConsensus.Teeking.com
     Specs:
       - Hostname: orderer0
       - Hostname: orderer1

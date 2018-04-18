@@ -22,7 +22,9 @@ const joinAllfcn = () => {
 			const channel = helper.prepareChannel(channelName, client);
 			const loopJoinChannel = ()=>{
 				return joinChannel(channel, peers).catch(err=>{
-					if(err.toString().includes('Invalid results returned ::NOT_FOUND')){
+					const errString = err.toString();
+					if(errString.includes('Invalid results returned ::NOT_FOUND')
+						||errString.includes('SERVICE_UNAVAILABLE')){
 						logger.warn('loopJoinChannel...');
 						Sleep.msleep(1000);
 						return loopJoinChannel();

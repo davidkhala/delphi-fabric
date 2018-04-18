@@ -5,6 +5,7 @@ const CURRENT = __dirname;
 const yaml = require('js-yaml');
 const helper = require('../app/helper');
 const logger = require('../app/util/logger').new('compose-gen');
+const peerUtil = require('../app/util/peer');
 const container =
 	{
 		dir: {
@@ -127,29 +128,18 @@ exports.gen = ({
 			const peerConfig = peersConfig[peerIndex];
 
 			const PEER_STRUCTURE = `peerOrganizations/${orgDomain}/peers/${peerDomain}`;
-			const environment =
-				[
-					`CORE_VM_ENDPOINT=unix://${dockerSock}`,
-					`CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=${network}`,
-					'CORE_LOGGING_LEVEL=DEBUG',
-					'CORE_LEDGER_HISTORY_ENABLEHISTORYDATABASE=true',
-					'CORE_PEER_GOSSIP_USELEADERELECTION=true',
-					'CORE_PEER_GOSSIP_ORGLEADER=false',
-					`CORE_PEER_GOSSIP_EXTERNALENDPOINT=${peerDomain}:7051`, // FIXME take care!
-					`CORE_PEER_LOCALMSPID=${orgConfig.MSP.id}`,
-					`CORE_PEER_MSPCONFIGPATH=${container.dir.MSPROOT}/${PEER_STRUCTURE}/msp`,
-					`CORE_PEER_TLS_ENABLED=${TLS}`,
-					`CORE_PEER_ID=${peerDomain}`,
-					`CORE_PEER_ADDRESS=${peerDomain}:7051`,
-					'CORE_CHAINCODE_EXECUTETIMEOUT=180s',
 
-					'GODEBUG=netdns=go'//NOTE aliyun only
-				];
-			if (TLS) {
-				environment.push(`CORE_PEER_TLS_KEY_FILE=${container.dir.MSPROOT}/${PEER_STRUCTURE}/tls/server.key`);
-				environment.push(`CORE_PEER_TLS_CERT_FILE=${container.dir.MSPROOT}/${PEER_STRUCTURE}/tls/server.crt`);
-				environment.push(`CORE_PEER_TLS_ROOTCERT_FILE=${container.dir.MSPROOT}/${PEER_STRUCTURE}/tls/ca.crt`);
-			}
+
+			const tls =TLS?{
+				serverKey:path.resolve(peerUtil.container.MSPROOT,PEER_STRUCTURE,'tls','server.key'),
+				serverCrt:path.resolve(peerUtil.container.MSPROOT,PEER_STRUCTURE,'tls','server.crt'),
+				caCrt:path.resolve(peerUtil.container.MSPROOT,PEER_STRUCTURE,'tls','ca.crt')
+			}:undefined;
+			const environment = peerUtil.envBuilder({network,msp:{
+				configPath:path.resolve(peerUtil.container.MSPROOT,PEER_STRUCTURE,'msp'),
+				id:orgConfig.MSP.id,
+				peer_hostName_full:peerDomain
+			},tls});
 			const ports = [];
 			for (const portIndex in peerConfig.portMap) {
 				const entry = peerConfig.portMap[portIndex];
@@ -254,7 +244,6 @@ exports.gen = ({
 			const caService = {
 				image: `hyperledger/fabric-ca:${IMAGE_TAG}`,
 				command: `sh -c 'fabric-ca-server start -d -b ${caConfig.admin.name}:${caConfig.admin.pass}'`,
-				volumes: [`./caExpose:${container.dir.CA_HOME}`],//FIXME local debug only
 				ports: [`${caConfig.portHost}:7054`],
 				environment: [
 					'GODEBUG=netdns=go'//NOTE aliyun only
@@ -491,71 +480,4 @@ exports.addCA = (services, {caConfig}, {orgDomain, IMAGE_TAG}) => {
 	caServiceName = swarmServiceName(caServiceName);
 
 	services[caServiceName] = caService;
-};
-
-
-//FIXME deprecated??
-exports.addPeer = (services, {peerConfig, peerIndex, orgDomain, orgConfig}, {MSPROOTVolume, network, TLS, IMAGE_TAG, depends_on, swarmType}) => {
-	const peerDomain = `peer${peerIndex}.${orgDomain}`;
-
-	const PEER_STRUCTURE = `peerOrganizations/${orgDomain}/peers/${peerDomain}`;
-	const environment =
-		[
-			`CORE_VM_ENDPOINT=unix://${dockerSock}`,
-			`CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=${network}`,
-			'CORE_LOGGING_LEVEL=DEBUG',
-			'CORE_LEDGER_HISTORY_ENABLEHISTORYDATABASE=true',
-			'CORE_PEER_GOSSIP_USELEADERELECTION=true',
-			'CORE_PEER_GOSSIP_ORGLEADER=false',
-			`CORE_PEER_GOSSIP_EXTERNALENDPOINT=${peerDomain}:7051`, // FIXME take care!
-			`CORE_PEER_LOCALMSPID=${orgConfig.MSP.id}`,
-			`CORE_PEER_MSPCONFIGPATH=${container.dir.MSPROOT}/${PEER_STRUCTURE}/msp`,
-			`CORE_PEER_TLS_ENABLED=${TLS}`,
-			`CORE_PEER_ID=${peerDomain}`,
-			`CORE_PEER_ADDRESS=${peerDomain}:7051`,
-			'CORE_CHAINCODE_EXECUTETIMEOUT=180s',
-
-			'GODEBUG=netdns=go'//NOTE aliyun only
-		];
-	if (TLS) {
-		environment.push(`CORE_PEER_TLS_KEY_FILE=${container.dir.MSPROOT}/${PEER_STRUCTURE}/tls/server.key`);
-		environment.push(`CORE_PEER_TLS_CERT_FILE=${container.dir.MSPROOT}/${PEER_STRUCTURE}/tls/server.crt`);
-		environment.push(`CORE_PEER_TLS_ROOTCERT_FILE=${container.dir.MSPROOT}/${PEER_STRUCTURE}/tls/ca.crt`);
-	}
-	const ports = [];
-	for (const portIndex in peerConfig.portMap) {
-		const entry = peerConfig.portMap[portIndex];
-		ports.push(`${entry.host}:${entry.container}`);
-	}
-	const peerService = {
-		depends_on,
-		image: `hyperledger/fabric-peer:${IMAGE_TAG}`,
-		command: 'peer node start',
-		environment,
-		ports,
-		volumes: [
-			`/run/docker.sock:${dockerSock}`,
-			`${MSPROOTVolume}:${container.dir.MSPROOT}`]
-	};
-
-	let peerServiceName = peerDomain;
-
-	if (swarmType === 'swarm') {
-		peerServiceName = swarmServiceName(peerServiceName);
-		peerService.networks = {
-			default: {
-				aliases: [peerDomain]
-			}
-		};
-		peerService.environment.push('CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052');
-		peerService.deploy = {
-			placement: {
-				constraints: peerConfig.swarm.constraints
-			}
-		};
-	} else {
-		peerService.container_name = peerConfig.container_name;
-		peerService.networks = ['default'];
-	}
-	services[peerServiceName] = peerService;
 };

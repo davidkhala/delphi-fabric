@@ -14,7 +14,7 @@ const caUtil = require('./util/ca');
 const caHelper = require('./caHelper');
 const globalConfig = require('../config/orgs.json');
 const ClientUtil = require('./util/client');
-
+const userUtil = require('./util/user');
 const companyConfig = globalConfig;
 const CRYPTO_CONFIG_DIR = companyConfig.docker.volumes.MSPROOT.dir;
 const COMPANY_DOMAIN = companyConfig.domain;
@@ -55,7 +55,7 @@ const setCAUser = (client, { username, orgName, TLS }) => {
 					//fixme bug design in CryptoSuite_ECDSA_AES.importKey
 
 					const client = ClientUtil.new();
-					return caUtil.user.build(helper.formatUsername(username, orgName), result, MSPID).then((user) => {
+					return userUtil.build(helper.formatUsername(username, orgName), result, MSPID).then((user) => {
 
 						return client.setUserContext(user, true);
 					});

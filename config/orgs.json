@@ -150,11 +150,11 @@
           "container_name": "SupplyChain",
           "portMap": [
             {
-              "host": 7051,
+              "host": 6051,
               "container": 7051
             },
             {
-              "host": 7053,
+              "host": 6053,
               "container": 7053
             }
           ]
@@ -263,11 +263,11 @@
           "container_name": "Tk",
           "portMap": [
             {
-              "host": 6051,
+              "host": 7051,
               "container": 7051
             },
             {
-              "host": 6053,
+              "host": 7053,
               "container": 7053
             }
           ]
