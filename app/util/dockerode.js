@@ -4,45 +4,26 @@ const dockerUtil = require('../../common/docker/nodejs/dockerode-util');
 const docker = new Docker();
 const logger = require('./logger').new('dockerode');
 const peerUtil = require('./peer');
-const testUbuntu = () => {
-	const testImage = 'ubuntu:16.04';
-
-	dockerUtil.pullImage(testImage).then(() => {
-
-		return docker.run(testImage, ['bash', '-c', 'uname -a'], process.stdout).then((container) => {
-			console.log(container.output.StatusCode);
-			return container.remove();
-		}).then((data) => {
-			console.log('container removed');
-		}).catch((err) => {
-			console.log(err);
-		});
-	});
-};
+const caUtil = require('./ca');
 
 exports.runNewCA = ({
-	ca: {container_name, port, networkName}, version, arch = 'x86_64',
-	config: {CAHome, containerCAHome}
+	container_name, port,network, imageTag,
 }) => {
 
-	const imageTag = `${arch}-${version}`;
+	const Image = `hyperledger/fabric-ca:${imageTag}`;
 
-	const image = `hyperledger/fabric-ca:${imageTag}`;
+	const Cmd = ['fabric-ca-server', 'start', '-d','-b','admin:passwd'];
 
-	const cmd = ['fabric-ca-server', 'start', '-d'];
-
-	const Env = [`FABRIC_CA_HOME=${containerCAHome}`];
+	const Env = caUtil.envBuilder();
 	const createOptions = {
 		name: container_name,
 		Env,
-		Volumes: {
-			[containerCAHome]: {}
-		},
 		ExposedPorts: {
 			'7054': {}
 		},
+		Cmd,
+        Image,
 		Hostconfig: {
-			Binds: [`${CAHome}:${containerCAHome}`],
 			PortBindings: {
 				'7054': [
 					{
@@ -50,23 +31,11 @@ exports.runNewCA = ({
 					}
 				]
 			},
-			NetworkMode: networkName
+			NetworkMode: network
 		}
 
 	};
-	return docker.run(image, cmd, undefined, createOptions);
-	// tlsca.BU.Delphi.com:
-	// environment:
-	// 		- FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server/BU.Delphi.com/tlsca
-	// container_name: BUTLSCA
-	// networks:
-	// 		- default
-	// image: hyperledger/fabric-ca:x86_64-1.0.1
-	// command: sh -c 'fabric-ca-server start -d'
-	// volumes:
-	// 		- /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/BU.Delphi.com:/etc/hyperledger/fabric-ca-server/BU.Delphi.com
-	// ports:
-	// 		- 7055:7054
+    return dockerUtil.startContainer(createOptions);
 };
 exports.uninstallChaincode = ({container_name, chaincodeId, chaincodeVersion}) => {
 	const container = docker.getContainer(container_name);
@@ -88,8 +57,8 @@ exports.runNewPeer = ({
 	}, peer_hostName_full,
 	tls
 }) => {
-	const image = `hyperledger/fabric-peer:${imageTag}`;
-	const cmd = ['peer', 'node', 'start'];
+	const Image = `hyperledger/fabric-peer:${imageTag}`;
+	const Cmd = ['peer', 'node', 'start'];
 	const Env = peerUtil.envBuilder({network,msp:{
 		configPath,id,peer_hostName_full
 	},tls});
@@ -101,8 +70,8 @@ exports.runNewPeer = ({
 			'/host/var/run/docker.sock': {},
 			[peerUtil.container.MSPROOT]: {}
 		},
-		Cmd:cmd,
-		Image:image,
+		Cmd,
+		Image,
 		ExposedPorts: {
 			'7051': {},
 			'7053': {}

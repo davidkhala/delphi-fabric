@@ -1,0 +1,55 @@
+{
+    "orderer":{
+        "orgs":{
+            "NewConsensus":{
+                "MSP":{
+                    "name":"newConsensus",
+                    "id":"NewConsensusMSP"
+                },
+                "ca":{
+                    "portHost":7464,
+                    "tlsca":{
+                        "portHost":7465
+                    }
+                },
+                "orderers":{
+                    "orderer0":{
+                        "portHost":7060
+                    }
+                }
+            }
+        }
+    },
+    "channels":{
+        "allChannel":{
+            "file":"all.tx"
+        }
+    },
+    "orgs":{
+        "NEW":{
+            "peers":[{
+                "container_name":"newContainer",
+                "portMap": [
+                    {
+                        "host": 7061,
+                        "container": 7051
+                    },
+                    {
+                        "host": 7063,
+                        "container": 7053
+                    }
+                ]
+            }],
+            "ca":{
+                "portHost":7064,
+                "tlsca":{
+                    "portHost":7065
+                }
+            },
+            "MSP": {
+                "name": "NEWMSPName",
+                "id": "NEWMSP"
+            }
+        }
+    }
+}

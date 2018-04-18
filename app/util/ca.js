@@ -140,3 +140,6 @@ exports.new = (caUrl, trustedRoots = []) => {
 
 	return new CAClient(caUrl, tlsOptions);
 };
+exports.envBuilder = ()=>{
+    return [`GODEBUG=netdns=go`]
+}

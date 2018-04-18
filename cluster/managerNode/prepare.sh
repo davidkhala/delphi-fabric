@@ -32,12 +32,12 @@ thirdPartyTag=$(echo $CONFIG_JSON | jq -r ".docker.thirdPartyTag")
 $root/cluster/prepare.sh pullKafka $thirdPartyTag
 
 CONFIGTX_nfs="$HOME/Documents/nfs/CONFIGTX/"
-MSPROOT_nfs="$HOME/Documents/nfs/MSPROOT/"
+# MSPROOT_nfs="$HOME/Documents/nfs/MSPROOT/"
 CONFIGTX_volumeName="CONFIGTX_swarm"
 MSPROOT_volumeName="MSPROOT_swarm"
 
 mkdir -p $CONFIGTX_nfs
-mkdir -p $MSPROOT_nfs
+# mkdir -p $MSPROOT_nfs
 
 leaderInfo=$(curl -s ${swarmBaseUrl}/leader)
 
@@ -53,12 +53,12 @@ CONFIGTX_DIR=$(eval echo $(curl -s -X POST ${swarmBaseUrl}/volume/get -d '{"key"
 MSPROOT_DIR=$(eval echo $(curl -s -X POST ${swarmBaseUrl}/volume/get -d '{"key":"MSPROOT"}' -H "Content-Type: application/json"))
 
 mainNodeIP=$(echo $leaderInfo | jq -r ".ip")
-echo mountClient[MSPROOT] $MSPROOT_nfs $mainNodeIP ${MSPROOT_DIR}
-sudo $ubuntuDir/nfs.sh mountClient $MSPROOT_nfs $mainNodeIP $MSPROOT_DIR
+# echo mountClient[MSPROOT] $MSPROOT_nfs $mainNodeIP ${MSPROOT_DIR}
+# sudo $ubuntuDir/nfs.sh mountClient $MSPROOT_nfs $mainNodeIP $MSPROOT_DIR
 echo mountClient[CONFIGTX] $CONFIGTX_nfs $mainNodeIP $CONFIGTX_DIR
 sudo $ubuntuDir/nfs.sh mountClient $CONFIGTX_nfs $mainNodeIP $CONFIGTX_DIR
 
 $root/cluster/clean.sh
 docker volume prune --force
 $utilsDir/volume.sh createLocal $CONFIGTX_volumeName $CONFIGTX_nfs
-$utilsDir/volume.sh createLocal $MSPROOT_volumeName $MSPROOT_nfs
+# $utilsDir/volume.sh createLocal $MSPROOT_volumeName $MSPROOT_nfs

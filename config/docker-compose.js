@@ -6,6 +6,7 @@ const yaml = require('js-yaml');
 const helper = require('../app/helper');
 const logger = require('../app/util/logger').new('compose-gen');
 const peerUtil = require('../app/util/peer');
+const caUtil = require('../app/util/ca');
 const container =
 	{
 		dir: {
@@ -187,86 +188,6 @@ exports.gen = ({
 				peerService.networks = ['default'];
 			}
 			services[peerServiceName] = peerService;
-
-		}
-		const caConfig = orgConfig.ca;
-		if (caConfig.enable || type === 'swarm') {
-
-			const FABRIC_CA_HOME = `${container.dir.CA_HOME}/peerOrganizations/${orgDomain}/ca`;
-			const CAVolume = path.join(MSPROOT, 'peerOrganizations', orgDomain, 'ca');
-			const caServerConfigFile = path.resolve(CAVolume, 'fabric-ca-server-config.yaml');
-			if (fs.existsSync(caServerConfigFile)) {
-				fs.unlinkSync(caServerConfigFile);
-			}
-			const caPrivateKey = helper.findKeyfiles(CAVolume)[0];
-			// const caServerConfig = {
-			// 	affiliations: {
-			// 		[orgName]: ['client', 'user', 'peer']
-			// 	},
-			// 	tls: {
-			// 		enabled: TLS
-			// 	},
-			// 	registry: {
-			// 		identities: [
-			// 			{
-			// 				type: 'client',
-			// 				name: caConfig.admin.name,
-			// 				pass: caConfig.admin.pass,
-			// 				maxenrollments: -1,
-			// 				attrs: {
-			// 					'hf.Registrar.Roles': 'client,user,peer',
-			// 					'hf.Revoker': true,
-			// 					'hf.Registrar.DelegateRoles': 'client,user',
-			// 					'hf.Registrar.Attributes': '*'
-			// 				}
-			// 			}]
-			// 	},
-			// 	ca: {
-			// 		certfile: `${FABRIC_CA_HOME}/ca.${orgDomain}-cert.pem`,
-			// 		keyfile: `${FABRIC_CA_HOME}/${path.basename(caPrivateKey)}`
-			// 	}
-			// };
-
-			let caContainerName;
-
-			if (TLS) {
-				//    FIXME? tlsca? what is this for
-				ORDERER_GENERAL_TLS_ROOTCAS += `${container.dir.MSPROOT}/peerOrganizations/${orgDomain}/tlsca/tlsca.${orgDomain}-cert.pem,`;
-				caContainerName = `tlsca.${orgDomain}`;
-				// caServerConfig.tls = {
-				// 	certfile: `${FABRIC_CA_HOME}/ca.${orgDomain}-cert.pem`,
-				// 	keyfile: `${FABRIC_CA_HOME}/${path.basename(caPrivateKey)}`
-				// };
-			} else {
-				caContainerName = `ca.${orgDomain}`;
-
-			}
-			const caService = {
-				image: `hyperledger/fabric-ca:${IMAGE_TAG}`,
-				command: `sh -c 'fabric-ca-server start -d -b ${caConfig.admin.name}:${caConfig.admin.pass}'`,
-				ports: [`${caConfig.portHost}:7054`],
-				environment: [
-					'GODEBUG=netdns=go'//NOTE aliyun only
-				]
-			};
-			let caServiceName = caContainerName;
-			if (type === 'swarm') {
-				caService.networks = {
-					default: {
-						aliases: [caContainerName]
-					}
-				};
-				caServiceName = swarmServiceName(caServiceName);
-				//TODO network map service here
-
-
-			} else {
-				caService.container_name = caContainerName;
-				caService.networks = ['default'];
-
-			}
-			services[caServiceName] = caService;
-			// fs.writeFileSync(caServerConfigFile, yaml.safeDump(caServerConfig, {lineWidth: 180}));
 
 		}
 
@@ -466,9 +387,7 @@ exports.addCA = (services, {caConfig}, {orgDomain, IMAGE_TAG}) => {
 		image: `hyperledger/fabric-ca:${IMAGE_TAG}`,
 		command: 'fabric-ca-server start -d -b admin:passwd',
 		ports: [`${caConfig.portHost}:7054`],
-		environment: [
-			'GODEBUG=netdns=go',//NOTE aliyun only
-		],
+		environment: caUtil.envBuilder(),
 		container_name:caContainerName
 	};
 	let caServiceName = caContainerName;
