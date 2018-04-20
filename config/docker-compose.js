@@ -7,22 +7,20 @@ const helper = require('../app/helper');
 const logger = require('../app/util/logger').new('compose-gen');
 const peerUtil = require('../app/util/peer');
 const caUtil = require('../app/util/ca');
+const ordererUtil = require('../app/util/orderer');
 const container =
-	{
-		dir: {
-			CONFIGTX: '/etc/hyperledger/configtx',
-			MSPROOT: '/etc/hyperledger/crypto-config',
-			CA_HOME: '/etc/hyperledger/fabric-ca-server'
-		}
-	};
+    {
+    	dir: {
+    		CONFIGTX: '/etc/hyperledger/configtx',
+    		MSPROOT: '/etc/hyperledger/crypto-config',
+    		CA_HOME: '/etc/hyperledger/fabric-ca-server'
+    	}
+    };
 const dockerSock = '/host/var/run/docker.sock';
 
-const swarmServiceName = (serviceName) => {
-	return serviceName.replace(/\./g, '-');
-};
+const {swarmServiceName} = require('../common/docker/nodejs/dockerode-util');
 const addOrdererService = (services, {BLOCK_FILE, mspId, ordererEachConfig, MSPROOTVolume, CONFIGTXVolume}, {
 	ordererName, domain, IMAGE_TAG,
-	ORDERER_GENERAL_TLS_ROOTCAS,
 	kafkaServices, swarmType = 'local',
 	CONFIGTX = '/etc/hyperledger/configtx',
 	MSPROOT = '/etc/hyperledger/crypto-config',
@@ -31,6 +29,20 @@ const addOrdererService = (services, {BLOCK_FILE, mspId, ordererEachConfig, MSPR
 	const {TLS} = globalConfig;
 	let ordererServiceName = ordererName;
 	const ORDERER_STRUCTURE = `ordererOrganizations/${domain}/orderers/${ordererServiceName}.${domain}`;
+
+	const environment = ordererUtil.envBuilder({
+		BLOCK_FILE,
+		msp: {
+			configPath: path.resolve(MSPROOT, ORDERER_STRUCTURE, 'msp'),
+			id: mspId
+		},
+		kafka: kafkaServices,
+		tls: TLS ? {
+			serverKey: path.resolve(MSPROOT, ORDERER_STRUCTURE, 'tls', 'server.key'),
+			serverCrt: path.resolve(MSPROOT, ORDERER_STRUCTURE, 'tls', 'server.crt'),
+			caCrt: path.resolve(MSPROOT, ORDERER_STRUCTURE, 'tls', 'ca.crt')
+		} : undefined
+	});
 	const ordererService = {
 		image: `hyperledger/fabric-orderer:${IMAGE_TAG}`,
 		command: 'orderer',
@@ -38,19 +50,7 @@ const addOrdererService = (services, {BLOCK_FILE, mspId, ordererEachConfig, MSPR
 		volumes: [
 			`${CONFIGTXVolume}:${CONFIGTX}`,
 			`${MSPROOTVolume}:${MSPROOT}`],
-		environment: [
-			'ORDERER_GENERAL_LOGLEVEL=debug',
-			'ORDERER_GENERAL_LISTENADDRESS=0.0.0.0',// TODO useless checking
-			`ORDERER_GENERAL_TLS_ENABLED=${TLS}`,
-			'ORDERER_GENERAL_GENESISMETHOD=file',
-			`ORDERER_GENERAL_GENESISFILE=${CONFIGTX}/${BLOCK_FILE}`,
-			//  NOTE remove ORDERER_GENERAL_GENESISFILE: panic: Unable to bootstrap orderer. Error reading genesis block file: open /etc/hyperledger/fabric/genesisblock: no such file or directory
-			// NOTE when ORDERER_GENERAL_GENESISMETHOD=provisional  ORDERER_GENERAL_GENESISPROFILE=SampleNoConsortium -> panic: No system chain found.  If bootstrapping, does your system channel contain a consortiums group definition
-			`ORDERER_GENERAL_LOCALMSPID=${mspId}`,
-			`ORDERER_GENERAL_LOCALMSPDIR=${MSPROOT}/${ORDERER_STRUCTURE}/msp`,
-			'GODEBUG=netdns=go' // aliyun only
-
-		],
+		environment,
 		networks: {
 			default: {
 				aliases: [ordererServiceName]
@@ -69,31 +69,18 @@ const addOrdererService = (services, {BLOCK_FILE, mspId, ordererEachConfig, MSPR
 		ordererService.container_name = ordererServiceName;
 	}
 	if (Array.isArray(kafkaServices)) {
-		ordererService.environment = [
-			...ordererService.environment,
-			'ORDERER_KAFKA_RETRY_SHORTINTERVAL=1s',
-			'ORDERER_KAFKA_RETRY_SHORTTOTAL=30s',
-			'ORDERER_KAFKA_VERBOSE=true'
-		];
 		ordererService.depends_on = kafkaServices;
 	}
 
-	if (TLS) {
-		ordererService.environment = [...ordererService.environment,
-			`ORDERER_GENERAL_TLS_PRIVATEKEY=${MSPROOT}/${ORDERER_STRUCTURE}/tls/server.key`,
-			`ORDERER_GENERAL_TLS_CERTIFICATE=${MSPROOT}/${ORDERER_STRUCTURE}/tls/server.crt`,
-			`ORDERER_GENERAL_TLS_ROOTCAS=[${ORDERER_GENERAL_TLS_ROOTCAS}${container.dir.MSPROOT}/${ORDERER_STRUCTURE}/tls/ca.crt]`
-		];
-	}
 	services[ordererServiceName] = ordererService;
 };
 
 exports.gen = ({
-				   MSPROOT,
-				   arch = 'x86_64',
-				   COMPOSE_FILE = path.resolve(CURRENT, 'docker-compose.yaml'),
-				   type = 'local', volumeName
-			   }) => {
+	MSPROOT,
+	arch = 'x86_64',
+	COMPOSE_FILE = path.resolve(CURRENT, 'docker-compose.yaml'),
+	type = 'local', volumeName
+}) => {
 
 	logger.debug({MSPROOT, arch, COMPOSE_FILE, type, volumeName});
 
@@ -116,7 +103,7 @@ exports.gen = ({
 	const services = {};
 
 
-	let ORDERER_GENERAL_TLS_ROOTCAS = '';
+	const ORDERER_GENERAL_TLS_ROOTCAS = '';
 
 
 	for (const orgName in orgsConfig) {
@@ -131,16 +118,18 @@ exports.gen = ({
 			const PEER_STRUCTURE = `peerOrganizations/${orgDomain}/peers/${peerDomain}`;
 
 
-			const tls =TLS?{
-				serverKey:path.resolve(peerUtil.container.MSPROOT,PEER_STRUCTURE,'tls','server.key'),
-				serverCrt:path.resolve(peerUtil.container.MSPROOT,PEER_STRUCTURE,'tls','server.crt'),
-				caCrt:path.resolve(peerUtil.container.MSPROOT,PEER_STRUCTURE,'tls','ca.crt')
-			}:undefined;
-			const environment = peerUtil.envBuilder({network,msp:{
-				configPath:path.resolve(peerUtil.container.MSPROOT,PEER_STRUCTURE,'msp'),
-				id:orgConfig.MSP.id,
-				peer_hostName_full:peerDomain
-			},tls});
+			const tls = TLS ? {
+				serverKey: path.resolve(peerUtil.container.MSPROOT, PEER_STRUCTURE, 'tls', 'server.key'),
+				serverCrt: path.resolve(peerUtil.container.MSPROOT, PEER_STRUCTURE, 'tls', 'server.crt'),
+				caCrt: path.resolve(peerUtil.container.MSPROOT, PEER_STRUCTURE, 'tls', 'ca.crt')
+			} : undefined;
+			const environment = peerUtil.envBuilder({
+				network, msp: {
+					configPath: path.resolve(peerUtil.container.MSPROOT, PEER_STRUCTURE, 'msp'),
+					id: orgConfig.MSP.id,
+					peer_hostName_full: peerDomain
+				}, tls
+			});
 			const ports = [];
 			for (const portIndex in peerConfig.portMap) {
 				const entry = peerConfig.portMap[portIndex];
@@ -206,7 +195,7 @@ exports.gen = ({
 
 
 				addOrdererService(services, {BLOCK_FILE, mspId, ordererEachConfig, CONFIGTXVolume, MSPROOTVolume}, {
-					ordererName, domain:ordererOrgName, IMAGE_TAG,
+					ordererName, domain: ordererOrgName, IMAGE_TAG,
 					swarmType: type, ORDERER_GENERAL_TLS_ROOTCAS,
 					kafkaServices: Object.keys(kafkaConfigs)
 				});
@@ -230,7 +219,7 @@ exports.gen = ({
 				networks: {
 					default: {
 						aliases:
-							[zookeeper]
+                            [zookeeper]
 					}
 				}
 
@@ -269,7 +258,7 @@ exports.gen = ({
 				networks: {
 					default: {
 						aliases:
-							[kafka]
+                            [kafka]
 					}
 				},
 			};
@@ -284,7 +273,7 @@ exports.gen = ({
 		const BLOCK_FILE = companyConfig.orderer.genesis_block.file;
 		const mspId = companyConfig.orderer.solo.MSP.id;
 		addOrdererService(services, {BLOCK_FILE, mspId, ordererEachConfig, CONFIGTXVolume, MSPROOTVolume}, {
-			ordererName: ordererEachConfig.container_name, domain:COMPANY_DOMAIN, IMAGE_TAG,
+			ordererName: ordererEachConfig.container_name, domain: COMPANY_DOMAIN, IMAGE_TAG,
 			swarmType: type, ORDERER_GENERAL_TLS_ROOTCAS,
 			kafkaServices: undefined
 		});
@@ -388,7 +377,7 @@ exports.addCA = (services, {caConfig}, {orgDomain, IMAGE_TAG}) => {
 		command: 'fabric-ca-server start -d -b admin:passwd',
 		ports: [`${caConfig.portHost}:7054`],
 		environment: caUtil.envBuilder(),
-		container_name:caContainerName
+		container_name: caContainerName
 	};
 	let caServiceName = caContainerName;
 	caService.networks = {

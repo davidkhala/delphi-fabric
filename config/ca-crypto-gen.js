@@ -35,7 +35,7 @@ exports.initAdmin = (url = 'http://localhost:7054', {mspId, domain}, usersDir) =
 	}
 
 };
-exports.init = (url = 'http://localhost:7054', {mspId, domain, affiliationRoot = domain}, usersDir) => {
+exports.init = (url, {mspId, domain, affiliationRoot = domain}, usersDir) => {
 	logger.debug('init', {url, affiliationRoot, mspId, domain, usersDir});
 	const ca = caUtil.new(url);
 	const affiliationService = ca.newAffiliationService();
@@ -53,7 +53,7 @@ exports.init = (url = 'http://localhost:7054', {mspId, domain, affiliationRoot =
 	});
 
 };
-exports.genOrderer = (url = 'http://localhost:7054', orderersDir, {ordererName, domain, ordererPort, mspId, affiliationRoot = domain}, usersDir) => {
+exports.genOrderer = (url, orderersDir, {ordererName, domain, ordererPort, mspId, affiliationRoot = domain}, usersDir) => {
 	const caService = caUtil.new(url);
 
 	const orderer_hostName_full = peerUtil.formatPeerName(ordererName, domain);

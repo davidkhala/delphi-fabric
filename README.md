@@ -196,3 +196,6 @@ govendor: to import third-party package in vendor folder
 - how about each org has 1 orderer,1 peer and 1 ca before the previous 2
 - migrates to use dockerode in everywhere and clean up existing dockerode code
 - why files in app/cryptoKeyStore keeping generated
+- use relative path via ``const os = require('os');console.log(os.homedir());``
+- refactor: to use pathUtil.CryptoPath class
+- change default keystore path: [Error: EACCES: permission denied, open '/home/david/.hfc-key-store/05669e8b1597befecc99049b7b5797d992ab51c6c669a57fd1bcd76974a83324-priv']

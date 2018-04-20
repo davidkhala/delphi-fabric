@@ -19,7 +19,7 @@ const configPath = path.resolve('/etc/hyperledger/crypto-config/',
 	'peerOrganizations', domain, 'peers', peer_hostName_full, 'msp');
 const peersDir = path.resolve(globalConfig.docker.volumes.CACRYPTOROOT.dir,'peerOrganizations', domain, 'peers');
 const opts = {
-	peer: {container_name, port, eventHubPort, network, imageTag},
+	container_name, port, eventHubPort, network, imageTag,
 	msp: {id, volumeName, configPath}, peer_hostName_full
 };
 const caCryptoGen = require('../config/ca-crypto-gen');

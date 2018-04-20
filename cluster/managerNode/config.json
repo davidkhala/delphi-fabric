@@ -1,4 +1,8 @@
 {
+    "MSPROOT": "/home/david/Documents/delphi-fabric/config/ca-crypto-config",
+    "swarm":{
+        "Constraints":["node.hostname==david-Project"]
+    },
     "orderer":{
         "orgs":{
             "NewConsensus":{

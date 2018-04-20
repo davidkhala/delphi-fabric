@@ -5,24 +5,19 @@ const docker = new Docker();
 const logger = require('./logger').new('dockerode');
 const peerUtil = require('./peer');
 const caUtil = require('./ca');
+const ordererUtil = require('./orderer');
 
 exports.runNewCA = ({
-	container_name, port,network, imageTag,
+	container_name, port, network, imageTag,
 }) => {
-
-	const Image = `hyperledger/fabric-ca:${imageTag}`;
-
-	const Cmd = ['fabric-ca-server', 'start', '-d','-b','admin:passwd'];
-
-	const Env = caUtil.envBuilder();
 	const createOptions = {
 		name: container_name,
-		Env,
+		Env: caUtil.envBuilder(),
 		ExposedPorts: {
 			'7054': {}
 		},
-		Cmd,
-        Image,
+		Cmd: ['fabric-ca-server', 'start', '-d', '-b', 'admin:passwd'],
+		Image: `hyperledger/fabric-ca:${imageTag}`,
 		Hostconfig: {
 			PortBindings: {
 				'7054': [
@@ -33,10 +28,19 @@ exports.runNewCA = ({
 			},
 			NetworkMode: network
 		}
-
 	};
-    return dockerUtil.startContainer(createOptions);
+	return dockerUtil.startContainer(createOptions);
 };
+exports.deployNewCA = ({Name, network, imageTag, Constraints, port}) => {
+	return dockerUtil.serviceCreate({
+		Image: `hyperledger/fabric-ca:${imageTag}`,
+		Name,
+		Cmd:['fabric-ca-server', 'start', '-d', '-b', 'admin:passwd'],
+		network, Constraints, volumes: [], ports: [{host: port, container: 7054}]
+	});
+};
+
+
 exports.uninstallChaincode = ({container_name, chaincodeId, chaincodeVersion}) => {
 	const container = docker.getContainer(container_name);
 	const options = {
@@ -49,19 +53,71 @@ exports.uninstallChaincode = ({container_name, chaincodeId, chaincodeVersion}) =
 
 // 	docker exec $PEER_CONTAINER rm -rf /var/hyperledger/production/chaincodes/$CHAINCODE_NAME.$VERSION
 };
+exports.runNewOrderer = ({container_name, imageTag, port, network, BLOCK_FILE, CONFIGTXVolume, msp: {id, configPath, volumeName}, kafkas, tls}) => {
+	const Image = `hyperledger/fabric-orderer:${imageTag}`;
+	const Cmd = ['orderer'];
+	const Env = ordererUtil.envBuilder({
+		BLOCK_FILE, msp: {
+			configPath, id
+		}, kafkas, tls
+	});
+
+	const createOptions = {
+		name: container_name,
+		Env,
+		Volumes: {
+			[peerUtil.container.MSPROOT]: {},
+			[ordererUtil.container.CONFIGTX]: {},
+		},
+		Cmd,
+		Image,
+		ExposedPorts: {
+			'7050': {},
+		},
+		Hostconfig: {
+			Binds: [
+				`${volumeName}:${peerUtil.container.MSPROOT}`,
+				`${CONFIGTXVolume}:${ordererUtil.container.CONFIGTX}`
+			],
+			PortBindings: {
+				'7050': [
+					{
+						'HostPort': `${port}`
+					}
+				]
+			},
+			NetworkMode: network
+		}
+	};
+	return dockerUtil.startContainer(createOptions);
+};
+exports.deployNewOrderer = ({Name, network, imageTag, Constraints, port, msp: {volumeName, configPath, id}, CONFIGTXVolume, BLOCK_FILE, kafkas, tls}) => {
+	const Env = ordererUtil.envBuilder({BLOCK_FILE, msp: {configPath, id}, kafkas, tls});
+	return dockerUtil.serviceCreate({
+		Image: `hyperledger/fabric-orderer:${imageTag}`
+		, Name, network, Constraints, volumes: [{
+			volumeName, volume: peerUtil.container.MSPROOT
+		}, {
+			volumeName: CONFIGTXVolume, volume: ordererUtil.container.CONFIGTX
+		}], ports: [{host: port, container: 7050}],
+		Env
+	});
+};
 exports.runNewPeer = ({
-	peer: {container_name, port, eventHubPort, network, imageTag},
+	container_name, port, eventHubPort, network, imageTag,
 	msp: {
-		id,  volumeName,
+		id, volumeName,
 		configPath
 	}, peer_hostName_full,
 	tls
 }) => {
 	const Image = `hyperledger/fabric-peer:${imageTag}`;
 	const Cmd = ['peer', 'node', 'start'];
-	const Env = peerUtil.envBuilder({network,msp:{
-		configPath,id,peer_hostName_full
-	},tls});
+	const Env = peerUtil.envBuilder({
+		network, msp: {
+			configPath, id, peer_hostName_full
+		}, tls
+	});
 
 	const createOptions = {
 		name: container_name,
