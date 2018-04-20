@@ -1,5 +1,7 @@
 {
     "MSPROOT": "/home/david/Documents/delphi-fabric/config/ca-crypto-config",
+    "CONFIGTX":"/home/david/Documents/nfs/CONFIGTX",
+    "BLOCK_FILE":"tk.block",
     "swarm":{
         "Constraints":["node.hostname==david-Project"]
     },
@@ -31,19 +33,20 @@
     },
     "orgs":{
         "NEW":{
-            "peers":[{
-                "container_name":"newContainer",
-                "portMap": [
-                    {
-                        "host": 7061,
-                        "container": 7051
-                    },
-                    {
-                        "host": 7063,
-                        "container": 7053
-                    }
-                ]
-            }],
+            "peers":{
+                "newContainer":{
+                    "portMap": [
+                        {
+                            "host": 7061,
+                            "container": 7051
+                        },
+                        {
+                            "host": 7063,
+                            "container": 7053
+                        }
+                    ]
+                }
+            },
             "ca":{
                 "portHost":7064,
                 "tlsca":{

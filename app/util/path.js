@@ -11,7 +11,6 @@ exports.findKeyfiles = (dir) => {
 };
 exports.CryptoPath = class {
 	constructor(rootPath, {orderer, peer, user,react} = {}) {
-		fsExtra.ensureDirSync(rootPath);
 		if (orderer) {
 			this.ordererOrgName = orderer.org;
 			if (orderer.name && orderer.org) {
@@ -79,9 +78,15 @@ exports.CryptoPath = class {
 	orderer() {
 		return this.resolve(this.orderers(), this.ordererName);
 	}
+	ordererMSP() {
+		return this.resolve(this.orderer(), 'msp');
+	}
 
 	peer() {
 		return this.resolve(this.peers(), this.peerName);
+	}
+	peerMSP(){
+		return this.resolve(this.peer(), 'msp');
 	}
 	ordererUser(){
 		return this.resolve(this.ordererUsers(),`${this.userName}@${this.ordererOrgName}`);

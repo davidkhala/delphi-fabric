@@ -1,4 +1,4 @@
-const config = require('../config');
+const config = require('./config');
 const dockerUtil = require('../../../app/util/dockerode');
 const Request = require('request');
 const swarmServerConfig = require('../../../swarm/swarm');

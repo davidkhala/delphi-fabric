@@ -29,7 +29,7 @@ exports.runNewCA = ({
 			NetworkMode: network
 		}
 	};
-	return dockerUtil.startContainer(createOptions);
+	return dockerUtil.containerStart(createOptions);
 };
 exports.deployNewCA = ({Name, network, imageTag, Constraints, port}) => {
 	return dockerUtil.serviceCreate({
@@ -89,9 +89,10 @@ exports.runNewOrderer = ({container_name, imageTag, port, network, BLOCK_FILE, C
 			NetworkMode: network
 		}
 	};
-	return dockerUtil.startContainer(createOptions);
+	return dockerUtil.containerStart(createOptions);
 };
-exports.deployNewOrderer = ({Name, network, imageTag, Constraints, port, msp: {volumeName, configPath, id}, CONFIGTXVolume, BLOCK_FILE, kafkas, tls}) => {
+exports.deployNewOrderer = ({Name, network, imageTag, Constraints, port,
+	msp: {volumeName, configPath, id}, CONFIGTXVolume, BLOCK_FILE, kafkas, tls}) => {
 	const Env = ordererUtil.envBuilder({BLOCK_FILE, msp: {configPath, id}, kafkas, tls});
 	return dockerUtil.serviceCreate({
 		Image: `hyperledger/fabric-orderer:${imageTag}`
@@ -151,5 +152,9 @@ exports.runNewPeer = ({
 			NetworkMode: network
 		}
 	};
-	return dockerUtil.startContainer(createOptions);
+	return dockerUtil.containerStart(createOptions);
+};
+
+exports.volumeReCreate = ({Name,path})=>{
+	return dockerUtil.volumeRemove({Name}).then(()=>dockerUtil.volumeCreateIfNotExist({Name,path}));
 };
