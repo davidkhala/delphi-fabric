@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const fsExtra = require('fs-extra');
 const os = require('os');
-exports.home = ()=>{
+exports.home = () => {
 	return os.homedir();
 };
 exports.findKeyfiles = (dir) => {
@@ -10,7 +10,7 @@ exports.findKeyfiles = (dir) => {
 	return files.filter((fileName) => fileName.endsWith('_sk')).map((fileName) => path.resolve(dir, fileName));
 };
 exports.CryptoPath = class {
-	constructor(rootPath, {orderer, peer, user,react} = {}) {
+	constructor(rootPath, {orderer, peer, user, react} = {}) {
 		if (orderer) {
 			this.ordererOrgName = orderer.org;
 			if (orderer.name && orderer.org) {
@@ -23,7 +23,7 @@ exports.CryptoPath = class {
 				this.peerName = `${peer.name}.${peer.org}`;
 			}
 		}
-		if(user){
+		if (user) {
 			this.userName = user.name;
 		}
 		this.root = rootPath;
@@ -75,20 +75,35 @@ exports.CryptoPath = class {
 		return this.resolve(this.peerOrg(), 'users');
 	}
 
-	orderer() {
-		return this.resolve(this.orderers(), this.ordererName);
-	}
 	ordererMSP() {
-		return this.resolve(this.orderer(), 'msp');
+		return this.resolve(this.orderers(), `${this.ordererName}.${this.ordererOrgName}`, 'msp');
 	}
 
-	peerMSP(){
-		return this.resolve(this.peers(),this.peerName, 'msp');
+	ordererMSPSigncert() {
+		return this.resolve(this.ordererMSP(), 'signcerts', `${this.ordererName}.${this.ordererOrgName}-cert.pem`);
 	}
-	ordererUserMSP(){
-		return this.resolve(this.ordererUsers(),`${this.userName}@${this.ordererOrgName}`,'msp');
+
+	peerMSP() {
+		return this.resolve(this.peers(), `${this.peerName}.${this.peerOrgName}`, 'msp');
 	}
-	peerUserMSP(){
-		return this.resolve(this.peerUsers(),`${this.userName}@${this.peerOrgName}`,'msp');
+
+	peerMSPSigncert() {
+		return this.resolve(this.peerMSP(), 'signcerts', `${this.peerName}.${this.peerOrgName}-cert.pem`);
+	}
+
+	ordererUserMSP() {
+		return this.resolve(this.ordererUsers(), `${this.userName}@${this.ordererOrgName}`, 'msp');
+	}
+
+	ordererUserMSPSigncert() {
+		return this.resolve(this.ordererUserMSP(), 'signcerts', `${this.userName}@${this.ordererOrgName}-cert.pem`);
+	}
+
+	peerUserMSP() {
+		return this.resolve(this.peerUsers(), `${this.userName}@${this.peerOrgName}`, 'msp');
+	}
+
+	peerUserMSPSigncert() {
+		return this.resolve(this.peerUserMSP(), 'signcerts', `${this.userName}@${this.peerOrgName}-cert.pem`);
 	}
 };

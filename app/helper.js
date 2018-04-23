@@ -24,7 +24,6 @@ const companyConfig = globalConfig;
 const orgsConfig = companyConfig.orgs;
 const CRYPTO_CONFIG_DIR = companyConfig.docker.volumes.CACRYPTOROOT.dir;
 const channelsConfig = companyConfig.channels;
-const COMPANY_DOMAIN = companyConfig.domain;
 const chaincodeConfig = require('../config/chaincode.json');
 const sdkUtils = require('fabric-client/lib/utils');
 const nodeConfig = require('./config.json');
@@ -32,10 +31,11 @@ const ClientUtil = require('./util/client');
 const EventHubUtil = require('./util/eventHub');
 const Orderer = require('fabric-client/lib/Orderer');
 const peerUtil = require('./util/peer');
-
+const pathUtil = require('./util/path');
+const {CryptoPath} = pathUtil;
 // set up the client and channel objects for each org
 const gen_tls_cacerts = (orgName, peerIndex) => {
-	const org_domain = `${orgName}.${COMPANY_DOMAIN}`;// bu.delphi.com
+	const org_domain = `${orgName}`;
 	const peer_hostName_full = `peer${peerIndex}.${org_domain}`;
 	const tls_cacerts = `${CRYPTO_CONFIG_DIR}/peerOrganizations/${org_domain}/peers/${peer_hostName_full}/tls/ca.crt`;
 	return {org_domain, peer_hostName_full, tls_cacerts};
@@ -121,7 +121,8 @@ exports.prepareChannel = (channelName, client, isRenew) => {
 
 		}
 	} else {
-		const orderer = newOrderer(ordererConfig.solo.container_name, COMPANY_DOMAIN, ordererConfig.solo);
+
+		const orderer = newOrderer(ordererConfig.solo.container_name, ordererConfig.solo.orgName, ordererConfig.solo);
 		channel.addOrderer(orderer);
 	}
 
@@ -180,11 +181,6 @@ const getMspID = (orgName) => {
 	const mspid = orgsConfig[orgName].MSP.id;
 	return mspid;
 };
-//NOTE have to do this since filename for private Key file would be as : a4fbafa51de1161a2f82ffa80cf1c34308482c33a9dcd4d150183183d0a3e0c6_sk
-const getKeyFilesInDir = (dir) => {
-	const files = fs.readdirSync(dir);
-	return files.filter((fileName) => fileName.endsWith('_sk')).map((fileName) => path.resolve(dir, fileName));
-};
 
 const rawAdminUsername = globalConfig.cryptogenSkip ? 'admin' : 'Admin';
 const objects = {};
@@ -211,8 +207,8 @@ objects.user = {
 		}
 	},
 	mspCreate: (client,
-				{keystoreDir, signcertFile, username, orgName, mspid = getMspID(orgName), skipPersistence = false}) => {
-		const keyFile = getKeyFilesInDir(keystoreDir)[0];
+		{keystoreDir, signcertFile, username, orgName, mspid = getMspID(orgName), skipPersistence = false}) => {
+		const keyFile = pathUtil.findKeyfiles(keystoreDir)[0];
 		// NOTE:(jsdoc) This allows applications to use pre-existing crypto materials (private keys and certificates) to construct user objects with signing capabilities
 		// NOTE In client.createUser option, two types of cryptoContent is supported:
 		// 1. cryptoContent: {		privateKey: keyFilePath,signedCert: certFilePath}
@@ -273,37 +269,45 @@ objects.user = {
 	},
 
 };
-exports.formatPeerName = (peerName, orgName) => `${peerName}.${orgName}.${COMPANY_DOMAIN}`;
-const formatUsername = (username, orgName) => `${username}@${orgName}.${COMPANY_DOMAIN}`;
+exports.formatPeerName = (peerName, orgName) => `${peerName}.${orgName}`;
+const formatUsername = (username, orgName) => `${username}@${orgName}`;
 objects.user.admin = {
 	orderer: {
-		select: (ordererContainerName = 'ordererContainerName') => {
+		select: (ordererOrg) => {
 
-			const ordererUser_name_full = `${rawAdminUsername}@${COMPANY_DOMAIN}`;
-			const keystoreDir = path.join(CRYPTO_CONFIG_DIR,
-				'ordererOrganizations', COMPANY_DOMAIN, 'users', ordererUser_name_full, 'msp', 'keystore');
-			const signcertFile = path.join(CRYPTO_CONFIG_DIR,
-				'ordererOrganizations', COMPANY_DOMAIN, 'users', ordererUser_name_full, 'msp', 'signcerts',
-				`${ordererUser_name_full}-cert.pem`);
-			const ordererMSPID = ordererConfig.MSP.id;
+			const cryptoPath = new CryptoPath(CRYPTO_CONFIG_DIR,{
+				orderer:{
+					org:ordererOrg
+				},
+				user:{
+					name:rawAdminUsername
+				}
+			});
+			const keystoreDir = path.resolve(cryptoPath.ordererUserMSP(), 'keystore');
+			const signcertFile = path.resolve(cryptoPath.ordererUserMSPSigncert());
+			let ordererOrgConfig;
+			if(ordererConfig.type==='kafka'){
+				ordererOrgConfig = ordererConfig.kafka.orgs[ordererOrg];
+			}else {
+				ordererOrgConfig = ordererConfig.solo;
+			}
+			const ordererMSPID = ordererOrgConfig.MSP.id;
 			const client = ClientUtil.new();
 
-			return objects.user.get(ordererUser_name_full, ordererContainerName, client).then(user => {
-				if (user) return client.setUserContext(user, false);
-				return objects.user.mspCreate(client, {
-					keystoreDir, signcertFile,
-					username: ordererUser_name_full,
-					orgName: COMPANY_DOMAIN,
-					mspid: ordererMSPID,
-				});
+			return objects.user.mspCreate(client, {
+				keystoreDir, signcertFile,
+				username: rawAdminUsername,
+				orgName: ordererOrg,
+				mspid: ordererMSPID,
 			}).then(() => Promise.resolve(client));
+
 		},
 	}
 	,
 	get: (orgName, client) => objects.user.get(rawAdminUsername, orgName, client),
 	create: (orgName, client) => {
 
-		const org_domain = `${orgName}.${COMPANY_DOMAIN}`;// BU.Delphi.com
+		const org_domain = `${orgName}`;
 
 
 		const admin_name_full = `${rawAdminUsername}@${org_domain}`;
@@ -375,4 +379,3 @@ exports.userAction = objects.user;
 exports.bindEventHub = bindEventHub;
 exports.getOrgAdmin = objects.user.admin.select;
 exports.formatUsername = formatUsername;
-exports.findKeyfiles = getKeyFilesInDir;

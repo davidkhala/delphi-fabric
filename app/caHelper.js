@@ -107,9 +107,6 @@ const getCaService = ({orgName}) => {
 	const caProtocol = TLS ? 'https://' : 'http://';
 
 	const caUrl = `${caProtocol}${caHost}:${ca_port}`;
-	// const org_domain=`${orgName}.${COMPANY_DOMAIN}`
-	// const tlscaCert=path.join(CRYPTO_CONFIG_DIR,'peerOrganizations',org_domain,'tlsca',`tlsca.${org_domain}-cert.pem`)
-	// const trustedRoots=[fs.readFileSync(tlscaCert).toString()] //fixme  Error: Calling register endpoint failed with error [Error: Hostname/IP doesn't match certificate's altnames: "Host: localhost. is not cert's CN: tlsca.BU.Delphi.com"]
 	return caUtil.new(caUrl);
 };
 exports.getCaService = getCaService;

@@ -1,5 +1,4 @@
 {
-  "domain": "Teeking.com",
   "TLS": false,
   "cryptogenSkip":true,
   "docker": {
@@ -19,12 +18,13 @@
     }
   },
   "orderer": {
-    "type": "kafka",
+    "type": "solo",
     "genesis_block": {
       "file": "tk.block",
       "profile": "TeekingGenesis"
     },
     "solo": {
+      "orgName":"Teeking.com",
       "container_name": "orderContainerName",
       "portHost": 7050,
       "swarm": {
@@ -139,7 +139,7 @@
     }
   },
   "orgs": {
-    "SUPPLY": {
+    "SUPPLY.Teeking.com": {
       "peers": [
         {
           "swarm": {
@@ -171,7 +171,7 @@
         "id": "SUPPLYMSP"
       }
     },
-    "CAR": {
+    "CAR.Teeking.com": {
       "peers": [
         {
           "swarm": {
@@ -203,7 +203,7 @@
         "id": "CARMSP"
       }
     },
-    "FACTORY": {
+    "FACTORY.Teeking.com": {
       "peers": [
         {
           "swarm": {
@@ -235,7 +235,7 @@
         "id": "FACTORYMSP"
       }
     },
-    "TK": {
+    "TK.Teeking.com": {
       "peers": [
         {
           "swarm": {

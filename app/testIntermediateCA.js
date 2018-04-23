@@ -13,9 +13,8 @@ const globalConfig = require('../config/orgs.json');
 const companyConfig = globalConfig;
 const caService = caHelper.getCaService({ orgName, TLS: companyConfig.TLS });
 const CRYPTO_CONFIG_DIR = companyConfig.docker.volumes.MSPROOT.dir;
-const COMPANY_DOMAIN = companyConfig.domain;
 
-const org_domain = `${orgName}.${COMPANY_DOMAIN}`;
+const org_domain = `${orgName}`;
 const orgPath = path.join(CRYPTO_CONFIG_DIR, 'peerOrganizations', org_domain);
 const ClientUtil = require('./util/client');
 

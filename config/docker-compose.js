@@ -91,7 +91,6 @@ exports.gen = ({
 
 	const IMAGE_TAG_3rdParty = `${arch}-${thirdPartyTag}`;
 	const orgsConfig = companyConfig.orgs;
-	const COMPANY_DOMAIN = companyConfig.domain;
 	const ordererConfig = companyConfig.orderer;
 	const CONFIGTXVolume = volumeName.CONFIGTX;
 	const MSPROOTVolume = volumeName.MSPROOT;
@@ -106,7 +105,7 @@ exports.gen = ({
 
 	for (const orgName in orgsConfig) {
 		const orgConfig = orgsConfig[orgName];
-		const orgDomain = `${orgName}.${COMPANY_DOMAIN}`;
+		const orgDomain = `${orgName}`;
 		const peersConfig = orgConfig.peers;
 
 		for (const peerIndex in peersConfig) {
@@ -205,7 +204,8 @@ exports.gen = ({
 		const BLOCK_FILE = companyConfig.orderer.genesis_block.file;
 		const mspId = companyConfig.orderer.solo.MSP.id;
 		addOrdererService(services, {BLOCK_FILE, mspId, ordererEachConfig, CONFIGTXVolume, MSPROOTVolume}, {
-			ordererName: ordererEachConfig.container_name, domain: COMPANY_DOMAIN, IMAGE_TAG,
+			ordererName: ordererEachConfig.container_name,
+			domain: ordererEachConfig.orgName, IMAGE_TAG,
 			swarmType: type,
 		});
 	}
@@ -249,7 +249,6 @@ exports.genCAs = ({
 	const IMAGE_TAG_3rdParty = `${arch}-${globalConfig.docker.thirdPartyTag}`;
 	const peerOrgsConfig = globalConfig.orgs;
 
-	const COMPANY_DOMAIN = globalConfig.domain;
 
 	if (fs.existsSync(COMPOSE_FILE)) {
 		fs.unlinkSync(COMPOSE_FILE);
@@ -260,7 +259,7 @@ exports.genCAs = ({
 		for (const ordererOrg in globalConfig.orderer.kafka.orgs) {
 			const ordererOrgConfig = globalConfig.orderer.kafka.orgs[ordererOrg];
 			const caConfig = ordererOrgConfig.ca;
-			module.exports.addCA(services, {caConfig}, {orgDomain: ordererOrg, IMAGE_TAG});
+			module.exports.addCA(services, {caConfig}, {domain: ordererOrg, IMAGE_TAG});
 		}
 		module.exports.addKafka(services,{
 			CONFIGTX:'CONFIGTX_local',
@@ -268,16 +267,14 @@ exports.genCAs = ({
 		},{type:swarmType,IMAGE_TAG_3rdParty});
 	} else {
 		const {ca, container_name} = globalConfig.orderer.solo;
-		module.exports.addCA(services, {caConfig: ca}, {orgDomain: container_name, IMAGE_TAG});
+		module.exports.addCA(services, {caConfig: ca}, {domain: container_name, IMAGE_TAG});
 	}
 
 	for (const orgName in peerOrgsConfig) {
 		const orgConfig = peerOrgsConfig[orgName];
 		const caConfig = orgConfig.ca;
 
-		const orgDomain = `${orgName}.${COMPANY_DOMAIN}`;
-
-		module.exports.addCA(services, {caConfig}, {orgDomain, IMAGE_TAG});
+		module.exports.addCA(services, {caConfig}, {domain:orgName, IMAGE_TAG});
 	}
 
 	fs.writeFileSync(COMPOSE_FILE, yaml.safeDump({
@@ -297,18 +294,18 @@ exports.genCAs = ({
  * config less ca server
  * @param services
  * @param caConfig
- * @param orgDomain
+ * @param domain
  * @param TLS
  * @param IMAGE_TAG
  */
-exports.addCA = (services, {caConfig}, {orgDomain, IMAGE_TAG}) => {
+exports.addCA = (services, {caConfig}, { domain, IMAGE_TAG}) => {
 	const {TLS} = globalConfig;
 	let caContainerName;
 
 	if (TLS) {
-		caContainerName = `tlsca.${orgDomain}`;
+		caContainerName = `tlsca.${domain}`;
 	} else {
-		caContainerName = `ca.${orgDomain}`;
+		caContainerName = `ca.${domain}`;
 	}
 	const caService = {
 		image: `hyperledger/fabric-ca:${IMAGE_TAG}`,

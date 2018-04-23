@@ -19,10 +19,9 @@ peerPort="7071"     # map for 7051, random assign when empty
 eventHubPort="7073" # map for 7053, random assign when empty
 
 companyConfig=$(jq "." $CONFIG_JSON)
-COMPANY_DOMAIN=$(echo $companyConfig | jq -r ".domain")
 TLS_ENABLED=$(echo $companyConfig | jq ".TLS")
 dockerNetworkName=$(echo $companyConfig | jq -r ".docker.network")
-org_domain="$orgName.$COMPANY_DOMAIN"
+org_domain="$orgName"
 newDir="${CRYPTO_CONFIG_DIR}peerOrganizations/$org_domain"
 peerCount=1
 userCount=0
@@ -52,7 +51,7 @@ function down() {
 function up() {
 	node -e "require('./config/crypto-config.js').newOrg({
     Name:'${orgName}',
-    Domain:'${orgName}.${COMPANY_DOMAIN}',
+    Domain:'${orgName}',
     CRYPTO_UPDATE_CONFIG:'${CRYPTO_UPDATE_CONFIG}'
     })"
 	# TODO use fabric-ca for key generate

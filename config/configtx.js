@@ -11,7 +11,6 @@ exports.gen = ({
 
 }) => {
 	const channelsConfig = globalConfig.channels;
-	const COMPANY_DOMAIN = globalConfig.domain;
 	const ordererConfig = globalConfig.orderer;
 
 	//	refresh configtxFile
@@ -34,7 +33,7 @@ exports.gen = ({
 			Organizations: [
 				{
 					Name: ordererConfig.solo.MSP.name, ID: ordererConfig.solo.MSP.id,
-					MSPDir: path.join(MSPROOT, 'ordererOrganizations', COMPANY_DOMAIN, 'msp')
+					MSPDir: path.join(MSPROOT, 'ordererOrganizations', ordererConfig.solo.orgName, 'msp')
 				}
 			]
 		}
@@ -70,7 +69,7 @@ exports.gen = ({
 		return {
 			Name: orgConfig.MSP.name,
 			ID: orgConfig.MSP.id,
-			MSPDir: path.join(MSPROOT, 'peerOrganizations', `${orgName}.${COMPANY_DOMAIN}`, 'msp'),
+			MSPDir: path.join(MSPROOT, 'peerOrganizations', orgName, 'msp'),
 			AnchorPeers: [{
 				Host: anchorPeerConfig.container_name,
 				Port: 7051
