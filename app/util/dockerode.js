@@ -32,11 +32,14 @@ exports.runNewCA = ({
 	return dockerUtil.containerStart(createOptions);
 };
 exports.deployNewCA = ({Name, network, imageTag, Constraints, port}) => {
-	return dockerUtil.serviceCreate({
-		Image: `hyperledger/fabric-ca:${imageTag}`,
-		Name,
-		Cmd:['fabric-ca-server', 'start', '-d', '-b', 'admin:passwd'],
-		network, Constraints, volumes: [], ports: [{host: port, container: 7054}]
+	return dockerUtil.serviceExist({Name}).then((info) => {
+		if (info) return info;
+		return dockerUtil.serviceCreate({
+			Image: `hyperledger/fabric-ca:${imageTag}`,
+			Name,
+			Cmd: ['fabric-ca-server', 'start', '-d', '-b', 'admin:passwd'],
+			network, Constraints, volumes: [], ports: [{host: port, container: 7054}]
+		});
 	});
 };
 
@@ -91,17 +94,51 @@ exports.runNewOrderer = ({container_name, imageTag, port, network, BLOCK_FILE, C
 	};
 	return dockerUtil.containerStart(createOptions);
 };
-exports.deployNewOrderer = ({Name, network, imageTag, Constraints, port,
-	msp: {volumeName, configPath, id}, CONFIGTXVolume, BLOCK_FILE, kafkas, tls}) => {
-	const Env = ordererUtil.envBuilder({BLOCK_FILE, msp: {configPath, id}, kafkas, tls});
-	return dockerUtil.serviceCreate({
-		Image: `hyperledger/fabric-orderer:${imageTag}`
-		, Name, network, Constraints, volumes: [{
-			volumeName, volume: peerUtil.container.MSPROOT
-		}, {
-			volumeName: CONFIGTXVolume, volume: ordererUtil.container.CONFIGTX
-		}], ports: [{host: port, container: 7050}],
-		Env
+
+exports.deployNewOrderer = ({
+	Name, network, imageTag, Constraints, port,
+	msp: {volumeName, configPath, id}, CONFIGTXVolume, BLOCK_FILE, kafkas, tls
+}) => {
+	return dockerUtil.serviceExist({Name}).then((info) => {
+		if (info) return info;
+		const Env = ordererUtil.envBuilder({BLOCK_FILE, msp: {configPath, id}, kafkas, tls});
+		return dockerUtil.serviceCreate({
+			Cmd: ['orderer'],
+			Image: `hyperledger/fabric-orderer:${imageTag}`
+			, Name, network, Constraints, volumes: [{
+				volumeName, volume: peerUtil.container.MSPROOT
+			}, {
+				volumeName: CONFIGTXVolume, volume: ordererUtil.container.CONFIGTX
+			}], ports: [{host: port, container: 7050}],
+			Env
+		});
+	});
+};
+exports.deployNewPeer = ({
+	Name, network, imageTag, Constraints, port, eventHubPort,
+	msp: {volumeName, configPath, id}, peer_hostName_full, tls
+}) => {
+	return dockerUtil.serviceExist({Name}).then((info) => {
+		if (info) return info;
+		const Env = peerUtil.envBuilder({
+			network, msp: {
+				configPath, id, peer_hostName_full
+			}, tls
+		});
+
+		return dockerUtil.serviceCreate({
+			Image: `hyperledger/fabric-peer:${imageTag}`,
+			Cmd: ['peer', 'node', 'start'],
+			Name, network, Constraints, volumes: [{
+				volumeName, volume: peerUtil.container.MSPROOT
+			}, {
+				Type:'bind',volumeName: peerUtil.host.dockerSock, volume: peerUtil.container.dockerSock
+			}], ports: [
+				{host: port, container: 7051},
+				{host: eventHubPort, container: 7053}
+			],
+			Env
+		});
 	});
 };
 exports.runNewPeer = ({
@@ -109,8 +146,7 @@ exports.runNewPeer = ({
 	msp: {
 		id, volumeName,
 		configPath
-	}, peer_hostName_full,
-	tls
+	}, peer_hostName_full, tls
 }) => {
 	const Image = `hyperledger/fabric-peer:${imageTag}`;
 	const Cmd = ['peer', 'node', 'start'];
@@ -124,7 +160,7 @@ exports.runNewPeer = ({
 		name: container_name,
 		Env,
 		Volumes: {
-			'/host/var/run/docker.sock': {},
+			[peerUtil.container.dockerSock]: {},
 			[peerUtil.container.MSPROOT]: {}
 		},
 		Cmd,
@@ -135,7 +171,7 @@ exports.runNewPeer = ({
 		},
 		Hostconfig: {
 			Binds: [
-				'/run/docker.sock:/host/var/run/docker.sock',
+				`${peerUtil.host.dockerSock}:${peerUtil.container.dockerSock}`,
 				`${volumeName}:${peerUtil.container.MSPROOT}`],
 			PortBindings: {
 				'7051': [
@@ -155,6 +191,27 @@ exports.runNewPeer = ({
 	return dockerUtil.containerStart(createOptions);
 };
 
-exports.volumeReCreate = ({Name,path})=>{
-	return dockerUtil.volumeRemove({Name}).then(()=>dockerUtil.volumeCreateIfNotExist({Name,path}));
+exports.volumeReCreate = ({Name, path}) => {
+	return dockerUtil.volumeRemove({Name}).then(() => dockerUtil.volumeCreateIfNotExist({Name, path}));
+};
+exports.volumeCreateIfNotExist = ({Name, path}) => {
+	return dockerUtil.volumeCreateIfNotExist({Name, path});
+};
+/**
+ * service=<service name>
+ node=<node id or name>
+ */
+exports.findTask = ({service, node, state}) => {
+	return dockerUtil.taskList({
+		services: service ? [service] : [],
+		nodes: node ? [node] : [],
+	}).then(result => {
+		if (state) {
+			return result.filter((each) => {
+				return each.Status.State = state;
+			});
+		} else {
+			return result;
+		}
+	});
 };

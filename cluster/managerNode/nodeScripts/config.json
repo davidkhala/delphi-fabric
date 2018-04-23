@@ -35,16 +35,10 @@
         "NEW":{
             "peers":{
                 "newContainer":{
-                    "portMap": [
-                        {
-                            "host": 7061,
-                            "container": 7051
-                        },
-                        {
-                            "host": 7063,
-                            "container": 7053
-                        }
-                    ]
+                    "portMap": {
+                        "port":7061,
+                        "eventHubPort":7063
+                    }
                 }
             },
             "ca":{
