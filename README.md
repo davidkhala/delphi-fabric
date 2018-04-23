@@ -203,3 +203,4 @@ govendor: to import third-party package in vendor folder
 - signature server for both leader node and manager nodes
 - try: service constraints node.role==master
 - adding kafka/zookeeper online
+- remove global domain

@@ -2,9 +2,11 @@ const express = require('express');
 const router = express.Router();
 const logger = require('../app/util/logger').new('router signature');
 const Multer = require('multer');
-const cache = Multer({dest: 'cache/'});
 const fs = require('fs');
-const signServerPort= require('./swarm.json').signServer.port;
+const singerServerConfig=require('./swarm.json').signServer;
+const signServerPort= singerServerConfig.port;
+const cache = Multer({dest: singerServerConfig.cache});
+
 const swarmConfig = require('./swarm.json').swarmServer;
 const {couchDB: {url}} = swarmConfig;
 const swarmDoc = 'swarm';

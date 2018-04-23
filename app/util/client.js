@@ -16,4 +16,4 @@ exports.newCryptoSuite  = ({path} = {path: Utils.getDefaultKeyStorePath()})=>{
 	const newCryptoSuite = BaseClient.newCryptoSuite();
 	newCryptoSuite.setCryptoKeyStore(BaseClient.newCryptoKeyStore(undefined, {path}));
 	return newCryptoSuite;
-}
+};
