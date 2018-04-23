@@ -6,7 +6,6 @@ const yaml = require('js-yaml');
 exports.gen = ({
 	cryptoConfigFile = path.resolve(CURRENT, 'crypto-config.yaml')
 }) => {
-	const COMPANY_DOMAIN = globalConfig.domain;
 	const ordererConfig = globalConfig.orderer;
 	const orgsConfig = globalConfig.orgs;
 	if(fs.existsSync(cryptoConfigFile)){
@@ -28,7 +27,7 @@ exports.gen = ({
 
 	}else {
 		OrdererOrgs.push({
-			Domain: COMPANY_DOMAIN,
+			Domain: ordererConfig.solo.orgName,
 			Specs: [{Hostname: ordererConfig.solo.container_name}]
 		});
 	}
@@ -37,7 +36,7 @@ exports.gen = ({
 	for (const orgName in orgsConfig) {
 		const orgConfig = orgsConfig[orgName];
 		PeerOrgs.push({
-			Domain: `${orgName}.${COMPANY_DOMAIN}`,
+			Domain: `${orgName}`,
 			Template: {
 				Start: 0,
 				Count: orgConfig.peers.length
