@@ -8,7 +8,7 @@ services:
     image: 'hyperledger/fabric-ca:x86_64-1.1.0'
     command: 'fabric-ca-server start -d -b admin:passwd'
     ports:
-      - '7450:7054'
+      - '7454:7054'
     environment:
       - GODEBUG=netdns=go
     container_name: ca.TKConsensus.Teeking.com
@@ -16,6 +16,129 @@ services:
       default:
         aliases:
           - ca.TKConsensus.Teeking.com
+  zookeeper0:
+    image: 'hyperledger/fabric-zookeeper:x86_64-0.4.6'
+    ports:
+      - 2181
+      - 2888
+      - 3888
+    environment:
+      - ZOO_MY_ID=0
+      - 'ZOO_SERVERS=server.0=0.0.0.0:2888:3888 server.1=zookeeper1:2888:3888 server.2=zookeeper2:2888:3888 '
+    networks:
+      default:
+        aliases:
+          - zookeeper0
+  zookeeper1:
+    image: 'hyperledger/fabric-zookeeper:x86_64-0.4.6'
+    ports:
+      - 2181
+      - 2888
+      - 3888
+    environment:
+      - ZOO_MY_ID=1
+      - 'ZOO_SERVERS=server.0=zookeeper0:2888:3888 server.1=0.0.0.0:2888:3888 server.2=zookeeper2:2888:3888 '
+    networks:
+      default:
+        aliases:
+          - zookeeper1
+  zookeeper2:
+    image: 'hyperledger/fabric-zookeeper:x86_64-0.4.6'
+    ports:
+      - 2181
+      - 2888
+      - 3888
+    environment:
+      - ZOO_MY_ID=2
+      - 'ZOO_SERVERS=server.0=zookeeper0:2888:3888 server.1=zookeeper1:2888:3888 server.2=0.0.0.0:2888:3888 '
+    networks:
+      default:
+        aliases:
+          - zookeeper2
+  kafka0:
+    image: 'hyperledger/fabric-kafka:x86_64-0.4.6'
+    environment:
+      - KAFKA_BROKER_ID=0
+      - 'KAFKA_ZOOKEEPER_CONNECT=zookeeper0:2181,zookeeper1:2181,zookeeper2:2181'
+      - KAFKA_LOG_RETENTION_MS=-1
+      - KAFKA_MESSAGE_MAX_BYTES=103809024
+      - KAFKA_REPLICA_FETCH_MAX_BYTES=103809024
+      - KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE=false
+      - KAFKA_DEFAULT_REPLICATION_FACTOR=3
+      - KAFKA_MIN_INSYNC_REPLICAS=2
+    ports:
+      - 9092
+    depends_on:
+      - zookeeper0
+      - zookeeper1
+      - zookeeper2
+    networks:
+      default:
+        aliases:
+          - kafka0
+  kafka1:
+    image: 'hyperledger/fabric-kafka:x86_64-0.4.6'
+    environment:
+      - KAFKA_BROKER_ID=1
+      - 'KAFKA_ZOOKEEPER_CONNECT=zookeeper0:2181,zookeeper1:2181,zookeeper2:2181'
+      - KAFKA_LOG_RETENTION_MS=-1
+      - KAFKA_MESSAGE_MAX_BYTES=103809024
+      - KAFKA_REPLICA_FETCH_MAX_BYTES=103809024
+      - KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE=false
+      - KAFKA_DEFAULT_REPLICATION_FACTOR=3
+      - KAFKA_MIN_INSYNC_REPLICAS=2
+    ports:
+      - 9092
+    depends_on:
+      - zookeeper0
+      - zookeeper1
+      - zookeeper2
+    networks:
+      default:
+        aliases:
+          - kafka1
+  kafka2:
+    image: 'hyperledger/fabric-kafka:x86_64-0.4.6'
+    environment:
+      - KAFKA_BROKER_ID=2
+      - 'KAFKA_ZOOKEEPER_CONNECT=zookeeper0:2181,zookeeper1:2181,zookeeper2:2181'
+      - KAFKA_LOG_RETENTION_MS=-1
+      - KAFKA_MESSAGE_MAX_BYTES=103809024
+      - KAFKA_REPLICA_FETCH_MAX_BYTES=103809024
+      - KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE=false
+      - KAFKA_DEFAULT_REPLICATION_FACTOR=3
+      - KAFKA_MIN_INSYNC_REPLICAS=2
+    ports:
+      - 9092
+    depends_on:
+      - zookeeper0
+      - zookeeper1
+      - zookeeper2
+    networks:
+      default:
+        aliases:
+          - kafka2
+  kafka3:
+    image: 'hyperledger/fabric-kafka:x86_64-0.4.6'
+    environment:
+      - KAFKA_BROKER_ID=3
+      - 'KAFKA_ZOOKEEPER_CONNECT=zookeeper0:2181,zookeeper1:2181,zookeeper2:2181'
+      - KAFKA_LOG_RETENTION_MS=-1
+      - KAFKA_MESSAGE_MAX_BYTES=103809024
+      - KAFKA_REPLICA_FETCH_MAX_BYTES=103809024
+      - KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE=false
+      - KAFKA_DEFAULT_REPLICATION_FACTOR=3
+      - KAFKA_MIN_INSYNC_REPLICAS=2
+    ports:
+      - 9092
+    depends_on:
+      - zookeeper0
+      - zookeeper1
+      - zookeeper2
+    networks:
+      default:
+        aliases:
+          - kafka3
   ca-SUPPLY-Teeking-com:
     image: 'hyperledger/fabric-ca:x86_64-1.1.0'
     command: 'fabric-ca-server start -d -b admin:passwd'

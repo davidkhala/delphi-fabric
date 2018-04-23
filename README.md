@@ -201,3 +201,5 @@ govendor: to import third-party package in vendor folder
 - change default keystore path: [Error: EACCES: permission denied, open '/home/david/.hfc-key-store/05669e8b1597befecc99049b7b5797d992ab51c6c669a57fd1bcd76974a83324-priv']
 - simplify portMap design from [{7051:port}] to {port: port,eventHubPort:port2}
 - signature server for both leader node and manager nodes
+- try: service constraints node.role==master
+- adding kafka/zookeeper online

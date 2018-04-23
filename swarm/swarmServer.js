@@ -1,33 +1,14 @@
 //TODO work as network map server in Corda : see in readme
 
 const logger = require('../app/util/logger').new('swarm-server');
-const express = require('express');
 const swarmConfig = require('./swarm.json').swarmServer;
 const {port, couchDB: {url}} = swarmConfig;
-const bodyParser = require('body-parser');
-const http = require('http');
-const app = express();
-const cors = require('cors');
+const app = require('../express/baseApp').run(port);
 const FabricCouchDB = require('fabric-client/lib/impl/CouchDBKeyValueStore');
 const swarmDoc = 'swarm';
 const volumeDoc = 'volume';
 const leaderKey = 'leaderNode';
 const managerKey = 'managerNodes';
-
-app.options('*', cors());
-app.use(cors());
-//support parsing of application/json type post data
-app.use(bodyParser.json());
-//support parsing of application/x-www-form-urlencoded post data
-app.use(bodyParser.urlencoded({
-	extended: false
-}));
-const server = http.createServer(app).listen(port, () => {
-});
-logger.info('****************** SERVER STARTED ************************');
-logger.info('**************  http://localhost:' + port +
-    '  ******************');
-server.timeout = 240000;
 
 app.use('/config', require('../express/configExpose'));
 

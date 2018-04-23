@@ -10,7 +10,7 @@ exports.new = () => {
 	const client = new Client();
 	const newCryptoSuite = module.exports.newCryptoSuite({path:cryptoKeyStorePath});
 	client.setCryptoSuite(newCryptoSuite);
-	return client
+	return client;
 };
 exports.newCryptoSuite  = ({path} = {path: Utils.getDefaultKeyStorePath()})=>{
 	const newCryptoSuite = BaseClient.newCryptoSuite();

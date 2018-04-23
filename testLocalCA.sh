@@ -14,7 +14,7 @@ VERSION=$(jq -r ".docker.fabricTag" $CONFIG_JSON)
 IMAGE_TAG="x86_64-$VERSION"
 
 #############
-node -e "require('./config/docker-compose.js').genCAs({})"
+node -e "require('./config/docker-compose.js').genCAs({type:'local'})"
 caCOMPOSE_FILE=$CONFIG_DIR/docker-ca-compose.yaml
 COMPOSE_FILE="$CONFIG_DIR/docker-compose.yaml"
 caCryptoConfig=$CURRENT/config/ca-crypto-config

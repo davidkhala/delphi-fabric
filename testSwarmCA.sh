@@ -14,14 +14,14 @@ VERSION=$(jq -r ".docker.fabricTag" $CONFIG_JSON)
 IMAGE_TAG="x86_64-$VERSION"
 
 #############
-node -e "require('./config/docker-compose.js').genCAs({})"
+node -e "require('./config/docker-compose.js').genCAs({type:'swarm'})"
 caCOMPOSE_FILE=$CONFIG_DIR/docker-ca-compose.yaml
 COMPOSE_FILE="$CONFIG_DIR/docker-compose.yaml"
 caCryptoConfig=$CURRENT/config/ca-crypto-config
 dockerNetworkName=$(jq -r ".docker.network" $CONFIG_JSON)
 
-docker-compose -f $caCOMPOSE_FILE down
-docker-compose -f $COMPOSE_FILE down
+docker stack rm $dockerNetworkName
+# docker-compose -f $COMPOSE_FILE down
 commonDir="$CURRENT/common"
 $commonDir/rmChaincodeContainer.sh container "dev"
 $commonDir/rmChaincodeContainer.sh image "dev"
@@ -31,9 +31,9 @@ if docker network ls | grep $dockerNetworkName; then
 fi
 
 if ! docker network ls | grep $dockerNetworkName; then
-	docker network create $dockerNetworkName
+	docker network create --driver overlay --attachable $dockerNetworkName
 fi
-docker-compose -f $caCOMPOSE_FILE up -d
+docker stack up --compose-file=$caCOMPOSE_FILE $dockerNetworkName
 echo sleep 5
 sleep 5
 sudo rm -rf $caCryptoConfig
@@ -97,4 +97,4 @@ $CURRENT/common/docker/utils/volume.sh createLocal $CONFIGTXVolume $CONFIGTX_DIR
 
 ./common/docker/utils/docker.sh pullIfNotExist hyperledger/fabric-ccenv:$IMAGE_TAG
 node -e "require('./config/docker-compose').gen({MSPROOT:'$caCryptoConfig',COMPOSE_FILE:'$COMPOSE_FILE',type: 'local',volumeName:{CONFIGTX:'$CONFIGTXVolume',MSPROOT:'$MSPROOTVolume'}})"
-docker-compose -f $COMPOSE_FILE up -d
+

@@ -9,13 +9,13 @@ const peerUtil = require('../app/util/peer');
 const caUtil = require('../app/util/ca');
 const ordererUtil = require('../app/util/orderer');
 const container =
-    {
-    	dir: {
-    		CONFIGTX: '/etc/hyperledger/configtx',
-    		MSPROOT: '/etc/hyperledger/crypto-config',
-    		CA_HOME: '/etc/hyperledger/fabric-ca-server'
-    	}
-    };
+	{
+		dir: {
+			CONFIGTX: '/etc/hyperledger/configtx',
+			MSPROOT: '/etc/hyperledger/crypto-config',
+			CA_HOME: '/etc/hyperledger/fabric-ca-server'
+		}
+	};
 const dockerSock = '/host/var/run/docker.sock';
 
 const {swarmServiceName} = require('../common/docker/nodejs/dockerode-util');
@@ -75,12 +75,13 @@ const addOrdererService = (services, {BLOCK_FILE, mspId, ordererEachConfig, MSPR
 	services[ordererServiceName] = ordererService;
 };
 
+
 exports.gen = ({
-	MSPROOT,
-	arch = 'x86_64',
-	COMPOSE_FILE = path.resolve(CURRENT, 'docker-compose.yaml'),
-	type = 'local', volumeName
-}) => {
+				   MSPROOT,
+				   arch = 'x86_64',
+				   COMPOSE_FILE = path.resolve(CURRENT, 'docker-compose.yaml'),
+				   type = 'local', volumeName
+			   }) => {
 
 	logger.debug({MSPROOT, arch, COMPOSE_FILE, type, volumeName});
 
@@ -101,9 +102,6 @@ exports.gen = ({
 	}
 
 	const services = {};
-
-
-	const ORDERER_GENERAL_TLS_ROOTCAS = '';
 
 
 	for (const orgName in orgsConfig) {
@@ -184,98 +182,31 @@ exports.gen = ({
 
 
 	if (companyConfig.orderer.type === 'kafka') {
-		const kafkaConfigs = companyConfig.orderer.kafka.kafkas;
-		const zkConfigs = companyConfig.orderer.kafka.zookeepers;
-		const BLOCK_FILE = companyConfig.orderer.genesis_block.file;
-		for (const ordererOrgName in companyConfig.orderer.kafka.orgs) {
-			const ordererOrgConfig = companyConfig.orderer.kafka.orgs[ordererOrgName];
+		const kafkaConfigs = globalConfig.orderer.kafka.kafkas;
+		const BLOCK_FILE = globalConfig.orderer.genesis_block.file;
+		const CONFIGTXVolume = volumeName.CONFIGTX;
+		const MSPROOTVolume = volumeName.MSPROOT;
+		for (const ordererOrgName in globalConfig.orderer.kafka.orgs) {
+			const ordererOrgConfig = globalConfig.orderer.kafka.orgs[ordererOrgName];
 			const mspId = ordererOrgConfig.MSP.id;
 			for (const ordererName in ordererOrgConfig.orderers) {
 				const ordererEachConfig = ordererOrgConfig.orderers[ordererName];
-
-
 				addOrdererService(services, {BLOCK_FILE, mspId, ordererEachConfig, CONFIGTXVolume, MSPROOTVolume}, {
 					ordererName, domain: ordererOrgName, IMAGE_TAG,
-					swarmType: type, ORDERER_GENERAL_TLS_ROOTCAS,
+					swarmType: type,
 					kafkaServices: Object.keys(kafkaConfigs)
 				});
 
 			}
 		}
-
-
-		let KAFKA_ZOOKEEPER_CONNECT = 'KAFKA_ZOOKEEPER_CONNECT=';
-		for (const zookeeper in zkConfigs) {
-			KAFKA_ZOOKEEPER_CONNECT += `${zookeeper}:2181,`;
-		}
-		KAFKA_ZOOKEEPER_CONNECT = KAFKA_ZOOKEEPER_CONNECT.substring(0, KAFKA_ZOOKEEPER_CONNECT.length - 1);
-		for (const zookeeper in zkConfigs) {
-			const zkConfig = zkConfigs[zookeeper];
-			let ZOO_SERVERS = 'ZOO_SERVERS=';
-			services[zookeeper] = {
-				image: `hyperledger/fabric-zookeeper:${IMAGE_TAG_3rdParty}`,
-				ports: [2181, 2888, 3888],
-				environment: [`ZOO_MY_ID=${zkConfig.MY_ID}`],
-				networks: {
-					default: {
-						aliases:
-                            [zookeeper]
-					}
-				}
-
-			};
-			if (type === 'local') {
-				services[zookeeper].container_name = zookeeper;
-			}
-			for (const zookeeper in zkConfigs) {
-				const zkConfig2 = zkConfigs[zookeeper];
-				if (type === 'swarm' && zkConfig === zkConfig2) {
-					ZOO_SERVERS += `server.${zkConfig2.MY_ID}=0.0.0.0:2888:3888 `;
-				} else {
-					ZOO_SERVERS += `server.${zkConfig2.MY_ID}=${zookeeper}:2888:3888 `;
-				}
-			}
-			services[zookeeper].environment.push(ZOO_SERVERS);
-		}
-		for (const kafka in kafkaConfigs) {
-			const kafkaConfig = kafkaConfigs[kafka];
-			services[kafka] = {
-				image: `hyperledger/fabric-kafka:${IMAGE_TAG_3rdParty}`,
-
-				environment: [
-					`KAFKA_BROKER_ID=${kafkaConfig.BROKER_ID}`,
-					KAFKA_ZOOKEEPER_CONNECT,
-					'KAFKA_LOG_RETENTION_MS=-1',
-					'KAFKA_MESSAGE_MAX_BYTES=103809024',//NOTE cannot be in format of 10 MB
-					'KAFKA_REPLICA_FETCH_MAX_BYTES=103809024',//NOTE cannot be in format of 10 MB
-					'KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE=false',
-					`KAFKA_DEFAULT_REPLICATION_FACTOR=${companyConfig.orderer.kafka.N}`,
-					`KAFKA_MIN_INSYNC_REPLICAS=${companyConfig.orderer.kafka.M}`
-				],
-				ports: [9092],
-				depends_on: Object.keys(zkConfigs),
-
-				networks: {
-					default: {
-						aliases:
-                            [kafka]
-					}
-				},
-			};
-			if (type === 'swarm') {
-
-			} else {
-				services[kafka].container_name = kafka;
-			}
-		}
+		module.exports.addKafka(services,volumeName,{IMAGE_TAG,type,IMAGE_TAG_3rdParty});
 	} else {
 		const ordererEachConfig = companyConfig.orderer.solo;
 		const BLOCK_FILE = companyConfig.orderer.genesis_block.file;
 		const mspId = companyConfig.orderer.solo.MSP.id;
 		addOrdererService(services, {BLOCK_FILE, mspId, ordererEachConfig, CONFIGTXVolume, MSPROOTVolume}, {
 			ordererName: ordererEachConfig.container_name, domain: COMPANY_DOMAIN, IMAGE_TAG,
-			swarmType: type, ORDERER_GENERAL_TLS_ROOTCAS,
-			kafkaServices: undefined
+			swarmType: type,
 		});
 	}
 
@@ -306,13 +237,16 @@ exports.gen = ({
 
 exports.genCAs = ({
 	arch = 'x86_64',
-	COMPOSE_FILE = path.resolve(CURRENT, 'docker-ca-compose.yaml')
+	COMPOSE_FILE = path.resolve(CURRENT, 'docker-ca-compose.yaml'),
+	type:swarmType
 }) => {
 	logger.debug({arch, COMPOSE_FILE});
 
 	const {docker: {fabricTag, network}, orderer: {type}} = globalConfig;
+
 	const IMAGE_TAG = `${arch}-${fabricTag}`;
 
+	const IMAGE_TAG_3rdParty = `${arch}-${globalConfig.docker.thirdPartyTag}`;
 	const peerOrgsConfig = globalConfig.orgs;
 
 	const COMPANY_DOMAIN = globalConfig.domain;
@@ -328,6 +262,10 @@ exports.genCAs = ({
 			const caConfig = ordererOrgConfig.ca;
 			module.exports.addCA(services, {caConfig}, {orgDomain: ordererOrg, IMAGE_TAG});
 		}
+		module.exports.addKafka(services,{
+			CONFIGTX:'CONFIGTX_local',
+			MSPROOT :'MSPROOT_local'
+		},{type:swarmType,IMAGE_TAG_3rdParty});
 	} else {
 		const {ca, container_name} = globalConfig.orderer.solo;
 		module.exports.addCA(services, {caConfig: ca}, {orgDomain: container_name, IMAGE_TAG});
@@ -388,4 +326,72 @@ exports.addCA = (services, {caConfig}, {orgDomain, IMAGE_TAG}) => {
 	caServiceName = swarmServiceName(caServiceName);
 
 	services[caServiceName] = caService;
+};
+exports.addKafka = (services,volumeName,{type,IMAGE_TAG_3rdParty}) => {
+	const kafkaConfigs = globalConfig.orderer.kafka.kafkas;
+	const zkConfigs = globalConfig.orderer.kafka.zookeepers;
+
+
+	let KAFKA_ZOOKEEPER_CONNECT = 'KAFKA_ZOOKEEPER_CONNECT=';
+	for (const zookeeper in zkConfigs) {
+		KAFKA_ZOOKEEPER_CONNECT += `${zookeeper}:2181,`;
+	}
+	KAFKA_ZOOKEEPER_CONNECT = KAFKA_ZOOKEEPER_CONNECT.substring(0, KAFKA_ZOOKEEPER_CONNECT.length - 1);
+	for (const zookeeper in zkConfigs) {
+		const zkConfig = zkConfigs[zookeeper];
+		let ZOO_SERVERS = 'ZOO_SERVERS=';
+		services[zookeeper] = {
+			image: `hyperledger/fabric-zookeeper:${IMAGE_TAG_3rdParty}`,
+			ports: [2181, 2888, 3888],
+			environment: [`ZOO_MY_ID=${zkConfig.MY_ID}`],
+			networks: {
+				default: {
+					aliases:
+						[zookeeper]
+				}
+			}
+
+		};
+		if (type === 'local') {
+			services[zookeeper].container_name = zookeeper;
+		}
+		for (const zookeeper in zkConfigs) {
+			const zkConfig2 = zkConfigs[zookeeper];
+			if (type === 'swarm' && zkConfig === zkConfig2) {
+				ZOO_SERVERS += `server.${zkConfig2.MY_ID}=0.0.0.0:2888:3888 `;
+			} else {
+				ZOO_SERVERS += `server.${zkConfig2.MY_ID}=${zookeeper}:2888:3888 `;
+			}
+		}
+		services[zookeeper].environment.push(ZOO_SERVERS);
+	}
+	for (const kafka in kafkaConfigs) {
+		const kafkaConfig = kafkaConfigs[kafka];
+		services[kafka] = {
+			image: `hyperledger/fabric-kafka:${IMAGE_TAG_3rdParty}`,
+
+			environment: [
+				`KAFKA_BROKER_ID=${kafkaConfig.BROKER_ID}`,
+				KAFKA_ZOOKEEPER_CONNECT,
+				'KAFKA_LOG_RETENTION_MS=-1',
+				'KAFKA_MESSAGE_MAX_BYTES=103809024',//NOTE cannot be in format of 10 MB
+				'KAFKA_REPLICA_FETCH_MAX_BYTES=103809024',//NOTE cannot be in format of 10 MB
+				'KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE=false',
+				`KAFKA_DEFAULT_REPLICATION_FACTOR=${globalConfig.orderer.kafka.N}`,
+				`KAFKA_MIN_INSYNC_REPLICAS=${globalConfig.orderer.kafka.M}`
+			],
+			ports: [9092],
+			depends_on: Object.keys(zkConfigs),
+
+			networks: {
+				default: {
+					aliases:
+						[kafka]
+				}
+			},
+		};
+		if (type === 'local') {
+			services[kafka].container_name = kafka;
+		}
+	}
 };

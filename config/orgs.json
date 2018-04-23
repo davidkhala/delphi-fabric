@@ -78,7 +78,7 @@
             "id": "TkConsensusMSP"
           },
           "ca": {
-            "portHost": 7450,
+            "portHost": 7454,
             "tlsca": {
               "portHost": 7455
             }

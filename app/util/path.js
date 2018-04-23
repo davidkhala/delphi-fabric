@@ -82,16 +82,13 @@ exports.CryptoPath = class {
 		return this.resolve(this.orderer(), 'msp');
 	}
 
-	peer() {
-		return this.resolve(this.peers(), this.peerName);
-	}
 	peerMSP(){
-		return this.resolve(this.peer(), 'msp');
+		return this.resolve(this.peers(),this.peerName, 'msp');
 	}
-	ordererUser(){
-		return this.resolve(this.ordererUsers(),`${this.userName}@${this.ordererOrgName}`);
+	ordererUserMSP(){
+		return this.resolve(this.ordererUsers(),`${this.userName}@${this.ordererOrgName}`,'msp');
 	}
-	peerUser(){
-		return this.resolve(this.peerUsers(),`${this.userName}@${this.peerOrgName}`);
+	peerUserMSP(){
+		return this.resolve(this.peerUsers(),`${this.userName}@${this.peerOrgName}`,'msp');
 	}
 };

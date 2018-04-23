@@ -3,6 +3,7 @@ const helper = require('./helper');
 const logger = require('./util/logger').new('test-configtxlator');
 const ClientUtil = require('./util/client');
 const EventHubUtil = require('./util/eventHub');
+const peerUtil = require('./util/peer');
 const channelName = 'delphiChannel';
 const Query = require('./query');
 
@@ -51,7 +52,7 @@ exports.addOrg = (orgName, MSPName, MSPID, templateMSPName, adminMSPDir, org_dom
 					{keystoreDir, signcertFile, username: 'adminName', orgName, mspid: MSPID}).then(() => {
 
 					const tls_cacerts = api.format_tlscacert(adminMSPDir, org_domain);
-					const peer = helper.newPeer({peerPort, tls_cacerts, peer_hostName_full});
+					const peer = peerUtil.new({peerPort, tls_cacerts, peer_hostName_full});
 
 					peer.peerConfig = {
 						eventHub: {
