@@ -1,13 +1,13 @@
-const config = require('./config');
+const config = require('./nodeScripts/config');
 const signServerPort = config.signServer.port;
-const logger = require('../../../app/util/logger').new('sign server');
-const app = require('../../../express/baseApp').run(signServerPort);
+const logger = require('../../app/util/logger').new('sign server');
+const app = require('../../express/baseApp').run(signServerPort);
 const Multer = require('multer');
 const cache = Multer({dest: config.signServer.cache});
-const userUtil = require('../../../app/util/user');
-const signUtil = require('../../../app/util/multiSign');
-const clientUtil = require('../../../app/util/client');
-const pathUtil = require('../../../app/util/path');
+const userUtil = require('../../app/util/user');
+const signUtil = require('../../app/util/multiSign');
+const clientUtil = require('../../app/util/client');
+const pathUtil = require('../../app/util/path');
 const {CryptoPath} = pathUtil;
 
 
@@ -30,7 +30,7 @@ app.post('/', cache.single('proto'), async (req, res) => {
 		{
 			username: 'admin', domain: 'NewConsensus',
 			mspId: config.orderer.orgs.NewConsensus.MSP.id
-		}).then(ordererAdmin => ordererClient.setUserContext(ordererAdmin))
+		}).then(ordererAdmin => ordererClient.setUserContext(ordererAdmin,true))
 		.then(() => {
 			return signUtil.signs([Promise.resolve(ordererClient)], proto);
 		}).then(({signatures: ordererAdminSigns}) => {
@@ -42,7 +42,7 @@ app.post('/', cache.single('proto'), async (req, res) => {
 				{
 					username:'admin', domain:'NEW',
 					mspId:config.orgs.NEW.MSP.id
-				}).then(userAdmin =>peerClient.setUserContext(userAdmin))
+				}).then(userAdmin =>peerClient.setUserContext(userAdmin,true))
 				.then(()=>{
 					return signUtil.signs([Promise.resolve(peerClient)],proto);
 				}).then(({signatures: peerAdminSigns})=>{
