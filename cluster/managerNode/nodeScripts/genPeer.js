@@ -2,15 +2,14 @@ const config = require('./config');
 const dockerUtil = require('../../../app/util/dockerode');
 
 const Request = require('request');
-const swarmServerConfig = require('../../../swarm/swarm');
-const swarmBaseUrl = `${swarmServerConfig.swarmServer.url}:${swarmServerConfig.swarmServer.port}`;
+const swarmBaseUrl = `${config.swarmServer.url}:${config.swarmServer.port}`;
 const pathUtil = require('../../../app/util/path');
 const peerUtil = require('../../../app/util/peer');
 const MSPROOTvolumeName = 'MSPROOT';
 const CONFIGTXVolume = 'CONFIGTX';
 const peerName = 'newContainer';
 const peerOrg = 'NEW';
-const portMap = config.orgs.NEW.peers.newContainer.portMap;
+const portMap = config.orgs[peerOrg].peers[peerName].portMap;
 Request.get(`${swarmBaseUrl}/config/orgs`, (err, resp, body) => {
 	if (err) throw err;
 	body = JSON.parse(body);
@@ -27,13 +26,13 @@ Request.get(`${swarmBaseUrl}/config/orgs`, (err, resp, body) => {
 		dockerUtil.volumeCreateIfNotExist({Name: CONFIGTXVolume, path: config.CONFIGTX})
 	];
 	return Promise.all(promises).then(()=>dockerUtil.deployNewPeer({
-        Name: `${peerName}.${peerOrg}`, network, imageTag,
+		Name: `${peerName}.${peerOrg}`, network, imageTag,
 		Constraints: config.swarm.Constraints,
 		port: portMap.port, eventHubPort: portMap.eventHubPort,
 		msp: {
 			volumeName:MSPROOTvolumeName,
 			configPath:cryptoPath.peerMSP(),
-			id:config.orgs.NEW.MSP.id
+			id:config.orgs[peerOrg].MSP.id
 		}, peer_hostName_full:`${peerName}.${peerOrg}`
 	}));
 });

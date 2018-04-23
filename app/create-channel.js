@@ -27,7 +27,7 @@ const createChannel = (client, channelName, channelConfigFile, orgNames, orderer
 	// extract the channel config bytes from the envelope to be signed
 	const channelConfig = client.extractChannelConfig(channelConfig_envelop);
 	logger.debug({channelConfig});
-	return multiSign(clientSwitchPromises, channelConfig).then(signatures => {
+	return multiSign(clientSwitchPromises, channelConfig).then(({signatures}) => {
 		const channel = helper.prepareChannel(channelName, client, true);
 		const txId = client.newTransactionID();
 		const orderers = channel.getOrderers();

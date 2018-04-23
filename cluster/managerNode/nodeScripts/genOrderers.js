@@ -2,8 +2,7 @@ const config = require('./config');
 const dockerUtil = require('../../../app/util/dockerode');
 
 const Request = require('request');
-const swarmServerConfig = require('../../../swarm/swarm');
-const swarmBaseUrl = `${swarmServerConfig.swarmServer.url}:${swarmServerConfig.swarmServer.port}`;
+const swarmBaseUrl = `${config.swarmServer.url}:${config.swarmServer.port}`;
 const ordererOrg = 'NewConsensus';
 const ordererName = 'orderer0';
 const MSPROOTvolumeName = 'MSPROOT';
@@ -22,7 +21,7 @@ Request.get(`${swarmBaseUrl}/config/orgs`, (err, resp, body) => {
 		dockerUtil.volumeReCreate({Name: MSPROOTvolumeName, path: config.MSPROOT}),
 		dockerUtil.volumeReCreate({Name: CONFIGTXVolume, path: config.CONFIGTX})
 	];
-	const id = config.orderer.orgs.NewConsensus.MSP.id;
+	const id = config.orderer.orgs[ordererOrg].MSP.id;
 	// {Name, network, imageTag, Constraints, port, msp: {volumeName, configPath, id}, CONFIGTXVolume, BLOCK_FILE, kafkas, tls}
 	const cryptoPath = new pathUtil.CryptoPath(peerUtil.container.MSPROOT, {
 		orderer: {
@@ -31,7 +30,6 @@ Request.get(`${swarmBaseUrl}/config/orgs`, (err, resp, body) => {
 		}
 	});
 	return Promise.all(promises).then(() =>
-		//TODO kafka not ready
 		dockerUtil.deployNewOrderer({
 			Name: `${ordererName}.${ordererOrg}`,
 			imageTag, network, port,

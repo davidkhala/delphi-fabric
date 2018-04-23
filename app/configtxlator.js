@@ -6,6 +6,7 @@ const fs = require('fs');
 const agent = require('./util/agent2configtxlator');
 const OrdererUtil = require('./util/orderer');
 const EventHubUtil = require('./util/eventHub');
+const signUtil = require('./util/multiSign');
 const format_tlscacert = (adminMSPDir, org_domain) => path.join(adminMSPDir, 'tlscacerts',
 	`tlsca.${org_domain}-cert.pem`);
 exports.format_tlscacert = format_tlscacert;
@@ -39,23 +40,11 @@ exports.deleteMSP = (update_config, {MSPName}) => {
 const signChannelConfig = (channel, configUpdate_proto) => {
 
 	const proto = new Buffer(configUpdate_proto, 'binary');
-	const signatures = [];
-	const signFunc = (client) => {
-		logger.debug('signature identity', client.getUserContext().getName());
-		signatures.push(client.signChannelConfig(proto));
-	};
-	let promise = helper.userAction.admin.orderer.select().then(signFunc);
-
-	for (let orgName in channel.orgs) {
-		promise = promise.then(() => {
-			return helper.userAction.admin.select(orgName).then(signFunc);
-		});
+	const promises = [helper.userAction.admin.orderer.select()];
+	for (const orgName in channel.orgs) {
+		promises.push(helper.userAction.admin.select(orgName));
 	}
-
-	return promise.then(() => {
-		return {signatures, proto};
-	});
-
+	return signUtil.signs(promises,proto);
 };
 
 const getChannelConfigReadable = (channel) => channel.getChannelConfig()

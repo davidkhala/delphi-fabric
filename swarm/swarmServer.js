@@ -9,7 +9,6 @@ const http = require('http');
 const app = express();
 const cors = require('cors');
 const FabricCouchDB = require('fabric-client/lib/impl/CouchDBKeyValueStore');
-
 const swarmDoc = 'swarm';
 const volumeDoc = 'volume';
 const leaderKey = 'leaderNode';
@@ -32,9 +31,6 @@ server.timeout = 240000;
 
 app.use('/config', require('../express/configExpose'));
 
-app.get('/config/swarm', (req, res) => {
-	res.json(require(swarmJsonPath));
-});
 //FIXME async will not prompt error!!!
 app.get('/leader', async (req, res) => {
 	logger.debug('leader info');
@@ -126,6 +122,7 @@ app.post('/volume/set', async (req, res) => {
 	res.json({key, value});
 });
 
+app.use('/channel',require('./signaturesRouter'));
 app.get('/',(req,res)=>{
 	res.json({
 		errCode:'success',

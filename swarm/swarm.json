@@ -1,9 +1,12 @@
 {
   "swarmServer": {
     "port": 4001,
-    "url":"http://192.168.3.91",
+    "url":"http://192.168.0.158",
     "couchDB": {
-      "url": "http://192.168.3.91:5984"
+      "url": "http://192.168.0.158:5984"
     }
+  },
+  "signServer":{
+    "port":4002
   }
 }
