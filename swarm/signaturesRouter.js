@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const logger = require('../app/util/logger').new('router signature');
+const signUtil =require('../app/util/multiSign')
 const Multer = require('multer');
 const fs = require('fs');
 const path =require('path')
@@ -109,7 +110,12 @@ router.post('/newOrg', cache.fields([{name: 'admins'}, {name: 'root_certs'}, {na
 						proto: fs.createReadStream(tempFile)
 					};
 					Request.post({url: `http://localhost:${signServerPort}`, formData}, (err, resp, body) => {
-						logger.debug(err, resp, body);
+						if(err)reject(err);
+						const {signatures, proto} = JSON.parse(body);
+						logger.debug(signatures)
+						resolve({
+							signatures:signUtil.fromBase64(signatures),
+							proto:new Buffer(proto, 'binary')});
 					});
 				});
 

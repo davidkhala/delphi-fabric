@@ -10,11 +10,12 @@ const signUtil = require('../../app/util/multiSign');
 const clientUtil = require('../../app/util/client');
 const pathUtil = require('../../app/util/path');
 const {CryptoPath} = pathUtil;
-
+const fs = require('fs');
 
 app.post('/', cache.single('proto'), async (req, res) => {
-	logger.info('sign request');
-	const proto = req.file;
+
+	const proto = fs.readFileSync(req.file.path);
+	logger.info('sign request',{proto});
 	const globalConfig = require('../../config/orgs');
 
 	const caCryptoConfig = globalConfig.docker.volumes.CACRYPTOROOT.dir;
@@ -102,7 +103,10 @@ app.post('/', cache.single('proto'), async (req, res) => {
 		return signUtil.signs(peerClientPromises, proto);
 	}).then(({signatures: peerAdminSigns}) => {
 		signatures = signatures.concat(peerAdminSigns);
-		res.send({signatures});
+
+		res.send({signatures:signUtil.toBase64(signatures)
+			,proto
+		});
 	});
 
 });
