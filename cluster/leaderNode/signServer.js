@@ -56,16 +56,16 @@ app.post('/', cache.single('proto'), async (req, res) => {
 	for (const peerOrg in globalConfig.orgs) {
 		const peerOrgConfig = globalConfig.orgs[peerOrg];
 		promise = promise.then(() =>{
-			const peerOrgFull = `${peerOrg}.${globalConfig.domain}`;
+			const domain = peerOrg;
 			const peerClient = clientUtil.new();
 
 			const cryptoPath = new CryptoPath(caCryptoConfig, {
-				peer: {org: peerOrgFull},
+				peer: {org: domain},
 				user: {name: 'admin'}
 			});
 			return userUtil.loadFromLocal(cryptoPath.peerUserMSP(), peerClient.getCryptoSuite(),
 				{
-					username: 'admin', domain: peerOrgFull,
+					username: 'admin', domain,
 					mspId: peerOrgConfig.MSP.id
 				}).then(userAdmin => peerClient.setUserContext(userAdmin, true))
 				.then(() => {

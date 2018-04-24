@@ -5,6 +5,8 @@
     "fabricTag": "1.1.0",
     "thirdPartyTag": "0.4.6",
     "network": "TeekingNetwork",
+    "stack":"TeekingStack",
+    "caStack":"caStack",
     "volumes": {
       "CONFIGTX": {
         "dir": "/home/david/Documents/delphi-fabric/config/configtx"
@@ -115,22 +117,22 @@
       "file": "all.tx",
       "eventWaitTime": 30000,
       "orgs": {
-        "SUPPLY": {
+        "SUPPLY.Teeking.com": {
           "peerIndexes": [
             0
           ]
         },
-        "CAR": {
+        "CAR.Teeking.com": {
           "peerIndexes": [
             0
           ]
         },
-        "FACTORY": {
+        "FACTORY.Teeking.com": {
           "peerIndexes": [
             0
           ]
         },
-        "TK": {
+        "TK.Teeking.com": {
           "peerIndexes": [
             0
           ]

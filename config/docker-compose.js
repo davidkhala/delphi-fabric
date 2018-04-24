@@ -163,7 +163,6 @@ exports.gen = ({
 						aliases: [peerDomain]
 					}
 				};
-				peerService.environment.push('CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052');
 				peerService.deploy = {
 					placement: {
 						constraints: peerConfig.swarm.constraints

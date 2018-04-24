@@ -16,11 +16,12 @@ IMAGE_TAG="x86_64-$VERSION"
 #############
 node -e "require('./config/docker-compose.js').genCAs({type:'swarm'})"
 caCOMPOSE_FILE=$CONFIG_DIR/docker-ca-compose.yaml
-COMPOSE_FILE="$CONFIG_DIR/docker-compose.yaml"
+COMPOSE_FILE="$CONFIG_DIR/docker-swarm.yaml"
 caCryptoConfig=$CURRENT/config/ca-crypto-config
 dockerNetworkName=$(jq -r ".docker.network" $CONFIG_JSON)
+caStack=$(jq -r ".docker.caStack" $CONFIG_JSON)
 
-docker stack rm $dockerNetworkName
+docker stack rm $caStack
 # docker-compose -f $COMPOSE_FILE down
 commonDir="$CURRENT/common"
 $commonDir/rmChaincodeContainer.sh container "dev"
@@ -33,7 +34,7 @@ fi
 if ! docker network ls | grep $dockerNetworkName; then
 	docker network create --driver overlay --attachable $dockerNetworkName
 fi
-docker stack up --compose-file=$caCOMPOSE_FILE $dockerNetworkName
+docker stack up --compose-file=$caCOMPOSE_FILE $caStack
 echo sleep 5
 sleep 5
 sudo rm -rf $caCryptoConfig
@@ -86,7 +87,7 @@ jq ".GOPATH=\"$GOPATH\"" $chaincodeJSON | sponge $chaincodeJSON
 go get -u "github.com/davidkhala/chaincode" # FIXME: please use your own chaincode as in config/chaincode.json
 
 if [ -f "$COMPOSE_FILE" ]; then
-	./docker.sh down
+	./docker-swarm.sh down
 fi
 
 docker volume prune --force
@@ -96,5 +97,5 @@ $CURRENT/common/docker/utils/volume.sh createLocal $MSPROOTVolume $caCryptoConfi
 $CURRENT/common/docker/utils/volume.sh createLocal $CONFIGTXVolume $CONFIGTX_DIR
 
 ./common/docker/utils/docker.sh pullIfNotExist hyperledger/fabric-ccenv:$IMAGE_TAG
-node -e "require('./config/docker-compose').gen({MSPROOT:'$caCryptoConfig',COMPOSE_FILE:'$COMPOSE_FILE',type: 'local',volumeName:{CONFIGTX:'$CONFIGTXVolume',MSPROOT:'$MSPROOTVolume'}})"
+node -e "require('./config/docker-compose').gen({MSPROOT:'$caCryptoConfig',COMPOSE_FILE:'$COMPOSE_FILE',type: 'swarm',volumeName:{CONFIGTX:'$CONFIGTXVolume',MSPROOT:'$MSPROOTVolume'}})"
 

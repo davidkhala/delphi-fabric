@@ -2,10 +2,13 @@ const caUtil = require('../app/util/ca');
 
 const path = require('path');
 const userUtil = require('../app/util/user');
+const pathUtil = require('../app/util/path');
+const {CryptoPath} = pathUtil
 const logger = require('../app/util/logger').new('ca-crypto-gen');
 const peerUtil = require('../app/util/peer');
 const ordererUtil = require('../app/util/orderer');
 const affiliationUtil = require('../app/util/affiliationService');
+
 
 exports.initAdmin = (url = 'http://localhost:7054', {mspId, domain}, usersDir) => {
 	const enrollmentID = 'admin';
@@ -156,14 +159,22 @@ exports.genAll = () => {
 	let promise = Promise.resolve();
 	if (type === 'kafka') {
 		//gen orderers
-
 		const ordererOrgs = globalConfig.orderer.kafka.orgs;
 		for (const domain in ordererOrgs) {
 			const ordererConfig = ordererOrgs[domain];
 			const mspId = ordererConfig.MSP.id;
-			const orderersDir = path.resolve(caCryptoConfig, 'ordererOrganizations', domain, 'orderers');
 
-			const usersDir = path.resolve(caCryptoConfig, 'ordererOrganizations', domain, 'users');
+			const cryptoPath = new CryptoPath(caCryptoConfig,{
+				orderer:{
+					org:domain
+				},
+				user:{
+					name:'admin'
+				}
+			});
+			const orderersDir = cryptoPath.orderers();
+
+			const usersDir = cryptoPath.ordererUsers();
 			const caUrl = `http://localhost:${ordererConfig.ca.portHost}`;//FIXME: hard code here without tls
 			promise = promise.then(()=>module.exports.init(caUrl, {mspId, domain}, usersDir).then(() => {
 				const promises = [];
@@ -177,17 +188,43 @@ exports.genAll = () => {
 		}
 
 	} else {
-		//TODO
+		const ordererConfig = globalConfig.orderer.solo;
+		const mspId = ordererConfig.MSP.id;
+
+		const domain = ordererConfig.orgName;
+		const cryptoPath = new CryptoPath(caCryptoConfig,{
+			orderer:{
+				org:domain
+			},
+			user:{
+				name:'admin'
+			}
+		});
+		const orderersDir = cryptoPath.orderers();
+
+		const usersDir = cryptoPath.ordererUsers();
+		const caUrl = `http://localhost:${ordererConfig.ca.portHost}`;//FIXME: hard code here without tls
+		promise = promise.then(()=>module.exports.init(caUrl, {mspId,domain}, usersDir).then(() => {
+			const ordererName =ordererConfig.container_name;
+			return module.exports.genOrderer(caUrl, orderersDir, {ordererName, domain, mspId}, usersDir);
+		}));
 	}
 	//gen peers
 	const peerOrgs = globalConfig.orgs;
-	for (const peerOrg in peerOrgs) {
-		const peerOrgConfig = peerOrgs[peerOrg];
+	for (const domain in peerOrgs) {
+		const peerOrgConfig = peerOrgs[domain];
 		const mspId = peerOrgConfig.MSP.id;
-		const domain = `${peerOrg}.${globalConfig.domain}`;
 		const caUrl = `http://localhost:${peerOrgConfig.ca.portHost}`;//FIXME: hard code here without tls
-		const peersDir = path.resolve(caCryptoConfig, 'peerOrganizations', domain, 'peers');
-		const usersDir = path.resolve(caCryptoConfig, 'peerOrganizations', domain, 'users');
+		const cryptoPath = new CryptoPath(caCryptoConfig,{
+			peer:{
+				org:domain
+			},
+			user:{
+				name:'admin'
+			}
+		});
+		const peersDir = cryptoPath.peers();
+		const usersDir = cryptoPath.peerUsers();
 		promise = promise.then(()=>module.exports.init(caUrl, {mspId, domain}, usersDir).then(() => {
 			const promises = [];
 			for (let peerIndex = 0; peerIndex < peerOrgConfig.peers.length; peerIndex++) {
