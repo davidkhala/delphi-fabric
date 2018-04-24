@@ -12,7 +12,11 @@ const instantiate = require('./instantiate-chaincode').instantiate;
 const installChaincode = require('./install-chaincode').install;
 
 const api = require('./configtxlator');
-
+const format_tlscacert = (adminMSPDir, org_domain) => path.join(adminMSPDir, 'tlscacerts',
+	`tlsca.${org_domain}-cert.pem`);
+/**
+ * @Deprecated
+ */
 exports.deleteOrg = ({channelName, MSPName}) => {
 	const client = ClientUtil.new();
 	const channel = helper.prepareChannel(channelName, client, true);
@@ -21,7 +25,22 @@ exports.deleteOrg = ({channelName, MSPName}) => {
 	});
 
 };
-exports.addOrg = (orgName, MSPName, MSPID, templateMSPName, adminMSPDir, org_domain, peerPort, eventHubPort, peer_hostName_full
+const path = require('path');
+const cloneMSP = (original_config, {MSPName, MSPID,  adminMSPDir, org_domain}) => {
+// Note templateJson might differs with different channel profile, take care
+	let update_config = JSON.parse(JSON.stringify(original_config));
+	const admins = [path.join(adminMSPDir, 'admincerts', `Admin@${org_domain}-cert.pem`)];
+	const root_certs = [path.join(adminMSPDir, 'cacerts', `ca.${org_domain}-cert.pem`)];
+
+	const tls_root_certs = [format_tlscacert(adminMSPDir, org_domain)];
+
+	update_config = api.newPeerOrg(update_config,MSPName,MSPID,{admins,root_certs,tls_root_certs})
+	return update_config;
+};
+/**
+ * @Deprecated
+ */
+exports.addOrg = (orgName, MSPName, MSPID, adminMSPDir, org_domain, peerPort, eventHubPort, peer_hostName_full
 	, chaincodePath, chaincodeId, chaincodeVersion, args) => {
 
 	return helper.getOrgAdmin('BU').then((client) => {
@@ -34,7 +53,7 @@ exports.addOrg = (orgName, MSPName, MSPID, templateMSPName, adminMSPDir, org_dom
 				return original_config;
 			} else {
 
-				return api.cloneMSP(original_config, {MSPName, MSPID, templateMSPName, adminMSPDir, org_domain});
+				return cloneMSP(original_config, {MSPName, MSPID, adminMSPDir, org_domain});
 			}
 		};
 
@@ -51,7 +70,7 @@ exports.addOrg = (orgName, MSPName, MSPID, templateMSPName, adminMSPDir, org_dom
 				return helper.userAction.mspCreate(client,
 					{keystoreDir, signcertFile, username: 'adminName', orgName, mspid: MSPID}).then(() => {
 
-					const tls_cacerts = api.format_tlscacert(adminMSPDir, org_domain);
+					const tls_cacerts = format_tlscacert(adminMSPDir, org_domain);
 					const peer = peerUtil.new({peerPort, tls_cacerts, peer_hostName_full});
 
 					peer.peerConfig = {
@@ -99,7 +118,9 @@ exports.addOrg = (orgName, MSPName, MSPID, templateMSPName, adminMSPDir, org_dom
 	});
 
 };
-
+/**
+ * @Deprecated
+ */
 exports.updateOrderer = () => {
 	return helper.userAction.admin.orderer.select().then((client) => {
 

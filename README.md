@@ -204,3 +204,5 @@ govendor: to import third-party package in vendor folder
 - try: service constraints node.role==master
 - adding kafka/zookeeper online
 - remove global domain, and stateStore
+- should we use stack or dockerode?
+- user server design instead of nfs
