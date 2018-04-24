@@ -87,6 +87,14 @@ exports.CryptoPath = class {
 		return this.resolve(this.peers(), `${this.peerName}.${this.peerOrgName}`, 'msp');
 	}
 
+	peerCacerts() {
+		return this.resolve(this.peerOrg(), 'msp', 'cacerts', `ca.${this.peerOrgName}-cert.pem`);
+	}
+
+	ordererCacerts() {
+		return this.resolve(this.ordererOrg(), 'msp', 'cacerts', `ca.${this.ordererOrgName}-cert.pem`);
+	}
+
 	peerMSPSigncert() {
 		return this.resolve(this.peerMSP(), 'signcerts', `${this.peerName}.${this.peerOrgName}-cert.pem`);
 	}

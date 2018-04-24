@@ -30,7 +30,6 @@ Request.get(`${swarmBaseUrl}/config/orgs`, (err, resp, body) => {
 		.then((task)=>{if(!Array.isArray(task)||task.length===0){
 			console.error('task not found');
 		}else {
-			console.log('task found');
 			console.log(task[0].Status);
 		}});
 
