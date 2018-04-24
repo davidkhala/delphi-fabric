@@ -104,6 +104,12 @@ app.post('/volume/set', async (req, res) => {
 });
 
 app.use('/channel',require('./signaturesRouter'));
+app.get('/block', async (req,res)=>{
+	const globalConfig = require('../config/orgs');
+	const path = require('path');
+	const blockFile = path.resolve(globalConfig.docker.volumes.CONFIGTX.dir,globalConfig.orderer.genesis_block.file);
+	res.sendFile(blockFile);
+});
 app.get('/',(req,res)=>{
 	res.json({
 		errCode:'success',

@@ -17,7 +17,6 @@ app.post('/', cache.single('proto'), async (req, res) => {
 	const proto = req.file;
 	const globalConfig = require('../../config/orgs');
 
-	//TODO assuming we return two signatures: 1 from orderer 1 from peer
 	const caCryptoConfig = globalConfig.docker.volumes.CACRYPTOROOT.dir;
 
 
@@ -25,6 +24,7 @@ app.post('/', cache.single('proto'), async (req, res) => {
 	let promise = Promise.resolve();
 	if (globalConfig.orderer.type === 'kafka') {
 
+		const clientPromises = [];
 		for (const ordererOrg in globalConfig.orderer.kafka.orgs) {
 			const ordererOrgConfig = globalConfig.orderer.kafka.orgs[ordererOrg];
 			const mspId = ordererOrgConfig.MSP.id;
@@ -33,51 +33,76 @@ app.post('/', cache.single('proto'), async (req, res) => {
 				user: {name: 'admin'}
 			});
 
+			const ordererClient = clientUtil.new();
 
-			promise = promise.then(() => {
-				const ordererClient = clientUtil.new();
-				return userUtil.loadFromLocal(cryptoPath.ordererUserMSP(), ordererClient.getCryptoSuite(),
-					{
-						username: 'admin', domain: ordererOrg, mspId
-					}).then(ordererAdmin => ordererClient.setUserContext(ordererAdmin, true))
-					.then(() => {
-						return signUtil.signs([Promise.resolve(ordererClient)], proto);
-					});
-			}).then(({signatures: ordererAdminSigns}) => {
-				signatures = signatures.concat(ordererAdminSigns);
-				return Promise.resolve();
-			});
+			clientPromises.push(userUtil.loadFromLocal(cryptoPath.ordererUserMSP(), ordererClient.getCryptoSuite(),
+				{
+					username: 'admin', domain: ordererOrg, mspId
+				}).then(ordererAdmin => ordererClient.setUserContext(ordererAdmin, true))
+				.then(() => ordererClient));
 
 		}
 
-	} else {
-		//TODO
-	}
-	for (const peerOrg in globalConfig.orgs) {
-		const peerOrgConfig = globalConfig.orgs[peerOrg];
-		promise = promise.then(() =>{
-			const domain = peerOrg;
-			const peerClient = clientUtil.new();
+		promise = promise.then(() => {
+			return signUtil.signs(clientPromises, proto);
+		}).then(({signatures: ordererAdminSigns}) => {
+			signatures = signatures.concat(ordererAdminSigns);
+			return Promise.resolve();
+		});
 
-			const cryptoPath = new CryptoPath(caCryptoConfig, {
-				peer: {org: domain},
-				user: {name: 'admin'}
-			});
-			return userUtil.loadFromLocal(cryptoPath.peerUserMSP(), peerClient.getCryptoSuite(),
+	} else {
+		const clientPromises = [];
+		const ordererOrg = globalConfig.orderer.solo.orgName;
+		const ordererOrgConfig = globalConfig.orderer.solo;
+		const mspId = ordererOrgConfig.MSP.id;
+		const cryptoPath = new CryptoPath(caCryptoConfig, {
+			orderer: {org: ordererOrg},
+			user: {name: 'admin'}
+		});
+
+		const ordererClient = clientUtil.new();
+
+		clientPromises.push(userUtil.loadFromLocal(cryptoPath.ordererUserMSP(), ordererClient.getCryptoSuite(),
+			{
+				username: 'admin', domain: ordererOrg, mspId
+			}).then(ordererAdmin => ordererClient.setUserContext(ordererAdmin, true))
+			.then(() => ordererClient));
+
+		promise = promise.then(() => {
+			return signUtil.signs(clientPromises, proto);
+		}).then(({signatures: ordererAdminSigns}) => {
+			signatures = signatures.concat(ordererAdminSigns);
+			return Promise.resolve();
+		});
+
+
+	}
+	const peerClientPromises = [];
+
+	for (const domain in globalConfig.orgs) {
+		const peerOrgConfig = globalConfig.orgs[domain];
+		const peerClient = clientUtil.new();
+
+		const cryptoPath = new CryptoPath(caCryptoConfig, {
+			peer: {org: domain},
+			user: {name: 'admin'}
+		});
+		peerClientPromises.push(
+			userUtil.loadFromLocal(cryptoPath.peerUserMSP(), peerClient.getCryptoSuite(),
 				{
 					username: 'admin', domain,
 					mspId: peerOrgConfig.MSP.id
 				}).then(userAdmin => peerClient.setUserContext(userAdmin, true))
-				.then(() => {
-					return signUtil.signs([Promise.resolve(peerClient)], proto);
-				});
+				.then(() => peerClient));
 
-		}).then(({signatures: peerAdminSigns}) => {
-			signatures = signatures.concat(peerAdminSigns);
-		}).then(() => {
-			res.send({signatures});
-		});
+
 	}
 
+	return promise.then(() => {
+		return signUtil.signs(peerClientPromises, proto);
+	}).then(({signatures: peerAdminSigns}) => {
+		signatures = signatures.concat(peerAdminSigns);
+		res.send({signatures});
+	});
 
 });
