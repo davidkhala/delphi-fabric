@@ -282,13 +282,13 @@ router.get('/worldState', (req, res) => {
 
 	helper.getOrgAdmin(TKOrgName).then((client) => {
 		const channel = helper.prepareChannel(channelName, client);
-		const peers = helper.newPeers([peerIndex], orgName);
+		const peers = helper.newPeers([peerIndex], TKOrgName);
 		return invoke(channel, peers, {
 			chaincodeId, fcn,
 			args
 		}).then((message) => {
 			const data = reducer(message);
-			res.json({data: data.responses});
+			res.json({data: JSON.parse(data.responses)});
 
 		}).catch(err => {
 			logger.error(err);
