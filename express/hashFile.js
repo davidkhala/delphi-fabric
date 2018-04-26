@@ -15,6 +15,9 @@ const {reducer} = require('../app/util/chaincode');
 
 const channelName = 'allChannel';
 const chaincodeId = 'hashChaincode';
+const TKOrgName = 'TK.Teeking.com'
+
+const baseUrl = 'http://192.168.3.139:9090/teeking-api/api';
 const errorHandle = (err, res) => {
 	const errorCodeMap = require('./errorCodeMap.json');
 
@@ -29,40 +32,61 @@ const errorHandle = (err, res) => {
 
 };
 
+
 const userMiddleware = (req, res, next) => {
 	const {username, password, token} = req.body;
 	const oauthClient = require('./oauth2Client').passwordGrant;
-
 	let promise = Promise.resolve();
-	if (!token) {
-		if (!username || !password) {
-			return errorHandle('missing user identity ', res);
-		}
-		promise = promise.then(()=>oauthClient.getToken({username, password}))
-			.then(accessToken => {
-				res.locals.accessToken = accessToken.accessToken.accessToken;
-				next();
-				return Promise.resolve(accessToken);
+
+	const oauthEnable = false;
+	if (oauthEnable) {
+		if (!token) {
+			if (!username || !password) {
+				return errorHandle('missing user identity ', res);
+			}
+			promise = promise.then(() => oauthClient.getToken({username, password}))
+				.then(accessToken => {
+					res.locals.accessToken = accessToken.accessToken.accessToken;
+					next();
+					return Promise.resolve(accessToken);
+				});
+		} else {
+			//TODO request TK platform to authenticate token
+			promise = promise.then(() => oauthClient.verify(token)).then(result => {
+				if (result) {
+					res.locals.accessToken = token;
+					next();
+					return Promise.resolve(result);
+				}
 			});
+		}
 	} else {
-		//TODO request TK platform to authenticate token
-		promise= promise.then(()=>oauthClient.verify(token)).then(result => {
-			if (result) {
+		promise = promise.then(() => new Promise((resolve, reject) => {
+			Request.post({
+				url: `${baseUrl}/tokens`, formData: {
+					name: username, password
+				}
+			}, (err, resp, body) => {
+				if (err) return reject(err);
+				const {token, userid} = JSON.parse(body);
 				res.locals.accessToken = token;
 				next();
-				return Promise.resolve(result);
-			}
-		});
+				return resolve();
+			});
+		}));
+
 	}
+
 	promise.catch(err => {
 		res.status(400).send(err);
 	});
 };
 const Request = require('request');
 const peerIndex = 0;
-router.post('/write', cache.array('files'), userMiddleware, (req, res) => {
+router.post('/write', cache.array('files'), (req, res) => {
 	const {id, plain, toHash} = req.body;
-	const {accessToken} = res.locals;
+	let {accessToken} = res.locals;
+	if(!accessToken)accessToken = '';//FIXME
 	const {org: orgName} = req.body;
 	logger.debug('write', {id, plain, toHash, orgName});
 
@@ -78,52 +102,70 @@ router.post('/write', cache.array('files'), userMiddleware, (req, res) => {
 	const fileStreams = files.map(({path}) => {
 		return fs.createReadStream(path);
 	});
-	const formData = {
-		accessToken,
-		files: fileStreams,
-	};
 
-	promise = promise.then(() => new Promise((resolve, reject) => {
 
-		Request.post({url: 'http://service.com/upload', formData}, (err, resp, body) => {
+	const uploadFilesRequest = () => new Promise((resolve, reject) => {
+		const formData = {
+			accessToken,
+			files: fileStreams,
+		};
+		Request.post({url: `${baseUrl}/files`, formData,timeout:1000}, (err, resp, body) => {
+			logger.debug({err,body});
+			if (err) {
+				return reject(err);
+			}
+			logger.debug('Upload successful!  Server responded with:', body);
+			resolve(JSON.parse(body))
+		});
+	});
+
+	const assetsRequest = () => new Promise((resolve, reject) => {
+		const formData = {
+			accessToken, plain, toHash
+		};
+
+		Request.post({url: `${baseUrl}/assets`, formData}, (err, resp, body) => {
 			if (err) {
 				reject(err);
 			}
-			logger.debug('Upload successful!  Server responded with:', body);
-			const formData = {
-				accessToken, plain, toHash
-			};
-			Request.post({url: 'http://sql', formData}, (err, resp, body) => {
-				if (err) {
-					reject(err);
-				}
-				logger.debug('sql server response with:', body);
-				const {value} = body;
-				const fcn = 'write';
-				const args = [id, value];
+			logger.debug('sql server response with:', body);
+			resolve(JSON.parse(body));
 
-				logger.debug({chaincodeId, fcn, orgName, peerIndex, channelName});
-				const invalidArgs = invalid.args({args});
-				if (invalidArgs) reject(invalidArgs);
-
-				resolve({fcn, args});
-			});
-		});
-	})).then(({fcn,args}) => {
-		const {invoke} = require('../app/invoke-chaincode.js');
-		return helper.getOrgAdmin(orgName).then((client) => {
-			const channel = helper.prepareChannel(channelName, client);
-			const peers = helper.newPeers([peerIndex], orgName);
-			return invoke(channel, peers, {
-				chaincodeId, fcn,
-				args
-			}).then((message) => {
-				const data = reducer(message);
-				res.json({data: data.responses});
-
-			});
 		});
 	});
+	promise = promise
+		.then(uploadFilesRequest)
+		.then(assetsRequest)
+		.then(body => {
+			const {success, message, data:{ischain, req_data, hash}} = body;
+			const fcn = 'write';
+			const args = [id, hash];
+
+			logger.debug({chaincodeId, fcn, orgName, peerIndex, channelName});
+			const invalidArgs = invalid.args({args});
+			if (invalidArgs) reject(invalidArgs);
+
+			return Promise.resolve({fcn:ischain?fcn:undefined, args});
+		})
+		.then(({fcn, args}) => {
+			if (!fcn) {
+				res.json({data: 'not to update blockchain'});
+				return;
+			}
+			const {invoke} = require('../app/invoke-chaincode.js');
+			return helper.getOrgAdmin(orgName).then((client) => {
+				const channel = helper.prepareChannel(channelName, client);
+				const peers = helper.newPeers([peerIndex], orgName);
+				return invoke(channel, peers, {
+					chaincodeId, fcn,
+					args
+				}).then((message) => {
+					const data = reducer(message);
+					res.json({data: data.responses});
+
+				});
+			});
+		});
 
 	promise.catch(err => {
 		logger.error(err);
@@ -189,10 +231,10 @@ router.post('/read', (req, res) => {
 	const fcn = 'read';
 
 	const args = [id];
-	if (orgName === 'TK') {
+	if (orgName === TKOrgName) {
 		let {delegatedOrg} = req.body;
 		if (!delegatedOrg) {
-			delegatedOrg = 'TK';
+			delegatedOrg = TKOrgName;
 		}
 		args.push(delegatedOrg);
 	}
@@ -230,5 +272,34 @@ router.post('/read', (req, res) => {
 	});
 });
 
+router.get('/worldState', (req, res) => {
+
+
+	const fcn = 'worldStates';
+
+	const args = [];
+	const {invoke} = require('../app/invoke-chaincode.js');
+
+	helper.getOrgAdmin(TKOrgName).then((client) => {
+		const channel = helper.prepareChannel(channelName, client);
+		const peers = helper.newPeers([peerIndex], orgName);
+		return invoke(channel, peers, {
+			chaincodeId, fcn,
+			args
+		}).then((message) => {
+			const data = reducer(message);
+			res.json({data: data.responses});
+
+		}).catch(err => {
+			logger.error(err);
+			const {proposalResponses} = err;
+			if (proposalResponses) {
+				errorHandle(proposalResponses, res);
+			} else {
+				errorHandle(err, res);
+			}
+		});
+	});
+});
 
 module.exports = router;

@@ -17,12 +17,11 @@
 
 const logger = require('./util/logger').new('Helper');
 const path = require('path');
-const fs = require('fs-extra');
 const globalConfig = require('../config/orgs.json');
 
 const companyConfig = globalConfig;
 const orgsConfig = companyConfig.orgs;
-const CRYPTO_CONFIG_DIR = companyConfig.docker.volumes.CACRYPTOROOT.dir;
+const CRYPTO_CONFIG_DIR = globalConfig.cryptogenSkip ? globalConfig.docker.volumes.CACRYPTOROOT.dir : globalConfig.docker.volumes.MSPROOT.dir;
 const channelsConfig = companyConfig.channels;
 const chaincodeConfig = require('../config/chaincode.json');
 const sdkUtils = require('fabric-client/lib/utils');
@@ -33,18 +32,10 @@ const Orderer = require('fabric-client/lib/Orderer');
 const peerUtil = require('./util/peer');
 const pathUtil = require('./util/path');
 const {CryptoPath} = pathUtil;
-// set up the client and channel objects for each org
-const gen_tls_cacerts = (orgName, peerIndex) => {
-	const org_domain = `${orgName}`;
-	const peer_hostName_full = `peer${peerIndex}.${org_domain}`;
-	const tls_cacerts = `${CRYPTO_CONFIG_DIR}/peerOrganizations/${org_domain}/peers/${peer_hostName_full}/tls/ca.crt`;
-	return {org_domain, peer_hostName_full, tls_cacerts};
-};
 
 
 // peerConfig: "portMap": [{	"host": 8051,		"container": 7051},{	"host": 8053,		"container": 7053}]
 const preparePeer = (orgName, peerIndex, peerConfig) => {
-	const {peer_hostName_full, tls_cacerts} = gen_tls_cacerts(orgName, peerIndex);
 	let peerPort;
 	let eventHubPort;
 	for (const portMapEach of peerConfig.portMap) {
@@ -55,11 +46,17 @@ const preparePeer = (orgName, peerIndex, peerConfig) => {
 			eventHubPort = portMapEach.host;
 		}
 	}
-	if (!peerPort) {
-		logger.warn(`Could not find port mapped to 7051 for peer host==${peer_hostName_full}`);
-		throw new Error(`Could not find port mapped to 7051 for peer host==${peer_hostName_full}`);
+	let peer;
+	if (globalConfig.TLS) {
+
+		const peer_hostName_full = `peer${peerIndex}.${orgName}`;
+		const cryptoPath = new CryptoPath(CRYPTO_CONFIG_DIR,
+			{peer: {name: `peer${peerIndex}`, org: orgName}});
+		const tls_cacerts = path.resolve(cryptoPath.peers(), peer_hostName_full, 'tls', 'ca.crt');
+		peer = peerUtil.new({peerPort, tls_cacerts, peer_hostName_full});
+	} else {
+		peer = peerUtil.new({peerPort});
 	}
-	const peer = peerUtil.new({peerPort, tls_cacerts, peer_hostName_full});
 	//NOTE append more info
 	peer.peerConfig = peerConfig;
 
@@ -207,7 +204,7 @@ objects.user = {
 		}
 	},
 	mspCreate: (client,
-		{keystoreDir, signcertFile, username, orgName, mspid = getMspID(orgName), skipPersistence = false}) => {
+				{keystoreDir, signcertFile, username, orgName, mspid = getMspID(orgName), skipPersistence = false}) => {
 		const keyFile = pathUtil.findKeyfiles(keystoreDir)[0];
 		// NOTE:(jsdoc) This allows applications to use pre-existing crypto materials (private keys and certificates) to construct user objects with signing capabilities
 		// NOTE In client.createUser option, two types of cryptoContent is supported:
@@ -275,20 +272,20 @@ objects.user.admin = {
 	orderer: {
 		select: (ordererOrg) => {
 
-			const cryptoPath = new CryptoPath(CRYPTO_CONFIG_DIR,{
-				orderer:{
-					org:ordererOrg
+			const cryptoPath = new CryptoPath(CRYPTO_CONFIG_DIR, {
+				orderer: {
+					org: ordererOrg
 				},
-				user:{
-					name:rawAdminUsername
+				user: {
+					name: rawAdminUsername
 				}
 			});
 			const keystoreDir = path.resolve(cryptoPath.ordererUserMSP(), 'keystore');
 			const signcertFile = path.resolve(cryptoPath.ordererUserMSPSigncert());
 			let ordererOrgConfig;
-			if(ordererConfig.type==='kafka'){
+			if (ordererConfig.type === 'kafka') {
 				ordererOrgConfig = ordererConfig.kafka.orgs[ordererOrg];
-			}else {
+			} else {
 				ordererOrgConfig = ordererConfig.solo;
 			}
 			const ordererMSPID = ordererOrgConfig.MSP.id;
@@ -373,7 +370,6 @@ exports.chaincodeProposalAdapter = (actionString, validator) => {
 };
 
 exports.globalConfig = globalConfig;
-exports.gen_tls_cacerts = gen_tls_cacerts;
 exports.preparePeer = preparePeer;
 exports.userAction = objects.user;
 exports.bindEventHub = bindEventHub;
