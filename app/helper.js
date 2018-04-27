@@ -331,11 +331,6 @@ objects.user.admin = {
 	},
 };
 
-// TODO: TypeError: Path must be a string. Received undefined
-exports.setGOPATH = () => {
-	process.env.GOPATH = chaincodeConfig.GOPATH;
-};
-
 exports.chaincodeProposalAdapter = (actionString, validator) => {
 	const _validator = validator ? validator : ({response}) => {
 		return {isValid: response && response.status === 200, isSwallowed: false};

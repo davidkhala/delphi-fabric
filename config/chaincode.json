@@ -1,5 +1,4 @@
 {
-  "GOPATH": "/home/fabric2/go",
   "chaincodes": {
     "delphiChaincode": {
       "path": "github.com/davidkhala/chaincode/golang/delphi"

@@ -8,7 +8,6 @@ function cn() {
 		gitSync
 	fi
 	$CURRENT/common/install.sh cn
-	sudo apt -qq install -y moreutils
 	npm install
 }
 function gitSync() {
@@ -30,8 +29,6 @@ else
 		gitSync
 	fi
 	$CURRENT/common/install.sh
-	# write to config: jq do not support in-place editing, use moreutils:sponge
-	sudo apt -qq install -y moreutils
 	npm install
 	if ! go version; then
 		$CURRENT/common/install.sh golang

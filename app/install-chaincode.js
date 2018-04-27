@@ -1,5 +1,6 @@
 //NOTE install chaincode does not require channel existence
 const helper = require('./helper.js');
+const golangUtil = require('./util/golang');
 
 //allowedCharsChaincodeName = "[A-Za-z0-9_-]+"
 // allowedCharsVersion       = "[A-Za-z0-9_.-]+"
@@ -8,7 +9,6 @@ const helper = require('./helper.js');
 const install = (peers, { chaincodeId, chaincodePath, chaincodeVersion }, client) => {
 	const logger = require('./util/logger').new('install-chaincode');
 	logger.debug({ peers_length: peers.length, chaincodeId, chaincodePath, chaincodeVersion });
-	helper.setGOPATH();
 
 	const request = {
 		targets: peers,
@@ -16,7 +16,9 @@ const install = (peers, { chaincodeId, chaincodePath, chaincodeVersion }, client
 		chaincodeId,
 		chaincodeVersion
 	};
-	return client.installChaincode(request).then(helper.chaincodeProposalAdapter('install', (proposalResponse) => {
+	return golangUtil.setGOPATH()
+		.then(()=>client.installChaincode(request))
+		.then(helper.chaincodeProposalAdapter('install', (proposalResponse) => {
 		const { response } = proposalResponse;
 		if (response && response.status === 200) return {
 			isValid: true,

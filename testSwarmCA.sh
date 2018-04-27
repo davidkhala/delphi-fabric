@@ -81,8 +81,6 @@ for channelName in $channelNames; do
 done
 
 chaincodeJSON=$CONFIG_DIR/chaincode.json
-GOPATH=$(go env GOPATH)
-jq ".GOPATH=\"$GOPATH\"" $chaincodeJSON | sponge $chaincodeJSON
 
 go get -u "github.com/davidkhala/chaincode" # FIXME: please use your own chaincode as in config/chaincode.json
 

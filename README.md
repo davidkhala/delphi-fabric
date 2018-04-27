@@ -32,7 +32,6 @@ If any problem found when running ``install.sh``, like hanging in ``npm install`
         - ``$ npm config set registry  https://registry.npm.taobao.org/``
    * java 1.8.0_151 (测试java-sdk用)
    * jq 1.5：一个用命令行解析json的工具 https://stedolan.github.io/jq/
-   * moreutils 0.57-1 : 工具集，ubuntu或类似系统专用。我们用到其中sponge工具，用于结合jq 将pipeline里面的内容inline更新到源文件里
 
 -----
 

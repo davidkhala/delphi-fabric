@@ -1,4 +1,5 @@
 const logger = require('./app/util/logger').new('express API');
+const golangUtil = require('./app/util/golang');
 const express = require('express');
 const bodyParser = require('body-parser');
 const http = require('http');
@@ -195,9 +196,8 @@ app.post('/chaincode/install/:chaincodeId', (req, res) => {
 	const peers = helper.newPeers([peerIndex], orgName);
 	//TODO to test ChaincodeVersion
 
-	helper.setGOPATH();
-
-	helper.getOrgAdmin(orgName).then((client) => {
+	golangUtil.setGOPATH().then(()=>helper.getOrgAdmin(orgName))
+		.then((client) => {
 		return install(peers, {chaincodeId, chaincodePath, chaincodeVersion}, client).then((message) => {
 			res.send(
 				`install chaincode ${chaincodeId} of version ${chaincodeVersion} to peer${peerIndex}.${orgName} successfully`);
