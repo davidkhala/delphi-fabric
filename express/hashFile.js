@@ -16,6 +16,8 @@ const {reducer} = require('../app/util/chaincode');
 const channelName = 'allChannel';
 const chaincodeId = 'hashChaincode';
 const TKOrgName = 'TK.Teeking.com'
+const globalConfig = require('../config/orgs.json');
+const TKMSP = globalConfig.orgs['TK.Teeking.com'].MSP.id
 
 const baseUrl = 'http://192.168.3.139:8080/teeking-api/api';
 const errorHandle = (err, res) => {
@@ -232,11 +234,11 @@ router.post('/read', (req, res) => {
 
 	const args = [id];
 	if (orgName === TKOrgName) {
-		let {delegatedOrg} = req.body;
-		if (!delegatedOrg) {
-			delegatedOrg = TKOrgName;
+		let {delegatedMSP} = req.body;
+		if (!delegatedMSP) {
+			delegatedMSP = TKMSP;
 		}
-		args.push(delegatedOrg);
+		args.push(delegatedMSP);
 	}
 	const {invoke} = require('../app/invoke-chaincode.js');
 
