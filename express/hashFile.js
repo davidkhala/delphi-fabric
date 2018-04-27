@@ -234,11 +234,7 @@ router.post('/read', (req, res) => {
 
 	const args = [id];
 	if (orgName === TKOrgName) {
-		let {delegatedMSP} = req.body;
-		if (!delegatedMSP) {
-			delegatedMSP = TKMSP;
-		}
-		args.push(delegatedMSP);
+		args.push(req.body.delegatedMSP?req.body.delegatedMSP:TKMSP);
 	}
 	const {invoke} = require('../app/invoke-chaincode.js');
 
