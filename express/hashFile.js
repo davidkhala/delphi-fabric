@@ -128,7 +128,10 @@ router.post('/write', cache.array('files'), (req, res) => {
 
 		Request.post({url: `${baseUrl}/blockchain`, form}, (err, resp, body) => {
 			if (err) {
-				reject(err);
+				return reject(err);
+			}
+			if(!body){
+				return reject(resp)
 			}
 			logger.debug('sql server response with:', body);
 			resolve(JSON.parse(body));
