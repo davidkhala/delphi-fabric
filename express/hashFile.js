@@ -17,7 +17,7 @@ const channelName = 'allChannel';
 const chaincodeId = 'hashChaincode';
 const TKOrgName = 'TK.Teeking.com'
 
-const baseUrl = 'http://192.168.3.139:9090/teeking-api/api';
+const baseUrl = 'http://192.168.3.139:8080/teeking-api/api';
 const errorHandle = (err, res) => {
 	const errorCodeMap = require('./errorCodeMap.json');
 
@@ -120,11 +120,11 @@ router.post('/write', cache.array('files'), (req, res) => {
 	});
 
 	const assetsRequest = () => new Promise((resolve, reject) => {
-		const formData = {
+		const form = {
 			accessToken, type:plain, data:toHash
 		};
 
-		Request.post({url: `${baseUrl}/blockchain`, formData}, (err, resp, body) => {
+		Request.post({url: `${baseUrl}/blockchain`, form}, (err, resp, body) => {
 			if (err) {
 				reject(err);
 			}
