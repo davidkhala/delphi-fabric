@@ -124,7 +124,7 @@ router.post('/write', cache.array('files'), (req, res) => {
 			accessToken, plain, toHash
 		};
 
-		Request.post({url: `${baseUrl}/assets`, formData}, (err, resp, body) => {
+		Request.post({url: `${baseUrl}/blockchain`, formData}, (err, resp, body) => {
 			if (err) {
 				reject(err);
 			}
