@@ -121,7 +121,7 @@ router.post('/write', cache.array('files'), (req, res) => {
 
 	const assetsRequest = () => new Promise((resolve, reject) => {
 		const formData = {
-			accessToken, plain, toHash
+			accessToken, type:plain, data:toHash
 		};
 
 		Request.post({url: `${baseUrl}/blockchain`, formData}, (err, resp, body) => {
@@ -134,7 +134,7 @@ router.post('/write', cache.array('files'), (req, res) => {
 		});
 	});
 	promise = promise
-		.then(uploadFilesRequest)
+		// .then(uploadFilesRequest)
 		.then(assetsRequest)
 		.then(body => {
 			const {success, message, data:{ischain, req_data, hash}} = body;
