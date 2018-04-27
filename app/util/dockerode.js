@@ -8,7 +8,7 @@ const caUtil = require('./ca');
 const ordererUtil = require('./orderer');
 
 exports.runNewCA = ({
-	container_name, port, network, imageTag,
+	container_name, port, network, imageTag,admin="Admin",adminpw="passwd"
 }) => {
 	const createOptions = {
 		name: container_name,
@@ -16,7 +16,7 @@ exports.runNewCA = ({
 		ExposedPorts: {
 			'7054': {}
 		},
-		Cmd: ['fabric-ca-server', 'start', '-d', '-b', 'admin:passwd'],
+		Cmd: ['fabric-ca-server', 'start', '-d', '-b', `${admin}:${adminpw}`],
 		Image: `hyperledger/fabric-ca:${imageTag}`,
 		Hostconfig: {
 			PortBindings: {
@@ -31,13 +31,13 @@ exports.runNewCA = ({
 	};
 	return dockerUtil.containerStart(createOptions);
 };
-exports.deployNewCA = ({Name, network, imageTag, Constraints, port}) => {
+exports.deployNewCA = ({Name, network, imageTag, Constraints, port, admin="Admin",adminpw="passwd"}) => {
 	return dockerUtil.serviceExist({Name}).then((info) => {
 		if (info) return info;
 		return dockerUtil.serviceCreate({
 			Image: `hyperledger/fabric-ca:${imageTag}`,
 			Name,
-			Cmd: ['fabric-ca-server', 'start', '-d', '-b', 'admin:passwd'],
+			Cmd: ['fabric-ca-server', 'start', '-d', '-b', `${admin}:${adminpw}`],
 			network, Constraints, volumes: [], ports: [{host: port, container: 7054}]
 		});
 	});

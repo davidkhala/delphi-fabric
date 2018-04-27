@@ -11,7 +11,7 @@ const {CryptoPath} = pathUtil;
 const peerClient = clientUtil.new();
 const channelName = 'allChannel';
 const peerOrgName = 'NEW';
-const peerAdminName = 'admin';
+const peerAdminName = 'Admin';
 const cryptoPath = new CryptoPath(config.MSPROOT, {peer: {org: peerOrgName}, user: {name: peerAdminName,}});
 
 

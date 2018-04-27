@@ -11,7 +11,7 @@ const affiliationUtil = require('../app/util/affiliationService');
 
 
 exports.initAdmin = (url = 'http://localhost:7054', {mspId, domain}, usersDir) => {
-	const enrollmentID = 'admin';
+	const enrollmentID = 'Admin';
 	const enrollmentSecret = 'passwd';
 	const caService = caUtil.new(url);
 
@@ -82,7 +82,7 @@ exports.genOrderer = (url, orderersDir, {ordererName, domain, ordererPort, mspId
 	return module.exports.initAdmin(url, {mspId, domain}, usersDir)
 		.then(admin => {
 			const certificate = userUtil.getCertificate(admin);
-			caUtil.peer.toadmincerts({certificate}, ordererMSPRoot, {username: 'admin', domain});
+			caUtil.peer.toadmincerts({certificate}, ordererMSPRoot, {username: 'Admin', domain});
 			return caUtil.register(caService, {
 				enrollmentID,
 				enrollmentSecret,
@@ -135,7 +135,7 @@ exports.genPeer = (url, peersDir, {peerName, domain, mspId, peerPort, affiliatio
 	return module.exports.initAdmin(url, {mspId, domain}, usersDir)
 		.then(admin => {
 			const certificate = userUtil.getCertificate(admin);
-			caUtil.peer.toadmincerts({certificate}, peerMSPRoot, {username: 'admin', domain});
+			caUtil.peer.toadmincerts({certificate}, peerMSPRoot, {username: 'Admin', domain});
 			return caUtil.register(caService, {
 				enrollmentID,
 				enrollmentSecret,
@@ -169,7 +169,7 @@ exports.genAll = () => {
 					org:domain
 				},
 				user:{
-					name:'admin'
+					name:'Admin'
 				}
 			});
 			const orderersDir = cryptoPath.orderers();
@@ -197,7 +197,7 @@ exports.genAll = () => {
 				org:domain
 			},
 			user:{
-				name:'admin'
+				name:'Admin'
 			}
 		});
 		const orderersDir = cryptoPath.orderers();
@@ -220,7 +220,7 @@ exports.genAll = () => {
 				org:domain
 			},
 			user:{
-				name:'admin'
+				name:'Admin'
 			}
 		});
 		const peersDir = cryptoPath.peers();

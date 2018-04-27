@@ -10,7 +10,7 @@ const {CryptoPath} = pathUtil;
 const ordererClient = clientUtil.new();
 const channelName = 'allChannel';
 const ordererOrgName = 'NewConsensus';
-const orderAdminName = 'admin';
+const orderAdminName = 'Admin';
 const cryptoPath = new CryptoPath(config.MSPROOT, {orderer: {org: ordererOrgName}, user: {name: orderAdminName,}});
 
 userUtil.loadFromLocal(cryptoPath.ordererUserMSP(),ordererClient.getCryptoSuite(),{username:orderAdminName,domain:ordererOrgName,

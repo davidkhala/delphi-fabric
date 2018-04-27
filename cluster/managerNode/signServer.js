@@ -22,13 +22,13 @@ app.post('/', cache.single('proto'), async (req, res) => {
 	const cryptoPath = new CryptoPath(caCryptoConfig, {
 		orderer: {name: 'orderer0', org: 'NewConsensus',},
 		peer: {name: 'newContainer', org: 'NEW'},
-		user: {name: 'admin'}
+		user: {name: 'Admin'}
 	});
 	// (userMSPRoot, cryptoSuite, {username, domain, mspId});
 	let signatures = [];
 	return userUtil.loadFromLocal(cryptoPath.ordererUserMSP(), ordererClient.getCryptoSuite(),
 		{
-			username: 'admin', domain: 'NewConsensus',
+			username: 'Admin', domain: 'NewConsensus',
 			mspId: config.orderer.orgs.NewConsensus.MSP.id
 		}).then(ordererAdmin => ordererClient.setUserContext(ordererAdmin,true))
 		.then(() => {
@@ -40,7 +40,7 @@ app.post('/', cache.single('proto'), async (req, res) => {
 
 			return userUtil.loadFromLocal(cryptoPath.peerUserMSP(),peerClient.getCryptoSuite(),
 				{
-					username:'admin', domain:'NEW',
+					username:'Admin', domain:'NEW',
 					mspId:config.orgs.NEW.MSP.id
 				}).then(userAdmin =>peerClient.setUserContext(userAdmin,true))
 				.then(()=>{

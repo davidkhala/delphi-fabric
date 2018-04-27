@@ -31,14 +31,14 @@ app.post('/', cache.single('proto'), async (req, res) => {
 			const mspId = ordererOrgConfig.MSP.id;
 			const cryptoPath = new CryptoPath(caCryptoConfig, {
 				orderer: {org: ordererOrg},
-				user: {name: 'admin'}
+				user: {name: 'Admin'}
 			});
 
 			const ordererClient = clientUtil.new();
 
 			clientPromises.push(userUtil.loadFromLocal(cryptoPath.ordererUserMSP(), ordererClient.getCryptoSuite(),
 				{
-					username: 'admin', domain: ordererOrg, mspId
+					username: 'Admin', domain: ordererOrg, mspId
 				}).then(ordererAdmin => ordererClient.setUserContext(ordererAdmin, true))
 				.then(() => ordererClient));
 
@@ -58,14 +58,14 @@ app.post('/', cache.single('proto'), async (req, res) => {
 		const mspId = ordererOrgConfig.MSP.id;
 		const cryptoPath = new CryptoPath(caCryptoConfig, {
 			orderer: {org: ordererOrg},
-			user: {name: 'admin'}
+			user: {name: 'Admin'}
 		});
 
 		const ordererClient = clientUtil.new();
 
 		clientPromises.push(userUtil.loadFromLocal(cryptoPath.ordererUserMSP(), ordererClient.getCryptoSuite(),
 			{
-				username: 'admin', domain: ordererOrg, mspId
+				username: 'Admin', domain: ordererOrg, mspId
 			}).then(ordererAdmin => ordererClient.setUserContext(ordererAdmin, true))
 			.then(() => ordererClient));
 
@@ -86,12 +86,12 @@ app.post('/', cache.single('proto'), async (req, res) => {
 
 		const cryptoPath = new CryptoPath(caCryptoConfig, {
 			peer: {org: domain},
-			user: {name: 'admin'}
+			user: {name: 'Admin'}
 		});
 		peerClientPromises.push(
 			userUtil.loadFromLocal(cryptoPath.peerUserMSP(), peerClient.getCryptoSuite(),
 				{
-					username: 'admin', domain,
+					username: 'Admin', domain,
 					mspId: peerOrgConfig.MSP.id
 				}).then(userAdmin => peerClient.setUserContext(userAdmin, true))
 				.then(() => peerClient));

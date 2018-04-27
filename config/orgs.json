@@ -1,6 +1,5 @@
 {
   "TLS": false,
-  "cryptogenSkip":false,
   "docker": {
     "fabricTag": "1.1.0",
     "thirdPartyTag": "0.4.6",
@@ -34,7 +33,7 @@
         ]
       },
       "ca": {
-        "portHost": 7450,
+        "portHost": 7454,
         "tlsca": {
           "portHost": 7455
         }

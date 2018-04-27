@@ -179,7 +179,7 @@ const getMspID = (orgName) => {
 	return mspid;
 };
 
-const rawAdminUsername = globalConfig.cryptogenSkip ? 'admin' : 'Admin';
+const rawAdminUsername = 'Admin';
 const objects = {};
 
 objects.user = {

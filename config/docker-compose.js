@@ -308,7 +308,7 @@ exports.addCA = (services, {caConfig}, { domain, IMAGE_TAG}) => {
 	}
 	const caService = {
 		image: `hyperledger/fabric-ca:${IMAGE_TAG}`,
-		command: 'fabric-ca-server start -d -b admin:passwd',
+		command: 'fabric-ca-server start -d -b Admin:passwd',
 		ports: [`${caConfig.portHost}:7054`],
 		environment: caUtil.envBuilder(),
 		container_name: caContainerName
