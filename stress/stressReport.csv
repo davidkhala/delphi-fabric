@@ -1,4 +1,0 @@
-BatchTimeout,MaxMessageCount,AbsoluteMaxBytes,PreferredMaxBytes,orderer,normal invoke *10(ms) ,invoke(no evenListener) *100(ms),Query *1000(ms),Query peer on another machine *1000(ms),Invoke (proposal only) *1000 (ms)
-10s,1000,99 MB,10 MB,3,107017,2213,5490,18987,4535
-1s,1000,99 MB,10 MB,3,17345,2833,5275,17876,4853
-1s,1,99 MB,10 MB,3,10499,2730,6684,19085,6677
