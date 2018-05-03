@@ -15,16 +15,6 @@ else echo
 fi
 CONFIG_JSON=$(curl -s ${swarmBaseUrl}/config/orgs)
 
-function _gluster() {
-	# TODO not ready
-	manager0_glusterRoot="/home/david/Documents/gluster"
-	gluster peer probe $this_ip
-	gluster peer probe $manager0_ip
-	gluster peer status
-	echo
-
-}
-
 ./testBin.sh
 MSPROOT_DIR=$(echo $CONFIG_JSON | jq -r ".docker.volumes.MSPROOT.dir")
 CONFIGTX_DIR=$(echo $CONFIG_JSON | jq -r ".docker.volumes.CONFIGTX.dir")
