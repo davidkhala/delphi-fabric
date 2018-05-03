@@ -37,10 +37,9 @@ stateDBCacheDir=$(jq -r '.stateDBCacheDir' $nodeAppConfigJson)
 rm -rf $stateDBCacheDir
 echo clear stateDBCacheDir $stateDBCacheDir
 
-node -e "require('./config/configtx.js').gen({\"MSPROOT\":\"$MSPROOT\"})"
-
 BLOCK_FILE=$(echo $companyConfig | jq -r ".orderer.genesis_block.file")
 PROFILE_BLOCK=$(echo $companyConfig | jq -r ".orderer.genesis_block.profile")
+node -e "require('./config/configtx.js').gen({MSPROOT:'${MSPROOT}',PROFILE_BLOCK:'${PROFILE_BLOCK}'})"
 
 ./common/bin-manage/configtxgen/runConfigtxgen.sh block create "$CONFIGTX_DIR/$BLOCK_FILE" -p $PROFILE_BLOCK -i $config_dir
 
@@ -52,9 +51,4 @@ for channelName in $channelNames; do
 	./common/bin-manage/configtxgen/runConfigtxgen.sh channel create $channelFile -p $channelName -i $config_dir -c ${channelName,,}
 	#NOTE Capital char in Channel name is not supported  [channel: delphiChannel] Rejecting broadcast of config message from 172.18.0.1:36954 because of error: initializing configtx manager failed: Bad channel id: channel ID 'delphiChannel' contains illegal characters
 done
-
-chaincodeJSON=$config_dir/chaincode.json
-GOPATH=$(go env GOPATH)
-jq ".GOPATH=\"$GOPATH\"" $chaincodeJSON | sponge $chaincodeJSON
-
 go get -u "github.com/davidkhala/chaincode" # FIXME: please use your own chaincode as in config/chaincode.json

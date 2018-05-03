@@ -1,0 +1,66 @@
+version: '3'
+networks:
+  default:
+    external:
+      name: TeekingNetwork
+services:
+  ca-orderContainerName:
+    image: 'hyperledger/fabric-ca:x86_64-1.1.0'
+    command: 'fabric-ca-server start -d -b Admin:passwd'
+    ports:
+      - '7454:7054'
+    environment:
+      - GODEBUG=netdns=go
+    container_name: ca.orderContainerName
+    networks:
+      default:
+        aliases:
+          - ca.orderContainerName
+  ca-SUPPLY-Teeking-com:
+    image: 'hyperledger/fabric-ca:x86_64-1.1.0'
+    command: 'fabric-ca-server start -d -b Admin:passwd'
+    ports:
+      - '6054:7054'
+    environment:
+      - GODEBUG=netdns=go
+    container_name: ca.SUPPLY.Teeking.com
+    networks:
+      default:
+        aliases:
+          - ca.SUPPLY.Teeking.com
+  ca-CAR-Teeking-com:
+    image: 'hyperledger/fabric-ca:x86_64-1.1.0'
+    command: 'fabric-ca-server start -d -b Admin:passwd'
+    ports:
+      - '8054:7054'
+    environment:
+      - GODEBUG=netdns=go
+    container_name: ca.CAR.Teeking.com
+    networks:
+      default:
+        aliases:
+          - ca.CAR.Teeking.com
+  ca-FACTORY-Teeking-com:
+    image: 'hyperledger/fabric-ca:x86_64-1.1.0'
+    command: 'fabric-ca-server start -d -b Admin:passwd'
+    ports:
+      - '9054:7054'
+    environment:
+      - GODEBUG=netdns=go
+    container_name: ca.FACTORY.Teeking.com
+    networks:
+      default:
+        aliases:
+          - ca.FACTORY.Teeking.com
+  ca-TK-Teeking-com:
+    image: 'hyperledger/fabric-ca:x86_64-1.1.0'
+    command: 'fabric-ca-server start -d -b Admin:passwd'
+    ports:
+      - '7054:7054'
+    environment:
+      - GODEBUG=netdns=go
+    container_name: ca.TK.Teeking.com
+    networks:
+      default:
+        aliases:
+          - ca.TK.Teeking.com

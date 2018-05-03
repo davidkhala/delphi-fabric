@@ -7,28 +7,26 @@ volumes:
 networks:
   default:
     external:
-      name: delphiNetwork
+      name: TeekingNetwork
 services:
-  peer0-BU-Delphi-com:
+  peer0-SUPPLY-Teeking-com:
     depends_on:
-      - orderer0
-      - orderer1
-      - orderer2
+      - orderContainerName
     image: 'hyperledger/fabric-peer:x86_64-1.1.0'
     command: peer node start
     environment:
       - 'CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock'
-      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=delphiNetwork
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=TeekingNetwork
       - CORE_LOGGING_LEVEL=DEBUG
       - CORE_LEDGER_HISTORY_ENABLEHISTORYDATABASE=true
       - CORE_PEER_GOSSIP_USELEADERELECTION=true
       - CORE_PEER_GOSSIP_ORGLEADER=false
-      - 'CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.BU.Delphi.com:7051'
-      - CORE_PEER_LOCALMSPID=BUMSP
-      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/BU.Delphi.com/peers/peer0.BU.Delphi.com/msp
+      - 'CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.SUPPLY.Teeking.com:7051'
+      - CORE_PEER_LOCALMSPID=SUPPLYMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/SUPPLY.Teeking.com/peers/peer0.SUPPLY.Teeking.com/msp
       - CORE_PEER_TLS_ENABLED=false
-      - CORE_PEER_ID=peer0.BU.Delphi.com
-      - 'CORE_PEER_ADDRESS=peer0.BU.Delphi.com:7051'
+      - CORE_PEER_ID=peer0.SUPPLY.Teeking.com
+      - 'CORE_PEER_ADDRESS=peer0.SUPPLY.Teeking.com:7051'
       - CORE_CHAINCODE_EXECUTETIMEOUT=180s
       - GODEBUG=netdns=go
       - 'CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052'
@@ -41,49 +39,12 @@ services:
     networks:
       default:
         aliases:
-          - peer0.BU.Delphi.com
+          - peer0.SUPPLY.Teeking.com
     deploy:
       placement:
         constraints:
-          - node.hostname==admin-soc
-  peer1-BU-Delphi-com:
-    depends_on:
-      - orderer0
-      - orderer1
-      - orderer2
-    image: 'hyperledger/fabric-peer:x86_64-1.1.0'
-    command: peer node start
-    environment:
-      - 'CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock'
-      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=delphiNetwork
-      - CORE_LOGGING_LEVEL=DEBUG
-      - CORE_LEDGER_HISTORY_ENABLEHISTORYDATABASE=true
-      - CORE_PEER_GOSSIP_USELEADERELECTION=true
-      - CORE_PEER_GOSSIP_ORGLEADER=false
-      - 'CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.BU.Delphi.com:7051'
-      - CORE_PEER_LOCALMSPID=BUMSP
-      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/BU.Delphi.com/peers/peer1.BU.Delphi.com/msp
-      - CORE_PEER_TLS_ENABLED=false
-      - CORE_PEER_ID=peer1.BU.Delphi.com
-      - 'CORE_PEER_ADDRESS=peer1.BU.Delphi.com:7051'
-      - CORE_CHAINCODE_EXECUTETIMEOUT=180s
-      - GODEBUG=netdns=go
-      - 'CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052'
-    ports:
-      - '7061:7051'
-      - '7063:7053'
-    volumes:
-      - '/run/docker.sock:/host/var/run/docker.sock'
-      - 'MSPROOT_swarm:/etc/hyperledger/crypto-config'
-    networks:
-      default:
-        aliases:
-          - peer1.BU.Delphi.com
-    deploy:
-      placement:
-        constraints:
-          - node.hostname==admin-soc
-  ca-BU-Delphi-com:
+          - node.role==manager
+  ca-SUPPLY-Teeking-com:
     image: 'hyperledger/fabric-ca:x86_64-1.1.0'
     command: sh -c 'fabric-ca-server start -d'
     volumes:
@@ -91,32 +52,30 @@ services:
     ports:
       - '7054:7054'
     environment:
-      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server/peerOrganizations/BU.Delphi.com/ca
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server/peerOrganizations/SUPPLY.Teeking.com/ca
       - GODEBUG=netdns=go
     networks:
       default:
         aliases:
-          - ca.BU.Delphi.com
-  peer0-ENG-Delphi-com:
+          - ca.SUPPLY.Teeking.com
+  peer0-CAR-Teeking-com:
     depends_on:
-      - orderer0
-      - orderer1
-      - orderer2
+      - orderContainerName
     image: 'hyperledger/fabric-peer:x86_64-1.1.0'
     command: peer node start
     environment:
       - 'CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock'
-      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=delphiNetwork
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=TeekingNetwork
       - CORE_LOGGING_LEVEL=DEBUG
       - CORE_LEDGER_HISTORY_ENABLEHISTORYDATABASE=true
       - CORE_PEER_GOSSIP_USELEADERELECTION=true
       - CORE_PEER_GOSSIP_ORGLEADER=false
-      - 'CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.ENG.Delphi.com:7051'
-      - CORE_PEER_LOCALMSPID=ENGMSP
-      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/ENG.Delphi.com/peers/peer0.ENG.Delphi.com/msp
+      - 'CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.CAR.Teeking.com:7051'
+      - CORE_PEER_LOCALMSPID=CARMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/CAR.Teeking.com/peers/peer0.CAR.Teeking.com/msp
       - CORE_PEER_TLS_ENABLED=false
-      - CORE_PEER_ID=peer0.ENG.Delphi.com
-      - 'CORE_PEER_ADDRESS=peer0.ENG.Delphi.com:7051'
+      - CORE_PEER_ID=peer0.CAR.Teeking.com
+      - 'CORE_PEER_ADDRESS=peer0.CAR.Teeking.com:7051'
       - CORE_CHAINCODE_EXECUTETIMEOUT=180s
       - GODEBUG=netdns=go
       - 'CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052'
@@ -129,31 +88,29 @@ services:
     networks:
       default:
         aliases:
-          - peer0.ENG.Delphi.com
+          - peer0.CAR.Teeking.com
     deploy:
       placement:
         constraints:
-          - node.hostname==admin-soc
-  peer0-PM-Delphi-com:
+          - node.role==manager
+  peer0-FACTORY-Teeking-com:
     depends_on:
-      - orderer0
-      - orderer1
-      - orderer2
+      - orderContainerName
     image: 'hyperledger/fabric-peer:x86_64-1.1.0'
     command: peer node start
     environment:
       - 'CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock'
-      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=delphiNetwork
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=TeekingNetwork
       - CORE_LOGGING_LEVEL=DEBUG
       - CORE_LEDGER_HISTORY_ENABLEHISTORYDATABASE=true
       - CORE_PEER_GOSSIP_USELEADERELECTION=true
       - CORE_PEER_GOSSIP_ORGLEADER=false
-      - 'CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.PM.Delphi.com:7051'
-      - CORE_PEER_LOCALMSPID=PMMSP
-      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/PM.Delphi.com/peers/peer0.PM.Delphi.com/msp
+      - 'CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.FACTORY.Teeking.com:7051'
+      - CORE_PEER_LOCALMSPID=FACTORYMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/FACTORY.Teeking.com/peers/peer0.FACTORY.Teeking.com/msp
       - CORE_PEER_TLS_ENABLED=false
-      - CORE_PEER_ID=peer0.PM.Delphi.com
-      - 'CORE_PEER_ADDRESS=peer0.PM.Delphi.com:7051'
+      - CORE_PEER_ID=peer0.FACTORY.Teeking.com
+      - 'CORE_PEER_ADDRESS=peer0.FACTORY.Teeking.com:7051'
       - CORE_CHAINCODE_EXECUTETIMEOUT=180s
       - GODEBUG=netdns=go
       - 'CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052'
@@ -166,12 +123,46 @@ services:
     networks:
       default:
         aliases:
-          - peer0.PM.Delphi.com
+          - peer0.FACTORY.Teeking.com
     deploy:
       placement:
         constraints:
-          - node.hostname==admin-soc
-  orderer0:
+          - node.role==manager
+  peer0-TK-Teeking-com:
+    depends_on:
+      - orderContainerName
+    image: 'hyperledger/fabric-peer:x86_64-1.1.0'
+    command: peer node start
+    environment:
+      - 'CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock'
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=TeekingNetwork
+      - CORE_LOGGING_LEVEL=DEBUG
+      - CORE_LEDGER_HISTORY_ENABLEHISTORYDATABASE=true
+      - CORE_PEER_GOSSIP_USELEADERELECTION=true
+      - CORE_PEER_GOSSIP_ORGLEADER=false
+      - 'CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.TK.Teeking.com:7051'
+      - CORE_PEER_LOCALMSPID=TkMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/TK.Teeking.com/peers/peer0.TK.Teeking.com/msp
+      - CORE_PEER_TLS_ENABLED=false
+      - CORE_PEER_ID=peer0.TK.Teeking.com
+      - 'CORE_PEER_ADDRESS=peer0.TK.Teeking.com:7051'
+      - CORE_CHAINCODE_EXECUTETIMEOUT=180s
+      - GODEBUG=netdns=go
+      - 'CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052'
+    ports:
+      - '6051:7051'
+      - '6053:7053'
+    volumes:
+      - '/run/docker.sock:/host/var/run/docker.sock'
+      - 'MSPROOT_swarm:/etc/hyperledger/crypto-config'
+    networks:
+      default:
+        aliases:
+          - peer0.TK.Teeking.com
+    deploy:
+      placement:
+        constraints: []
+  orderContainerName:
     image: 'hyperledger/fabric-orderer:x86_64-1.1.0'
     command: orderer
     ports:
@@ -184,212 +175,14 @@ services:
       - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
       - ORDERER_GENERAL_TLS_ENABLED=false
       - ORDERER_GENERAL_GENESISMETHOD=file
-      - ORDERER_GENERAL_GENESISFILE=/etc/hyperledger/configtx/delphi.block
+      - ORDERER_GENERAL_GENESISFILE=/etc/hyperledger/configtx/tk.block
       - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
-      - ORDERER_GENERAL_LOCALMSPDIR=/etc/hyperledger/crypto-config/ordererOrganizations/Delphi.com/orderers/orderer0.Delphi.com/msp
+      - ORDERER_GENERAL_LOCALMSPDIR=/etc/hyperledger/crypto-config/ordererOrganizations/Teeking.com/orderers/orderContainerName.Teeking.com/msp
       - GODEBUG=netdns=go
-      - ORDERER_KAFKA_RETRY_SHORTINTERVAL=1s
-      - ORDERER_KAFKA_RETRY_SHORTTOTAL=30s
-      - ORDERER_KAFKA_VERBOSE=true
     networks:
       default:
         aliases:
-          - orderer0
+          - orderContainerName
     deploy:
       placement:
-        constraints:
-          - node.role==manager
-    depends_on:
-      - kafka0
-      - kafka1
-      - kafka2
-      - kafka3
-  orderer1:
-    image: 'hyperledger/fabric-orderer:x86_64-1.1.0'
-    command: orderer
-    ports:
-      - '8050:7050'
-    volumes:
-      - 'CONFIGTX_swarm:/etc/hyperledger/configtx'
-      - 'MSPROOT_swarm:/etc/hyperledger/crypto-config'
-    environment:
-      - ORDERER_GENERAL_LOGLEVEL=debug
-      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
-      - ORDERER_GENERAL_TLS_ENABLED=false
-      - ORDERER_GENERAL_GENESISMETHOD=file
-      - ORDERER_GENERAL_GENESISFILE=/etc/hyperledger/configtx/delphi.block
-      - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
-      - ORDERER_GENERAL_LOCALMSPDIR=/etc/hyperledger/crypto-config/ordererOrganizations/Delphi.com/orderers/orderer1.Delphi.com/msp
-      - GODEBUG=netdns=go
-      - ORDERER_KAFKA_RETRY_SHORTINTERVAL=1s
-      - ORDERER_KAFKA_RETRY_SHORTTOTAL=30s
-      - ORDERER_KAFKA_VERBOSE=true
-    networks:
-      default:
-        aliases:
-          - orderer1
-    deploy:
-      placement:
-        constraints:
-          - node.hostname==admin-soc
-    depends_on:
-      - kafka0
-      - kafka1
-      - kafka2
-      - kafka3
-  orderer2:
-    image: 'hyperledger/fabric-orderer:x86_64-1.1.0'
-    command: orderer
-    ports:
-      - '9050:7050'
-    volumes:
-      - 'CONFIGTX_swarm:/etc/hyperledger/configtx'
-      - 'MSPROOT_swarm:/etc/hyperledger/crypto-config'
-    environment:
-      - ORDERER_GENERAL_LOGLEVEL=debug
-      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
-      - ORDERER_GENERAL_TLS_ENABLED=false
-      - ORDERER_GENERAL_GENESISMETHOD=file
-      - ORDERER_GENERAL_GENESISFILE=/etc/hyperledger/configtx/delphi.block
-      - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
-      - ORDERER_GENERAL_LOCALMSPDIR=/etc/hyperledger/crypto-config/ordererOrganizations/Delphi.com/orderers/orderer2.Delphi.com/msp
-      - GODEBUG=netdns=go
-      - ORDERER_KAFKA_RETRY_SHORTINTERVAL=1s
-      - ORDERER_KAFKA_RETRY_SHORTTOTAL=30s
-      - ORDERER_KAFKA_VERBOSE=true
-    networks:
-      default:
-        aliases:
-          - orderer2
-    deploy:
-      placement:
-        constraints:
-          - node.role==manager
-    depends_on:
-      - kafka0
-      - kafka1
-      - kafka2
-      - kafka3
-  zookeeper0:
-    image: 'hyperledger/fabric-zookeeper:x86_64-0.4.6'
-    ports:
-      - 2181
-      - 2888
-      - 3888
-    environment:
-      - ZOO_MY_ID=0
-      - 'ZOO_SERVERS=server.0=0.0.0.0:2888:3888 server.1=zookeeper1:2888:3888 server.2=zookeeper2:2888:3888 '
-    networks:
-      default:
-        aliases:
-          - zookeeper0
-  zookeeper1:
-    image: 'hyperledger/fabric-zookeeper:x86_64-0.4.6'
-    ports:
-      - 2181
-      - 2888
-      - 3888
-    environment:
-      - ZOO_MY_ID=1
-      - 'ZOO_SERVERS=server.0=zookeeper0:2888:3888 server.1=0.0.0.0:2888:3888 server.2=zookeeper2:2888:3888 '
-    networks:
-      default:
-        aliases:
-          - zookeeper1
-  zookeeper2:
-    image: 'hyperledger/fabric-zookeeper:x86_64-0.4.6'
-    ports:
-      - 2181
-      - 2888
-      - 3888
-    environment:
-      - ZOO_MY_ID=2
-      - 'ZOO_SERVERS=server.0=zookeeper0:2888:3888 server.1=zookeeper1:2888:3888 server.2=0.0.0.0:2888:3888 '
-    networks:
-      default:
-        aliases:
-          - zookeeper2
-  kafka0:
-    image: 'hyperledger/fabric-kafka:x86_64-0.4.6'
-    environment:
-      - KAFKA_BROKER_ID=0
-      - 'KAFKA_ZOOKEEPER_CONNECT=zookeeper0:2181,zookeeper1:2181,zookeeper2:2181'
-      - KAFKA_LOG_RETENTION_MS=-1
-      - KAFKA_MESSAGE_MAX_BYTES=103809024
-      - KAFKA_REPLICA_FETCH_MAX_BYTES=103809024
-      - KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE=false
-      - KAFKA_DEFAULT_REPLICATION_FACTOR=3
-      - KAFKA_MIN_INSYNC_REPLICAS=2
-    ports:
-      - 9092
-    depends_on:
-      - zookeeper0
-      - zookeeper1
-      - zookeeper2
-    networks:
-      default:
-        aliases:
-          - kafka0
-  kafka1:
-    image: 'hyperledger/fabric-kafka:x86_64-0.4.6'
-    environment:
-      - KAFKA_BROKER_ID=1
-      - 'KAFKA_ZOOKEEPER_CONNECT=zookeeper0:2181,zookeeper1:2181,zookeeper2:2181'
-      - KAFKA_LOG_RETENTION_MS=-1
-      - KAFKA_MESSAGE_MAX_BYTES=103809024
-      - KAFKA_REPLICA_FETCH_MAX_BYTES=103809024
-      - KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE=false
-      - KAFKA_DEFAULT_REPLICATION_FACTOR=3
-      - KAFKA_MIN_INSYNC_REPLICAS=2
-    ports:
-      - 9092
-    depends_on:
-      - zookeeper0
-      - zookeeper1
-      - zookeeper2
-    networks:
-      default:
-        aliases:
-          - kafka1
-  kafka2:
-    image: 'hyperledger/fabric-kafka:x86_64-0.4.6'
-    environment:
-      - KAFKA_BROKER_ID=2
-      - 'KAFKA_ZOOKEEPER_CONNECT=zookeeper0:2181,zookeeper1:2181,zookeeper2:2181'
-      - KAFKA_LOG_RETENTION_MS=-1
-      - KAFKA_MESSAGE_MAX_BYTES=103809024
-      - KAFKA_REPLICA_FETCH_MAX_BYTES=103809024
-      - KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE=false
-      - KAFKA_DEFAULT_REPLICATION_FACTOR=3
-      - KAFKA_MIN_INSYNC_REPLICAS=2
-    ports:
-      - 9092
-    depends_on:
-      - zookeeper0
-      - zookeeper1
-      - zookeeper2
-    networks:
-      default:
-        aliases:
-          - kafka2
-  kafka3:
-    image: 'hyperledger/fabric-kafka:x86_64-0.4.6'
-    environment:
-      - KAFKA_BROKER_ID=3
-      - 'KAFKA_ZOOKEEPER_CONNECT=zookeeper0:2181,zookeeper1:2181,zookeeper2:2181'
-      - KAFKA_LOG_RETENTION_MS=-1
-      - KAFKA_MESSAGE_MAX_BYTES=103809024
-      - KAFKA_REPLICA_FETCH_MAX_BYTES=103809024
-      - KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE=false
-      - KAFKA_DEFAULT_REPLICATION_FACTOR=3
-      - KAFKA_MIN_INSYNC_REPLICAS=2
-    ports:
-      - 9092
-    depends_on:
-      - zookeeper0
-      - zookeeper1
-      - zookeeper2
-    networks:
-      default:
-        aliases:
-          - kafka3
+        constraints: []
