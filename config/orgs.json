@@ -3,8 +3,8 @@
   "docker": {
     "fabricTag": "1.1.0",
     "thirdPartyTag": "0.4.6",
-    "network": "TeekingNetwork",
-    "stack":"TeekingStack",
+    "network": "delphiNetwork",
+    "stack":"delphiStack",
     "caStack":"caStack",
     "volumes": {
       "CONFIGTX": {
@@ -21,11 +21,11 @@
   "orderer": {
     "type": "solo",
     "genesis_block": {
-      "file": "tk.block",
-      "profile": "TeekingGenesis"
+      "file": "delphi.block",
+      "profile": "delphiGenesis"
     },
     "solo": {
-      "orgName":"Teeking.com",
+      "orgName":"Delphi.com",
       "container_name": "orderContainerName",
       "portHost": 7050,
       "swarm": {
@@ -73,10 +73,10 @@
         }
       },
       "orgs": {
-        "TKConsensus.Teeking.com": {
+        "DelphiConsensus.Delphi.com": {
           "MSP": {
-            "name": "TkMSPName",
-            "id": "TkConsensusMSP"
+            "name": "DelphiMSPName",
+            "id": "DelphiConsensusMSP"
           },
           "ca": {
             "portHost": 7454,
@@ -116,22 +116,22 @@
       "file": "all.tx",
       "eventWaitTime": 30000,
       "orgs": {
-        "SUPPLY.Teeking.com": {
+        "BU.Delphi.com": {
           "peerIndexes": [
             0
           ]
         },
-        "CAR.Teeking.com": {
+        "PM.Delphi.com": {
           "peerIndexes": [
             0
           ]
         },
-        "FACTORY.Teeking.com": {
+        "ENG.Delphi.com": {
           "peerIndexes": [
             0
           ]
         },
-        "TK.Teeking.com": {
+        "ASTRI.Delphi.com": {
           "peerIndexes": [
             0
           ]
@@ -140,7 +140,7 @@
     }
   },
   "orgs": {
-    "SUPPLY.Teeking.com": {
+    "BU.Delphi.com": {
       "peers": [
         {
           "swarm": {
@@ -148,7 +148,7 @@
               "node.role==manager"
             ]
           },
-          "container_name": "SupplyChain",
+          "container_name": "bu",
           "portMap": [
             {
               "host": 6051,
@@ -168,11 +168,11 @@
         }
       },
       "MSP": {
-        "name": "SUPPLYMSPName",
-        "id": "SUPPLYMSP"
+        "name": "BUMSPName",
+        "id": "BUMSP"
       }
     },
-    "CAR.Teeking.com": {
+    "PM.Delphi.com": {
       "peers": [
         {
           "swarm": {
@@ -180,7 +180,7 @@
               "node.role==manager"
             ]
           },
-          "container_name": "Car",
+          "container_name": "pm",
           "portMap": [
             {
               "host": 8051,
@@ -200,11 +200,11 @@
         }
       },
       "MSP": {
-        "name": "CARMSPName",
-        "id": "CARMSP"
+        "name": "PMMSPName",
+        "id": "PMMSP"
       }
     },
-    "FACTORY.Teeking.com": {
+    "ENG.Delphi.com": {
       "peers": [
         {
           "swarm": {
@@ -212,7 +212,7 @@
               "node.role==manager"
             ]
           },
-          "container_name": "Factory",
+          "container_name": "eng",
           "portMap": [
             {
               "host": 9051,
@@ -232,18 +232,18 @@
         }
       },
       "MSP": {
-        "name": "FACTORYMSPName",
-        "id": "FACTORYMSP"
+        "name": "ENGMSPName",
+        "id": "ENGMSP"
       }
     },
-    "TK.Teeking.com": {
+    "ASTRI.Delphi.com": {
       "peers": [
         {
           "swarm": {
             "constraints": [
             ]
           },
-          "container_name": "Tk",
+          "container_name": "astri",
           "portMap": [
             {
               "host": 7051,
@@ -264,8 +264,8 @@
         }
       },
       "MSP": {
-        "name": "TkMSPName",
-        "id": "TkMSP"
+        "name": "ASTRIMSPName",
+        "id": "ASTRIMSP"
       }
     }
   }
