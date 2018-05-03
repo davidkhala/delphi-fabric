@@ -7,24 +7,24 @@ volumes:
 networks:
   default:
     external:
-      name: TeekingNetwork
+      name: delphiNetwork
 services:
-  peer0.SUPPLY.Teeking.com:
+  peer0.BU.Delphi.com:
     image: 'hyperledger/fabric-peer:x86_64-1.1.0'
     command: peer node start
     environment:
       - 'CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock'
-      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=TeekingNetwork
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=delphiNetwork
       - CORE_LOGGING_LEVEL=DEBUG
       - CORE_LEDGER_HISTORY_ENABLEHISTORYDATABASE=true
       - CORE_PEER_GOSSIP_USELEADERELECTION=true
       - CORE_PEER_GOSSIP_ORGLEADER=false
-      - 'CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.SUPPLY.Teeking.com:7051'
-      - CORE_PEER_LOCALMSPID=SUPPLYMSP
-      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/SUPPLY.Teeking.com/peers/peer0.SUPPLY.Teeking.com/msp
+      - 'CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.BU.Delphi.com:7051'
+      - CORE_PEER_LOCALMSPID=BUMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/BU.Delphi.com/peers/peer0.BU.Delphi.com/msp
       - CORE_PEER_TLS_ENABLED=false
-      - CORE_PEER_ID=peer0.SUPPLY.Teeking.com
-      - 'CORE_PEER_ADDRESS=peer0.SUPPLY.Teeking.com:7051'
+      - CORE_PEER_ID=peer0.BU.Delphi.com
+      - 'CORE_PEER_ADDRESS=peer0.BU.Delphi.com:7051'
       - CORE_CHAINCODE_EXECUTETIMEOUT=180s
       - 'CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052'
       - GODEBUG=netdns=go
@@ -36,25 +36,25 @@ services:
       - 'MSPROOT_local:/etc/hyperledger/crypto-config'
     depends_on:
       - orderContainerName
-    container_name: SupplyChain
+    container_name: bu
     networks:
       - default
-  peer0.CAR.Teeking.com:
+  peer0.PM.Delphi.com:
     image: 'hyperledger/fabric-peer:x86_64-1.1.0'
     command: peer node start
     environment:
       - 'CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock'
-      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=TeekingNetwork
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=delphiNetwork
       - CORE_LOGGING_LEVEL=DEBUG
       - CORE_LEDGER_HISTORY_ENABLEHISTORYDATABASE=true
       - CORE_PEER_GOSSIP_USELEADERELECTION=true
       - CORE_PEER_GOSSIP_ORGLEADER=false
-      - 'CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.CAR.Teeking.com:7051'
-      - CORE_PEER_LOCALMSPID=CARMSP
-      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/CAR.Teeking.com/peers/peer0.CAR.Teeking.com/msp
+      - 'CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.PM.Delphi.com:7051'
+      - CORE_PEER_LOCALMSPID=PMMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/PM.Delphi.com/peers/peer0.PM.Delphi.com/msp
       - CORE_PEER_TLS_ENABLED=false
-      - CORE_PEER_ID=peer0.CAR.Teeking.com
-      - 'CORE_PEER_ADDRESS=peer0.CAR.Teeking.com:7051'
+      - CORE_PEER_ID=peer0.PM.Delphi.com
+      - 'CORE_PEER_ADDRESS=peer0.PM.Delphi.com:7051'
       - CORE_CHAINCODE_EXECUTETIMEOUT=180s
       - 'CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052'
       - GODEBUG=netdns=go
@@ -66,25 +66,25 @@ services:
       - 'MSPROOT_local:/etc/hyperledger/crypto-config'
     depends_on:
       - orderContainerName
-    container_name: Car
+    container_name: pm
     networks:
       - default
-  peer0.FACTORY.Teeking.com:
+  peer0.ENG.Delphi.com:
     image: 'hyperledger/fabric-peer:x86_64-1.1.0'
     command: peer node start
     environment:
       - 'CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock'
-      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=TeekingNetwork
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=delphiNetwork
       - CORE_LOGGING_LEVEL=DEBUG
       - CORE_LEDGER_HISTORY_ENABLEHISTORYDATABASE=true
       - CORE_PEER_GOSSIP_USELEADERELECTION=true
       - CORE_PEER_GOSSIP_ORGLEADER=false
-      - 'CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.FACTORY.Teeking.com:7051'
-      - CORE_PEER_LOCALMSPID=FACTORYMSP
-      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/FACTORY.Teeking.com/peers/peer0.FACTORY.Teeking.com/msp
+      - 'CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.ENG.Delphi.com:7051'
+      - CORE_PEER_LOCALMSPID=ENGMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/ENG.Delphi.com/peers/peer0.ENG.Delphi.com/msp
       - CORE_PEER_TLS_ENABLED=false
-      - CORE_PEER_ID=peer0.FACTORY.Teeking.com
-      - 'CORE_PEER_ADDRESS=peer0.FACTORY.Teeking.com:7051'
+      - CORE_PEER_ID=peer0.ENG.Delphi.com
+      - 'CORE_PEER_ADDRESS=peer0.ENG.Delphi.com:7051'
       - CORE_CHAINCODE_EXECUTETIMEOUT=180s
       - 'CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052'
       - GODEBUG=netdns=go
@@ -96,25 +96,25 @@ services:
       - 'MSPROOT_local:/etc/hyperledger/crypto-config'
     depends_on:
       - orderContainerName
-    container_name: Factory
+    container_name: eng
     networks:
       - default
-  peer0.TK.Teeking.com:
+  peer0.ASTRI.Delphi.com:
     image: 'hyperledger/fabric-peer:x86_64-1.1.0'
     command: peer node start
     environment:
       - 'CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock'
-      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=TeekingNetwork
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=delphiNetwork
       - CORE_LOGGING_LEVEL=DEBUG
       - CORE_LEDGER_HISTORY_ENABLEHISTORYDATABASE=true
       - CORE_PEER_GOSSIP_USELEADERELECTION=true
       - CORE_PEER_GOSSIP_ORGLEADER=false
-      - 'CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.TK.Teeking.com:7051'
-      - CORE_PEER_LOCALMSPID=TkMSP
-      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/TK.Teeking.com/peers/peer0.TK.Teeking.com/msp
+      - 'CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.ASTRI.Delphi.com:7051'
+      - CORE_PEER_LOCALMSPID=ASTRIMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto-config/peerOrganizations/ASTRI.Delphi.com/peers/peer0.ASTRI.Delphi.com/msp
       - CORE_PEER_TLS_ENABLED=false
-      - CORE_PEER_ID=peer0.TK.Teeking.com
-      - 'CORE_PEER_ADDRESS=peer0.TK.Teeking.com:7051'
+      - CORE_PEER_ID=peer0.ASTRI.Delphi.com
+      - 'CORE_PEER_ADDRESS=peer0.ASTRI.Delphi.com:7051'
       - CORE_CHAINCODE_EXECUTETIMEOUT=180s
       - 'CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052'
       - GODEBUG=netdns=go
@@ -126,7 +126,7 @@ services:
       - 'MSPROOT_local:/etc/hyperledger/crypto-config'
     depends_on:
       - orderContainerName
-    container_name: Tk
+    container_name: astri
     networks:
       - default
   orderContainerName:
@@ -142,9 +142,9 @@ services:
       - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
       - ORDERER_GENERAL_TLS_ENABLED=false
       - ORDERER_GENERAL_GENESISMETHOD=file
-      - ORDERER_GENERAL_GENESISFILE=/etc/hyperledger/configtx/tk.block
+      - ORDERER_GENERAL_GENESISFILE=/etc/hyperledger/configtx/delphi.block
       - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
-      - ORDERER_GENERAL_LOCALMSPDIR=/etc/hyperledger/crypto-config/ordererOrganizations/Teeking.com/orderers/orderContainerName.Teeking.com/msp
+      - ORDERER_GENERAL_LOCALMSPDIR=/etc/hyperledger/crypto-config/ordererOrganizations/Delphi.com/orderers/orderContainerName.Delphi.com/msp
       - GODEBUG=netdns=go
     networks:
       default:

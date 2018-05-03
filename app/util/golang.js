@@ -7,7 +7,7 @@ exports.getGOPATH = async () => {
 	if (stderr) {
 		throw stderr;
 	}
-	return stdout;
+	return stdout.trim();
 };
 exports.setGOPATH = async () => {
 	process.env.GOPATH = await module.exports.getGOPATH();

@@ -4,8 +4,7 @@ const instantiate = require('./instantiate-chaincode').instantiate;
 const helper = require('./helper');
 const logger = require('./util/logger').new('testInstall');
 const chaincodeConfig = require('../config/chaincode.json');
-const chaincodeId = 'hashChaincode';
-const ClientUtil = require('./util/client');
+const chaincodeId = 'adminChaincode';
 
 const chaincodePath = chaincodeConfig.chaincodes[chaincodeId].path;
 
@@ -22,10 +21,10 @@ const deploy = (orgName, peerIndexes) => {
 	});
 };
 
-deploy('TK.Teeking.com', [0]).then(() => deploy('CAR.Teeking.com', [0])
-).then(() => deploy('FACTORY.Teeking.com', [0]).then(()=>deploy('SUPPLY.Teeking.com',[0]))
+deploy('BU.Delphi.com', [0]).then(() => deploy('ENG.Delphi.com', [0])
+).then(() => deploy('PM.Delphi.com', [0]).then(()=>deploy('ASTRI.Delphi.com',[0]))
 ).then(() => {
-	const orgName = 'TK.Teeking.com';
+	const orgName = 'BU.Delphi.com';
 	const peers = helper.newPeers([0], orgName);
 	return helper.getOrgAdmin(orgName).then((client) => {
 		const channel = helper.prepareChannel(channelName, client, true);

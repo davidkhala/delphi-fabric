@@ -14,7 +14,7 @@ function down() {
 }
 function up() {
 	docker network create $dockerNetworkName
-	docker-compose -f $COMPOSE_FILE up
+	docker-compose -f $COMPOSE_FILE up -d
 }
 
 if [ "$1" == "up" ]; then

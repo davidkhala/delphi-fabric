@@ -6,7 +6,7 @@ const golangUtil = require('./util/golang');
 // allowedCharsVersion       = "[A-Za-z0-9_.-]+"
 //
 
-const install = (peers, { chaincodeId, chaincodePath, chaincodeVersion }, client) => {
+exports.install = (peers, { chaincodeId, chaincodePath, chaincodeVersion }, client) => {
 	const logger = require('./util/logger').new('install-chaincode');
 	logger.debug({ peers_length: peers.length, chaincodeId, chaincodePath, chaincodeVersion });
 
@@ -38,7 +38,6 @@ const install = (peers, { chaincodeId, chaincodePath, chaincodeVersion }, client
 		}
 	});
 };
-exports.install = install;
 
 exports.updateInstall = (peers, { chaincodeId }, client) => {
 	const Query = require('./query');
@@ -59,7 +58,7 @@ exports.updateInstall = (peers, { chaincodeId }, client) => {
 		// 	vscc: '' } ]
 
 		const chaincodeVersion = ChaincodeUtil.nextVersion(version);
-		return install(peers, { chaincodeId, chaincodePath, chaincodeVersion }, client);
+		return module.exports.install(peers, { chaincodeId, chaincodePath, chaincodeVersion }, client);
 	});
 
 };

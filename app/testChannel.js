@@ -41,8 +41,8 @@ const joinAllfcn = () => {
 };
 //E0905 10:07:20.462272826    7262 ssl_transport_security.c:947] Handshake failed with fatal error SSL_ERROR_SSL: error:14090086:SSL routines:ssl3_get_server_certificate:certificate verify failed.
 
-helper.getOrgAdmin('TK.Teeking.com').then((client) => {
-	return createChannel(client, channelName, channelConfigFile, ['TK.Teeking.com', 'SUPPLY.Teeking.com'], 'grpc://localhost:7050');
+helper.getOrgAdmin('BU.Delphi.com').then((client) => {
+	return createChannel(client, channelName, channelConfigFile, ['BU.Delphi.com', 'ENG.Delphi.com'], 'grpc://localhost:7050');
 }).then(() => {
 	return joinAllfcn();
 }).catch(err => {

@@ -4,9 +4,9 @@ Profiles:
       OrdererType: solo
       Addresses:
         - 'orderContainerName:7050'
-      BatchTimeout: 2s
+      BatchTimeout: 1s
       BatchSize:
-        MaxMessageCount: 10
+        MaxMessageCount: 1
         AbsoluteMaxBytes: 99 MB
         PreferredMaxBytes: 512 KB
       Organizations:
@@ -20,21 +20,27 @@ Profiles:
             ID: BUMSP
             MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/BU.Delphi.com/msp
             AnchorPeers:
-              - Host: BUContainerName
-                Port: 7051
-          - Name: ENGMSPName
-            ID: ENGMSP
-            MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/ENG.Delphi.com/msp
-            AnchorPeers:
-              - Host: ENGContainerName
+              - Host: bu
                 Port: 7051
           - Name: PMMSPName
             ID: PMMSP
             MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/PM.Delphi.com/msp
             AnchorPeers:
-              - Host: PMContainerName
+              - Host: pm
                 Port: 7051
-  delphiChannel:
+          - Name: ENGMSPName
+            ID: ENGMSP
+            MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/ENG.Delphi.com/msp
+            AnchorPeers:
+              - Host: eng
+                Port: 7051
+          - Name: ASTRIMSPName
+            ID: ASTRIMSP
+            MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/ASTRI.Delphi.com/msp
+            AnchorPeers:
+              - Host: astri
+                Port: 7051
+  allChannel:
     Consortium: SampleConsortium
     Application:
       Organizations:
@@ -42,27 +48,23 @@ Profiles:
           ID: BUMSP
           MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/BU.Delphi.com/msp
           AnchorPeers:
-            - Host: BUContainerName
+            - Host: bu
               Port: 7051
         - Name: PMMSPName
           ID: PMMSP
           MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/PM.Delphi.com/msp
           AnchorPeers:
-            - Host: PMContainerName
+            - Host: pm
               Port: 7051
         - Name: ENGMSPName
           ID: ENGMSP
           MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/ENG.Delphi.com/msp
           AnchorPeers:
-            - Host: ENGContainerName
+            - Host: eng
               Port: 7051
-  BUChannel:
-    Consortium: SampleConsortium
-    Application:
-      Organizations:
-        - Name: BUMSPName
-          ID: BUMSP
-          MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/BU.Delphi.com/msp
+        - Name: ASTRIMSPName
+          ID: ASTRIMSP
+          MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/ASTRI.Delphi.com/msp
           AnchorPeers:
-            - Host: BUContainerName
+            - Host: astri
               Port: 7051
