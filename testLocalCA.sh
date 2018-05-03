@@ -69,14 +69,14 @@ BLOCK_FILE=$(echo $companyConfig | jq -r ".orderer.genesis_block.file")
 PROFILE_BLOCK=$(echo $companyConfig | jq -r ".orderer.genesis_block.profile")
 node -e "require('./config/configtx.js').gen({MSPROOT:'${caCryptoConfig}',PROFILE_BLOCK:'${PROFILE_BLOCK}'})"
 
-./common/bin-manage/configtxgen/runConfigtxgen.sh block create "$CONFIGTX_DIR/$BLOCK_FILE" -p $PROFILE_BLOCK -i $CONFIG_DIR
+./common/bin-manage/runConfigtxgen.sh block create "$CONFIGTX_DIR/$BLOCK_FILE" -p $PROFILE_BLOCK -i $CONFIG_DIR
 
 channelNames=$(echo $channelsConfig | jq -r "keys[]")
 for channelName in $channelNames; do
 	channelConfig=$(echo $channelsConfig | jq ".${channelName}")
 	channelFilename=$(echo $channelConfig | jq -r ".file")
 	channelFile="$CONFIGTX_DIR/$channelFilename"
-	./common/bin-manage/configtxgen/runConfigtxgen.sh channel create $channelFile -p $channelName -i $CONFIG_DIR -c ${channelName,,}
+	./common/bin-manage/runConfigtxgen.sh channel create $channelFile -p $channelName -i $CONFIG_DIR -c ${channelName,,}
 done
 
 chaincodeJSON=$CONFIG_DIR/chaincode.json

@@ -28,7 +28,7 @@ else
 fi
 
 node -e "require('./config/crypto-config.js').gen({})"
-$CURRENT/common/bin-manage/cryptogen/runCryptogen.sh -i "$CRYPTO_CONFIG_FILE" -o "$MSPROOT"
+$CURRENT/common/bin-manage/runCryptogen.sh -i "$CRYPTO_CONFIG_FILE" -o "$MSPROOT"
 
 # NOTE IMPORTANT for node-sdk: clean stateDBcacheDir, otherwise cached crypto material will leads to Bad request:
 # TODO more subtle control to do in nodejs
@@ -41,14 +41,14 @@ BLOCK_FILE=$(echo $companyConfig | jq -r ".orderer.genesis_block.file")
 PROFILE_BLOCK=$(echo $companyConfig | jq -r ".orderer.genesis_block.profile")
 node -e "require('./config/configtx.js').gen({MSPROOT:'${MSPROOT}',PROFILE_BLOCK:'${PROFILE_BLOCK}'})"
 
-./common/bin-manage/configtxgen/runConfigtxgen.sh block create "$CONFIGTX_DIR/$BLOCK_FILE" -p $PROFILE_BLOCK -i $config_dir
+./common/bin-manage/runConfigtxgen.sh block create "$CONFIGTX_DIR/$BLOCK_FILE" -p $PROFILE_BLOCK -i $config_dir
 
 channelNames=$(echo $channelsConfig | jq -r "keys[]")
 for channelName in $channelNames; do
 	channelConfig=$(echo $channelsConfig | jq ".${channelName}")
 	channelFilename=$(echo $channelConfig | jq -r ".file")
 	channelFile="$CONFIGTX_DIR/$channelFilename"
-	./common/bin-manage/configtxgen/runConfigtxgen.sh channel create $channelFile -p $channelName -i $config_dir -c ${channelName,,}
+	./common/bin-manage/runConfigtxgen.sh channel create $channelFile -p $channelName -i $config_dir -c ${channelName,,}
 	#NOTE Capital char in Channel name is not supported  [channel: delphiChannel] Rejecting broadcast of config message from 172.18.0.1:36954 because of error: initializing configtx manager failed: Bad channel id: channel ID 'delphiChannel' contains illegal characters
 done
 go get -u "github.com/davidkhala/chaincode" # FIXME: please use your own chaincode as in config/chaincode.json
