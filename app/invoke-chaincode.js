@@ -1,7 +1,7 @@
 const helper = require('./helper.js');
-const logger = require('./util/logger').new('invoke-chaincode');
-const eventHelper = require('./util/eventHub');
-const {resultWrapper}  = require('./util/chaincode');
+const logger = require('../common/nodejs/logger').new('invoke-chaincode');
+const eventHelper = require('../common/nodejs/eventHub');
+const {resultWrapper}  = require('../common/nodejs/chaincode');
 /**
  *
  * @param channel

@@ -1,5 +1,5 @@
 const requestPromise = require('request-promise-native');
-const logger = require('../app/util/logger').new('swarmServerClient');
+const logger = require('../common/nodejs/logger').new('swarmServerClient');
 const requestBuilder = ({uri, body}) => {
 	return {
 		method: 'POST',

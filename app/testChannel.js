@@ -2,7 +2,7 @@ const createChannel = require('./create-channel').create;
 const joinChannel = require('./join-channel').joinChannel;
 
 const helper = require('./helper');
-const logger = require('./util/logger').new('testChannel');
+const logger = require('../common/nodejs/logger').new('testChannel');
 const channelName = 'allChannel';
 const Sleep = require('sleep');
 

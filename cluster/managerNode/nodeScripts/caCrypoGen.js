@@ -6,7 +6,7 @@ const ordererName = 'orderer0';
 const ordererPort = config.orderer.orgs.NewConsensus.orderers.orderer0.portHost;
 const ordererMSPID = config.orderer.orgs.NewConsensus.MSP.id;
 const caCryptoGen = require('../../../config/ca-crypto-gen');
-const pathUtil = require('../../../app/util/path');
+const pathUtil = require('../../../common/nodejs/path');
 
 const peerOrg = 'NEW'
 const peerName = 'newContainer';

@@ -1,10 +1,10 @@
 // NOTE Invoke action cannot be performed on peer without chaincode installed(no matter whether chaincode has been instantiated on this peer): Error: cannot retrieve package for chaincode adminChaincode/v0, error open /var/hyperledger/production/chaincodes/adminChaincode.v0: no such file or directory
 
 const { invoke } = require('./invoke-chaincode');
-const { reducer } = require('./util/chaincode').reducer;
+const { reducer } = require('../common/nodejs/chaincode').reducer;
 const helper = require('./helper');
 
-const logger = require('./util/logger').new('testInvoke');
+const logger = require('../common/nodejs/logger').new('testInvoke');
 const chaincodeId = 'adminChaincode';
 const fcn = '';
 const args = [];

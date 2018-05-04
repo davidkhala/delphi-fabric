@@ -3,7 +3,7 @@ const helper = require('./helper');
 
 const channelName = 'delphiChannel';
 
-const logger = require('./util/logger').new('test-query');
+const logger = require('../common/nodejs/logger').new('test-query');
 
 const queryInstantiated = () => {
 	const orgName = 'PM';

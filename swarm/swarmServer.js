@@ -1,6 +1,6 @@
 //TODO work as network map server in Corda : see in readme
 
-const logger = require('../app/util/logger').new('swarm-server');
+const logger = require('../common/nodejs/logger').new('swarm-server');
 const swarmConfig = require('./swarm.json').swarmServer;
 const {port, couchDB: {url}} = swarmConfig;
 const app = require('../express/baseApp').run(port);

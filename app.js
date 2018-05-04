@@ -1,5 +1,5 @@
-const logger = require('./app/util/logger').new('express API');
-const golangUtil = require('./app/util/golang');
+const logger = require('./common/nodejs/logger').new('express API');
+const golangUtil = require('./common/nodejs/golang');
 const express = require('express');
 const bodyParser = require('body-parser');
 const http = require('http');

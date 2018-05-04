@@ -15,7 +15,7 @@
  */
 'use strict';
 
-const logger = require('./util/logger').new('Helper');
+const logger = require('../common/nodejs/logger').new('Helper');
 const path = require('path');
 const globalConfig = require('../config/orgs.json');
 
@@ -23,14 +23,13 @@ const companyConfig = globalConfig;
 const orgsConfig = companyConfig.orgs;
 const CRYPTO_CONFIG_DIR = globalConfig.cryptogenSkip ? globalConfig.docker.volumes.CACRYPTOROOT.dir : globalConfig.docker.volumes.MSPROOT.dir;
 const channelsConfig = companyConfig.channels;
-const chaincodeConfig = require('../config/chaincode.json');
 const sdkUtils = require('fabric-client/lib/utils');
 const nodeConfig = require('./config.json');
-const ClientUtil = require('./util/client');
-const EventHubUtil = require('./util/eventHub');
-const Orderer = require('fabric-client/lib/Orderer');
-const peerUtil = require('./util/peer');
-const pathUtil = require('./util/path');
+const ClientUtil = require('../common/nodejs/client');
+const EventHubUtil = require('../common/nodejs/eventHub');
+const peerUtil = require('../common/nodejs/peer');
+const pathUtil = require('../common/nodejs/path');
+const OrdererUtil = require('../common/nodejs/orderer');
 const {CryptoPath} = pathUtil;
 
 
@@ -71,7 +70,7 @@ const preparePeer = (orgName, peerIndex, peerConfig) => {
 
 const ordererConfig = companyConfig.orderer;
 
-const OrdererUtil = require('./util/orderer');
+
 /**
 
  * @param client

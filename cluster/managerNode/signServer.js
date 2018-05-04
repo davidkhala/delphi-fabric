@@ -1,13 +1,13 @@
 const config = require('./nodeScripts/config');
 const signServerPort = config.signServer.port;
-const logger = require('../../app/util/logger').new('sign server');
+const logger = require('../../common/nodejs/logger').new('sign server');
 const app = require('../../express/baseApp').run(signServerPort);
 const Multer = require('multer');
 const cache = Multer({dest: config.signServer.cache});
-const userUtil = require('../../app/util/user');
-const signUtil = require('../../app/util/multiSign');
-const clientUtil = require('../../app/util/client');
-const pathUtil = require('../../app/util/path');
+const userUtil = require('../../common/nodejs/user');
+const signUtil = require('../../common/nodejs/multiSign');
+const clientUtil = require('../../common/nodejs/client');
+const pathUtil = require('../../common/nodejs/path');
 const {CryptoPath} = pathUtil;
 
 

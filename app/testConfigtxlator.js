@@ -1,9 +1,8 @@
 //TODO This test case requires that the 'configtxlator' tool be running locally and on port 7059
 const helper = require('./helper');
-const logger = require('./util/logger').new('test-configtxlator');
-const ClientUtil = require('./util/client');
-const EventHubUtil = require('./util/eventHub');
-const peerUtil = require('./util/peer');
+const logger = require('../common/nodejs/logger').new('test-configtxlator');
+const ClientUtil = require('../common/nodejs/client');
+const peerUtil = require('../common/nodejs/peer');
 const channelName = 'delphiChannel';
 const Query = require('./query');
 

@@ -1,13 +1,16 @@
 //NOTE install chaincode does not require channel existence
 const helper = require('./helper.js');
-const golangUtil = require('./util/golang');
+const golangUtil = require('../common/nodejs/golang');
+const dockerodeUtil = require('../common/nodejs/dockerode');
+const chaincodeUtil = require('../common/nodejs/chaincode');
+const logUtil = require('../common/nodejs/logger');
 
 //allowedCharsChaincodeName = "[A-Za-z0-9_-]+"
 // allowedCharsVersion       = "[A-Za-z0-9_.-]+"
 //
 
 exports.install = (peers, { chaincodeId, chaincodePath, chaincodeVersion }, client) => {
-	const logger = require('./util/logger').new('install-chaincode');
+	const logger = logUtil.new('install-chaincode');
 	logger.debug({ peers_length: peers.length, chaincodeId, chaincodePath, chaincodeVersion });
 
 	const request = {
@@ -42,7 +45,6 @@ exports.install = (peers, { chaincodeId, chaincodePath, chaincodeVersion }, clie
 exports.updateInstall = (peers, { chaincodeId }, client) => {
 	const Query = require('./query');
 
-	const ChaincodeUtil = require('./util/chaincode');
 	return Query.chaincodes.installed(peers[0], client).then(({ chaincodes }) => {
 		const foundChaincode = chaincodes.find((element) => element.name === chaincodeId);
 		if (!foundChaincode) {
@@ -57,7 +59,7 @@ exports.updateInstall = (peers, { chaincodeId }, client) => {
 		// 	escc: '',
 		// 	vscc: '' } ]
 
-		const chaincodeVersion = ChaincodeUtil.nextVersion(version);
+		const chaincodeVersion = chaincodeUtil.nextVersion(version);
 		return module.exports.install(peers, { chaincodeId, chaincodePath, chaincodeVersion }, client);
 	});
 
@@ -65,14 +67,13 @@ exports.updateInstall = (peers, { chaincodeId }, client) => {
 //FIXME not ready, will lead to failure of  cannot retrieve package for chaincode adminChaincode/v0, error open /var/hyperledger/production/chaincodes/adminChaincode.v0: no such file or directory
 //TODO: not working in swarm mode
 exports.uninstall = (richPeers, { chaincodeId, chaincodeVersion }) => {
-	const logger = require('./util/logger').new('uninstall-chaincode');
+	const logger = logUtil.new('uninstall-chaincode');
 
-	const Dockerode = require('./util/dockerode');
 	const promises = [];
 	for (let peer of richPeers) {
 		const {container_name} = peer.peerConfig;
 		logger.debug(container_name);
-		promises.push(Dockerode.uninstallChaincode({ container_name, chaincodeId, chaincodeVersion }));
+		promises.push(dockerodeUtil.uninstallChaincode({ container_name, chaincodeId, chaincodeVersion }));
 	}
 	return Promise.all(promises);
 

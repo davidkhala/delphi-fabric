@@ -1,8 +1,8 @@
 const fs = require('fs');
 const helper = require('./helper.js');
-const logger = require('./util/logger').new('create-Channel');
-const multiSign = require('./util/multiSign').signs;
-const OrdererUtil = require('./util/orderer');
+const logger = require('../common/nodejs/logger').new('create-Channel');
+const multiSign = require('../common/nodejs/multiSign').signs;
+const OrdererUtil = require('../common/nodejs/orderer');
 /**
  *
  * @param client client of committer

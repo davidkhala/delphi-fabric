@@ -1,10 +1,10 @@
 const config = require('./config');
-const dockerUtil = require('../../../app/util/dockerode');
+const dockerUtil = require('../../../common/nodejs/dockerode');
 
 const Request = require('request');
 const swarmBaseUrl = `${config.swarmServer.url}:${config.swarmServer.port}`;
-const pathUtil = require('../../../app/util/path');
-const peerUtil = require('../../../app/util/peer');
+const pathUtil = require('../../../common/nodejs/path');
+const peerUtil = require('../../../common/nodejs/peer');
 const MSPROOTvolumeName = 'MSPROOT';
 const CONFIGTXVolume = 'CONFIGTX';
 const peerName = 'newContainer';

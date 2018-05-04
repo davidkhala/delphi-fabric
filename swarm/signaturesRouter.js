@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const logger = require('../app/util/logger').new('router signature');
-const signUtil =require('../app/util/multiSign')
+const logger = require('../common/nodejs/logger').new('router signature');
+const signUtil =require('../common/nodejs/multiSign');
 const Multer = require('multer');
 const fs = require('fs');
-const path =require('path')
+const path =require('path');
 const singerServerConfig = require('./swarm.json').signServer;
 const signServerPort = singerServerConfig.port;
 const cache = Multer({dest: singerServerConfig.cache});
@@ -71,7 +71,6 @@ router.post('/newOrg', cache.fields([{name: 'admins'}, {name: 'root_certs'}, {na
 		logger.debug({adminCerts, rootCerts, tlsRootCerts});
 		const {channelName, MSPID, MSPName, orderer, peer} = req.body;
 		const configtxlatorUtil = require('../app/configtxlator');
-		const ClientUtil = require('../app/util/client');
 		const helper = require('../app/helper');
 
 		return helper.getOrgAdmin('TK.Teeking.com').then((client) => {

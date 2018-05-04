@@ -1,5 +1,5 @@
 const config = require('./config');
-const dockerUtil = require('../../../app/util/dockerode');
+const dockerUtil = require('../../../common/nodejs/dockerode');
 const Request = require('request');
 const swarmBaseUrl = `${config.swarmServer.url}:${config.swarmServer.port}`;
 const ordererOrg = 'NewConsensus';

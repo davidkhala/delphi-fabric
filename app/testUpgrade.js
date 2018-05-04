@@ -1,7 +1,9 @@
 const Upgrade = require('./instantiate-chaincode').upgrade;
 const helper = require('./helper');
-const logger = require('./util/logger').new('testUpgrade');
+const logger = require('../common/nodejs/logger').new('testUpgrade');
 const Query = require('./query');
+const chaincodeUtil = require('../common/nodejs/chaincode');
+
 const chaincodeId = 'adminChaincode';
 
 const args = [];
@@ -26,8 +28,7 @@ const updateInstallAll = (chaincodeInfo) => {
 
 	}).then(() => {
 
-		const ChaincodeUtil = require('./util/chaincode');
-		const chaincodeVersion = ChaincodeUtil.nextVersion(chaincodeInfo.version);
+		const chaincodeVersion = chaincodeUtil.nextVersion(chaincodeInfo.version);
 		const orgName = 'BU';
 		return helper.getOrgAdmin(orgName).then((client) => {
 			const channel = helper.prepareChannel(channelName, client, true);

@@ -3,17 +3,16 @@ const fs = require('fs');
 const path = require('path');
 const CURRENT = __dirname;
 const yaml = require('js-yaml');
-const helper = require('../app/helper');
-const logger = require('../app/util/logger').new('compose-gen');
-const peerUtil = require('../app/util/peer');
-const caUtil = require('../app/util/ca');
-const ordererUtil = require('../app/util/orderer');
+const logger = require('../common/nodejs/logger').new('compose-gen');
+const peerUtil = require('../common/nodejs/peer');
+const caUtil = require('../common/nodejs/ca');
+const ordererUtil = require('../common/nodejs/orderer');
 const container =
 	{
 		dir: {
-			CONFIGTX: '/etc/hyperledger/configtx',
-			MSPROOT: '/etc/hyperledger/crypto-config',
-			CA_HOME: '/etc/hyperledger/fabric-ca-server'
+			CONFIGTX: ordererUtil.container.CONFIGTX,
+			MSPROOT: peerUtil.container.MSPROOT,
+			CA_HOME: caUtil.container.CA_HOME
 		}
 	};
 const dockerSock = '/host/var/run/docker.sock';

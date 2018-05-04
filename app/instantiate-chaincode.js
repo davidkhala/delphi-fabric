@@ -1,7 +1,7 @@
 const helper = require('./helper.js');
-const eventHelper = require('./util/eventHub');
-const ClientUtil = require('./util/client');
-
+const eventHelper = require('../common/nodejs/eventHub');
+const chaincodeUtil = require('../common/nodejs/chaincode');
+const logUtil = require('../common/nodejs/logger');
 //FIXED: UTC [endorser] simulateProposal -> ERRO 370 failed to invoke chaincode name:"lscc"  on transaction ec81adb6041b4b71dade56f0e9749e3dd2a2be2a63e0518ed75aa94c94f3d3fe, error: Error starting container: API error (500): {"message":"Could not attach to network delphiProject_default: context deadline exceeded"}: setting docker network instead of docker-compose --project-name
 
 // "chaincodeName":"mycc",
@@ -10,7 +10,7 @@ const ClientUtil = require('./util/client');
 // set peers to 'undefined' to target all peers in channel
 exports.instantiate = (channel, richPeers = channel.getPeers(), {chaincodeId, chaincodeVersion, args, fcn = 'init'},
 	client = channel._clientContext) => {
-	const logger = require('./util/logger').new('instantiate-chaincode');
+	const logger = logUtil.new('instantiate-chaincode');
 	logger.debug(
 		{channelName: channel.getName(), peersSize: richPeers.length, chaincodeId, chaincodeVersion, args});
 
@@ -87,8 +87,6 @@ exports.instantiate = (channel, richPeers = channel.getPeers(), {chaincodeId, ch
 	});
 };
 exports.upgradeToCurrent = (channel, richPeer, {chaincodeId, args, fcn}, client = channel._clientContext) => {
-	const logger = require('./util/logger').new('upgradeToCurrent-chaincode');
-	const ChaincodeUtil = require('./util/chaincode');
 	const Query = require('./query');
 	return Query.chaincodes.installed(richPeer, client).then(({chaincodes}) => {
 		const foundChaincode = chaincodes.find((element) => element.name === chaincodeId);
@@ -104,14 +102,14 @@ exports.upgradeToCurrent = (channel, richPeer, {chaincodeId, args, fcn}, client 
 		// 	escc: '',
 		// 	vscc: '' } ]
 
-		const chaincodeVersion = ChaincodeUtil.nextVersion(version);
+		const chaincodeVersion = chaincodeUtil.nextVersion(version);
 		return module.exports.upgrade(channel, [richPeer], {chaincodeId, args, chaincodeVersion, fcn}, client);
 	});
 };
 exports.upgrade = (channel, richPeers = channel.getPeers(), {chaincodeId, chaincodeVersion, args, fcn},
 	client = channel._clientContext) => {
 
-	const logger = require('./util/logger').new('upgrade-chaincode');
+	const logger = logUtil.new('upgrade-chaincode');
 	const {eventWaitTime} = channel;
 	const txId = client.newTransactionID();
 	const request = {

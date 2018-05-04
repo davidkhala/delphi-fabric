@@ -1,5 +1,5 @@
 const config = require('./config');
-const dockerUtil = require('../../../app/util/dockerode');
+const dockerUtil = require('../../../common/nodejs/dockerode');
 
 const Request = require('request');
 const swarmBaseUrl = `${config.swarmServer.url}:${config.swarmServer.port}`;
@@ -7,8 +7,8 @@ const ordererOrg = 'NewConsensus';
 const ordererName = 'orderer0';
 const MSPROOTvolumeName = 'MSPROOT';
 const CONFIGTXVolume = 'CONFIGTX';
-const pathUtil = require('../../../app/util/path');
-const peerUtil = require('../../../app/util/peer');
+const pathUtil = require('../../../common/nodejs/path');
+const peerUtil = require('../../../common/nodejs/peer');
 const port = config.orderer.orgs[ordererOrg].orderers[ordererName].portHost;
 
 Request.get(`${swarmBaseUrl}/config/orgs`, (err, resp, body) => {

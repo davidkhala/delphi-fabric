@@ -1,6 +1,6 @@
 const helper = require('./helper.js');
-const logger = require('./util/logger').new('Join-Channel');
-const EventHubUtil = require('./util/eventHub');
+const logger = require('../common/nodejs/logger').new('Join-Channel');
+const EventHubUtil = require('../common/nodejs/eventHub');
 
 //we could let peers from different org to join channel in 1 request
 exports.joinChannel = (channel, peers, client) => {

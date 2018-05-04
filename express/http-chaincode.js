@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const logger = require('../app/util/logger').new('http-chaincode');
+const logger = require('../common/nodejs/logger').new('http-chaincode');
 const helper = require('../app/helper.js');
 const invalid = require('./formValid').invalid();
-
+const {reducer} = require('../common/nodejs/chaincode');
 const errorHandle = (err, res) => {
 	const errorCodeMap = require('./errorCodeMap.json');
 
@@ -17,7 +17,7 @@ const errorHandle = (err, res) => {
 	res.status(status).json({error: err.toString()});
 
 };
-const {reducer} = require('../app/util/chaincode');
+
 router.post('/invoke', (req, res) => {
 	const {chaincodeId, fcn, args: argsString, orgName, peerIndex, channelName} = req.body;
 	const {invoke} = require('../app/invoke-chaincode.js');

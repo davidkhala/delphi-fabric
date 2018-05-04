@@ -2,7 +2,7 @@ const install = require('./install-chaincode').install;
 
 const instantiate = require('./instantiate-chaincode').instantiate;
 const helper = require('./helper');
-const logger = require('./util/logger').new('testInstall');
+const logger = require('../common/nodejs/logger').new('testInstall');
 const chaincodeConfig = require('../config/chaincode.json');
 const chaincodeId = 'adminChaincode';
 

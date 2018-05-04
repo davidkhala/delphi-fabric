@@ -1,5 +1,6 @@
 const helper = require('../app/helper.js');
-const logger = require('../app/util/logger').new('ws-chaincode');
+const logger = require('../common/nodejs/logger').new('ws-chaincode');
+const { reducer } = require('../common/nodejs/chaincode');
 
 const errorHandle = (err, ws, errCB) => {
 	const errorCodeMap = require('./errorCodeMap.json');
@@ -18,7 +19,6 @@ const errorHandle = (err, ws, errCB) => {
 	});
 
 };
-const { reducer } = require('../app/util/chaincode');
 exports.invoke = ({ chaincodeId }, ws) => {
 	const { invoke } = require('../app/invoke-chaincode.js');
 	const invalid = require('./formValid').invalid();

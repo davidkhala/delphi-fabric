@@ -1,13 +1,13 @@
-const caUtil = require('../app/util/ca');
+const caUtil = require('../common/nodejs/ca');
 
 const path = require('path');
-const userUtil = require('../app/util/user');
-const pathUtil = require('../app/util/path');
-const {CryptoPath} = pathUtil
-const logger = require('../app/util/logger').new('ca-crypto-gen');
-const peerUtil = require('../app/util/peer');
-const ordererUtil = require('../app/util/orderer');
-const affiliationUtil = require('../app/util/affiliationService');
+const userUtil = require('../common/nodejs/user');
+const pathUtil = require('../common/nodejs/path');
+const {CryptoPath} = pathUtil;
+const logger = require('../common/nodejs/logger').new('ca-crypto-gen');
+const peerUtil = require('../common/nodejs/peer');
+const ordererUtil = require('../common/nodejs/orderer');
+const affiliationUtil = require('../common/nodejs/affiliationService');
 
 
 exports.initAdmin = (url = 'http://localhost:7054', {mspId, domain}, usersDir) => {

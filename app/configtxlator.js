@@ -1,12 +1,10 @@
-const helper = require('./helper');
-const logger = require('./util/logger').new('configtxlator');
+const logger = require('../common/nodejs/logger').new('configtxlator');
 
 const path = require('path');
 const fs = require('fs');
-const agent = require('./util/agent2configtxlator');
-const OrdererUtil = require('./util/orderer');
-const EventHubUtil = require('./util/eventHub');
-const signUtil = require('./util/multiSign');
+const agent = require('../common/nodejs/agent2configtxlator');
+const OrdererUtil = require('../common/nodejs/orderer');
+const EventHubUtil = require('../common/nodejs/eventHub');
 
 
 exports.newPeerOrg = (original_config, MSPName, MSPID, {admins = [], root_certs = [], tls_root_certs = []} = {}) => {
