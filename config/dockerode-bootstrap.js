@@ -7,8 +7,11 @@ const logger = require('../common/nodejs/logger').new('compose-gen');
 const peerUtil = require('../common/nodejs/peer');
 const caUtil = require('../common/nodejs/ca');
 const ordererUtil = require('../common/nodejs/orderer');
+const dockerodeUtil = require('../common/nodejs/dockerode');
 
+const arch = 'x86_64';
 const {swarmServiceName} = require('../common/docker/nodejs/dockerode-util');
+const {docker: {fabricTag, network, thirdPartyTag}, TLS} = globalConfig;
 const addOrdererService = (services, {BLOCK_FILE, mspId, ordererEachConfig, MSPROOTVolume, CONFIGTXVolume}, {
 	ordererName, domain, IMAGE_TAG,
 	kafkaServices, swarmType = 'local',
@@ -16,7 +19,6 @@ const addOrdererService = (services, {BLOCK_FILE, mspId, ordererEachConfig, MSPR
 	MSPROOT = '/etc/hyperledger/crypto-config',
 }) => {
 
-	const {TLS} = globalConfig;
 	let ordererServiceName = ordererName;
 	const ORDERER_STRUCTURE = `ordererOrganizations/${domain}/orderers/${ordererServiceName}.${domain}`;
 
@@ -187,7 +189,7 @@ exports.gen = ({
 
 			}
 		}
-		module.exports.addKafka(services,volumeName,{IMAGE_TAG,type,IMAGE_TAG_3rdParty});
+		module.exports.addKafka(services, volumeName, {IMAGE_TAG, type, IMAGE_TAG_3rdParty});
 	} else {
 		const ordererEachConfig = companyConfig.orderer.solo;
 		const BLOCK_FILE = companyConfig.orderer.genesis_block.file;
@@ -224,36 +226,33 @@ exports.gen = ({
 
 };
 
-exports.genCAs = ({
-	arch = 'x86_64',
-	COMPOSE_FILE = path.resolve(CURRENT, 'docker-ca-compose.yaml'),
-	type:swarmType
-}) => {
-	logger.debug({arch, COMPOSE_FILE});
 
-	const {docker: {fabricTag, network}, orderer: {type}} = globalConfig;
+exports.runCAs = async ({}) => {
+	const {orderer: {type}, orgs: peerOrgsConfig} = globalConfig;
 
-	const IMAGE_TAG = `${arch}-${fabricTag}`;
+	const imageTag = `${arch}-${fabricTag}`;
 
-	const IMAGE_TAG_3rdParty = `${arch}-${globalConfig.docker.thirdPartyTag}`;
-	const peerOrgsConfig = globalConfig.orgs;
-
-
-	if (fs.existsSync(COMPOSE_FILE)) {
-		fs.unlinkSync(COMPOSE_FILE);
-	}
+	const IMAGE_TAG_3rdParty = `${arch}-${thirdPartyTag}`;
 
 	const services = {};
+
 	if (type === 'kafka') {
 		for (const ordererOrg in globalConfig.orderer.kafka.orgs) {
 			const ordererOrgConfig = globalConfig.orderer.kafka.orgs[ordererOrg];
-			const caConfig = ordererOrgConfig.ca;
-			module.exports.addCA(services, {caConfig}, {domain: ordererOrg, IMAGE_TAG});
+			const {portHost: port} = ordererOrgConfig.ca;
+			let container_name;
+
+			if (TLS) {
+				container_name = `tlsca.${ordererOrg}`;
+			} else {
+				container_name = `ca.${ordererOrg}`;
+			}
+			await dockerodeUtil.runNewCA({container_name, port, network, imageTag});
 		}
-		module.exports.addKafka(services,{
-			CONFIGTX:'CONFIGTX_local',
-			MSPROOT :'MSPROOT_local'
-		},{type:swarmType,IMAGE_TAG_3rdParty});
+		module.exports.addKafka(services, {
+			CONFIGTX: 'CONFIGTX_local',
+			MSPROOT: 'MSPROOT_local'
+		}, {type: 'local', IMAGE_TAG_3rdParty});
 	} else {
 		const {ca, container_name} = globalConfig.orderer.solo;
 		module.exports.addCA(services, {caConfig: ca}, {domain: container_name, IMAGE_TAG});
@@ -263,7 +262,7 @@ exports.genCAs = ({
 		const orgConfig = peerOrgsConfig[orgName];
 		const caConfig = orgConfig.ca;
 
-		module.exports.addCA(services, {caConfig}, {domain:orgName, IMAGE_TAG});
+		module.exports.addCA(services, {caConfig}, {domain: orgName, IMAGE_TAG});
 	}
 
 	fs.writeFileSync(COMPOSE_FILE, yaml.safeDump({
@@ -287,8 +286,7 @@ exports.genCAs = ({
  * @param TLS
  * @param IMAGE_TAG
  */
-exports.addCA = (services, {caConfig}, { domain, IMAGE_TAG}) => {
-	const {TLS} = globalConfig;
+exports.addCA = (services, {caConfig}, {domain, IMAGE_TAG}) => {
 	let caContainerName;
 
 	if (TLS) {
@@ -313,7 +311,22 @@ exports.addCA = (services, {caConfig}, { domain, IMAGE_TAG}) => {
 
 	services[caServiceName] = caService;
 };
-exports.addKafka = (services,volumeName,{type,IMAGE_TAG_3rdParty}) => {
+exports.runZookeepers = async () => {
+	const zkConfigs = globalConfig.orderer.kafka.zookeepers;
+	const imageTag = thirdPartyTag;
+	const allIDs = Object.values(zkConfigs).map(config => config.MY_ID);
+	for (const zookeeper in zkConfigs) {
+		const zkConfig = zkConfigs[zookeeper];
+		const {MY_ID} = zkConfig;
+		await dockerodeUtil.runNewZookeeper({
+			container_name: zookeeper, MY_ID, imageTag, network
+		}, allIDs);
+	}
+};
+exports.runKafka = ()=>{
+	
+}
+exports.addKafka = (services, volumeName, {type, IMAGE_TAG_3rdParty}) => {
 	const kafkaConfigs = globalConfig.orderer.kafka.kafkas;
 	const zkConfigs = globalConfig.orderer.kafka.zookeepers;
 

@@ -2,7 +2,7 @@ version: '3'
 networks:
   default:
     external:
-      name: TeekingNetwork
+      name: delphiNetwork
 services:
   ca-orderContainerName:
     image: 'hyperledger/fabric-ca:x86_64-1.1.0'
@@ -16,51 +16,51 @@ services:
       default:
         aliases:
           - ca.orderContainerName
-  ca-SUPPLY-Teeking-com:
+  ca-BU-Delphi-com:
     image: 'hyperledger/fabric-ca:x86_64-1.1.0'
     command: 'fabric-ca-server start -d -b Admin:passwd'
     ports:
       - '6054:7054'
     environment:
       - GODEBUG=netdns=go
-    container_name: ca.SUPPLY.Teeking.com
+    container_name: ca.BU.Delphi.com
     networks:
       default:
         aliases:
-          - ca.SUPPLY.Teeking.com
-  ca-CAR-Teeking-com:
+          - ca.BU.Delphi.com
+  ca-PM-Delphi-com:
     image: 'hyperledger/fabric-ca:x86_64-1.1.0'
     command: 'fabric-ca-server start -d -b Admin:passwd'
     ports:
       - '8054:7054'
     environment:
       - GODEBUG=netdns=go
-    container_name: ca.CAR.Teeking.com
+    container_name: ca.PM.Delphi.com
     networks:
       default:
         aliases:
-          - ca.CAR.Teeking.com
-  ca-FACTORY-Teeking-com:
+          - ca.PM.Delphi.com
+  ca-ENG-Delphi-com:
     image: 'hyperledger/fabric-ca:x86_64-1.1.0'
     command: 'fabric-ca-server start -d -b Admin:passwd'
     ports:
       - '9054:7054'
     environment:
       - GODEBUG=netdns=go
-    container_name: ca.FACTORY.Teeking.com
+    container_name: ca.ENG.Delphi.com
     networks:
       default:
         aliases:
-          - ca.FACTORY.Teeking.com
-  ca-TK-Teeking-com:
+          - ca.ENG.Delphi.com
+  ca-ASTRI-Delphi-com:
     image: 'hyperledger/fabric-ca:x86_64-1.1.0'
     command: 'fabric-ca-server start -d -b Admin:passwd'
     ports:
       - '7054:7054'
     environment:
       - GODEBUG=netdns=go
-    container_name: ca.TK.Teeking.com
+    container_name: ca.ASTRI.Delphi.com
     networks:
       default:
         aliases:
-          - ca.TK.Teeking.com
+          - ca.ASTRI.Delphi.com

@@ -12,31 +12,31 @@ Profiles:
       Organizations:
         - Name: OrdererMSPName
           ID: OrdererMSP
-          MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/ordererOrganizations/Delphi.com/msp
+          MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/Delphi.com/msp
     Consortiums:
       SampleConsortium:
         Organizations:
           - Name: BUMSPName
             ID: BUMSP
-            MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/BU.Delphi.com/msp
+            MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/BU.Delphi.com/msp
             AnchorPeers:
               - Host: bu
                 Port: 7051
           - Name: PMMSPName
             ID: PMMSP
-            MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/PM.Delphi.com/msp
+            MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/PM.Delphi.com/msp
             AnchorPeers:
               - Host: pm
                 Port: 7051
           - Name: ENGMSPName
             ID: ENGMSP
-            MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/ENG.Delphi.com/msp
+            MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/ENG.Delphi.com/msp
             AnchorPeers:
               - Host: eng
                 Port: 7051
           - Name: ASTRIMSPName
             ID: ASTRIMSP
-            MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/ASTRI.Delphi.com/msp
+            MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/ASTRI.Delphi.com/msp
             AnchorPeers:
               - Host: astri
                 Port: 7051
@@ -46,25 +46,25 @@ Profiles:
       Organizations:
         - Name: BUMSPName
           ID: BUMSP
-          MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/BU.Delphi.com/msp
+          MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/BU.Delphi.com/msp
           AnchorPeers:
             - Host: bu
               Port: 7051
         - Name: PMMSPName
           ID: PMMSP
-          MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/PM.Delphi.com/msp
+          MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/PM.Delphi.com/msp
           AnchorPeers:
             - Host: pm
               Port: 7051
         - Name: ENGMSPName
           ID: ENGMSP
-          MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/ENG.Delphi.com/msp
+          MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/ENG.Delphi.com/msp
           AnchorPeers:
             - Host: eng
               Port: 7051
         - Name: ASTRIMSPName
           ID: ASTRIMSP
-          MSPDir: /home/david/Documents/delphi-fabric/config/crypto-config/peerOrganizations/ASTRI.Delphi.com/msp
+          MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/ASTRI.Delphi.com/msp
           AnchorPeers:
             - Host: astri
               Port: 7051
