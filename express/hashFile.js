@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const logger = require('../app/util/logger').new('hash record');
-
+const Request = require('request');
 
 const Multer = require('multer');
 const cache = Multer({dest: 'cache/'});
@@ -35,7 +35,7 @@ const errorHandle = (err, res) => {
 };
 
 
-const userMiddleware = (req, res, next) => {
+const oauthMiddleware = (req, res, next) => {
 	const {username, password, token} = req.body;
 	const oauthClient = require('./oauth2Client').passwordGrant;
 	let promise = Promise.resolve();
@@ -83,8 +83,10 @@ const userMiddleware = (req, res, next) => {
 		res.status(400).send(err);
 	});
 };
-const Request = require('request');
+router.use(oauthMiddleware);
+
 const peerIndex = 0;
+
 router.post('/write', cache.array('files'), (req, res) => {
 	const {id, plain, toHash} = req.body;
 	let {accessToken} = res.locals;
@@ -126,7 +128,7 @@ router.post('/write', cache.array('files'), (req, res) => {
 			accessToken, type:plain, data:toHash
 		};
 
-		Request.post({url: `${baseUrl}/blockchain`, form}, (err, resp, body) => {
+		Request.post({url: `${baseUrl}/blockchains`, form}, (err, resp, body) => {
 			if (err) {
 				return reject(err);
 			}
