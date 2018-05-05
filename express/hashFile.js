@@ -19,7 +19,7 @@ const TKOrgName = 'TK.Teeking.com'
 const globalConfig = require('../config/orgs.json');
 const TKMSP = globalConfig.orgs['TK.Teeking.com'].MSP.id
 
-const baseUrl = 'http://192.168.3.139:8080/teeking-api/api';
+const baseUrl = 'http://192.168.3.72:8080/teeking-api/api';
 const errorHandle = (err, res) => {
 	const errorCodeMap = require('./errorCodeMap.json');
 
@@ -83,7 +83,6 @@ const oauthMiddleware = (req, res, next) => {
 		res.status(400).send(err);
 	});
 };
-router.use(oauthMiddleware);
 
 const peerIndex = 0;
 
