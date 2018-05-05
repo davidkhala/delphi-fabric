@@ -145,7 +145,6 @@
         {
           "swarm": {
             "constraints": [
-              "node.role==manager"
             ]
           },
           "container_name": "SupplyChain",
@@ -177,7 +176,6 @@
         {
           "swarm": {
             "constraints": [
-              "node.role==manager"
             ]
           },
           "container_name": "Car",
@@ -209,7 +207,6 @@
         {
           "swarm": {
             "constraints": [
-              "node.role==manager"
             ]
           },
           "container_name": "Factory",

@@ -10,8 +10,6 @@ networks:
       name: TeekingNetwork
 services:
   peer0-SUPPLY-Teeking-com:
-    depends_on:
-      - orderContainerName
     image: 'hyperledger/fabric-peer:x86_64-1.1.0'
     command: peer node start
     environment:
@@ -28,39 +26,24 @@ services:
       - CORE_PEER_ID=peer0.SUPPLY.Teeking.com
       - 'CORE_PEER_ADDRESS=peer0.SUPPLY.Teeking.com:7051'
       - CORE_CHAINCODE_EXECUTETIMEOUT=180s
-      - GODEBUG=netdns=go
       - 'CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052'
+      - GODEBUG=netdns=go
     ports:
-      - '7051:7051'
-      - '7053:7053'
+      - '6051:7051'
+      - '6053:7053'
     volumes:
       - '/run/docker.sock:/host/var/run/docker.sock'
       - 'MSPROOT_swarm:/etc/hyperledger/crypto-config'
+    depends_on:
+      - orderContainerName
     networks:
       default:
         aliases:
           - peer0.SUPPLY.Teeking.com
     deploy:
       placement:
-        constraints:
-          - node.role==manager
-  ca-SUPPLY-Teeking-com:
-    image: 'hyperledger/fabric-ca:x86_64-1.1.0'
-    command: sh -c 'fabric-ca-server start -d'
-    volumes:
-      - 'MSPROOT_swarm:/etc/hyperledger/fabric-ca-server'
-    ports:
-      - '7054:7054'
-    environment:
-      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server/peerOrganizations/SUPPLY.Teeking.com/ca
-      - GODEBUG=netdns=go
-    networks:
-      default:
-        aliases:
-          - ca.SUPPLY.Teeking.com
+        constraints: []
   peer0-CAR-Teeking-com:
-    depends_on:
-      - orderContainerName
     image: 'hyperledger/fabric-peer:x86_64-1.1.0'
     command: peer node start
     environment:
@@ -77,25 +60,24 @@ services:
       - CORE_PEER_ID=peer0.CAR.Teeking.com
       - 'CORE_PEER_ADDRESS=peer0.CAR.Teeking.com:7051'
       - CORE_CHAINCODE_EXECUTETIMEOUT=180s
-      - GODEBUG=netdns=go
       - 'CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052'
+      - GODEBUG=netdns=go
     ports:
       - '8051:7051'
       - '8053:7053'
     volumes:
       - '/run/docker.sock:/host/var/run/docker.sock'
       - 'MSPROOT_swarm:/etc/hyperledger/crypto-config'
+    depends_on:
+      - orderContainerName
     networks:
       default:
         aliases:
           - peer0.CAR.Teeking.com
     deploy:
       placement:
-        constraints:
-          - node.role==manager
+        constraints: []
   peer0-FACTORY-Teeking-com:
-    depends_on:
-      - orderContainerName
     image: 'hyperledger/fabric-peer:x86_64-1.1.0'
     command: peer node start
     environment:
@@ -112,25 +94,24 @@ services:
       - CORE_PEER_ID=peer0.FACTORY.Teeking.com
       - 'CORE_PEER_ADDRESS=peer0.FACTORY.Teeking.com:7051'
       - CORE_CHAINCODE_EXECUTETIMEOUT=180s
-      - GODEBUG=netdns=go
       - 'CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052'
+      - GODEBUG=netdns=go
     ports:
       - '9051:7051'
       - '9053:7053'
     volumes:
       - '/run/docker.sock:/host/var/run/docker.sock'
       - 'MSPROOT_swarm:/etc/hyperledger/crypto-config'
+    depends_on:
+      - orderContainerName
     networks:
       default:
         aliases:
           - peer0.FACTORY.Teeking.com
     deploy:
       placement:
-        constraints:
-          - node.role==manager
+        constraints: []
   peer0-TK-Teeking-com:
-    depends_on:
-      - orderContainerName
     image: 'hyperledger/fabric-peer:x86_64-1.1.0'
     command: peer node start
     environment:
@@ -147,14 +128,16 @@ services:
       - CORE_PEER_ID=peer0.TK.Teeking.com
       - 'CORE_PEER_ADDRESS=peer0.TK.Teeking.com:7051'
       - CORE_CHAINCODE_EXECUTETIMEOUT=180s
-      - GODEBUG=netdns=go
       - 'CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052'
+      - GODEBUG=netdns=go
     ports:
-      - '6051:7051'
-      - '6053:7053'
+      - '7051:7051'
+      - '7053:7053'
     volumes:
       - '/run/docker.sock:/host/var/run/docker.sock'
       - 'MSPROOT_swarm:/etc/hyperledger/crypto-config'
+    depends_on:
+      - orderContainerName
     networks:
       default:
         aliases:
