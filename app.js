@@ -276,7 +276,7 @@ app.post('/query/tx', (req, res) => {
 //NOTE: blockchain is summary for all channel and chaincode
 app.post('/query/chain', (req, res) => {
 	logger.debug('================ GET blockchain INFORMATION ======================');
-	const {orgName, peerIndex, channelName} = req.body;
+	const {orgName, peerIndex, channelName,pretty} = req.body;
 	logger.debug({orgName, peerIndex, channelName});
 
 	const invalidPeer = invalid.peer({orgName, peerIndex});
@@ -297,7 +297,7 @@ app.post('/query/chain', (req, res) => {
 					previousBlockHash: previousBlockHash.toString('hex')
 				};
 				//npm long:to parse{ low: 4, high: 0, unsigned: true }
-				res.send(message);
+				res.send(pretty?{pretty:message.pretty}:message);
 			}).catch(err => {
 			errorSyntaxHandle(err, res);
 		});
