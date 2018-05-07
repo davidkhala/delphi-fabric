@@ -3,13 +3,13 @@ const fs = require('fs');
 const path = require('path');
 const CURRENT = __dirname;
 const yaml = require('js-yaml');
-const logger = require('../common/nodejs/logger').new('compose-gen');
+const logger = require('../common/nodejs/logger').new('dockerode-bootstrap');
 const peerUtil = require('../common/nodejs/peer');
 const ordererUtil = require('../common/nodejs/orderer');
 const dockerodeUtil = require('../common/nodejs/fabric-dockerode');
 
 const arch = 'x86_64';
-const {swarmServiceName, deleteContainer, networkRemove} = require('../common/docker/nodejs/dockerode-util');
+const {swarmServiceName, containerDelete, networkRemove} = require('../common/docker/nodejs/dockerode-util');
 const {docker: {fabricTag, network, thirdPartyTag}, TLS} = globalConfig;
 const addOrdererService = (services, {BLOCK_FILE, mspId, ordererEachConfig, MSPROOTVolume, CONFIGTXVolume}, {
 	ordererName, domain, IMAGE_TAG,
@@ -80,7 +80,7 @@ exports.runOrderers = async (volumeName = {}, toStop) => {
 			for (const orderer in ordererOrgConfig.orderers) {
 				const container_name = `${orderer}.${domain}`;
 				if (toStop) {
-					await deleteContainer(container_name);
+					await containerDelete(container_name);
 					continue;
 				}
 				const ordererConfig = ordererOrgConfig.orderers[orderer];
@@ -108,7 +108,7 @@ exports.runOrderers = async (volumeName = {}, toStop) => {
 
 		const container_name = `${orderer}.${domain}`;
 		if (toStop) {
-			await deleteContainer(container_name);
+			await containerDelete(container_name);
 		} else {
 			await dockerodeUtil.runOrderer({
 				container_name, imageTag, port, network,
@@ -283,16 +283,17 @@ exports.gen = ({
 
 exports.stop = async () => {
 	const {orderer: {type}} = globalConfig;
+
 	const toStop = true;
 	await module.exports.runCAs(toStop);
 	if (type === 'kafka') {
 		await module.exports.runKafkas(toStop);
 		await module.exports.runZookeepers(toStop);
 	}
-
 	await exports.runOrderers(undefined, toStop);
 
-	// rmChaincodeContainer.sh
+	await dockerodeUtil.chaincodeContainerClean();
+
 	await networkRemove({Name: network});
 };
 exports.run = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'}) => {
@@ -323,7 +324,7 @@ exports.runCAs = async (toStop) => {
 				container_name = `ca.${ordererOrg}`;
 			}
 			if (toStop) {
-				await deleteContainer(container_name);
+				await containerDelete(container_name);
 			} else {
 				await dockerodeUtil.runCA({container_name, port, network, imageTag});
 			}
@@ -337,7 +338,7 @@ exports.runCAs = async (toStop) => {
 			container_name = `ca.${orgName}`;
 		}
 		if (toStop) {
-			await deleteContainer(container_name);
+			await containerDelete(container_name);
 		} else {
 			await dockerodeUtil.runCA({container_name, port, network, imageTag});
 		}
@@ -355,7 +356,7 @@ exports.runCAs = async (toStop) => {
 			container_name = `ca.${orgName}`;
 		}
 		if (toStop) {
-			await deleteContainer(container_name);
+			await containerDelete(container_name);
 		} else {
 			await dockerodeUtil.runCA({container_name, port, network, imageTag});
 		}
@@ -369,7 +370,7 @@ exports.runZookeepers = async (toStop) => {
 		const zkConfig = zkConfigs[zookeeper];
 		const {MY_ID} = zkConfig;
 		if (toStop) {
-			await deleteContainer(zookeeper);
+			await containerDelete(zookeeper);
 		} else {
 			await dockerodeUtil.runZookeeper({
 				container_name: zookeeper, MY_ID, imageTag, network
@@ -388,7 +389,7 @@ exports.runKafkas = async (toStop) => {
 		const kafkaConfig = kafkaConfigs[kafka];
 		const {BROKER_ID} = kafkaConfig;
 		if (toStop) {
-			await deleteContainer(kafka);
+			await containerDelete(kafka);
 		} else {
 			await dockerodeUtil.runKafka({
 				container_name: kafka, network, imageTag, BROKER_ID

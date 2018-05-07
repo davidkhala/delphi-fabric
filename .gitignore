@@ -11,4 +11,3 @@ config/ca-crypto-config/
 config/logs/
 dist/
 node_modules/
-app/cryptoKeyStore
