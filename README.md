@@ -142,6 +142,10 @@ govendor: to import third-party package in vendor folder
 - use npm:js-yaml to write YAML files instead of https://github.com/mikefarah/yq
 - chaincode upgrade will not reset data
 - thirdPartyTag for kafka, zookeeper, couchdb...
+- service constraints node.role==master will not work since leader will change when current leader corrupted
+- swarm mode : network server to manage ip:hostname
+- stress test in nodejs: Caliper
+- remove global domain
 ## TODO
 - java sdk and docker-swarm: keep update
 - endorsement policy config
@@ -152,24 +156,22 @@ govendor: to import third-party package in vendor folder
 - javascript chaincode
 - chaincode uninstall
 - use path.resolve to replace `${path}/filename`
-- docker volume plugin
 - current design: local volume will not be clean in docker.down
-- swarm mode : network server to manage ip:hostname and deploy constraints
-- stress test in nodejs
 - function new() -> classify
 - ?update system channel ``testchainid``
 - there is a trend to use golang/dep instead of govendor https://gerrit.hyperledger.org/r/#/c/19113/
-- Bug design: since multiple priv-file creation is witnessed, investigate problem of state store, crypto-store
 - how about each org has 1 orderer,1 peer and 1 ca before the previous 2
 - migrates to use dockerode in everywhere and clean up existing dockerode code
-- why files in app/cryptoKeyStore keeping generated
+- multiple priv-file creation is witnessed in app/cryptoKeyStore, investigate problem of state store, crypto-store
 - use relative path via ``const os = require('os');console.log(os.homedir());``
 - refactor: to use pathUtil.CryptoPath class
 - change default keystore path: [Error: EACCES: permission denied, open '/home/david/.hfc-key-store/05669e8b1597befecc99049b7b5797d992ab51c6c669a57fd1bcd76974a83324-priv']
 - simplify portMap design from [{7051:port}] to {port: port,eventHubPort:port2}
 - signature server for both leader node and manager nodes
-- try: service constraints node.role==master
 - adding kafka/zookeeper online
-- remove global domain, and stateStore
-- should we use stack or dockerode?
+- stateStore problem
 - user server design instead of nfs
+- not to use docker-compose and docker stack deploy to run docker services on swarm, use dockerode 
+
+## Abandoned TODO
+- docker volume plugin
