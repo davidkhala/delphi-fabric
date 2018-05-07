@@ -5,12 +5,11 @@ const CURRENT = __dirname;
 const yaml = require('js-yaml');
 const logger = require('../common/nodejs/logger').new('compose-gen');
 const peerUtil = require('../common/nodejs/peer');
-const caUtil = require('../common/nodejs/ca');
 const ordererUtil = require('../common/nodejs/orderer');
-const dockerodeUtil = require('../common/nodejs/dockerode');
+const dockerodeUtil = require('../common/nodejs/fabric-dockerode');
 
 const arch = 'x86_64';
-const {swarmServiceName} = require('../common/docker/nodejs/dockerode-util');
+const {swarmServiceName, deleteContainer, networkRemove} = require('../common/docker/nodejs/dockerode-util');
 const {docker: {fabricTag, network, thirdPartyTag}, TLS} = globalConfig;
 const addOrdererService = (services, {BLOCK_FILE, mspId, ordererEachConfig, MSPROOTVolume, CONFIGTXVolume}, {
 	ordererName, domain, IMAGE_TAG,
@@ -67,6 +66,62 @@ const addOrdererService = (services, {BLOCK_FILE, mspId, ordererEachConfig, MSPR
 	services[ordererServiceName] = ordererService;
 };
 
+exports.runOrderers = async (volumeName = {}, toStop) => {
+	const {orderer: {type, genesis_block: {file: BLOCK_FILE}}} = globalConfig;
+	const CONFIGTXVolume = volumeName.CONFIGTX;
+	const MSPROOTVolume = volumeName.MSPROOT;
+	const imageTag = `${arch}-${fabricTag}`;
+	const {MSPROOT} = peerUtil.container;
+	if (type === 'kafka') {
+		const ordererOrgs = globalConfig.orderer.kafka.orgs;
+		for (const domain in ordererOrgs) {
+			const ordererOrgConfig = ordererOrgs[domain];
+			const {MSP: {id}} = ordererOrgConfig;
+			for (const orderer in ordererOrgConfig.orderers) {
+				const container_name = `${orderer}.${domain}`;
+				if (toStop) {
+					await deleteContainer(container_name);
+					continue;
+				}
+				const ordererConfig = ordererOrgConfig.orderers[orderer];
+				const port = ordererConfig.portHost;
+
+				const ORDERER_STRUCTURE = `ordererOrganizations/${domain}/orderers/${orderer}.${domain}`;
+				await dockerodeUtil.runOrderer({
+					container_name, imageTag, port, network,
+					BLOCK_FILE, CONFIGTXVolume,
+					msp: {
+						id,
+						configPath: path.resolve(MSPROOT, ORDERER_STRUCTURE, 'msp'),
+						volumeName: MSPROOTVolume
+					},
+					kafkas: true,
+				});
+			}
+		}
+	} else {
+		const ordererConfig = globalConfig.orderer.solo;
+		const {orgName: domain, MSP: {id}, portHost: port} = ordererConfig;
+
+		const orderer = ordererConfig.container_name;
+		const ORDERER_STRUCTURE = `ordererOrganizations/${domain}/orderers/${orderer}.${domain}`;
+
+		const container_name = `${orderer}.${domain}`;
+		if (toStop) {
+			await deleteContainer(container_name);
+		} else {
+			await dockerodeUtil.runOrderer({
+				container_name, imageTag, port, network,
+				BLOCK_FILE, CONFIGTXVolume,
+				msp: {
+					id,
+					configPath: path.resolve(MSPROOT, ORDERER_STRUCTURE, 'msp'),
+					volumeName: MSPROOTVolume
+				}
+			});
+		}
+	}
+};
 
 exports.gen = ({
 				   MSPROOT,
@@ -226,171 +281,119 @@ exports.gen = ({
 
 };
 
+exports.stop = async () => {
+	const {orderer: {type}} = globalConfig;
+	const toStop = true;
+	await module.exports.runCAs(toStop);
+	if (type === 'kafka') {
+		await module.exports.runKafkas(toStop);
+		await module.exports.runZookeepers(toStop);
+	}
 
-exports.runCAs = async ({}) => {
+	await exports.runOrderers(undefined, toStop);
+
+	// rmChaincodeContainer.sh
+	await networkRemove({Name: network});
+};
+exports.run = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'}) => {
+	const {orderer: {type}} = globalConfig;
+	await dockerodeUtil.networkCreateIfNotExist({Name: network});
+	await module.exports.runCAs();
+	if (type === 'kafka') {
+		await module.exports.runZookeepers();
+		await module.exports.runKafkas();
+	}
+	await exports.runOrderers(volumeName);
+
+};
+
+exports.runCAs = async (toStop) => {
 	const {orderer: {type}, orgs: peerOrgsConfig} = globalConfig;
 
 	const imageTag = `${arch}-${fabricTag}`;
-
-	const IMAGE_TAG_3rdParty = `${arch}-${thirdPartyTag}`;
-
-	const services = {};
 
 	if (type === 'kafka') {
 		for (const ordererOrg in globalConfig.orderer.kafka.orgs) {
 			const ordererOrgConfig = globalConfig.orderer.kafka.orgs[ordererOrg];
 			const {portHost: port} = ordererOrgConfig.ca;
 			let container_name;
-
 			if (TLS) {
 				container_name = `tlsca.${ordererOrg}`;
 			} else {
 				container_name = `ca.${ordererOrg}`;
 			}
-			await dockerodeUtil.runNewCA({container_name, port, network, imageTag});
+			if (toStop) {
+				await deleteContainer(container_name);
+			} else {
+				await dockerodeUtil.runCA({container_name, port, network, imageTag});
+			}
 		}
-		module.exports.addKafka(services, {
-			CONFIGTX: 'CONFIGTX_local',
-			MSPROOT: 'MSPROOT_local'
-		}, {type: 'local', IMAGE_TAG_3rdParty});
 	} else {
-		const {ca, container_name} = globalConfig.orderer.solo;
-		module.exports.addCA(services, {caConfig: ca}, {domain: container_name, IMAGE_TAG});
+		const {ca: {portHost: port}, orgName} = globalConfig.orderer.solo;
+		let container_name;
+		if (TLS) {
+			container_name = `tlsca.${orgName}`;
+		} else {
+			container_name = `ca.${orgName}`;
+		}
+		if (toStop) {
+			await deleteContainer(container_name);
+		} else {
+			await dockerodeUtil.runCA({container_name, port, network, imageTag});
+		}
 	}
 
 	for (const orgName in peerOrgsConfig) {
 		const orgConfig = peerOrgsConfig[orgName];
-		const caConfig = orgConfig.ca;
+		const {ca: {portHost: port}} = orgConfig;
 
-		module.exports.addCA(services, {caConfig}, {domain: orgName, IMAGE_TAG});
-	}
+		let container_name;
 
-	fs.writeFileSync(COMPOSE_FILE, yaml.safeDump({
-		//only version 3 support network setting
-		version: '3', //ERROR: Version in "/home/david/Documents/delphi-fabric/config/docker-compose.yaml" is invalid - it should be a string.
-		networks: {
-			default: {
-				external: {
-					name: network
-				}
-			}
-		},
-		services
-	}, {lineWidth: 180}));
-};
-/**
- * config less ca server
- * @param services
- * @param caConfig
- * @param domain
- * @param TLS
- * @param IMAGE_TAG
- */
-exports.addCA = (services, {caConfig}, {domain, IMAGE_TAG}) => {
-	let caContainerName;
-
-	if (TLS) {
-		caContainerName = `tlsca.${domain}`;
-	} else {
-		caContainerName = `ca.${domain}`;
-	}
-	const caService = {
-		image: `hyperledger/fabric-ca:${IMAGE_TAG}`,
-		command: 'fabric-ca-server start -d -b Admin:passwd',
-		ports: [`${caConfig.portHost}:7054`],
-		environment: caUtil.envBuilder(),
-		container_name: caContainerName
-	};
-	let caServiceName = caContainerName;
-	caService.networks = {
-		default: {
-			aliases: [caContainerName]
+		if (TLS) {
+			container_name = `tlsca.${orgName}`;
+		} else {
+			container_name = `ca.${orgName}`;
 		}
-	};
-	caServiceName = swarmServiceName(caServiceName);
-
-	services[caServiceName] = caService;
+		if (toStop) {
+			await deleteContainer(container_name);
+		} else {
+			await dockerodeUtil.runCA({container_name, port, network, imageTag});
+		}
+	}
 };
-exports.runZookeepers = async () => {
+exports.runZookeepers = async (toStop) => {
 	const zkConfigs = globalConfig.orderer.kafka.zookeepers;
-	const imageTag = thirdPartyTag;
+	const imageTag = `${arch}-${thirdPartyTag}`;
 	const allIDs = Object.values(zkConfigs).map(config => config.MY_ID);
 	for (const zookeeper in zkConfigs) {
 		const zkConfig = zkConfigs[zookeeper];
 		const {MY_ID} = zkConfig;
-		await dockerodeUtil.runNewZookeeper({
-			container_name: zookeeper, MY_ID, imageTag, network
-		}, allIDs);
+		if (toStop) {
+			await deleteContainer(zookeeper);
+		} else {
+			await dockerodeUtil.runZookeeper({
+				container_name: zookeeper, MY_ID, imageTag, network
+			}, allIDs);
+		}
 	}
 };
-exports.runKafka = ()=>{
-	
-}
-exports.addKafka = (services, volumeName, {type, IMAGE_TAG_3rdParty}) => {
+exports.runKafkas = async (toStop) => {
 	const kafkaConfigs = globalConfig.orderer.kafka.kafkas;
 	const zkConfigs = globalConfig.orderer.kafka.zookeepers;
+	const zookeepers = Object.keys(zkConfigs);
+	const {N, M} = globalConfig.orderer.kafka;
+	const imageTag = `${arch}-${thirdPartyTag}`;
 
-
-	let KAFKA_ZOOKEEPER_CONNECT = 'KAFKA_ZOOKEEPER_CONNECT=';
-	for (const zookeeper in zkConfigs) {
-		KAFKA_ZOOKEEPER_CONNECT += `${zookeeper}:2181,`;
-	}
-	KAFKA_ZOOKEEPER_CONNECT = KAFKA_ZOOKEEPER_CONNECT.substring(0, KAFKA_ZOOKEEPER_CONNECT.length - 1);
-	for (const zookeeper in zkConfigs) {
-		const zkConfig = zkConfigs[zookeeper];
-		let ZOO_SERVERS = 'ZOO_SERVERS=';
-		services[zookeeper] = {
-			image: `hyperledger/fabric-zookeeper:${IMAGE_TAG_3rdParty}`,
-			ports: [2181, 2888, 3888],
-			environment: [`ZOO_MY_ID=${zkConfig.MY_ID}`],
-			networks: {
-				default: {
-					aliases:
-						[zookeeper]
-				}
-			}
-
-		};
-		if (type === 'local') {
-			services[zookeeper].container_name = zookeeper;
-		}
-		for (const zookeeper in zkConfigs) {
-			const zkConfig2 = zkConfigs[zookeeper];
-			if (type === 'swarm' && zkConfig === zkConfig2) {
-				ZOO_SERVERS += `server.${zkConfig2.MY_ID}=0.0.0.0:2888:3888 `;
-			} else {
-				ZOO_SERVERS += `server.${zkConfig2.MY_ID}=${zookeeper}:2888:3888 `;
-			}
-		}
-		services[zookeeper].environment.push(ZOO_SERVERS);
-	}
 	for (const kafka in kafkaConfigs) {
 		const kafkaConfig = kafkaConfigs[kafka];
-		services[kafka] = {
-			image: `hyperledger/fabric-kafka:${IMAGE_TAG_3rdParty}`,
-
-			environment: [
-				`KAFKA_BROKER_ID=${kafkaConfig.BROKER_ID}`,
-				KAFKA_ZOOKEEPER_CONNECT,
-				'KAFKA_LOG_RETENTION_MS=-1',
-				'KAFKA_MESSAGE_MAX_BYTES=103809024',//NOTE cannot be in format of 10 MB
-				'KAFKA_REPLICA_FETCH_MAX_BYTES=103809024',//NOTE cannot be in format of 10 MB
-				'KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE=false',
-				`KAFKA_DEFAULT_REPLICATION_FACTOR=${globalConfig.orderer.kafka.N}`,
-				`KAFKA_MIN_INSYNC_REPLICAS=${globalConfig.orderer.kafka.M}`
-			],
-			ports: [9092],
-			depends_on: Object.keys(zkConfigs),
-
-			networks: {
-				default: {
-					aliases:
-						[kafka]
-				}
-			},
-		};
-		if (type === 'local') {
-			services[kafka].container_name = kafka;
+		const {BROKER_ID} = kafkaConfig;
+		if (toStop) {
+			await deleteContainer(kafka);
+		} else {
+			await dockerodeUtil.runKafka({
+				container_name: kafka, network, imageTag, BROKER_ID
+			}, zookeepers, {N, M});
 		}
+
 	}
 };

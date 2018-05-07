@@ -172,6 +172,8 @@ govendor: to import third-party package in vendor folder
 - stateStore problem
 - user server design instead of nfs
 - not to use docker-compose and docker stack deploy to run docker services on swarm, use dockerode 
+- docker version problem in ver. 18.x 
+- implement configtx in node-sdk??
 
 ## Abandoned TODO
 - docker volume plugin

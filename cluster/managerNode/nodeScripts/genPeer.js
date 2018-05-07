@@ -1,5 +1,5 @@
 const config = require('./config');
-const dockerUtil = require('../../../common/nodejs/dockerode');
+const dockerUtil = require('../../../common/nodejs/fabric-dockerode');
 
 const Request = require('request');
 const swarmBaseUrl = `${config.swarmServer.url}:${config.swarmServer.port}`;
@@ -25,7 +25,7 @@ Request.get(`${swarmBaseUrl}/config/orgs`, (err, resp, body) => {
 		dockerUtil.volumeCreateIfNotExist({Name: MSPROOTvolumeName, path: config.MSPROOT}),
 		dockerUtil.volumeCreateIfNotExist({Name: CONFIGTXVolume, path: config.CONFIGTX})
 	];
-	return Promise.all(promises).then(()=>dockerUtil.deployNewPeer({
+	return Promise.all(promises).then(()=>dockerUtil.deployPeer({
 		Name: `${peerName}.${peerOrg}`, network, imageTag,
 		Constraints: config.swarm.Constraints,
 		port: portMap.port, eventHubPort: portMap.eventHubPort,

@@ -1,5 +1,5 @@
 const config = require('./config');
-const dockerUtil = require('../../../common/nodejs/dockerode');
+const dockerUtil = require('../../../common/nodejs/fabric-dockerode');
 const Request = require('request');
 const swarmBaseUrl = `${config.swarmServer.url}:${config.swarmServer.port}`;
 const ordererOrg = 'NewConsensus';
@@ -14,13 +14,13 @@ Request.get(`${swarmBaseUrl}/config/orgs`, (err, resp, body) => {
 	const imageTag = `x86_64-${body.docker.fabricTag}`;
 	const {network} = body.docker;
 
-	return dockerUtil.deployNewCA({
+	return dockerUtil.deployCA({
 		Name: container_name.ordererCA,
 		port: config.orderer.orgs.NewConsensus.ca.portHost,
 		network, imageTag,
 		Constraints: config.swarm.Constraints
 	}).then(() => {
-		return dockerUtil.deployNewCA({
+		return dockerUtil.deployCA({
 			Name: container_name.peerCA,
 			port: config.orgs.NEW.ca.portHost,
 			Constraints: config.swarm.Constraints,

@@ -1,7 +1,7 @@
 //NOTE install chaincode does not require channel existence
 const helper = require('./helper.js');
 const golangUtil = require('../common/nodejs/golang');
-const dockerodeUtil = require('../common/nodejs/dockerode');
+const dockerodeUtil = require('../common/nodejs/fabric-dockerode');
 const chaincodeUtil = require('../common/nodejs/chaincode');
 const logUtil = require('../common/nodejs/logger');
 
