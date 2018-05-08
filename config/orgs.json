@@ -25,10 +25,6 @@
       "orgName":"Delphi.com",
       "container_name": "orderContainerName",
       "portHost": 7050,
-      "swarm": {
-        "constraints": [
-        ]
-      },
       "ca": {
         "portHost": 7454,
         "tlsca": {
@@ -83,24 +79,12 @@
           },
           "orderers": {
             "orderer0": {
-              "swarm": {
-                "constraints": [
-                ]
-              },
               "portHost": 7050
             },
             "orderer1": {
-              "swarm": {
-                "constraints": [
-                ]
-              },
               "portHost": 8050
             },
             "orderer2": {
-              "swarm": {
-                "constraints": [
-                ]
-              },
               "portHost": 9050
             }
           }
@@ -140,11 +124,6 @@
     "BU.Delphi.com": {
       "peers": [
         {
-          "swarm": {
-            "constraints": [
-              "node.role==manager"
-            ]
-          },
           "container_name": "bu",
           "portMap": [
             {
@@ -172,11 +151,6 @@
     "PM.Delphi.com": {
       "peers": [
         {
-          "swarm": {
-            "constraints": [
-              "node.role==manager"
-            ]
-          },
           "container_name": "pm",
           "portMap": [
             {
@@ -204,11 +178,6 @@
     "ENG.Delphi.com": {
       "peers": [
         {
-          "swarm": {
-            "constraints": [
-              "node.role==manager"
-            ]
-          },
           "container_name": "eng",
           "portMap": [
             {
@@ -236,10 +205,6 @@
     "ASTRI.Delphi.com": {
       "peers": [
         {
-          "swarm": {
-            "constraints": [
-            ]
-          },
           "container_name": "astri",
           "portMap": [
             {
