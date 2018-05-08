@@ -1,6 +1,6 @@
 const config = require('./config');
-const dockerUtil = require('../../../common/nodejs/fabric-dockerode');
-
+const fabricDockerUtil = require('../../../common/nodejs/fabric-dockerode');
+const dockerodeUtil = require('../../../common/docker/nodejs/dockerode-util');
 const Request = require('request');
 const swarmBaseUrl = `${config.swarmServer.url}:${config.swarmServer.port}`;
 const pathUtil = require('../../../common/nodejs/path');
@@ -22,10 +22,10 @@ Request.get(`${swarmBaseUrl}/config/orgs`, (err, resp, body) => {
 		}
 	});
 	const promises = [
-		dockerUtil.volumeCreateIfNotExist({Name: MSPROOTvolumeName, path: config.MSPROOT}),
-		dockerUtil.volumeCreateIfNotExist({Name: CONFIGTXVolume, path: config.CONFIGTX})
+		dockerodeUtil.volumeCreateIfNotExist({Name: MSPROOTvolumeName, path: config.MSPROOT}),
+		dockerodeUtil.volumeCreateIfNotExist({Name: CONFIGTXVolume, path: config.CONFIGTX})
 	];
-	return Promise.all(promises).then(()=>dockerUtil.deployPeer({
+	return Promise.all(promises).then(()=>fabricDockerUtil.deployPeer({
 		Name: `${peerName}.${peerOrg}`, network, imageTag,
 		Constraints: config.swarm.Constraints,
 		port: portMap.port, eventHubPort: portMap.eventHubPort,

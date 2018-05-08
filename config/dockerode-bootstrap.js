@@ -11,7 +11,8 @@ const dockerodeUtil = require('../common/nodejs/fabric-dockerode');
 const channelUtil = require('../common/nodejs/channel');
 
 const arch = 'x86_64';
-const {swarmServiceName, containerDelete, networkRemove, volumeRemove, prune: {system: pruneSystem}} = require('../common/docker/nodejs/dockerode-util');
+const {swarmServiceName, containerDelete, networkRemove,volumeCreateIfNotExist,
+	volumeRemove, prune: {system: pruneSystem}} = require('../common/docker/nodejs/dockerode-util');
 const {docker: {fabricTag, network, thirdPartyTag}, TLS} = globalConfig;
 const addOrdererService = (services, {BLOCK_FILE, mspId, ordererEachConfig, MSPROOTVolume, CONFIGTXVolume}, {
 	ordererName, domain, IMAGE_TAG,
@@ -299,7 +300,7 @@ exports.volumesAction = async (toStop) => {
 			continue;
 		}
 		const path = globalConfig.docker.volumes[Name].dir;
-		await dockerodeUtil.volumeCreateIfNotExist({Name, path});
+		await volumeCreateIfNotExist({Name, path});
 	}
 };
 exports.down = async () => {
@@ -369,6 +370,7 @@ exports.up = async () => {
 	}
 
 
+
 	await module.exports.runOrderers();
 	await module.exports.runPeers();
 };
@@ -376,7 +378,7 @@ exports.up = async () => {
 exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'}, tostop) => {
 	const imageTag = `${arch}-${fabricTag}`;
 	const orgsConfig = globalConfig.orgs;
-
+	if(!tostop) await dockerodeUtil.imagePullCCENV(imageTag);
 	for (const domain in orgsConfig) {
 		const orgConfig = orgsConfig[domain];
 		const peersConfig = orgConfig.peers;

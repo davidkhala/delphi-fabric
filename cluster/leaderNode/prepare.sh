@@ -55,3 +55,15 @@ fabricTag=$(echo $CONFIG_JSON | jq -r ".docker.fabricTag")
 thirdPartyTag=$(echo $CONFIG_JSON | jq -r ".docker.thirdPartyTag")
 $root/cluster/prepare.sh pull $fabricTag
 $root/cluster/prepare.sh pullKafka $thirdPartyTag
+
+
+function configServer() {
+	# TODO not exposed to manager
+	$root/install.sh couchdb
+	node $root/swarm/swarmServer.js
+}
+function updateBin() {
+	# TODO not exposed to manager
+	local VERSION=$1
+	$root/common/bin-manage/pullBIN.sh -v $VERSION
+}

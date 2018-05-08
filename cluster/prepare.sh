@@ -24,9 +24,19 @@ function pullKafka() {
 	$utilsDir/docker.sh pullIfNotExist hyperledger/fabric-kafka:$IMAGE_TAG
 	$utilsDir/docker.sh pullIfNotExist hyperledger/fabric-zookeeper:$IMAGE_TAG
 }
-function configServer(){
-	$root/install.sh couchdb
-	node $root/swarm/swarmServer.js
+function updateChaincode() {
+	go get -u "github.com/davidkhala/chaincode" # FIXME: please use your own chaincode as in config/chaincode.json
 }
-$fcn $remain_params
+function updateNODESDK() {
+	local VERSION=$1
+	if npm list fabric-client@$VERSION --depth=0; then : # --depth=0 => list only top level modules
+	else
+		npm install fabric-client@$VERSION --save --save-exact
+	fi
+	if npm list fabric-ca-client@$VERSION --depth=0; then :
+	else
+		npm install fabric-ca-client@$VERSION --save --save-exact
+	fi
+}
 
+$fcn $remain_params
