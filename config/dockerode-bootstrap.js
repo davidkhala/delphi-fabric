@@ -1,5 +1,6 @@
 const globalConfig = require('./orgs.json');
 const fs = require('fs');
+const fsExtra = require('fs-extra');
 const path = require('path');
 const CURRENT = __dirname;
 const yaml = require('js-yaml');
@@ -7,9 +8,10 @@ const logger = require('../common/nodejs/logger').new('dockerode-bootstrap');
 const peerUtil = require('../common/nodejs/peer');
 const ordererUtil = require('../common/nodejs/orderer');
 const dockerodeUtil = require('../common/nodejs/fabric-dockerode');
+const channelUtil = require('../common/nodejs/channel');
 
 const arch = 'x86_64';
-const {swarmServiceName, containerDelete, networkRemove} = require('../common/docker/nodejs/dockerode-util');
+const {swarmServiceName, containerDelete, networkRemove, volumeRemove, prune: {system: pruneSystem}} = require('../common/docker/nodejs/dockerode-util');
 const {docker: {fabricTag, network, thirdPartyTag}, TLS} = globalConfig;
 const addOrdererService = (services, {BLOCK_FILE, mspId, ordererEachConfig, MSPROOTVolume, CONFIGTXVolume}, {
 	ordererName, domain, IMAGE_TAG,
@@ -66,7 +68,7 @@ const addOrdererService = (services, {BLOCK_FILE, mspId, ordererEachConfig, MSPR
 	services[ordererServiceName] = ordererService;
 };
 
-exports.runOrderers = async (volumeName = {}, toStop) => {
+exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'}, toStop) => {
 	const {orderer: {type, genesis_block: {file: BLOCK_FILE}}} = globalConfig;
 	const CONFIGTXVolume = volumeName.CONFIGTX;
 	const MSPROOTVolume = volumeName.MSPROOT;
@@ -96,6 +98,11 @@ exports.runOrderers = async (volumeName = {}, toStop) => {
 						volumeName: MSPROOTVolume
 					},
 					kafkas: true,
+					tls: TLS ? {
+						serverKey: path.resolve(MSPROOT, ORDERER_STRUCTURE, 'tls', 'server.key'),
+						serverCrt: path.resolve(MSPROOT, ORDERER_STRUCTURE, 'tls', 'server.crt'),
+						caCrt: path.resolve(MSPROOT, ORDERER_STRUCTURE, 'tls', 'ca.crt')
+					} : undefined
 				});
 			}
 		}
@@ -117,7 +124,12 @@ exports.runOrderers = async (volumeName = {}, toStop) => {
 					id,
 					configPath: path.resolve(MSPROOT, ORDERER_STRUCTURE, 'msp'),
 					volumeName: MSPROOTVolume
-				}
+				},
+				tls: TLS ? {
+					serverKey: path.resolve(MSPROOT, ORDERER_STRUCTURE, 'tls', 'server.key'),
+					serverCrt: path.resolve(MSPROOT, ORDERER_STRUCTURE, 'tls', 'server.crt'),
+					caCrt: path.resolve(MSPROOT, ORDERER_STRUCTURE, 'tls', 'ca.crt')
+				} : undefined
 			});
 		}
 	}
@@ -280,32 +292,129 @@ exports.gen = ({
 	}, {lineWidth: 180}));
 
 };
-
-exports.stop = async () => {
+exports.volumesAction = async (toStop) => {
+	for (const Name in globalConfig.docker.volumes) {
+		if (toStop) {
+			await volumeRemove({Name});
+			continue;
+		}
+		const path = globalConfig.docker.volumes[Name].dir;
+		await dockerodeUtil.volumeCreateIfNotExist({Name, path});
+	}
+};
+exports.down = async () => {
 	const {orderer: {type}} = globalConfig;
 
 	const toStop = true;
 	await module.exports.runCAs(toStop);
+	await module.exports.runPeers(undefined, toStop);
+	await module.exports.runOrderers(undefined, toStop);
 	if (type === 'kafka') {
 		await module.exports.runKafkas(toStop);
 		await module.exports.runZookeepers(toStop);
 	}
-	await exports.runOrderers(undefined, toStop);
-
 	await dockerodeUtil.chaincodeContainerClean();
 
 	await networkRemove({Name: network});
+	await module.exports.volumesAction(toStop);
+	await pruneSystem();
+
+	const nodeAppConfigJson=require('../app/config');
+	fsExtra.removeSync(nodeAppConfigJson.stateDBCacheDir);
+	logger.info(`[done] clear stateDBCacheDir ${nodeAppConfigJson.stateDBCacheDir}`);
+
+
+	const MSPROOT = globalConfig.docker.volumes.MSPROOT.dir;
+	const CONFIGTX = globalConfig.docker.volumes.CONFIGTX.dir;
+	fsExtra.removeSync(MSPROOT);
+	logger.info(`[done] clear MSPROOT ${MSPROOT}`);
+	fsExtra.removeSync(CONFIGTX);
+	logger.info(`[done] clear CONFIGTX ${CONFIGTX}`);
+
 };
-exports.run = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'}) => {
+const util = require('util');
+const exec = util.promisify(require('child_process').exec);
+const runConfigtxGenShell = path.resolve(path.dirname(__dirname),'common','bin-manage','runConfigtxgen.sh');
+exports.up = async () => {
 	const {orderer: {type}} = globalConfig;
+	await pruneSystem();
+	await module.exports.volumesAction();
 	await dockerodeUtil.networkCreateIfNotExist({Name: network});
 	await module.exports.runCAs();
 	if (type === 'kafka') {
 		await module.exports.runZookeepers();
 		await module.exports.runKafkas();
 	}
-	await exports.runOrderers(volumeName);
+	await require('./ca-crypto-gen').genAll();
 
+	const MSPROOT = globalConfig.docker.volumes.MSPROOT.dir;
+	const CONFIGTX = globalConfig.docker.volumes.CONFIGTX.dir;
+	const PROFILE_BLOCK = globalConfig.orderer.genesis_block.profile;
+	const configtxFile = path.resolve(__dirname, 'configtx.yaml');
+	require('./configtx.js').gen({MSPROOT,PROFILE_BLOCK,configtxFile});
+
+
+
+	const BLOCK_FILE=globalConfig.orderer.genesis_block.file;
+	const config_dir = path.dirname(configtxFile);
+	fsExtra.ensureDirSync(CONFIGTX);
+	await exec(`${runConfigtxGenShell} block create ${path.resolve(CONFIGTX,BLOCK_FILE)} -p ${PROFILE_BLOCK} -i ${config_dir}`);
+
+	const channelsConfig = globalConfig.channels;
+	for(const channelName in channelsConfig){
+		channelUtil.nameMatcher(channelName,true);
+		const channelConfig = channelsConfig[channelName];
+		const channelFile = path.resolve(CONFIGTX,channelConfig.file);
+		await exec(`${runConfigtxGenShell} channel create ${channelFile} -p ${channelName} -i ${config_dir} -c ${channelName}`)
+	}
+
+
+	await module.exports.runOrderers();
+	await module.exports.runPeers();
+};
+
+exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'}, tostop) => {
+	const imageTag = `${arch}-${fabricTag}`;
+	const orgsConfig = globalConfig.orgs;
+
+	for (const domain in orgsConfig) {
+		const orgConfig = orgsConfig[domain];
+		const peersConfig = orgConfig.peers;
+
+		const {MSP: {id}} = orgConfig;
+		for (const peerIndex in peersConfig) {
+			const peerConfig = peersConfig[peerIndex];
+			const {container_name, portMap} = peerConfig;
+
+			if (tostop) {
+				await containerDelete(container_name);
+				continue;
+			}
+			const peerDomain = `peer${peerIndex}.${domain}`;
+			const PEER_STRUCTURE = `peerOrganizations/${domain}/peers/${peerDomain}`;
+
+
+			const tls = TLS ? {
+				serverKey: path.resolve(peerUtil.container.MSPROOT, PEER_STRUCTURE, 'tls', 'server.key'),
+				serverCrt: path.resolve(peerUtil.container.MSPROOT, PEER_STRUCTURE, 'tls', 'server.crt'),
+				caCrt: path.resolve(peerUtil.container.MSPROOT, PEER_STRUCTURE, 'tls', 'ca.crt')
+			} : undefined;
+
+			const port = portMap.find(portEntry => portEntry.container === 7051).host;
+			const eventHubPort = portMap.find(portEntry => portEntry.container === 7053).host;
+			await dockerodeUtil.runPeer({
+				container_name, port, eventHubPort, imageTag, network,
+				peer_hostName_full: peerDomain, tls,
+				msp: {
+					id,
+					volumeName: volumeName.MSPROOT,
+					configPath: path.resolve(peerUtil.container.MSPROOT, PEER_STRUCTURE, 'msp')
+				}
+			});
+
+		}
+
+	}
 };
 
 exports.runCAs = async (toStop) => {

@@ -18,7 +18,7 @@ app.post('/', cache.single('proto'), async (req, res) => {
 	logger.info('sign request',{proto});
 	const globalConfig = require('../../config/orgs');
 
-	const caCryptoConfig = globalConfig.docker.volumes.CACRYPTOROOT.dir;
+	const caCryptoConfig = globalConfig.docker.volumes.MSPROOT.dir;
 
 
 	let signatures = [];

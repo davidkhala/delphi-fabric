@@ -174,6 +174,7 @@ govendor: to import third-party package in vendor folder
 - not to use docker-compose and docker stack deploy to run docker services on swarm, use dockerode 
 - docker version problem in ver. 18.x 
 - implement configtx in node-sdk??
+- fix: configtxgen binary allow upper case channelName
 
 ## Abandoned TODO
 - docker volume plugin

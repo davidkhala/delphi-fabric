@@ -3,6 +3,7 @@ const helper = require('./helper.js');
 const logger = require('../common/nodejs/logger').new('create-Channel');
 const multiSign = require('../common/nodejs/multiSign').signs;
 const OrdererUtil = require('../common/nodejs/orderer');
+const channelUtil = require('../common/nodejs/channel');
 /**
  *
  * @param client client of committer
@@ -16,6 +17,7 @@ const createChannel = (client, channelName, channelConfigFile, orgNames, orderer
 	logger.debug('====== Creating Channel ======');
 	logger.debug({channelName, channelConfigFile, orgNames});
 
+	channelUtil.nameMatcher(channelName,true);
 
 	const clientSwitchPromises = [];
 	for (const orgName of orgNames) {
@@ -36,7 +38,7 @@ const createChannel = (client, channelName, channelConfigFile, orgNames, orderer
 		const request = {
 			config: channelConfig,
 			signatures,
-			name: channelName.toLowerCase(),
+			name: channelName,
 			orderer,
 			txId
 		};

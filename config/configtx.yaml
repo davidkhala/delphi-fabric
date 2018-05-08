@@ -2,8 +2,6 @@ Profiles:
   delphiGenesis:
     Orderer:
       OrdererType: solo
-      Addresses:
-        - 'orderContainerName:7050'
       BatchTimeout: 1s
       BatchSize:
         MaxMessageCount: 1
@@ -13,6 +11,8 @@ Profiles:
         - Name: OrdererMSPName
           ID: OrdererMSP
           MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/Delphi.com/msp
+      Addresses:
+        - 'orderContainerName.Delphi.com:7050'
     Consortiums:
       SampleConsortium:
         Organizations:
@@ -40,7 +40,7 @@ Profiles:
             AnchorPeers:
               - Host: astri
                 Port: 7051
-  allChannel:
+  allchannel:
     Consortium: SampleConsortium
     Application:
       Organizations:

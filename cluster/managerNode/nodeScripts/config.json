@@ -35,7 +35,7 @@
         }
     },
     "channels":{
-        "allChannel":{
+        "allchannel":{
             "file":"all.tx"
         }
     },
