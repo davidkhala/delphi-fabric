@@ -48,7 +48,7 @@ for channelName in $channelNames; do
 	channelConfig=$(echo $channelsConfig | jq ".${channelName}")
 	channelFilename=$(echo $channelConfig | jq -r ".file")
 	channelFile="$CONFIGTX_DIR/$channelFilename"
-	./common/bin-manage/runConfigtxgen.sh channel create $channelFile -p $channelName -i $config_dir -c ${channelName,,}
+	./common/bin-manage/runConfigtxgen.sh channel create $channelFile -p $channelName -i $config_dir -c ${channelName}
 	#NOTE Capital char in Channel name is not supported  [channel: delphiChannel] Rejecting broadcast of config message from 172.18.0.1:36954 because of error: initializing configtx manager failed: Bad channel id: channel ID 'delphiChannel' contains illegal characters
 done
 go get -u "github.com/davidkhala/chaincode" # FIXME: please use your own chaincode as in config/chaincode.json

@@ -23,7 +23,6 @@ exports.gen = ({
 		Orderer: {
 			OrdererType: 'solo',
 
-			Addresses: [`${ordererConfig.solo.container_name}:${ordererConfig.solo.portHost}`],
 			BatchTimeout: '1s',
 			BatchSize: {
 				MaxMessageCount: 1,
@@ -59,6 +58,9 @@ exports.gen = ({
 			Brokers: Object.keys(globalConfig.orderer.kafka.kafkas).map((kafka) => `${kafka}:9092`)
 		};
 		blockProfileConfig.Orderer.Organizations = Organizations;
+	}else {
+		const {container_name,orgName,portHost} = ordererConfig.solo;
+		blockProfileConfig.Orderer.Addresses=[`${container_name}.${orgName}:${portHost}`]
 	}
 	const orgsConfig = globalConfig.orgs;
 	const Organizations = [];

@@ -46,7 +46,7 @@ public class testQuery {
     }
 
     public static Channel testPrepareChannel(String orgName,String channelFilename) throws TransactionException, IOException, InvalidArgumentException, InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException, CryptoException {
-        String channelName = "delphiChannel".toLowerCase();
+        String channelName = "allchannel";
         HFClient client = HFClient.createNewInstance();
 
         client.setCryptoSuite(CryptoSuite.Factory.getCryptoSuite());

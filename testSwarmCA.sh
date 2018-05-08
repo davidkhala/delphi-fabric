@@ -77,7 +77,7 @@ for channelName in $channelNames; do
 	channelConfig=$(echo $channelsConfig | jq ".${channelName}")
 	channelFilename=$(echo $channelConfig | jq -r ".file")
 	channelFile="$CONFIGTX_DIR/$channelFilename"
-	./common/bin-manage/runConfigtxgen.sh channel create $channelFile -p $channelName -i $CONFIG_DIR -c ${channelName,,}
+	./common/bin-manage/runConfigtxgen.sh channel create $channelFile -p $channelName -i $CONFIG_DIR -c ${channelName}
 done
 
 chaincodeJSON=$CONFIG_DIR/chaincode.json

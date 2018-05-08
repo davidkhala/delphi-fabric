@@ -3,7 +3,7 @@ const joinChannel = require('./join-channel').joinChannel;
 
 const helper = require('./helper');
 const logger = require('../common/nodejs/logger').new('testChannel');
-const channelName = 'allChannel';
+const channelName = 'allchannel';
 const Sleep = require('sleep');
 
 const companyConfig = require('../config/orgs.json');

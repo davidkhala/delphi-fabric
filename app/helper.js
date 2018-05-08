@@ -21,7 +21,7 @@ const globalConfig = require('../config/orgs.json');
 
 const companyConfig = globalConfig;
 const orgsConfig = companyConfig.orgs;
-const CRYPTO_CONFIG_DIR = globalConfig.cryptogenSkip ? globalConfig.docker.volumes.CACRYPTOROOT.dir : globalConfig.docker.volumes.MSPROOT.dir;
+const CRYPTO_CONFIG_DIR = globalConfig.docker.volumes.MSPROOT.dir;
 const channelsConfig = companyConfig.channels;
 const sdkUtils = require('fabric-client/lib/utils');
 const nodeConfig = require('./config.json');
@@ -30,6 +30,7 @@ const EventHubUtil = require('../common/nodejs/eventHub');
 const peerUtil = require('../common/nodejs/peer');
 const pathUtil = require('../common/nodejs/path');
 const OrdererUtil = require('../common/nodejs/orderer');
+const channelUtil = require('../common/nodejs/channel');
 const {CryptoPath} = pathUtil;
 
 
@@ -80,15 +81,15 @@ const ordererConfig = companyConfig.orderer;
 exports.prepareChannel = (channelName, client, isRenew) => {
 
 	const channelConfig = channelsConfig[channelName];
-	const channelname = channelName.toLowerCase();
+	channelUtil.nameMatcher(channelName, true);
 
 	if (isRenew) {
-		delete client._channels[channelname];
+		delete client._channels[channelName];
 	} else {
-		if (client._channels[channelname]) return client._channels[channelname];
+		if (client._channels[channelName]) return client._channels[channelName];
 	}
 
-	const channel = client.newChannel(channelname);//NOTE throw exception if exist
+	const channel = client.newChannel(channelName);//NOTE throw exception if exist
 	const newOrderer = (ordererName, domain, ordererSingleConfig) => {
 
 		const ordererPort = ordererSingleConfig.portHost;

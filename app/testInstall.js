@@ -11,7 +11,7 @@ const chaincodePath = chaincodeConfig.chaincodes[chaincodeId].path;
 const instantiate_args = [];
 
 const chaincodeVersion = 'v0';
-const channelName = 'allChannel';
+const channelName = 'allchannel';
 //only one time, one org could deploy
 const deploy = (orgName, peerIndexes) => {
 	const peers = helper.newPeers(peerIndexes, orgName);

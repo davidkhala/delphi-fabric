@@ -11,9 +11,6 @@
         "dir": "/home/david/Documents/delphi-fabric/config/configtx"
       },
       "MSPROOT": {
-        "dir": "/home/david/Documents/delphi-fabric/config/crypto-config/"
-      },
-      "CACRYPTOROOT": {
         "dir": "/home/david/Documents/delphi-fabric/config/ca-crypto-config/"
       }
     }
@@ -112,7 +109,7 @@
     }
   },
   "channels": {
-    "allChannel": {
+    "allchannel": {
       "file": "all.tx",
       "eventWaitTime": 30000,
       "orgs": {

@@ -18,7 +18,7 @@ public class testMain {
 
 
     public static void main(String[] args) {
-        String channelName = "delphiChannel".toLowerCase();
+        String channelName = "allchannel";
         try {
             HFClient client = HFClient.createNewInstance();
 
