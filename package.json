@@ -31,11 +31,10 @@
     "request": "^2.81.0",
     "request-promise-native": "^1.0.5",
     "simple-oauth2": "^1.5.2",
-    "sleep": "^5.1.1",
     "ws": "^3.3.2"
   },
   "devDependencies": {
-    "winston": "^2.2.0",
+    "winston": "^2.4.2",
     "x509": "^0.3.2"
   }
 }
