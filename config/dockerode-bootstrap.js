@@ -10,8 +10,8 @@ const channelUtil = require('../common/nodejs/channel');
 
 const arch = 'x86_64';
 const {
-	containerDelete, networkRemove, volumeCreateIfNotExist,
-	swarmServiceName, serviceDelete,
+	containerDelete, networkRemove, volumeCreateIfNotExist,networkCreateIfNotExist,
+	swarmServiceName, serviceDelete, tasksWaitUntilLive,
 	volumeRemove, prune: {system: pruneSystem}
 } = require('../common/docker/nodejs/dockerode-util');
 const {docker: {fabricTag, network, thirdPartyTag}, TLS} = globalConfig;
@@ -26,6 +26,7 @@ exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPRO
 	const MSPROOTVolume = volumeName.MSPROOT;
 	const imageTag = `${arch}-${fabricTag}`;
 	const {MSPROOT} = peerUtil.container;
+	const results = [];
 	const tls = (ORDERER_STRUCTURE) => {
 		return TLS ? {
 			serverKey: path.resolve(MSPROOT, ORDERER_STRUCTURE, 'tls', 'server.key'),
@@ -82,21 +83,24 @@ exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPRO
 			for (const orderer in ordererOrgConfig.orderers) {
 				const ordererConfig = ordererOrgConfig.orderers[orderer];
 				const port = ordererConfig.portHost;
-				await toggle({orderer, domain, port, id}, toStop, swarm, true);
+				const service = await toggle({orderer, domain, port, id}, toStop, swarm, true);
+				results.push(service);
 			}
 		}
 	} else {
 		const ordererConfig = globalConfig.orderer.solo;
 		const {orgName: domain, MSP: {id}, portHost: port} = ordererConfig;
 		const orderer = ordererConfig.container_name;
-		await toggle({orderer, domain, port, id}, toStop, swarm, undefined);
+		const service = await toggle({orderer, domain, port, id}, toStop, swarm, undefined);
+		results.push(service);
 	}
+	return results;
 };
 
 exports.volumesAction = async (toStop) => {
 	for (const Name in globalConfig.docker.volumes) {
 		if (toStop) {
-			await volumeRemove({Name});
+			await volumeRemove(Name);
 			continue;
 		}
 		const path = globalConfig.docker.volumes[Name].dir;
@@ -106,6 +110,7 @@ exports.volumesAction = async (toStop) => {
 exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'}, tostop, swarm) => {
 	const imageTag = `${arch}-${fabricTag}`;
 	const orgsConfig = globalConfig.orgs;
+	const results = [];
 	if (!tostop) await dockerodeUtil.imagePullCCENV(imageTag);
 	for (const domain in orgsConfig) {
 		const orgConfig = orgsConfig[domain];
@@ -117,9 +122,9 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 			const {container_name, portMap} = peerConfig;
 
 			if (tostop) {
-				if(swarm){
+				if (swarm) {
 					await serviceDelete(swarmServiceName(container_name));
-				}else {
+				} else {
 					await containerDelete(container_name);
 				}
 				continue;
@@ -137,7 +142,7 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 			const port = portMap.find(portEntry => portEntry.container === 7051).host;
 			const eventHubPort = portMap.find(portEntry => portEntry.container === 7053).host;
 			if (swarm) {
-				await dockerodeUtil.deployPeer({
+				const peer= await dockerodeUtil.deployPeer({
 					Name: container_name, port, eventHubPort, imageTag, network,
 					peer_hostName_full,
 					msp: {
@@ -147,8 +152,9 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 					},
 					tls,
 				});
+				results.push(peer);
 			} else {
-				await dockerodeUtil.runPeer({
+				const peer= await dockerodeUtil.runPeer({
 					container_name, port, eventHubPort, imageTag, network,
 					peer_hostName_full, tls,
 					msp: {
@@ -157,11 +163,13 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 						configPath: path.resolve(peerUtil.container.MSPROOT, PEER_STRUCTURE, 'msp')
 					}
 				});
+				results.push(peer);
 			}
 
 		}
 
 	}
+	return results;
 };
 
 exports.runCAs = async (toStop, swarm) => {
@@ -169,6 +177,7 @@ exports.runCAs = async (toStop, swarm) => {
 
 	const imageTag = `${arch}-${fabricTag}`;
 
+	const results = [];
 	const toggle = ({container_name, port}, toStop, swarm) => {
 		const serviceName = swarmServiceName(container_name);
 
@@ -187,7 +196,6 @@ exports.runCAs = async (toStop, swarm) => {
 		}
 	};
 	if (type === 'kafka') {
-		const promises = [];
 		for (const ordererOrg in globalConfig.orderer.kafka.orgs) {
 			const ordererOrgConfig = globalConfig.orderer.kafka.orgs[ordererOrg];
 			const {portHost: port} = ordererOrgConfig.ca;
@@ -197,9 +205,9 @@ exports.runCAs = async (toStop, swarm) => {
 			} else {
 				container_name = `ca.${ordererOrg}`;
 			}
-			promises.push(toggle({container_name, port}, toStop, swarm));
+			const service = await toggle({container_name, port}, toStop, swarm);
+			results.push(service);
 		}
-		await Promise.all(promises);
 	} else {
 		const {ca: {portHost: port}, orgName} = globalConfig.orderer.solo;
 		let container_name;
@@ -208,7 +216,9 @@ exports.runCAs = async (toStop, swarm) => {
 		} else {
 			container_name = `ca.${orgName}`;
 		}
-		await toggle({container_name, port}, toStop, swarm);
+		const service = await toggle({container_name, port}, toStop, swarm);
+		results.push(service);
+
 	}
 
 	for (const orgName in peerOrgsConfig) {
@@ -222,14 +232,17 @@ exports.runCAs = async (toStop, swarm) => {
 		} else {
 			container_name = `ca.${orgName}`;
 		}
-		await toggle({container_name, port}, toStop, swarm);
+		const service = await toggle({container_name, port}, toStop, swarm);
+		results.push(service);
 	}
+	return results;
 };
 
 exports.runZookeepers = async (toStop, swarm) => {
 	const zkConfigs = globalConfig.orderer.kafka.zookeepers;
 	const imageTag = `${arch}-${thirdPartyTag}`;
 	const allIDs = Object.values(zkConfigs).map(config => config.MY_ID);
+	const results = [];
 	for (const zookeeper in zkConfigs) {
 		const zkConfig = zkConfigs[zookeeper];
 		const {MY_ID} = zkConfig;
@@ -241,16 +254,19 @@ exports.runZookeepers = async (toStop, swarm) => {
 			}
 		} else {
 			if (swarm) {
-				await dockerodeUtil.deployZookeeper({
+				const service = await dockerodeUtil.deployZookeeper({
 					Name: zookeeper, network, imageTag, MY_ID
 				}, allIDs);
+				results.push(service);
 			} else {
-				await dockerodeUtil.runZookeeper({
+				const container = await dockerodeUtil.runZookeeper({
 					container_name: zookeeper, MY_ID, imageTag, network
 				}, allIDs);
+				results.push(container);
 			}
 		}
 	}
+	return results;
 };
 exports.runKafkas = async (toStop, swarm) => {
 	const kafkaConfigs = globalConfig.orderer.kafka.kafkas;
@@ -259,6 +275,7 @@ exports.runKafkas = async (toStop, swarm) => {
 	const {N, M} = globalConfig.orderer.kafka;
 	const imageTag = `${arch}-${thirdPartyTag}`;
 
+	const results = [];
 	for (const kafka in kafkaConfigs) {
 		const kafkaConfig = kafkaConfigs[kafka];
 		const {BROKER_ID} = kafkaConfig;
@@ -270,17 +287,20 @@ exports.runKafkas = async (toStop, swarm) => {
 			}
 		} else {
 			if (swarm) {
-				await dockerodeUtil.deployKafka({
+				const service = await dockerodeUtil.deployKafka({
 					Name: kafka, network, imageTag, BROKER_ID
 				}, zookeepers, {N, M});
+				results.push(service);
 			} else {
-				await dockerodeUtil.runKafka({
+				const container = await dockerodeUtil.runKafka({
 					container_name: kafka, network, imageTag, BROKER_ID
 				}, zookeepers, {N, M});
+				results.push(container);
 			}
 		}
 
 	}
+	return results;
 };
 exports.down = async (swarm) => {
 	const {orderer: {type}} = globalConfig;
@@ -288,17 +308,16 @@ exports.down = async (swarm) => {
 	const toStop = true;
 	await module.exports.runCAs(toStop, swarm);
 
-	await module.exports.runPeers(undefined, toStop,swarm);
-	await module.exports.runOrderers(undefined, toStop,swarm);
+	await module.exports.runPeers(undefined, toStop, swarm);
+	await module.exports.runOrderers(undefined, toStop, swarm);
 	if (type === 'kafka') {
 		await module.exports.runKafkas(toStop, swarm);
 		await module.exports.runZookeepers(toStop, swarm);
 	}
-	await networkRemove({Name: network});
-
+	await pruneSystem(swarm);
+	await networkRemove(network);
 	await dockerodeUtil.chaincodeClean();
 	await module.exports.volumesAction(toStop);
-	await pruneSystem();
 
 	const nodeAppConfigJson = require('../app/config');
 	fsExtra.removeSync(nodeAppConfigJson.stateDBCacheDir);
@@ -317,12 +336,16 @@ exports.up = async (swarm) => {
 	const {orderer: {type}} = globalConfig;
 	await pruneSystem();
 	await module.exports.volumesAction();
-	await dockerodeUtil.networkCreateIfNotExist({Name: network}, swarm);
-	await module.exports.runCAs(undefined, swarm);
+	await networkCreateIfNotExist({Name: network}, swarm);
+	const caServices = await module.exports.runCAs(undefined, swarm);
+
 	if (type === 'kafka') {
-		await module.exports.runZookeepers(undefined, swarm);
-		await module.exports.runKafkas(undefined, swarm);
+		const zkServices = await exports.runZookeepers(undefined, swarm);
+		if (swarm) await tasksWaitUntilLive(zkServices);
+		const kafkaServices = await exports.runKafkas(undefined, swarm);
+		if (swarm) await tasksWaitUntilLive(kafkaServices);
 	}
+	if (swarm) await tasksWaitUntilLive(caServices);
 	await require('./ca-crypto-gen').genAll();
 
 	const MSPROOT = globalConfig.docker.volumes.MSPROOT.dir;
@@ -346,6 +369,10 @@ exports.up = async (swarm) => {
 	}
 
 
-	await module.exports.runOrderers(undefined, undefined, swarm);
-	await module.exports.runPeers(undefined, undefined, swarm);
+	const ordererServices = await module.exports.runOrderers(undefined, undefined, swarm);
+	if (swarm) await tasksWaitUntilLive(ordererServices);
+
+	const peerServices = await module.exports.runPeers(undefined, undefined, swarm);
+	if (swarm) await tasksWaitUntilLive(peerServices);
+
 };
