@@ -241,7 +241,6 @@ exports.runCAs = async (toStop, swarm) => {
 exports.runZookeepers = async (toStop, swarm) => {
 	const zkConfigs = globalConfig.orderer.kafka.zookeepers;
 	const imageTag = `${arch}-${thirdPartyTag}`;
-	const allIDs = Object.values(zkConfigs).map(config => config.MY_ID);
 	const results = [];
 	for (const zookeeper in zkConfigs) {
 		const zkConfig = zkConfigs[zookeeper];
@@ -256,12 +255,12 @@ exports.runZookeepers = async (toStop, swarm) => {
 			if (swarm) {
 				const service = await dockerodeUtil.deployZookeeper({
 					Name: zookeeper, network, imageTag, MY_ID
-				}, allIDs);
+				}, zkConfigs);
 				results.push(service);
 			} else {
 				const container = await dockerodeUtil.runZookeeper({
 					container_name: zookeeper, MY_ID, imageTag, network
-				}, allIDs);
+				}, zkConfigs);
 				results.push(container);
 			}
 		}
