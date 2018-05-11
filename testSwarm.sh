@@ -15,16 +15,8 @@ else echo
 fi
 CONFIG_JSON=$(curl -s ${swarmBaseUrl}/config/orgs)
 
-./testBin.sh
-MSPROOT_DIR=$(echo $CONFIG_JSON | jq -r ".docker.volumes.MSPROOT.dir")
-CONFIGTX_DIR=$(echo $CONFIG_JSON | jq -r ".docker.volumes.CONFIGTX.dir")
-MSPROOTVolume="MSPROOT_swarm"
-CONFIGTXVolume="CONFIGTX_swarm"
-./common/docker/utils/volume.sh createLocal $MSPROOTVolume $MSPROOT_DIR
-./common/docker/utils/volume.sh createLocal $CONFIGTXVolume $CONFIGTX_DIR
+VERSION=$(jq -r ".docker.fabricTag" $CONFIG_JSON)
+./common/bin-manage/pullBIN.sh -v $VERSION
+./cluster/prepare.sh updateNODESDK $VERSION
 
-COMPOSE_FILE="$CONFIG_DIR/docker-swarm.yaml"
-if [ -f "$COMPOSE_FILE" ]; then
-	./docker-swarm.sh down
-fi
-node -e "require('./config/docker-compose').gen({MSPROOT:'$MSPROOT_DIR',COMPOSE_FILE:'$COMPOSE_FILE',type: 'swarm',volumeName:{CONFIGTX:'$CONFIGTXVolume',MSPROOT:'$MSPROOTVolume'}})"
+./cluster/prepare.sh updateChaincode

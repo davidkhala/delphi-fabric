@@ -1,7 +1,7 @@
 const helper = require('./helper.js');
 const logger = require('../common/nodejs/logger').new('invoke-chaincode');
 const eventHelper = require('../common/nodejs/eventHub');
-const {resultWrapper}  = require('../common/nodejs/chaincode');
+const {resultWrapper,chaincodeProposalAdapter} = require('../common/nodejs/chaincode');
 /**
  *
  * @param channel
@@ -12,9 +12,9 @@ const {resultWrapper}  = require('../common/nodejs/chaincode');
  * @param client
  * @return {Promise.<TResult>}
  */
-exports.invoke= (channel, richPeers, { chaincodeId, fcn, args }, client = channel._clientContext) => {
-	logger.debug({ channelName: channel.getName(), peersSize: richPeers.length, chaincodeId, fcn, args });
-	const { eventWaitTime } = channel;
+exports.invoke = async (channel, richPeers, {chaincodeId, fcn, args}, client = channel._clientContext) => {
+	logger.debug({channelName: channel.getName(), peersSize: richPeers.length, chaincodeId, fcn, args});
+	const {eventWaitTime} = channel;
 	const txId = client.newTransactionID();
 
 	const request = {
@@ -24,36 +24,35 @@ exports.invoke= (channel, richPeers, { chaincodeId, fcn, args }, client = channe
 		txId,
 		targets: richPeers //optional: use channel.getPeers() as default
 	};
-	return channel.sendTransactionProposal(request).
-		then(helper.chaincodeProposalAdapter('invoke')).
-		then(({ nextRequest, errCounter }) => {
-			const { proposalResponses } = nextRequest;
+	const [responses, proposal, header] = await channel.sendTransactionProposal(request);
+	const ccHandler = chaincodeProposalAdapter('invoke');
+	const {nextRequest, errCounter} = ccHandler([responses, proposal, header]);
 
-			if (errCounter >0) {
-				return Promise.reject({ proposalResponses });
-			}
-			const promises = [];
+	const {proposalResponses} = nextRequest;
 
-			for (let peer of richPeers) {
-				const eventhub = helper.bindEventHub(peer, client);
-				const txPromise = eventHelper.txEventPromise(eventhub, { txId, eventWaitTime }, ({ tx, code }) => {
-					return { valid: code === 'VALID', interrupt: true };
-				});
-				promises.push(txPromise);
-			}
+	if (errCounter > 0) {
+		throw {proposalResponses};
+	}
+	const promises = [];
 
-			return channel.sendTransaction(nextRequest).then((/*{ status: 'SUCCESS' }*/) => {
-				return Promise.all(promises).then((txEventResponses) =>
-					resultWrapper(txEventResponses,{proposalResponses})
-				);
-			});
+	for (let peer of richPeers) {
+		const eventhub = helper.bindEventHub(peer, client);
+		const txPromise = eventHelper.txEventPromise(eventhub, {txId, eventWaitTime}, ({tx, code}) => {
+			return {valid: code === 'VALID', interrupt: true};
 		});
+		promises.push(txPromise);
+	}
+
+	await channel.sendTransaction(nextRequest);
+
+	const txEventResponses = await Promise.all(promises);
+	return resultWrapper(txEventResponses, {proposalResponses});
 
 };
 
 
-exports.query= (channel, peers, { chaincodeId, fcn, args }, client = channel._clientContext) => {
-	logger.debug('query',{ channelName: channel.getName(), peersSize: peers.length, chaincodeId, fcn, args });
+exports.query = async (channel, peers, {chaincodeId, fcn, args}, client = channel._clientContext) => {
+	logger.debug('query', {channelName: channel.getName(), peersSize: peers.length, chaincodeId, fcn, args});
 	const txId = client.newTransactionID();
 
 	const request = {
@@ -63,7 +62,7 @@ exports.query= (channel, peers, { chaincodeId, fcn, args }, client = channel._cl
 		txId,
 		targets: peers //optional: use channel.getPeers() as default
 	};
-
-	return channel.queryByChaincode(request).then(results=>results.map(e=>e.toString()));
+	const results = await channel.queryByChaincode(request);
+	return results.map(e => e.toString());
 
 };

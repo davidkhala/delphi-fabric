@@ -19,14 +19,13 @@ Installation
 `$ ./install.sh`
 
 > **墙内网络的问题**
-在墙内由于docker-compose，yaml工具，npm 包安装都很慢，因而时常会出现运行安装脚本到一般卡死的情况。
+在墙内由于npm 包安装都很慢，因而时常会出现运行安装脚本到一般卡死的情况。
 If any problem found when running ``install.sh``, like hanging in ``npm install``, it is recommended to install manually for each requirement
 ----
  以下是依赖的版本列表，遇到问题可以自行寻找安装源
   **Requirements**
    * fabric: 1.1.0-alpha (for docker image, binary tool and fabric-sdk)
    * docker-ce 17.12.0-ce (API version 1.35)
-   * docker-compose 1.14.0
    * golang 1.9.2 : align with docker version
    * node 8.10, npm 5.6 : npm install卡死的话，可以考虑添加淘宝的源
         - ``$ npm config set registry  https://registry.npm.taobao.org/``
@@ -41,89 +40,34 @@ If any problem found when running ``install.sh``, like hanging in ``npm install`
 Major configuration
 -----------------------
  we cluster most of the config in ``config/orgs.json``, enjoy!
+ others:
+  - swarm server: ``swarm/swarm.json``
+  - Restfull app: ``app/config.json``
+  - chaincodes path: ``config/chaincode.json``  
 
 Test on single host
 -----------------------
 **steps**
 1. run `$ ./testLocal.sh`
     - it includes
-        1. load others config from orgs.json
-        2. npm fabric-* updating
-        3. generate crypto-config file(default crypto-config.yaml)
-        4. run 'cryptogen' binary to generate crypto-materials
-        5. generate channel, block config file (default configtx.yaml)
-        6. run 'configtxgen' to generate channel, block file
-        7. generate docker-compose.yaml
+        1. update fabric binary files 
+        2. update npm fabric-ca-client, npm fabric-client 
+        3. update golang chaincode 
 
-2. in another terminal, run `$ ./docker.sh` to clean and restart network
+2. run `$ ./docker.sh` to clean and restart network
 
-
-3. Then come back to previous terminal running testLocal.sh
-  run `$ node app/testChannel.js`
-  to create-channel and join-channel
+3. run `$ node app/testChannel.js` to create-channel and join-channel
 4. `$ node app/testInstall.js` to install chaincode and instantiate chaincode
 5. `$ node app/testInvoke.js` to invoke chaincode
 
-channel update (single host mode)
+channel update 
 -----------------------
-__Description:__
-- assume we have already channel named 'delphiChannel' with 2 orgs 'BU', 'PM'
-- we want to create a new docker container named 'AMContainerName' belonging to a new org 'AM'
-- the new peer should work as other existing peers, supporting all chaincode action like instantiate, invoke, etc.
-- org 'AM' should be added to 'delphiChannel' config as a 'online update'(not to re-create current channel).
-
-__Steps:__
-
-
-1. run first 3 steps of `testing on single host'
-    ```
-    terminal 1:$ ./testLocal.sh
-    ...
-    terminal 2:$ ./docker.sh
-    ...
-    terminal 1:$ node app/testChannel.js
-
-    ```
-2. run:
-    ```
-    terminal 1 $ ./testNewOrg.sh
-    ```
+TODO: refactoring
 
 test Swarm mode
 -----------------------
 
-assume we have two physical machine, take ip `192.168.0.167` as *leader*, ip `192.168.0.144` as *manager*
-
-1. Prepare: swarm configuration service server(SCSS)
-  - SCSS is used to monitoring cluster status(ip,hostname), docker-swarm join-token,docker volume path to share and other global information.
-
-        > SCSS using couchdb as state persistent mechanism.
-        To install couchdb on your target machine run:
-        ```$ ./install.sh couchdb```
-  - Fauxton is installed along with couchdb as admin portal. [http://localhost:5984/_utils/]
-          make sure to setting "Main Config" -- "chttpd" -- "bind_address" ==> 0.0.0.0
-  - run SCSS: ``node ./swarm/swarmServer.js`` in a new terminal
-2. if you have run through above 'single host test', you should clean your environment before start. For example, run `$ ./docker.sh down`
-3. on *leader*, run `$ cluster/leaderNode/install.sh`
-4. on *leader*, run `$ cluster/leaderNode/prepare.sh 192.168.0.167`
-      > parameter *192.168.0.167* work as `advertiseAddr` in docker swarm
-5. on *manager*, run `$ cluster/managerNode/install.sh` and then `$ cluster/managerNode/prepare.sh`
-6. health-check swarm across nodes(1 node means 1 physical machine),
-    (if there is network problem, 'nmap' is a recommended network probing tools:`apt install nmap`)
-
- - On both *leader* and *manager*, check if joining swarm success by `docker node ls` (*means current node)
-    > ID                            HOSTNAME               STATUS              AVAILABILITY        MANAGER STATUS
-    > lhpmolwzw60dclsjmr4suufno *   ubuntu                   Ready               Active              Leader
-    > tatl890bgusrzww4x5w1ktvjk     fabric-swarm-manager                Ready               Active              Reachable
-7. on *leader* run ./testSwarm.sh
-    it includes:
-     - re-create crypto material and block file
-     - re-create local docker volume
-     - generate compose-file for swarm
-8. on *leader* run ./docker-swarm.sh to deploy service
-9. run `$ node app/testChannel.js` to create-channel and join-channel
-10. `$ node app/testInstall.js` to install chaincode and instantiate chaincode
-11. `$ node app/testInvoke.js` to invoke chaincode
+TODO:refactoring
 
 
 ### CA service
@@ -146,6 +90,8 @@ govendor: to import third-party package in vendor folder
 - swarm mode : network server to manage ip:hostname
 - stress test in nodejs: Caliper
 - remove global domain
+- not to use docker-compose and docker stack deploy to run docker services on swarm, use npm dockerode 
+
 ## TODO
 - java sdk and docker-swarm: keep update
 - endorsement policy config
@@ -171,10 +117,9 @@ govendor: to import third-party package in vendor folder
 - adding kafka/zookeeper online
 - stateStore problem
 - user server design instead of nfs
-- not to use docker-compose and docker stack deploy to run docker services on swarm, use dockerode 
 - docker version problem in ver. 18.x 
 - implement configtx in node-sdk??
 - fix: configtxgen binary allow upper case channelName
 
-## Abandoned TODO
+## Abandoned tasks
 - docker volume plugin

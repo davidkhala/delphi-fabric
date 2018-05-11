@@ -331,38 +331,7 @@ objects.user.admin = {
 	},
 };
 
-exports.chaincodeProposalAdapter = (actionString, validator) => {
-	const _validator = validator ? validator : ({response}) => {
-		return {isValid: response && response.status === 200, isSwallowed: false};
-	};
-	return ([responses, proposal, header]) => {
 
-		let errCounter = 0; // NOTE logic: reject only when all bad
-		let swallowCounter = 0;
-		for (const i in responses) {
-			const proposalResponse = responses[i];
-			const {isValid, isSwallowed} = _validator(proposalResponse);
-			if (isValid) {
-				logger.info(`${actionString} was good for [${i}]`, proposalResponse);
-				if (isSwallowed) {
-					swallowCounter++;
-				}
-			} else {
-				logger.error(`${actionString} was bad for [${i}]`, proposalResponse);
-				errCounter++;
-			}
-		}
-
-		return Promise.resolve({
-			errCounter,
-			swallowCounter,
-			nextRequest: {
-				proposalResponses: responses, proposal,
-			},
-		});
-
-	};
-};
 
 exports.globalConfig = globalConfig;
 exports.preparePeer = preparePeer;
