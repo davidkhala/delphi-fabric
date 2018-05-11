@@ -119,7 +119,12 @@ govendor: to import third-party package in vendor folder
 - user server design instead of nfs
 - docker version problem in ver. 18.x 
 - implement configtx in node-sdk??
-- fix: configtxgen binary allow upper case channelName
+- slave node in swarm should use another code repository. 
 
+## New feature, patch required for node-sdk
+ 
+- feature: implement configtx in node-sdk??
+- patch: configtxgen binary allow upper case channelName
+ 
 ## Abandoned tasks
 - docker volume plugin

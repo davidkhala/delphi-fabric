@@ -1,17 +1,15 @@
 const globalConfig = require('./orgs.json');
-const fs = require('fs');
 const fsExtra = require('fs-extra');
 const path = require('path');
 const logger = require('../common/nodejs/logger').new('dockerode-bootstrap');
 const peerUtil = require('../common/nodejs/peer');
-const ordererUtil = require('../common/nodejs/orderer');
 const dockerodeUtil = require('../common/nodejs/fabric-dockerode');
 const channelUtil = require('../common/nodejs/channel');
 
 const arch = 'x86_64';
 const {
 	containerDelete, networkRemove, volumeCreateIfNotExist,networkCreateIfNotExist,
-	swarmServiceName, serviceDelete, tasksWaitUntilLive,
+	swarmServiceName, serviceDelete, tasksWaitUntilLive,constraintSelf,
 	volumeRemove, prune: {system: pruneSystem}
 } = require('../common/docker/nodejs/dockerode-util');
 const {docker: {fabricTag, network, thirdPartyTag}, TLS} = globalConfig;
@@ -34,7 +32,7 @@ exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPRO
 			caCrt: path.resolve(MSPROOT, ORDERER_STRUCTURE, 'tls', 'ca.crt')
 		} : undefined;
 	};
-	const toggle = ({orderer, domain, port, id}, toStop, swarm, kafka) => {
+	const toggle = async ({orderer, domain, port, id}, toStop, swarm, kafka) => {
 		const container_name = `${orderer}.${domain}`;
 		const serviceName = swarmServiceName(container_name);
 		const ORDERER_STRUCTURE = `ordererOrganizations/${domain}/orderers/${orderer}.${domain}`;
@@ -47,6 +45,7 @@ exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPRO
 			}
 		} else {
 			if (swarm) {
+				const Constraints = await constraintSelf();
 				return dockerodeUtil.deployOrderer({
 					Name: container_name,
 					imageTag,
@@ -58,7 +57,8 @@ exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPRO
 						id
 					}, CONFIGTXVolume, BLOCK_FILE,
 					kafkas: kafka,
-					tls: tls(ORDERER_STRUCTURE)
+					tls: tls(ORDERER_STRUCTURE),
+					Constraints,
 				});
 			} else {
 				return dockerodeUtil.runOrderer({
@@ -142,6 +142,8 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 			const port = portMap.find(portEntry => portEntry.container === 7051).host;
 			const eventHubPort = portMap.find(portEntry => portEntry.container === 7053).host;
 			if (swarm) {
+				const Constraints =  await constraintSelf();
+
 				const peer= await dockerodeUtil.deployPeer({
 					Name: container_name, port, eventHubPort, imageTag, network,
 					peer_hostName_full,
@@ -151,6 +153,7 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 						configPath: path.resolve(peerUtil.container.MSPROOT, PEER_STRUCTURE, 'msp')
 					},
 					tls,
+					Constraints,
 				});
 				results.push(peer);
 			} else {
