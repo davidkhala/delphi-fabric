@@ -45,7 +45,7 @@ exports.gen = ({
 		for (const ordererOrgName in globalConfig.orderer.kafka.orgs){
 			const ordererOrgConfig  = globalConfig.orderer.kafka.orgs[ordererOrgName];
 			for (const ordererName in ordererOrgConfig.orderers){
-				addresses.push(`${ordererName}:7050`);
+				addresses.push(`${ordererName}.${ordererOrgName}:7050`);
 			}
 			Organizations.push({Name:ordererOrgConfig.MSP.name,
 				ID:ordererOrgConfig.MSP.id,
