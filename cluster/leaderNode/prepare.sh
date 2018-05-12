@@ -39,31 +39,19 @@ thisHostName=$($root/common/ubuntu/hostname.sh get)
 joinToken=$($root/common/docker/utils/swarm.sh managerToken)
 node -e "require('$root/swarm/swarmServerClient').leader.update('$swarmBaseUrl', {ip:'$advertiseAddr', hostname:'$thisHostName', managerToken:'$joinToken'})"
 
-CONFIGTX_DIR=$(echo $CONFIG_JSON | jq -r ".docker.volumes.CONFIGTX.dir")
-MSPROOT_DIR=$(echo $CONFIG_JSON | jq -r ".docker.volumes.MSPROOT.dir")
-
-### setup nfs-server in host
-$root/common/ubuntu/nfs.sh exposeHost "$CONFIGTX_DIR"
-$root/common/ubuntu/nfs.sh exposeHost "$MSPROOT_DIR"
-
-$root/common/ubuntu/nfs.sh startHost
-
-node -e "require('$root/swarm/swarmServerClient').volume.set('$swarmBaseUrl',{key:'CONFIGTX',value:'$CONFIGTX_DIR'})"
-node -e "require('$root/swarm/swarmServerClient').volume.set('$swarmBaseUrl',{key:'MSPROOT',value:'$MSPROOT_DIR'})"
-
 fabricTag=$(echo $CONFIG_JSON | jq -r ".docker.fabricTag")
 thirdPartyTag=$(echo $CONFIG_JSON | jq -r ".docker.thirdPartyTag")
 $root/cluster/prepare.sh pull $fabricTag
 $root/cluster/prepare.sh pullKafka $thirdPartyTag
 
+$root/common/bin-manage/pullBIN.sh -v $fabricTag
+
+$root/cluster/prepare.sh updateNODESDK $fabricTag
+
+$root/cluster/prepare.sh updateChaincode
 
 function configServer() {
 	# TODO not exposed to manager
 	$root/install.sh couchdb
 	node $root/swarm/swarmServer.js
-}
-function updateBin() {
-	# TODO not exposed to manager
-	local VERSION=$1
-	$root/common/bin-manage/pullBIN.sh -v $VERSION
 }

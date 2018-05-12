@@ -5,7 +5,6 @@ root=$(dirname $(dirname $CURRENT))
 
 $root/install.sh
 
-$root/common/ubuntu/nfs.sh installHost
 
 # finally
 sudo apt autoremove -y

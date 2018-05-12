@@ -9,7 +9,5 @@ fi
 
 $root/common/install.sh
 
-$root/common/ubuntu/nfs.sh installClient
-
 # finally
 sudo apt autoremove -y

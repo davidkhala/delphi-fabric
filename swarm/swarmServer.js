@@ -89,19 +89,6 @@ app.post('/manager/leave', async (req, res) => {
 	await connection.setValue(managerKey, newValue);
 	res.json({ip});
 });
-//TODO how to hard code services restraint when manager leave??
-app.post('/volume/get', async (req, res) => {
-	const {key} = req.body;
-	const connection = await new FabricCouchDB({url, name: volumeDoc});
-	const value = await connection.getValue(key);
-	res.json(value);
-});
-app.post('/volume/set', async (req, res) => {
-	const {key, value} = req.body;
-	const connection = await new FabricCouchDB({url, name: volumeDoc});
-	await connection.setValue(key, value);
-	res.json({key, value});
-});
 
 app.use('/channel',require('./signaturesRouter'));
 app.get('/block', async (req,res)=>{
