@@ -1,4 +1,4 @@
-const createChannel = require('./create-channel').create;
+const {createChannel} = require('./create-channel');
 const {joinChannel} = require('./join-channel');
 
 const helper = require('./helper');

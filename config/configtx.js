@@ -4,12 +4,12 @@ const path = require('path');
 const CURRENT = __dirname;
 const yaml = require('js-yaml');
 exports.gen = ({
-	consortiumName = 'SampleConsortium',
-	MSPROOT,
-	PROFILE_BLOCK,
-	configtxFile = path.resolve(CURRENT, 'configtx.yaml')
+				   consortiumName = 'SampleConsortium',
+				   MSPROOT,
+				   PROFILE_BLOCK,
+				   configtxFile = path.resolve(CURRENT, 'configtx.yaml')
 
-}) => {
+			   }) => {
 	const channelsConfig = globalConfig.channels;
 	const ordererConfig = globalConfig.orderer;
 
@@ -19,49 +19,49 @@ exports.gen = ({
 	}
 
 
-	const blockProfileConfig = {
-		Orderer: {
-			OrdererType: 'solo',
-
-			BatchTimeout: '1s',
-			BatchSize: {
-				MaxMessageCount: 1,
-				AbsoluteMaxBytes: '99 MB',
-				PreferredMaxBytes: '512 KB'
-			},
-			Organizations: [
-				{
-					Name: ordererConfig.solo.MSP.name, ID: ordererConfig.solo.MSP.id,
-					MSPDir: path.join(MSPROOT, 'ordererOrganizations', ordererConfig.solo.orgName, 'msp')
-				}
-			]
-		}
+	const blockProfileConfig = {};
+	const OrdererConfig = {
+		BatchTimeout: '1s',
+		BatchSize: {
+			MaxMessageCount: 1,
+			AbsoluteMaxBytes: '99 MB',
+			PreferredMaxBytes: '512 KB'
+		},
 	};
 	if (globalConfig.orderer.type === 'kafka') {
-		blockProfileConfig.Orderer.OrdererType = 'kafka';
+		OrdererConfig.OrdererType = 'kafka';
 
-		const addresses =[];
+		const Addresses = [];
 		const Organizations = [];
-		for (const ordererOrgName in globalConfig.orderer.kafka.orgs){
-			const ordererOrgConfig  = globalConfig.orderer.kafka.orgs[ordererOrgName];
-			for (const ordererName in ordererOrgConfig.orderers){
-				addresses.push(`${ordererName}.${ordererOrgName}:7050`);
+		for (const ordererOrgName in globalConfig.orderer.kafka.orgs) {
+			const ordererOrgConfig = globalConfig.orderer.kafka.orgs[ordererOrgName];
+			for (const ordererName in ordererOrgConfig.orderers) {
+				Addresses.push(`${ordererName}.${ordererOrgName}:7050`);
 			}
-			Organizations.push({Name:ordererOrgConfig.MSP.name,
-				ID:ordererOrgConfig.MSP.id,
+			Organizations.push({
+				Name: ordererOrgConfig.MSP.name,
+				ID: ordererOrgConfig.MSP.id,
 				MSPDir: path.join(MSPROOT, 'ordererOrganizations', ordererOrgName, 'msp')
 			});
 		}
-		blockProfileConfig.Orderer.Addresses = addresses;
+		OrdererConfig.Addresses = Addresses;
 
-		blockProfileConfig.Orderer.Kafka = {
+		OrdererConfig.Kafka = {
 			Brokers: Object.keys(globalConfig.orderer.kafka.kafkas).map((kafka) => `${kafka}:9092`)
 		};
-		blockProfileConfig.Orderer.Organizations = Organizations;
-	}else {
-		const {container_name,orgName,portHost} = ordererConfig.solo;
-		blockProfileConfig.Orderer.Addresses=[`${container_name}.${orgName}:${portHost}`]
+		OrdererConfig.Organizations = Organizations;
+	} else {
+		OrdererConfig.OrdererType = 'solo';
+		const {container_name, orgName, portHost} = ordererConfig.solo;
+		OrdererConfig.Addresses = [`${container_name}.${orgName}:${portHost}`];
+		OrdererConfig.Organizations = [
+			{
+				Name: ordererConfig.solo.MSP.name, ID: ordererConfig.solo.MSP.id,
+				MSPDir: path.join(MSPROOT, 'ordererOrganizations', ordererConfig.solo.orgName, 'msp')
+			}
+		];
 	}
+	blockProfileConfig.Orderer = OrdererConfig;
 	const orgsConfig = globalConfig.orgs;
 	const Organizations = [];
 

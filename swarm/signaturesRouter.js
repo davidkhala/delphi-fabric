@@ -1,13 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const logger = require('../common/nodejs/logger').new('router signature');
-const signUtil =require('../common/nodejs/multiSign');
+const signUtil = require('../common/nodejs/multiSign');
 const Multer = require('multer');
 const fs = require('fs');
-const path =require('path');
-const singerServerConfig = require('./swarm.json').signServer;
-const signServerPort = singerServerConfig.port;
-const cache = Multer({dest: singerServerConfig.cache});
+const path = require('path');
+const signServerConfig = require('./swarm.json').signServer;
+const signServerPort = signServerConfig.port;
+const signCache = signServerConfig.cache;
+const cache = Multer({dest: signServerConfig.cache});
 
 const swarmConfig = require('./swarm.json').swarmServer;
 const {couchDB: {url}} = swarmConfig;
@@ -64,16 +65,17 @@ router.post('/getSignatures', cache.single('proto'), async (req, res) => {
 
 });
 router.post('/newOrg', cache.fields([{name: 'admins'}, {name: 'root_certs'}, {name: 'tls_root_certs'}])
-	, (req, res) => {
-		const adminCerts = req.files['admins'];
-		const rootCerts = req.files['root_certs'];
-		const tlsRootCerts = req.files['tls_root_certs'];
-		logger.debug({adminCerts, rootCerts, tlsRootCerts});
-		const {channelName, MSPID, MSPName, orderer, peer} = req.body;
-		const configtxlatorUtil = require('../app/configtxlator');
-		const helper = require('../app/helper');
+	, async (req, res) => {
+		try {
+			const adminCerts = req.files['admins'];
+			const rootCerts = req.files['root_certs'];
+			const tlsRootCerts = req.files['tls_root_certs'];
+			logger.debug({adminCerts, rootCerts, tlsRootCerts});
+			const {channelName, MSPID, MSPName, orderer: ordererFlag, peer: peerFlag} = req.body;
+			const configtxlatorUtil = require('../app/configtxlator');
+			const helper = require('../app/helper');
 
-		return helper.getOrgAdmin('TK.Teeking.com').then((client) => {
+			const client = await helper.getOrgAdmin('TK.Teeking.com');
 			const channel = helper.prepareChannel(channelName, client, true);
 
 			const onUpdate = (original_config) => {
@@ -94,14 +96,10 @@ router.post('/newOrg', cache.fields([{name: 'admins'}, {name: 'root_certs'}, {na
 				}
 			};
 
-
 			const peer = helper.newPeers([0], 'TK.Teeking.com')[0];
 			const peerEventHub = helper.bindEventHub(peer, client);
 			const signatureCollector = (proto) => {
-				const signServerConfig = require('../swarm/swarm.json').signServer;
-				const signServerPort = signServerConfig.port;
-				const signCache = signServerConfig.cache;
-				const tempFile =path.resolve(signCache,'proto');
+				const tempFile = path.resolve(signCache, 'proto');
 				fs.writeFileSync(tempFile, proto);
 				return new Promise((resolve, reject) => {
 
@@ -109,25 +107,26 @@ router.post('/newOrg', cache.fields([{name: 'admins'}, {name: 'root_certs'}, {na
 						proto: fs.createReadStream(tempFile)
 					};
 					Request.post({url: `http://localhost:${signServerPort}`, formData}, (err, resp, body) => {
-						if(err)reject(err);
+						if (err) reject(err);
 						const {signatures, proto} = JSON.parse(body);
-						logger.debug(signatures)
+						logger.debug(signatures);
 						resolve({
-							signatures:signUtil.fromBase64(signatures),
-							proto:new Buffer(proto, 'binary')});
+							signatures: signUtil.fromBase64(signatures),
+							proto: new Buffer(proto, 'binary')
+						});
 					});
 				});
 
 			};
 
 
-			return configtxlatorUtil.channelUpdate(channel, onUpdate, signatureCollector, peerEventHub).then(() => {
-				return channel.initialize().then((_) => {
-					logger.debug('channel.getOrganizations() after', channel.getOrganizations());
-					return Promise.resolve(_);
-				});
-			});
-		});
+			await configtxlatorUtil.channelUpdate(channel, onUpdate, signatureCollector, peerEventHub);
+			await channel.initialize();
+			logger.debug('channel.getOrganizations() after', channel.getOrganizations());
+			res.json(channel.getOrganizations());
+		} catch (err) {
+			res.send(err);
+		}
 
 	});
 module.exports = router;
