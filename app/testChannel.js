@@ -1,5 +1,5 @@
 const createChannel = require('./create-channel').create;
-const joinChannel = require('./join-channel').joinChannel;
+const {joinChannel} = require('./join-channel');
 
 const helper = require('./helper');
 const logger = require('../common/nodejs/logger').new('testChannel');
@@ -56,9 +56,6 @@ helper.getOrgAdmin('BU.Delphi.com').then((client) => {
 }).then((data) => {
 	logger.info('final success', data);
 
-}).catch((err) => {
-	logger.error('final Error', err);
-	return Promise.reject(err);
 });
 
 

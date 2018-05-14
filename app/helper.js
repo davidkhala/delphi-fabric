@@ -1,28 +1,11 @@
-/**
- * Copyright 2017 IBM All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the 'License');
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an 'AS IS' BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
-'use strict';
-
 const logger = require('../common/nodejs/logger').new('Helper');
 const path = require('path');
 const globalConfig = require('../config/orgs.json');
 
-const companyConfig = globalConfig;
-const orgsConfig = companyConfig.orgs;
+const orgsConfig = globalConfig.orgs;
 const CRYPTO_CONFIG_DIR = globalConfig.docker.volumes.MSPROOT.dir;
-const channelsConfig = companyConfig.channels;
+const channelsConfig = globalConfig.channels;
+const ordererConfig = globalConfig.orderer;
 const sdkUtils = require('fabric-client/lib/utils');
 const nodeConfig = require('./config.json');
 const ClientUtil = require('../common/nodejs/client');
@@ -69,7 +52,7 @@ const preparePeer = (orgName, peerIndex, peerConfig) => {
 	return peer;
 };
 
-const ordererConfig = companyConfig.orderer;
+
 
 
 /**
@@ -93,7 +76,7 @@ exports.prepareChannel = (channelName, client, isRenew) => {
 	const newOrderer = (ordererName, domain, ordererSingleConfig) => {
 
 		const ordererPort = ordererSingleConfig.portHost;
-		if (companyConfig.TLS) {
+		if (globalConfig.TLS) {
 			const orderer_hostName_full = `${ordererName}.${domain}`;
 			const tls_cacerts = path.resolve(CRYPTO_CONFIG_DIR,
 				'ordererOrganizations', domain, 'orderers', orderer_hostName_full, 'tls', 'ca.crt');

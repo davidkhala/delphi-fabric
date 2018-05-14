@@ -1,47 +1,43 @@
-const query = require('./query');
+const query = require('../common/nodejs/query');
 const helper = require('./helper');
 
-const channelName = 'delphiChannel';
+const channelName = 'allchannel';
 
 const logger = require('../common/nodejs/logger').new('test-query');
 
-const queryInstantiated = () => {
-	const orgName = 'PM';
+const queryInstantiated = async () => {
+	const orgName = 'PM.Delphi.com';
 	const peerIndexes = [0];
 	const peers = helper.newPeers(peerIndexes, orgName);
 
-	return helper.getOrgAdmin(orgName).then((client) => {
-		const channel = helper.prepareChannel(channelName, client, true);
-		return query.chaincodes.instantiated(peers[0], channel).then((result) => {
-			logger.info(result);
-			return Promise.resolve(result);
-		});
+	const client = await helper.getOrgAdmin(orgName);
+	const channel = helper.prepareChannel(channelName, client, true);
+	const result = await query.chaincodes.instantiated(peers[0], channel);
+	logger.info('queryInstantiated',result);
+	return result;
 
-	});
 };
-const queryInstalled = () => {
-	const orgName = 'PM';
+const queryInstalled = async () => {
+	const orgName = 'PM.Delphi.com';
 	const peerIndexes = [0];
 	const peers = helper.newPeers(peerIndexes, orgName);
-	return helper.getOrgAdmin(orgName).then((client) => {
+	const client = await helper.getOrgAdmin(orgName);
 
-		return query.chaincodes.installed(peers[0], client).then((result) => {
-			logger.info(result);
-			return Promise.resolve(result);
-		});
-
-	});
+	const result = await query.chaincodes.installed(peers[0], client);
+	logger.info('queryInstalled',result);
+	return result;
 };
 
-const queryHeight = () => {
-	const orgName = 'BU';
+const queryHeight = async () => {
+	const orgName = 'BU.Delphi.com';
 	const peerIndexes = [0];
 	const peers = helper.newPeers(peerIndexes, orgName);
-	return helper.getOrgAdmin(orgName).then((client)=>{
-		const channel = helper.prepareChannel(channelName, client, true);
-		return query.chain(peers[0],channel);
-	}).then(message=>{
-		logger.info(message.pretty);
-	});
+	const client = await helper.getOrgAdmin(orgName);
+	const channel = helper.prepareChannel(channelName, client, true);
+	const message = await query.chain(peers[0], channel);
+	logger.info(message.pretty);
+	return message.pretty;
 };
 queryHeight();
+queryInstalled();
+queryInstantiated();

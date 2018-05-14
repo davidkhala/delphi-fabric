@@ -18,7 +18,7 @@ const helper = require('./app/helper.js');
 const createChannel = require('./app/create-channel').create;
 const joinChannel = require('./app/join-channel').joinChannel;
 
-const Query = require('./app/query');
+const Query = require('./common/nodejs/query');
 const {install} = require('./app/install-chaincode.js');
 
 app.options('*', cors());
@@ -65,25 +65,25 @@ ws.on('connection', (ws, req) => {
 
 	if (pathSplit.length === 4) {
 		switch (pathSplit[1]) {
-		case 'chaincode':
-			const chaincodeId = pathSplit[3];
-			const invalidChaincodeId = invalid.chaincodeId({chaincodeId});
-			if (invalidChaincodeId) return errorHandle(invalidChaincodeId, ws);
-			switch (pathSplit[2]) {
-			case 'invoke':
-				messageCB = require('./express/ws-chaincode').invoke({chaincodeId}, ws);
-				break;
-			case 'instantiate':
-				messageCB = require('./express/ws-chaincode').instantiate({chaincodeId}, ws);
-				break;
-			case 'upgrade':
-				messageCB = require('./express/ws-chaincode').upgrade({chaincodeId}, ws);
+			case 'chaincode':
+				const chaincodeId = pathSplit[3];
+				const invalidChaincodeId = invalid.chaincodeId({chaincodeId});
+				if (invalidChaincodeId) return errorHandle(invalidChaincodeId, ws);
+				switch (pathSplit[2]) {
+					case 'invoke':
+						messageCB = require('./express/ws-chaincode').invoke({chaincodeId}, ws);
+						break;
+					case 'instantiate':
+						messageCB = require('./express/ws-chaincode').instantiate({chaincodeId}, ws);
+						break;
+					case 'upgrade':
+						messageCB = require('./express/ws-chaincode').upgrade({chaincodeId}, ws);
+						break;
+					default:
+
+				}
 				break;
 			default:
-
-			}
-			break;
-		default:
 		}
 	}
 
@@ -141,7 +141,7 @@ app.post('/channel/create/:channelName', (req, res) => {
 	});
 });
 // Join Channel
-app.post('/channel/join/:channelName', (req, res) => {
+app.post('/channel/join/:channelName', async (req, res) => {
 	logger.info('<<<<<<<<<<<<<<<<< J O I N  C H A N N E L >>>>>>>>>>>>>>>>>');
 	const {channelName} = req.params;
 
@@ -163,18 +163,18 @@ app.post('/channel/join/:channelName', (req, res) => {
 	const peers = helper.newPeers([peerIndex], orgName);
 
 
-	helper.getOrgAdmin(orgName).then((client) => {
+	try {
+		const client = await helper.getOrgAdmin(orgName);
 		const channel = helper.prepareChannel(channelName, client);
-		return joinChannel(channel, peers).then((message) => {
-			res.send(`peer${peerIndex}.${orgName} has joined channel ${channelName} successfully`);
-		});
-	}).catch(err => {
+		await joinChannel(channel, peers);
+		res.send(`peer${peerIndex}.${orgName} has joined channel ${channelName} successfully`);
+	} catch (err) {
 		errorSyntaxHandle(err, res);
-	});
+	}
 
 });
 // Install chaincode on target peers
-app.post('/chaincode/install/:chaincodeId', (req, res) => {
+app.post('/chaincode/install/:chaincodeId', async (req, res) => {
 	logger.debug('==================== INSTALL CHAINCODE ==================');
 	const {chaincodeId} = req.params;
 	const {peerIndex, chaincodeVersion, orgName} = req.body;
@@ -195,13 +195,14 @@ app.post('/chaincode/install/:chaincodeId', (req, res) => {
 	const peers = helper.newPeers([peerIndex], orgName);
 	//TODO to test ChaincodeVersion
 
-	golangUtil.setGOPATH().then(()=>helper.getOrgAdmin(orgName))
-		.then((client) => {
-		return install(peers, {chaincodeId, chaincodePath, chaincodeVersion}, client).then((message) => {
-			res.send(
-				`install chaincode ${chaincodeId} of version ${chaincodeVersion} to peer${peerIndex}.${orgName} successfully`);
-		});
-	});
+	try {
+		await golangUtil.setGOPATH();
+		const client = await helper.getOrgAdmin(orgName);
+		await install(peers, {chaincodeId, chaincodePath, chaincodeVersion}, client);
+		res.send(`install chaincode ${chaincodeId} of version ${chaincodeVersion} to peer${peerIndex}.${orgName} successfully`);
+	} catch (err) {
+		errorSyntaxHandle(err, res);
+	}
 
 });
 //  Query Get Block by BlockNumber
@@ -273,9 +274,9 @@ app.post('/query/tx', (req, res) => {
 
 //Query for Channel Information
 //NOTE: blockchain is summary for all channel and chaincode
-app.post('/query/chain', (req, res) => {
+app.post('/query/chain', async (req, res) => {
 	logger.debug('================ GET blockchain INFORMATION ======================');
-	const {orgName, peerIndex, channelName,pretty} = req.body;
+	const {orgName, peerIndex, channelName, pretty} = req.body;
 	logger.debug({orgName, peerIndex, channelName});
 
 	const invalidPeer = invalid.peer({orgName, peerIndex});
@@ -283,24 +284,16 @@ app.post('/query/chain', (req, res) => {
 		res.send(invalidPeer);
 		return;
 	}
-	helper.getOrgAdmin(orgName).then((client) => {
+	try {
+		const client = await helper.getOrgAdmin(orgName);
 		const channel = helper.prepareChannel(channelName, client);
 		const peer = helper.newPeers([peerIndex], orgName)[0];
-		return Query.chain(peer, channel).then(
-			(message) => {
-				const {height, currentBlockHash, previousBlockHash} = message;
-				const Long = require('long');
-				message.pretty = {
-					height: new Long(height.low, height.high, height.unsigned).toInt(),
-					currentBlockHash: currentBlockHash.toString('hex'),
-					previousBlockHash: previousBlockHash.toString('hex')
-				};
-				//npm long:to parse{ low: 4, high: 0, unsigned: true }
-				res.send(pretty?{pretty:message.pretty}:message);
-			}).catch(err => {
-			errorSyntaxHandle(err, res);
-		});
-	});
+		const message = await Query.chain(peer, channel);
+		res.send(pretty ? {pretty: message.pretty} : message);
+	} catch (err) {
+		errorSyntaxHandle(err, res);
+	}
+
 
 });
 // Query to fetch all Installed/instantiated chaincodes

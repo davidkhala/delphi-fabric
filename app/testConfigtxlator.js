@@ -4,7 +4,7 @@ const logger = require('../common/nodejs/logger').new('test-configtxlator');
 const ClientUtil = require('../common/nodejs/client');
 const peerUtil = require('../common/nodejs/peer');
 const channelName = 'delphiChannel';
-const Query = require('./query');
+const Query = require('../common/nodejs/query');
 
 const join = require('./join-channel').joinChannel;
 const instantiate = require('./instantiate-chaincode').instantiate;

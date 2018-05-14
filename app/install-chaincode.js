@@ -42,7 +42,7 @@ exports.install = async (peers, {chaincodeId, chaincodePath, chaincodeVersion}, 
 };
 
 exports.updateInstall = (peers, {chaincodeId}, client) => {
-	const Query = require('./query');
+	const Query = require('../common/nodejs/query');
 
 	return Query.chaincodes.installed(peers[0], client).then(({chaincodes}) => {
 		const foundChaincode = chaincodes.find((element) => element.name === chaincodeId);

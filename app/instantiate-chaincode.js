@@ -2,7 +2,7 @@ const helper = require('./helper.js');
 const eventHelper = require('../common/nodejs/eventHub');
 const chaincodeUtil = require('../common/nodejs/chaincode');
 const logUtil = require('../common/nodejs/logger');
-const Query = require('./query');
+const Query = require('../common/nodejs/query');
 
 /**
  *
