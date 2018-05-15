@@ -10,7 +10,7 @@ const ordererUtil = require('../common/nodejs/orderer');
 const affiliationUtil = require('../common/nodejs/affiliationService');
 
 
-exports.initAdmin = (url = 'http://localhost:7054', {mspId, domain}, usersDir) => {
+exports.initAdmin = async (url = 'http://localhost:7054', {mspId, domain}, usersDir) => {
 	const enrollmentID = 'Admin';
 	const enrollmentSecret = 'passwd';
 	const caService = caUtil.new(url);
@@ -18,45 +18,38 @@ exports.initAdmin = (url = 'http://localhost:7054', {mspId, domain}, usersDir) =
 	const userFull = userUtil.formatUsername(enrollmentID, domain);
 	if (usersDir) {
 		const userMSPRoot = path.resolve(usersDir, userFull, 'msp');
-		return userUtil.loadFromLocal(userMSPRoot, undefined, {username: enrollmentID, domain, mspId}).then((user) => {
-			if (user) {
-				logger.info(`${domain} admin found in local`);
-				return Promise.resolve(user);
-			}
-			return caService.enroll({enrollmentID, enrollmentSecret}).then((result) => {
-				caUtil.user.toMSP(result, userMSPRoot, {username: enrollmentID, domain});
-				const base = path.dirname(usersDir);//parent
-				const orgMSPDir = path.resolve(base, 'msp');
-				caUtil.org.toMSP(result, orgMSPDir, {name: enrollmentID, domain});
-				return userUtil.build(userFull, result, mspId);
-			});
-		});
+		const user = await userUtil.loadFromLocal(userMSPRoot, undefined, {username: enrollmentID, domain, mspId});
+		if (user) {
+			logger.info(`${domain} admin found in local`);
+			return user;
+		}
+		const result = await caService.enroll({enrollmentID, enrollmentSecret});
+		caUtil.user.toMSP(result, userMSPRoot, {username: enrollmentID, domain});
+		const base = path.dirname(usersDir);//parent
+		const orgMSPDir = path.resolve(base, 'msp');
+		caUtil.org.toMSP(result, orgMSPDir, {name: enrollmentID, domain});
+		return userUtil.build(userFull, result, mspId);
 	} else {
-		return caService.enroll({enrollmentID, enrollmentSecret}).then((result) => {
-			return userUtil.build(userFull, result, mspId);
-		});
+		const result = await caService.enroll({enrollmentID, enrollmentSecret});
+		return userUtil.build(userFull, result, mspId);
 	}
 
 };
-exports.init = (url, {mspId, domain, affiliationRoot = domain}, usersDir) => {
+exports.init = async (url, {mspId, domain, affiliationRoot = domain}, usersDir) => {
 	logger.debug('init', {url, affiliationRoot, mspId, domain, usersDir});
 	const ca = caUtil.new(url);
 	const affiliationService = ca.newAffiliationService();
 	const force = true;//true to create recursively
 
 
-	return module.exports.initAdmin(url, {mspId, domain}, usersDir).then(adminUser => {
-		const promises = [affiliationUtil.creatIfNotExist(affiliationService, {name: `${affiliationRoot}.user`, force}, adminUser),
-			affiliationUtil.creatIfNotExist(affiliationService, {name: `${affiliationRoot}.peer`, force}, adminUser),
-			affiliationUtil.creatIfNotExist(affiliationService, {name: `${affiliationRoot}.orderer`, force}, adminUser)];
-		return Promise.all(promises).then(() => Promise.resolve(adminUser));
-	}).catch(err => {
-		logger.error(err);
-		return err;
-	});
-
+	const adminUser = await exports.initAdmin(url, {mspId, domain}, usersDir);
+	const promises = [affiliationUtil.creatIfNotExist(affiliationService, {name: `${affiliationRoot}.user`, force}, adminUser),
+		affiliationUtil.creatIfNotExist(affiliationService, {name: `${affiliationRoot}.peer`, force}, adminUser),
+		affiliationUtil.creatIfNotExist(affiliationService, {name: `${affiliationRoot}.orderer`, force}, adminUser)];
+	await Promise.all(promises);
+	return adminUser;
 };
-exports.genOrderer = (url, orderersDir, {ordererName, domain, ordererPort, mspId, affiliationRoot = domain}, usersDir) => {
+exports.genOrderer = async (url, orderersDir, {ordererName, domain, ordererPort, mspId, affiliationRoot = domain}, usersDir) => {
 	const caService = caUtil.new(url);
 
 	const orderer_hostName_full = peerUtil.formatPeerName(ordererName, domain);
@@ -79,22 +72,19 @@ exports.genOrderer = (url, orderersDir, {ordererName, domain, ordererPort, mspId
 
 	const enrollmentID = ordererName;
 	const enrollmentSecret = 'passwd';
-	return module.exports.initAdmin(url, {mspId, domain}, usersDir)
-		.then(admin => {
-			const certificate = userUtil.getCertificate(admin);
-			caUtil.peer.toadmincerts({certificate}, ordererMSPRoot, {username: 'Admin', domain});
-			return caUtil.register(caService, {
-				enrollmentID,
-				enrollmentSecret,
-				role: 'orderer',
-				affiliation: `${affiliationRoot}.orderer`
-			}, admin).then(() => {
-				return caService.enroll({enrollmentID, enrollmentSecret});
-			}).then(result => {
-				caUtil.peer.toMSP(result, ordererMSPRoot, {peerName: ordererName, domain});
-				return Promise.resolve(admin);
-			});
-		});
+	const admin = await exports.initAdmin(url, {mspId, domain}, usersDir);
+	const certificate = userUtil.getCertificate(admin);
+	caUtil.peer.toadmincerts({certificate}, ordererMSPRoot, {username: 'Admin', domain});
+	await caUtil.register(caService, {
+		enrollmentID,
+		enrollmentSecret,
+		role: 'orderer',
+		affiliation: `${affiliationRoot}.orderer`
+	}, admin);
+
+	const result = await caService.enroll({enrollmentID, enrollmentSecret});
+	caUtil.peer.toMSP(result, ordererMSPRoot, {peerName: ordererName, domain});
+	return admin;
 
 };
 /**
@@ -109,7 +99,7 @@ exports.genOrderer = (url, orderersDir, {ordererName, domain, ordererPort, mspId
  * @param usersDir required to allign admin cert
  * @returns {*}
  */
-exports.genPeer = (url, peersDir, {peerName, domain, mspId, peerPort, affiliationRoot = domain}, usersDir) => {
+exports.genPeer = async (url, peersDir, {peerName, domain, mspId, peerPort, affiliationRoot = domain}, usersDir) => {
 	const caService = caUtil.new(url);
 
 	const peer_hostName_full = peerUtil.formatPeerName(peerName, domain);
@@ -132,22 +122,17 @@ exports.genPeer = (url, peersDir, {peerName, domain, mspId, peerPort, affiliatio
 
 	const enrollmentID = peerName;
 	const enrollmentSecret = 'passwd';
-	return module.exports.initAdmin(url, {mspId, domain}, usersDir)
-		.then(admin => {
-			const certificate = userUtil.getCertificate(admin);
-			caUtil.peer.toadmincerts({certificate}, peerMSPRoot, {username: 'Admin', domain});
-			return caUtil.register(caService, {
-				enrollmentID,
-				enrollmentSecret,
-				role: 'peer',
-				affiliation: `${affiliationRoot}.peer`
-			}, admin);
-		}).then(() => {
-			return caService.enroll({enrollmentID, enrollmentSecret});
-		}).then(result => {
-			caUtil.peer.toMSP(result, peerMSPRoot, {peerName, domain});
-			return Promise.resolve();
-		});
+	const admin = await exports.initAdmin(url, {mspId, domain}, usersDir);
+	const certificate = userUtil.getCertificate(admin);
+	caUtil.peer.toadmincerts({certificate}, peerMSPRoot, {username: 'Admin', domain});
+	await caUtil.register(caService, {
+		enrollmentID,
+		enrollmentSecret,
+		role: 'peer',
+		affiliation: `${affiliationRoot}.peer`
+	}, admin);
+	const result = await  caService.enroll({enrollmentID, enrollmentSecret});
+	caUtil.peer.toMSP(result, peerMSPRoot, {peerName, domain});
 
 };
 

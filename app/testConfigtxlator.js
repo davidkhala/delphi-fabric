@@ -10,7 +10,7 @@ const join = require('./join-channel').joinChannel;
 const instantiate = require('./instantiate-chaincode').instantiate;
 const installChaincode = require('./install-chaincode').install;
 
-const api = require('./configtxlator');
+const api = require('../common/nodejs/configtxlator');
 const format_tlscacert = (adminMSPDir, org_domain) => path.join(adminMSPDir, 'tlscacerts',
 	`tlsca.${org_domain}-cert.pem`);
 /**

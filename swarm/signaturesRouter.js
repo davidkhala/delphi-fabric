@@ -72,7 +72,7 @@ router.post('/newOrg', cache.fields([{name: 'admins'}, {name: 'root_certs'}, {na
 			const tlsRootCerts = req.files['tls_root_certs'];
 			logger.debug({adminCerts, rootCerts, tlsRootCerts});
 			const {channelName, MSPID, MSPName, orderer: ordererFlag, peer: peerFlag} = req.body;
-			const configtxlatorUtil = require('../app/configtxlator');
+			const configtxlatorUtil = require('../common/nodejs/configtxlator');
 			const helper = require('../app/helper');
 
 			const client = await helper.getOrgAdmin('TK.Teeking.com');
