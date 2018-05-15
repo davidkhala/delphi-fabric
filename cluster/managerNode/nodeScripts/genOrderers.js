@@ -11,7 +11,7 @@ const pathUtil = require('../../../common/nodejs/path');
 const peerUtil = require('../../../common/nodejs/peer');
 const port = config.orderer.orgs[ordererOrg].orderers[ordererName].portHost;
 
-Request.get(`${swarmBaseUrl}/config/orgs`, (err, resp, body) => {
+Request.get(`${swarmBaseUrl}/config/orgs`, async (err, resp, body) => {
 	if (err) throw err;
 	body = JSON.parse(body);
 	const imageTag = `x86_64-${body.docker.fabricTag}`;
@@ -29,17 +29,16 @@ Request.get(`${swarmBaseUrl}/config/orgs`, (err, resp, body) => {
 			org: ordererOrg
 		}
 	});
-	return Promise.all(promises).then(() =>
-		dockerUtil.deployOrderer({
-			Name: `${ordererName}.${ordererOrg}`,
-			imageTag, network, port,
-			Constraints: config.swarm.Constraints,
-			msp: {
-				volumeName:MSPROOTvolumeName, id,
-				configPath: cryptoPath.ordererMSP()
-			}, CONFIGTXVolume,
-			BLOCK_FILE: config.BLOCK_FILE,
-			kafkas: true
-		})
-	);
+	await Promise.all(promises);
+	await dockerUtil.deployOrderer({
+		Name: `${ordererName}.${ordererOrg}`,
+		imageTag, network, port,
+		Constraints: config.swarm.Constraints,
+		msp: {
+			volumeName: MSPROOTvolumeName, id,
+			configPath: cryptoPath.ordererMSP()
+		}, CONFIGTXVolume,
+		BLOCK_FILE: config.BLOCK_FILE,
+		kafkas: true
+	});
 });

@@ -91,35 +91,36 @@ govendor: to import third-party package in vendor folder
 - stress test in nodejs: Caliper
 - remove global domain
 - not to use docker-compose and docker stack deploy to run docker services on swarm, use npm dockerode 
+- kafka on swarm
+
 
 ## TODO
 - java sdk and docker-swarm: keep update
 - endorsement policy config
 - test backup and recover
-- kafka on swarm: migrate orderer first
 - cooperate with official network_config.json
 - chaincode version string format
 - javascript chaincode
 - chaincode uninstall
 - use path.resolve to replace `${path}/filename`
-- current design: local volume will not be clean in docker.down
 - function new() -> classify
 - ?update system channel ``testchainid``
 - there is a trend to use golang/dep instead of govendor https://gerrit.hyperledger.org/r/#/c/19113/
-- how about each org has 1 orderer,1 peer and 1 ca before the previous 2
-- migrates to use dockerode in everywhere and clean up existing dockerode code
 - multiple priv-file creation is witnessed in app/cryptoKeyStore, investigate problem of state store, crypto-store
 - use relative path via ``const os = require('os');console.log(os.homedir());``
 - refactor: to use pathUtil.CryptoPath class
-- change default keystore path: [Error: EACCES: permission denied, open '/home/david/.hfc-key-store/05669e8b1597befecc99049b7b5797d992ab51c6c669a57fd1bcd76974a83324-priv']
+- change default keystore path: /home/david/.hfc-key-store/ still having files even when bootstrap
 - simplify portMap design from [{7051:port}] to {port: port,eventHubPort:port2}
-- signature server for both leader node and manager nodes
 - adding kafka/zookeeper online
 - stateStore problem
 - user server design instead of nfs
 - docker version problem in ver. 18.x 
-- implement configtx in node-sdk??
-- slave node in swarm should use another code repository. 
+- slave node in swarm should use another code repository.
+
+### TODO master slave design
+- slave: each org has 1 ca, then 1 orderer,1 peer
+- master & slave: signature server 
+- master: signature collector 
 
 ## New feature, patch required for node-sdk
  

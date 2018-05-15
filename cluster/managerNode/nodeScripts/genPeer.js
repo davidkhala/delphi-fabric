@@ -10,7 +10,7 @@ const CONFIGTXVolume = 'CONFIGTX';
 const peerName = 'newContainer';
 const peerOrg = 'NEW';
 const portMap = config.orgs[peerOrg].peers[peerName].portMap;
-Request.get(`${swarmBaseUrl}/config/orgs`, (err, resp, body) => {
+Request.get(`${swarmBaseUrl}/config/orgs`, async (err, resp, body) => {
 	if (err) throw err;
 	body = JSON.parse(body);
 	const imageTag = `x86_64-${body.docker.fabricTag}`;
@@ -25,14 +25,15 @@ Request.get(`${swarmBaseUrl}/config/orgs`, (err, resp, body) => {
 		dockerodeUtil.volumeCreateIfNotExist({Name: MSPROOTvolumeName, path: config.MSPROOT}),
 		dockerodeUtil.volumeCreateIfNotExist({Name: CONFIGTXVolume, path: config.CONFIGTX})
 	];
-	return Promise.all(promises).then(()=>fabricDockerUtil.deployPeer({
+	await Promise.all(promises);
+	await fabricDockerUtil.deployPeer({
 		Name: `${peerName}.${peerOrg}`, network, imageTag,
 		Constraints: config.swarm.Constraints,
 		port: portMap.port, eventHubPort: portMap.eventHubPort,
 		msp: {
-			volumeName:MSPROOTvolumeName,
-			configPath:cryptoPath.peerMSP(),
-			id:config.orgs[peerOrg].MSP.id
-		}, peer_hostName_full:`${peerName}.${peerOrg}`
-	}));
+			volumeName: MSPROOTvolumeName,
+			configPath: cryptoPath.peerMSP(),
+			id: config.orgs[peerOrg].MSP.id
+		}, peer_hostName_full: `${peerName}.${peerOrg}`
+	});
 });
