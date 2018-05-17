@@ -4,8 +4,6 @@
     "fabricTag": "1.1.0",
     "thirdPartyTag": "0.4.6",
     "network": "delphiNetwork",
-    "stack":"delphiStack",
-    "caStack":"caStack",
     "volumes": {
       "CONFIGTX": {
         "dir": "/home/david/Documents/delphi-fabric/config/configtx"
@@ -22,14 +20,11 @@
       "profile": "delphiGenesis"
     },
     "solo": {
-      "orgName":"Delphi.com",
+      "orgName": "Delphi.com",
       "container_name": "orderContainerName",
       "portHost": 7050,
       "ca": {
-        "portHost": 7454,
-        "tlsca": {
-          "portHost": 7455
-        }
+        "portHost": 7454
       },
       "MSP": {
         "name": "OrdererMSPName",
@@ -72,10 +67,7 @@
             "id": "DelphiConsensusMSP"
           },
           "ca": {
-            "portHost": 7454,
-            "tlsca": {
-              "portHost": 7455
-            }
+            "portHost": 7454
           },
           "orderers": {
             "orderer0": {
@@ -138,10 +130,7 @@
         }
       ],
       "ca": {
-        "portHost": 6054,
-        "tlsca": {
-          "portHost": 6055
-        }
+        "portHost": 6054
       },
       "MSP": {
         "name": "BUMSPName",
@@ -165,10 +154,7 @@
         }
       ],
       "ca": {
-        "portHost": 8054,
-        "tlsca": {
-          "portHost": 8055
-        }
+        "portHost": 8054
       },
       "MSP": {
         "name": "PMMSPName",
@@ -192,10 +178,7 @@
         }
       ],
       "ca": {
-        "portHost": 9054,
-        "tlsca": {
-          "portHost": 9055
-        }
+        "portHost": 9054
       },
       "MSP": {
         "name": "ENGMSPName",
@@ -218,12 +201,8 @@
           ]
         }
       ],
-
       "ca": {
-        "portHost": 7054,
-        "tlsca": {
-          "portHost": 7055
-        }
+        "portHost": 7054
       },
       "MSP": {
         "name": "ASTRIMSPName",

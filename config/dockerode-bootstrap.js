@@ -1,5 +1,6 @@
 const globalConfig = require('./orgs.json');
 const fsExtra = require('fs-extra');
+const fs = require('fs');
 const path = require('path');
 const logger = require('../common/nodejs/logger').new('dockerode-bootstrap');
 const peerUtil = require('../common/nodejs/peer');
@@ -8,8 +9,8 @@ const channelUtil = require('../common/nodejs/channel');
 
 const arch = 'x86_64';
 const {
-	containerDelete, networkRemove, volumeCreateIfNotExist,networkCreateIfNotExist,
-	swarmServiceName, serviceDelete, tasksWaitUntilLive,constraintSelf,
+	containerDelete, networkRemove, volumeCreateIfNotExist, networkCreateIfNotExist,
+	swarmServiceName, serviceDelete, tasksWaitUntilLive, constraintSelf,
 	volumeRemove, prune: {system: pruneSystem}
 } = require('../common/docker/nodejs/dockerode-util');
 const {docker: {fabricTag, network, thirdPartyTag}, TLS} = globalConfig;
@@ -142,9 +143,9 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 			const port = portMap.find(portEntry => portEntry.container === 7051).host;
 			const eventHubPort = portMap.find(portEntry => portEntry.container === 7053).host;
 			if (swarm) {
-				const Constraints =  await constraintSelf();
+				const Constraints = await constraintSelf();
 
-				const peer= await dockerodeUtil.deployPeer({
+				const peer = await dockerodeUtil.deployPeer({
 					Name: container_name, port, eventHubPort, imageTag, network,
 					peer_hostName_full,
 					msp: {
@@ -157,7 +158,7 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 				});
 				results.push(peer);
 			} else {
-				const peer= await dockerodeUtil.runPeer({
+				const peer = await dockerodeUtil.runPeer({
 					container_name, port, eventHubPort, imageTag, network,
 					peer_hostName_full, tls,
 					msp: {
@@ -181,20 +182,25 @@ exports.runCAs = async (toStop, swarm) => {
 	const imageTag = `${arch}-${fabricTag}`;
 
 	const results = [];
-	const toggle = ({container_name, port}, toStop, swarm) => {
+	const toggle = async ({container_name, port}, toStop, swarm) => {
 		const serviceName = swarmServiceName(container_name);
+
+		const fabricCaServerConfig = path.resolve(`${container_name}.yaml`);
 
 		if (toStop) {
 			if (swarm) {
-				return serviceDelete(serviceName);
+				await serviceDelete(serviceName);
 			} else {
-				return containerDelete(container_name);
+				await containerDelete(container_name);
+			}
+			if (fs.existsSync(fabricCaServerConfig)) {
+				fs.unlinkSync(fabricCaServerConfig);
 			}
 		} else {
 			if (swarm) {
-				return dockerodeUtil.deployCA({Name: container_name, network, imageTag, port});
+				return dockerodeUtil.deployCA({Name: container_name, network, imageTag, port, tls: TLS});
 			} else {
-				return dockerodeUtil.runCA({container_name, port, network, imageTag});
+				return dockerodeUtil.runCA({fabricCaServerConfig, container_name, port, network, imageTag, tls: TLS});
 			}
 		}
 	};
@@ -202,23 +208,13 @@ exports.runCAs = async (toStop, swarm) => {
 		for (const ordererOrg in globalConfig.orderer.kafka.orgs) {
 			const ordererOrgConfig = globalConfig.orderer.kafka.orgs[ordererOrg];
 			const {portHost: port} = ordererOrgConfig.ca;
-			let container_name;
-			if (TLS) {
-				container_name = `tlsca.${ordererOrg}`;
-			} else {
-				container_name = `ca.${ordererOrg}`;
-			}
+			const container_name = `ca.${ordererOrg}`;
 			const service = await toggle({container_name, port}, toStop, swarm);
 			results.push(service);
 		}
 	} else {
 		const {ca: {portHost: port}, orgName} = globalConfig.orderer.solo;
-		let container_name;
-		if (TLS) {
-			container_name = `tlsca.${orgName}`;
-		} else {
-			container_name = `ca.${orgName}`;
-		}
+		const container_name = `ca.${orgName}`;
 		const service = await toggle({container_name, port}, toStop, swarm);
 		results.push(service);
 
@@ -227,14 +223,8 @@ exports.runCAs = async (toStop, swarm) => {
 	for (const orgName in peerOrgsConfig) {
 		const orgConfig = peerOrgsConfig[orgName];
 		const {ca: {portHost: port}} = orgConfig;
+		const container_name = `ca.${orgName}`;
 
-		let container_name;
-
-		if (TLS) {
-			container_name = `tlsca.${orgName}`;
-		} else {
-			container_name = `ca.${orgName}`;
-		}
 		const service = await toggle({container_name, port}, toStop, swarm);
 		results.push(service);
 	}

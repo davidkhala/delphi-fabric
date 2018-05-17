@@ -95,6 +95,7 @@ govendor: to import third-party package in vendor folder
 
 
 ## TODO
+- TLS
 - java sdk and docker-swarm: keep update
 - endorsement policy config
 - test backup and recover
@@ -126,6 +127,7 @@ govendor: to import third-party package in vendor folder
  
 - feature: implement configtx in node-sdk??
 - patch: configtxgen binary allow upper case channelName
+- fabric-ca: cannot change csr.cn via '--csr.cn=${container_name}' TLS CSR: {CN:example.com Names:[{C:US ST:North Carolina L: O:Hyperledger OU:Fabric SerialNumber:}] Hosts:[02cf209b65fb localhost] KeyRequest:<nil> CA:<nil> SerialNumber:}
  
 ## Abandoned tasks
 - docker volume plugin
