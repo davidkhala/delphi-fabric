@@ -185,22 +185,17 @@ exports.runCAs = async (toStop, swarm) => {
 	const toggle = async ({container_name, port}, toStop, swarm) => {
 		const serviceName = swarmServiceName(container_name);
 
-		const fabricCaServerConfig = path.resolve(`${container_name}.yaml`);
-
 		if (toStop) {
 			if (swarm) {
-				await serviceDelete(serviceName);
+				return await serviceDelete(serviceName);
 			} else {
-				await containerDelete(container_name);
-			}
-			if (fs.existsSync(fabricCaServerConfig)) {
-				fs.unlinkSync(fabricCaServerConfig);
+				return await containerDelete(container_name);
 			}
 		} else {
 			if (swarm) {
-				return dockerodeUtil.deployCA({Name: container_name, network, imageTag, port, tls: TLS});
+				return await dockerodeUtil.deployCA({Name: container_name, network, imageTag, port, TLS});
 			} else {
-				return dockerodeUtil.runCA({fabricCaServerConfig, container_name, port, network, imageTag, tls: TLS});
+				return await dockerodeUtil.runCA({container_name, port, network, imageTag, TLS});
 			}
 		}
 	};

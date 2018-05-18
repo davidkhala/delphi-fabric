@@ -41,11 +41,11 @@ exports.initAdmin = async (url, {mspId, domain}, usersDir) => {
 const getCaService = async (url, domain) => {
 	if (TLS) {
 		const container_name = `ca.${domain}`;
-		const from = caUtil.container.tlsCert;
-		const to = `tls${container_name}-cert.pem`;
+		const from = caUtil.container.caCert;
+		const to = `${container_name}-cert.pem`;
 		await dockerCmd.copy(container_name, from, to);
-		const data = fs.readFileSync(to);
-		return caUtil.new(url, Buffer.from(data).toString());
+		const pem = fs.readFileSync(to).toString();
+		return caUtil.new(url, [pem]);
 	}
 	return caUtil.new(url);
 };
