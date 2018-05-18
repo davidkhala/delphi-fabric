@@ -32,11 +32,11 @@ const preparePeer = (orgName, peerIndex, peerConfig) => {
 	let peer;
 	if (globalConfig.TLS) {
 
-		const peer_hostName_full = `peer${peerIndex}.${orgName}`;
 		const cryptoPath = new CryptoPath(CRYPTO_CONFIG_DIR,
 			{peer: {name: `peer${peerIndex}`, org: orgName}});
-		const tls_cacerts = path.resolve(cryptoPath.peers(), peer_hostName_full, 'tls', 'ca.crt');
-		peer = peerUtil.new({peerPort, tls_cacerts, peer_hostName_full});
+		const {peerHostName} = cryptoPath;
+		const {caCert:tls_cacerts} = cryptoPath.peerTLSFile();
+		peer = peerUtil.new({peerPort, tls_cacerts, peerHostName});
 	} else {
 		peer = peerUtil.new({peerPort});
 	}
@@ -148,8 +148,8 @@ const bindEventHub = (richPeer, client) => {
 
 	const eventHubPort = richPeer.peerConfig.eventHub.port;
 	const pem = richPeer.pem;
-	const peer_hostName_full = richPeer._options['grpc.ssl_target_name_override'];
-	return EventHubUtil.new(client, {eventHubPort, pem, peer_hostName_full});
+	const peerHostName = richPeer._options['grpc.ssl_target_name_override'];
+	return EventHubUtil.new(client, {eventHubPort, pem, peerHostName});
 
 };
 /**
@@ -187,7 +187,7 @@ objects.user = {
 		}
 	},
 	mspCreate: (client,
-				{keystoreDir, signcertFile, username, orgName, mspid = getMspID(orgName), skipPersistence = false}) => {
+		{keystoreDir, signcertFile, username, orgName, mspid = getMspID(orgName), skipPersistence = false}) => {
 		const keyFile = pathUtil.findKeyfiles(keystoreDir)[0];
 		// NOTE:(jsdoc) This allows applications to use pre-existing crypto materials (private keys and certificates) to construct user objects with signing capabilities
 		// NOTE In client.createUser option, two types of cryptoContent is supported:
