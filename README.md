@@ -109,7 +109,7 @@ govendor: to import third-party package in vendor folder
 - there is a trend to use golang/dep instead of govendor https://gerrit.hyperledger.org/r/#/c/19113/
 - multiple priv-file creation is witnessed in app/cryptoKeyStore, investigate problem of state store, crypto-store
 - use relative path via ``const os = require('os');console.log(os.homedir());``
-- refactor: to use pathUtil.CryptoPath class
+- refactor: to use pathUtil.CryptoPath class instead of peer_hostname_full
 - change default keystore path: /home/david/.hfc-key-store/ still having files even when bootstrap
 - simplify portMap design from [{7051:port}] to {port: port,eventHubPort:port2}
 - adding kafka/zookeeper online

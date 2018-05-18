@@ -85,7 +85,7 @@ exports.genOrderer = async (url, orderersDir, {ordererName, domain, ordererPort,
 		}
 	}
 
-	const enrollmentID = ordererName;
+	const enrollmentID = orderer_hostName_full;
 	const enrollmentSecret = 'passwd';
 	const admin = await exports.initAdmin(url, {mspId, domain}, usersDir);
 	const certificate = userUtil.getCertificate(admin);
@@ -99,6 +99,11 @@ exports.genOrderer = async (url, orderersDir, {ordererName, domain, ordererPort,
 
 	const result = await caService.enroll({enrollmentID, enrollmentSecret});
 	caUtil.peer.toMSP(result, ordererMSPRoot, {peerName: ordererName, domain});
+	if(TLS){
+		const tlsResult = await caService.enroll({enrollmentID,enrollmentSecret,profile:'tls'});
+		const tlsDir = path.resolve(orderersDir,orderer_hostName_full,'tls');
+		caUtil.toTLS(tlsResult,tlsDir);
+	}
 	return admin;
 
 };
@@ -135,7 +140,7 @@ exports.genPeer = async (url, peersDir, {peerName, domain, mspId, peerPort, affi
 		}
 	}
 
-	const enrollmentID = peerName;
+	const enrollmentID = peer_hostName_full;
 	const enrollmentSecret = 'passwd';
 	const admin = await exports.initAdmin(url, {mspId, domain}, usersDir);
 	const certificate = userUtil.getCertificate(admin);
@@ -146,8 +151,13 @@ exports.genPeer = async (url, peersDir, {peerName, domain, mspId, peerPort, affi
 		role: 'peer',
 		affiliation: `${affiliationRoot}.peer`
 	}, admin);
-	const result = await  caService.enroll({enrollmentID, enrollmentSecret});
+	const result = await caService.enroll({enrollmentID, enrollmentSecret});
 	caUtil.peer.toMSP(result, peerMSPRoot, {peerName, domain});
+	if(TLS){
+		const tlsResult = await caService.enroll({enrollmentID,enrollmentSecret,profile:'tls'});
+		const tlsDir = path.resolve(peersDir,peer_hostName_full,'tls');
+		caUtil.toTLS(tlsResult,tlsDir);
+	}
 
 };
 

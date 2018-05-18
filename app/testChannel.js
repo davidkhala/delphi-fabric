@@ -5,9 +5,11 @@ const helper = require('./helper');
 const logger = require('../common/nodejs/logger').new('testChannel');
 const channelName = 'allchannel';
 
-const companyConfig = require('../config/orgs.json');
-const channelConfig = companyConfig.channels[channelName];
-const channelConfigFile = `${companyConfig.docker.volumes.CONFIGTX.dir}/${channelConfig.file}`;
+const globalConfig = require('../config/orgs.json');
+const {TLS}= globalConfig;
+const channelConfig = globalConfig.channels[channelName];
+
+const channelConfigFile = `${globalConfig.docker.volumes.CONFIGTX.dir}/${channelConfig.file}`;
 const joinAllfcn = async () => {
 
 
@@ -20,15 +22,15 @@ const joinAllfcn = async () => {
 		const channel = helper.prepareChannel(channelName, client);
 		const loopJoinChannel = async () => {
 			try{
-				return await joinChannel(channel, peers)
+				return await joinChannel(channel, peers);
 			}catch (err) {
 				if (err.toString().includes('Invalid results returned ::NOT_FOUND')
 					|| err.toString().includes('SERVICE_UNAVAILABLE')) {
 					logger.warn('loopJoinChannel...');
 					await new Promise(resolve => {
 						setTimeout(()=>{
-							resolve(loopJoinChannel())
-						},1000)
+							resolve(loopJoinChannel());
+						},1000);
 					});
 				}
 				else throw err;
@@ -39,10 +41,11 @@ const joinAllfcn = async () => {
 	}
 
 };
-//E0905 10:07:20.462272826    7262 ssl_transport_security.c:947] Handshake failed with fatal error SSL_ERROR_SSL: error:14090086:SSL routines:ssl3_get_server_certificate:certificate verify failed.
 
 helper.getOrgAdmin('BU.Delphi.com').then((client) => {
-	return createChannel(client, channelName, channelConfigFile, ['BU.Delphi.com', 'ENG.Delphi.com'], 'grpc://localhost:7050');
+	const ordererUrl = `${TLS?'grpcs':'grpc'}://localhost:7050`;
+	logger.info({ordererUrl});
+	return createChannel(client, channelName, channelConfigFile, ['BU.Delphi.com', 'ENG.Delphi.com'], ordererUrl);
 }).then(() => {
 	return joinAllfcn();
 }).catch(err => {
