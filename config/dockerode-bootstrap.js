@@ -6,6 +6,7 @@ const logger = require('../common/nodejs/logger').new('dockerode-bootstrap');
 const peerUtil = require('../common/nodejs/peer');
 const dockerodeUtil = require('../common/nodejs/fabric-dockerode');
 const channelUtil = require('../common/nodejs/channel');
+const {CryptoPath} = require('../common/nodejs/path');
 
 const arch = 'x86_64';
 const {
@@ -20,23 +21,24 @@ const exec = util.promisify(require('child_process').exec);
 const runConfigtxGenShell = path.resolve(path.dirname(__dirname), 'common', 'bin-manage', 'runConfigtxgen.sh');
 
 exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'}, toStop, swarm) => {
-	const {orderer: {type, genesis_block: {file: BLOCK_FILE}}} = globalConfig;
+	const {orderer: {type, genesis_block: {file: BLOCK_FILE}}, orgs: peerOrgs} = globalConfig;
 	const CONFIGTXVolume = volumeName.CONFIGTX;
 	const MSPROOTVolume = volumeName.MSPROOT;
 	const imageTag = `${arch}-${fabricTag}`;
 	const {MSPROOT} = peerUtil.container;
+	const cryptoType = 'orderer';
 	const results = [];
-	const tls = (ORDERER_STRUCTURE) => {
-		return TLS ? {
-			serverKey: path.resolve(MSPROOT, ORDERER_STRUCTURE, 'tls', 'server.key'),
-			serverCrt: path.resolve(MSPROOT, ORDERER_STRUCTURE, 'tls', 'server.crt'),
-			caCrt: path.resolve(MSPROOT, ORDERER_STRUCTURE, 'tls', 'ca.crt')
-		} : undefined;
-	};
+
 	const toggle = async ({orderer, domain, port, id}, toStop, swarm, kafka) => {
-		const container_name = `${orderer}.${domain}`;
+		const cryptoPath = new CryptoPath(MSPROOT, {
+			orderer: {org: domain, name: orderer}
+		});
+		const tls = TLS ? cryptoPath.ordererTLSFile() : undefined;
+
+		const {ordererHostName} = cryptoPath;
+		const container_name = ordererHostName;
 		const serviceName = swarmServiceName(container_name);
-		const ORDERER_STRUCTURE = `ordererOrganizations/${domain}/orderers/${orderer}.${domain}`;
+		const configPath = cryptoPath.MSP(cryptoType);
 
 		if (toStop) {
 			if (swarm) {
@@ -54,11 +56,11 @@ exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPRO
 					port,
 					msp: {
 						volumeName: MSPROOTVolume,
-						configPath: path.resolve(MSPROOT, ORDERER_STRUCTURE, 'msp'),
+						configPath,
 						id
 					}, CONFIGTXVolume, BLOCK_FILE,
 					kafkas: kafka,
-					tls: tls(ORDERER_STRUCTURE),
+					tls,
 					Constraints,
 				});
 			} else {
@@ -67,11 +69,11 @@ exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPRO
 					BLOCK_FILE, CONFIGTXVolume,
 					msp: {
 						id,
-						configPath: path.resolve(MSPROOT, ORDERER_STRUCTURE, 'msp'),
+						configPath,
 						volumeName: MSPROOTVolume
 					},
 					kafkas: kafka,
-					tls: tls(ORDERER_STRUCTURE)
+					tls
 				});
 			}
 		}
@@ -130,28 +132,29 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 				}
 				continue;
 			}
-			const peer_hostName_full = `peer${peerIndex}.${domain}`;
-			const PEER_STRUCTURE = `peerOrganizations/${domain}/peers/${peer_hostName_full}`;
+			const cryptoPath = new CryptoPath(peerUtil.container.MSPROOT, {
+				peer: {
+					org: domain, name: `peer${peerIndex}`
+				}
+			});
+			const {peerHostName} = cryptoPath;
 
-
-			const tls = TLS ? {
-				serverKey: path.resolve(peerUtil.container.MSPROOT, PEER_STRUCTURE, 'tls', 'server.key'),
-				serverCrt: path.resolve(peerUtil.container.MSPROOT, PEER_STRUCTURE, 'tls', 'server.crt'),
-				caCrt: path.resolve(peerUtil.container.MSPROOT, PEER_STRUCTURE, 'tls', 'ca.crt')
-			} : undefined;
+			const tls = TLS ? cryptoPath.peerTLSFile() : undefined;
 
 			const port = portMap.find(portEntry => portEntry.container === 7051).host;
 			const eventHubPort = portMap.find(portEntry => portEntry.container === 7053).host;
+			const type = 'peer';
+			const configPath = cryptoPath.MSP(type);
 			if (swarm) {
 				const Constraints = await constraintSelf();
 
 				const peer = await dockerodeUtil.deployPeer({
 					Name: container_name, port, eventHubPort, imageTag, network,
-					peer_hostName_full,
+					peerHostName,
 					msp: {
 						id,
 						volumeName: volumeName.MSPROOT,
-						configPath: path.resolve(peerUtil.container.MSPROOT, PEER_STRUCTURE, 'msp')
+						configPath,
 					},
 					tls,
 					Constraints,
@@ -160,11 +163,11 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 			} else {
 				const peer = await dockerodeUtil.runPeer({
 					container_name, port, eventHubPort, imageTag, network,
-					peer_hostName_full, tls,
+					peerHostName, tls,
 					msp: {
 						id,
 						volumeName: volumeName.MSPROOT,
-						configPath: path.resolve(peerUtil.container.MSPROOT, PEER_STRUCTURE, 'msp')
+						configPath,
 					}
 				});
 				results.push(peer);

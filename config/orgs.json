@@ -1,5 +1,5 @@
 {
-  "TLS": false,
+  "TLS": true,
   "docker": {
     "fabricTag": "1.1.0",
     "thirdPartyTag": "0.4.6",

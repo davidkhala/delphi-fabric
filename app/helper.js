@@ -76,14 +76,18 @@ exports.prepareChannel = (channelName, client, isRenew) => {
 	const newOrderer = (ordererName, domain, ordererSingleConfig) => {
 
 		const ordererPort = ordererSingleConfig.portHost;
+		const cryptoPath = new CryptoPath(CRYPTO_CONFIG_DIR,{
+			orderer:{
+				org:domain,name:ordererName
+			}
+		});
 		if (globalConfig.TLS) {
-			const orderer_hostName_full = `${ordererName}.${domain}`;
-			const tls_cacerts = path.resolve(CRYPTO_CONFIG_DIR,
-				'ordererOrganizations', domain, 'orderers', orderer_hostName_full, 'tls', 'ca.crt');
+			const {ordererHostName} = cryptoPath;
+			const tls_cacerts = cryptoPath.ordererTLSFile().caCert;
 			return OrdererUtil.new({
 				ordererPort,
 				tls_cacerts,
-				orderer_hostName_full
+				ordererHostName
 			});
 		} else {
 			return OrdererUtil.new({ordererPort});
@@ -149,6 +153,7 @@ const bindEventHub = (richPeer, client) => {
 	const eventHubPort = richPeer.peerConfig.eventHub.port;
 	const pem = richPeer.pem;
 	const peerHostName = richPeer._options['grpc.ssl_target_name_override'];
+	logger.debug('bindEventHub',eventHubPort,pem,peerHostName);
 	return EventHubUtil.new(client, {eventHubPort, pem, peerHostName});
 
 };

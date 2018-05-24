@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const CURRENT = __dirname;
 const yaml = require('js-yaml');
+const {CryptoPath} = require('../common/nodejs/path');
 exports.gen = ({
 				   consortiumName = 'SampleConsortium',
 				   MSPROOT,
@@ -38,10 +39,15 @@ exports.gen = ({
 			for (const ordererName in ordererOrgConfig.orderers) {
 				Addresses.push(`${ordererName}.${ordererOrgName}:7050`);
 			}
+			const cryptoPath = new CryptoPath(MSPROOT, {
+				orderer: {
+					org: ordererOrgName
+				}
+			});
 			Organizations.push({
 				Name: ordererOrgConfig.MSP.name,
 				ID: ordererOrgConfig.MSP.id,
-				MSPDir: path.join(MSPROOT, 'ordererOrganizations', ordererOrgName, 'msp')
+				MSPDir: cryptoPath.ordererOrgMSP()
 			});
 		}
 		OrdererConfig.Addresses = Addresses;
@@ -54,10 +60,14 @@ exports.gen = ({
 		OrdererConfig.OrdererType = 'solo';
 		const {container_name, orgName, portHost} = ordererConfig.solo;
 		OrdererConfig.Addresses = [`${container_name}.${orgName}:${portHost}`];
+		const cryptoPath = new CryptoPath(MSPROOT, {
+			orderer: {org: ordererConfig.solo.orgName}
+		});
 		OrdererConfig.Organizations = [
 			{
-				Name: ordererConfig.solo.MSP.name, ID: ordererConfig.solo.MSP.id,
-				MSPDir: path.join(MSPROOT, 'ordererOrganizations', ordererConfig.solo.orgName, 'msp')
+				Name: ordererConfig.solo.MSP.name,
+				ID: ordererConfig.solo.MSP.id,
+				MSPDir: cryptoPath.ordererOrgMSP()
 			}
 		];
 	}
@@ -68,10 +78,15 @@ exports.gen = ({
 	const OrganizationBuilder = (orgName) => {
 		const orgConfig = orgsConfig[orgName];
 		const anchorPeerConfig = orgConfig.peers[0];
+		const cryptoPath = new CryptoPath(MSPROOT, {
+			peer: {
+				org: orgName
+			}
+		});
 		return {
 			Name: orgConfig.MSP.name,
 			ID: orgConfig.MSP.id,
-			MSPDir: path.join(MSPROOT, 'peerOrganizations', orgName, 'msp'),
+			MSPDir: cryptoPath.peerOrgMSP(),
 			AnchorPeers: [{
 				Host: anchorPeerConfig.container_name,
 				Port: 7051

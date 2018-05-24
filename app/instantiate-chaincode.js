@@ -76,7 +76,7 @@ exports.instantiate = async (channel, richPeers = channel.getPeers(), {chaincode
 	}
 
 	const promises = [];
-	for (let peer of richPeers) {
+	for (const peer of richPeers) {
 
 		const client = await peer.peerConfig.eventHub.clientPromise;
 		const eventHub = helper.bindEventHub(peer, client);
@@ -148,7 +148,7 @@ exports.upgrade = async (channel, richPeers = channel.getPeers(), {chaincodeId, 
 		return {proposalResponses};
 	}
 	const promises = [];
-	for (let peer of richPeers) {
+	for (const peer of richPeers) {
 		const peerOrgName = peer.peerConfig.orgName;
 		const txPromise = helper.getOrgAdmin(peerOrgName).then((client) => {
 			const eventHub = helper.bindEventHub(peer, client);
