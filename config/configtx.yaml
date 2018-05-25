@@ -1,18 +1,18 @@
 Profiles:
   delphiGenesis:
     Orderer:
-      OrdererType: solo
       BatchTimeout: 1s
       BatchSize:
         MaxMessageCount: 1
         AbsoluteMaxBytes: 99 MB
         PreferredMaxBytes: 512 KB
+      OrdererType: solo
+      Addresses:
+        - 'orderContainerName.Delphi.com:7050'
       Organizations:
         - Name: OrdererMSPName
           ID: OrdererMSP
           MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/Delphi.com/msp
-      Addresses:
-        - 'orderContainerName.Delphi.com:7050'
     Consortiums:
       SampleConsortium:
         Organizations:
@@ -20,25 +20,25 @@ Profiles:
             ID: BUMSP
             MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/BU.Delphi.com/msp
             AnchorPeers:
-              - Host: bu
+              - Host: peer0.BU.Delphi.com
                 Port: 7051
           - Name: PMMSPName
             ID: PMMSP
             MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/PM.Delphi.com/msp
             AnchorPeers:
-              - Host: pm
+              - Host: peer0.PM.Delphi.com
                 Port: 7051
           - Name: ENGMSPName
             ID: ENGMSP
             MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/ENG.Delphi.com/msp
             AnchorPeers:
-              - Host: eng
+              - Host: peer0.ENG.Delphi.com
                 Port: 7051
           - Name: ASTRIMSPName
             ID: ASTRIMSP
             MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/ASTRI.Delphi.com/msp
             AnchorPeers:
-              - Host: astri
+              - Host: peer0.ASTRI.Delphi.com
                 Port: 7051
   allchannel:
     Consortium: SampleConsortium
@@ -48,23 +48,23 @@ Profiles:
           ID: BUMSP
           MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/BU.Delphi.com/msp
           AnchorPeers:
-            - Host: bu
+            - Host: peer0.BU.Delphi.com
               Port: 7051
         - Name: PMMSPName
           ID: PMMSP
           MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/PM.Delphi.com/msp
           AnchorPeers:
-            - Host: pm
+            - Host: peer0.PM.Delphi.com
               Port: 7051
         - Name: ENGMSPName
           ID: ENGMSP
           MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/ENG.Delphi.com/msp
           AnchorPeers:
-            - Host: eng
+            - Host: peer0.ENG.Delphi.com
               Port: 7051
         - Name: ASTRIMSPName
           ID: ASTRIMSP
           MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/ASTRI.Delphi.com/msp
           AnchorPeers:
-            - Host: astri
+            - Host: peer0.ASTRI.Delphi.com
               Port: 7051

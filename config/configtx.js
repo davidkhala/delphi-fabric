@@ -75,12 +75,13 @@ exports.gen = ({
 	const orgsConfig = globalConfig.orgs;
 	const Organizations = [];
 
+
 	const OrganizationBuilder = (orgName) => {
 		const orgConfig = orgsConfig[orgName];
-		const anchorPeerConfig = orgConfig.peers[0];
+		const peerIndex = 0;
 		const cryptoPath = new CryptoPath(MSPROOT, {
 			peer: {
-				org: orgName
+				org: orgName,name:`peer${peerIndex}`
 			}
 		});
 		return {
@@ -88,7 +89,7 @@ exports.gen = ({
 			ID: orgConfig.MSP.id,
 			MSPDir: cryptoPath.peerOrgMSP(),
 			AnchorPeers: [{
-				Host: anchorPeerConfig.container_name,
+				Host: cryptoPath.peerHostName,
 				Port: 7051
 			}]
 		};

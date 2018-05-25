@@ -2,6 +2,7 @@ const caUtil = require('../common/nodejs/ca');
 
 const path = require('path');
 const fs = require('fs');
+const fsExtra = require('fs-extra');
 const userUtil = require('../common/nodejs/user');
 const pathUtil = require('../common/nodejs/path');
 const dockerCmd = require('../common/docker/nodejs/dockerCmd');
@@ -65,7 +66,7 @@ exports.init = async (url, {mspId, domain, affiliationRoot = domain}, usersDir) 
 	return adminUser;
 
 };
-exports.genOrderer = async (url, cryptoPath, {ordererPort, affiliationRoot}, admin) => {
+exports.genOrderer = async (url, cryptoPath, {affiliationRoot}, admin) => {
 
 	const type = 'orderer';
 	const {ordererHostName, ordererName, ordererOrgName: domain} = cryptoPath;
@@ -76,9 +77,6 @@ exports.genOrderer = async (url, cryptoPath, {ordererPort, affiliationRoot}, adm
 	const signcertFile = cryptoPath.cryptoExistLocal(type);
 	if (signcertFile) {
 		logger.info(`crypto exist in ${ordererMSPRoot}`);
-		if (ordererPort) {
-			return ordererUtil.new({ordererPort, tls_cacerts: signcertFile, ordererHostName});
-		}
 		return;
 	}
 
@@ -99,6 +97,7 @@ exports.genOrderer = async (url, cryptoPath, {ordererPort, affiliationRoot}, adm
 		const tlsResult = await caService.enroll({enrollmentID, enrollmentSecret, profile: 'tls'});
 		const tlsDir = cryptoPath.ordererTLS();
 		caUtil.toTLS(tlsResult, tlsDir);
+		caUtil.toTLSCACert(tlsResult,cryptoPath,type);
 	}
 	return admin;
 
@@ -116,7 +115,7 @@ exports.genOrderer = async (url, cryptoPath, {ordererPort, affiliationRoot}, adm
  * @param usersDir required to allign admin cert
  * @returns {*}
  */
-exports.genPeer = async (url, cryptoPath, {peerPort, affiliationRoot}, admin) => {
+exports.genPeer = async (url, cryptoPath, {affiliationRoot}, admin) => {
 	const type = 'peer';
 
 	const {peerHostName, peerOrgName: domain, peerName} = cryptoPath;
@@ -127,9 +126,6 @@ exports.genPeer = async (url, cryptoPath, {peerPort, affiliationRoot}, admin) =>
 	const signcertFile = cryptoPath.cryptoExistLocal(type);
 	if (signcertFile) {
 		logger.info(`crypto exist in ${peerMSPRoot}`);
-		if (peerPort) {
-			return peerUtil.new({peerPort, tls_cacerts: signcertFile, peerHostName});
-		}
 		return;
 	}
 
@@ -149,6 +145,7 @@ exports.genPeer = async (url, cryptoPath, {peerPort, affiliationRoot}, admin) =>
 		const tlsResult = await caService.enroll({enrollmentID, enrollmentSecret, profile: 'tls'});
 		const tlsDir = cryptoPath.peerTLS();
 		caUtil.toTLS(tlsResult, tlsDir);
+		caUtil.toTLSCACert(tlsResult,cryptoPath,type);
 	}
 };
 

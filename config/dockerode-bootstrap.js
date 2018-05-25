@@ -29,11 +29,23 @@ exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPRO
 	const cryptoType = 'orderer';
 	const results = [];
 
+	const rootCAs = [];
 	const toggle = async ({orderer, domain, port, id}, toStop, swarm, kafka) => {
 		const cryptoPath = new CryptoPath(MSPROOT, {
 			orderer: {org: domain, name: orderer}
 		});
 		const tls = TLS ? cryptoPath.ordererTLSFile() : undefined;
+		if (tls) {
+			tls.rootCAs = [];
+			for (const org in peerOrgs) {
+				const cryptoPath = new CryptoPath(MSPROOT, {
+					peer: {
+						org
+					}
+				});
+				tls.rootCAs.push(cryptoPath.peerOrgTLSCACert());
+			}
+		}
 
 		const {ordererHostName} = cryptoPath;
 		const container_name = ordererHostName;

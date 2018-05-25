@@ -35,7 +35,7 @@ exports.invoke = async (channel, richPeers, {chaincodeId, fcn, args}, client = c
 	}
 	const promises = [];
 
-	for (let peer of richPeers) {
+	for (const peer of richPeers) {
 		const eventhub = helper.bindEventHub(peer, client);
 		const txPromise = eventHelper.txEventPromise(eventhub, {txId, eventWaitTime}, ({tx, code}) => {
 			return {valid: code === 'VALID', interrupt: true};
