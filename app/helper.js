@@ -32,10 +32,11 @@ const preparePeer = (orgName, peerIndex, peerConfig) => {
 	let peer;
 	if (globalConfig.TLS) {
 
+		const nodeType = 'peer';
 		const cryptoPath = new CryptoPath(CRYPTO_CONFIG_DIR,
 			{peer: {name: `peer${peerIndex}`, org: orgName}});
 		const {peerHostName} = cryptoPath;
-		const {caCert} = cryptoPath.peerTLSFile();
+		const {caCert} = cryptoPath.TLSFile(nodeType);
 		peer = peerUtil.new({peerPort, cert:caCert, peerHostName});
 	} else {
 		peer = peerUtil.new({peerPort});
@@ -74,7 +75,7 @@ exports.prepareChannel = (channelName, client, isRenew) => {
 
 	const channel = client.newChannel(channelName);//NOTE throw exception if exist
 	const newOrderer = (ordererName, domain, ordererSingleConfig) => {
-
+		const nodeType = 'orderer';
 		const ordererPort = ordererSingleConfig.portHost;
 		const cryptoPath = new CryptoPath(CRYPTO_CONFIG_DIR,{
 			orderer:{
@@ -83,7 +84,7 @@ exports.prepareChannel = (channelName, client, isRenew) => {
 		});
 		if (globalConfig.TLS) {
 			const {ordererHostName} = cryptoPath;
-			const {caCert} = cryptoPath.ordererTLSFile();
+			const {caCert} = cryptoPath.TLSFile(nodeType);
 			return OrdererUtil.new({
 				ordererPort,
 				cert:caCert,
@@ -325,4 +326,4 @@ exports.preparePeer = preparePeer;
 exports.userAction = objects.user;
 exports.bindEventHub = bindEventHub;
 exports.getOrgAdmin = objects.user.admin.select;
-exports.formatUsername = formatUsername;
+exports.JSONReadable = (data)=>JSON.stringify(data,null,2);

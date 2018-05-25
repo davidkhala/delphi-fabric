@@ -29,23 +29,22 @@ exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPRO
 	const cryptoType = 'orderer';
 	const results = [];
 
-	const rootCAs = [];
 	const toggle = async ({orderer, domain, port, id}, toStop, swarm, kafka) => {
 		const cryptoPath = new CryptoPath(MSPROOT, {
 			orderer: {org: domain, name: orderer}
 		});
-		const tls = TLS ? cryptoPath.ordererTLSFile() : undefined;
-		if (tls) {
-			tls.rootCAs = [];
-			for (const org in peerOrgs) {
-				const cryptoPath = new CryptoPath(MSPROOT, {
-					peer: {
-						org
-					}
-				});
-				tls.rootCAs.push(cryptoPath.peerOrgTLSCACert());
-			}
-		}
+		const tls = TLS ? cryptoPath.TLSFile(cryptoType) : undefined;
+		// if (tls) {
+		// 	tls.rootCAs = [];
+		// 	for (const org in peerOrgs) {
+		// 		const cryptoPath = new CryptoPath(MSPROOT, {
+		// 			peer: {
+		// 				org
+		// 			}
+		// 		});
+		// 		tls.rootCAs.push(cryptoPath.OrgFile('peer').tlsca);
+		// 	}
+		// }
 
 		const {ordererHostName} = cryptoPath;
 		const container_name = ordererHostName;
@@ -151,7 +150,8 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 			});
 			const {peerHostName} = cryptoPath;
 
-			const tls = TLS ? cryptoPath.peerTLSFile() : undefined;
+			const cryptoType = 'peer';
+			const tls = TLS ? cryptoPath.TLSFile(cryptoType) : undefined;
 
 			const port = portMap.find(portEntry => portEntry.container === 7051).host;
 			const eventHubPort = portMap.find(portEntry => portEntry.container === 7053).host;
