@@ -1,6 +1,5 @@
 const globalConfig = require('./orgs.json');
 const fsExtra = require('fs-extra');
-const fs = require('fs');
 const path = require('path');
 const logger = require('../common/nodejs/logger').new('dockerode-bootstrap');
 const peerUtil = require('../common/nodejs/peer');
@@ -34,17 +33,6 @@ exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPRO
 			orderer: {org: domain, name: orderer}
 		});
 		const tls = TLS ? cryptoPath.TLSFile(cryptoType) : undefined;
-		// if (tls) {
-		// 	tls.rootCAs = [];
-		// 	for (const org in peerOrgs) {
-		// 		const cryptoPath = new CryptoPath(MSPROOT, {
-		// 			peer: {
-		// 				org
-		// 			}
-		// 		});
-		// 		tls.rootCAs.push(cryptoPath.OrgFile('peer').tlsca);
-		// 	}
-		// }
 
 		const {ordererHostName} = cryptoPath;
 		const container_name = ordererHostName;
