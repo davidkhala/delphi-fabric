@@ -1,25 +1,21 @@
 const caUtil = require('../common/nodejs/ca');
 
-const path = require('path');
 const fs = require('fs');
-const fsExtra = require('fs-extra');
 const userUtil = require('../common/nodejs/user');
 const pathUtil = require('../common/nodejs/path');
 const dockerCmd = require('../common/docker/nodejs/dockerCmd');
+const dockerUtil = require('../common/docker/nodejs/dockerode-util');
 const {CryptoPath} = pathUtil;
 const logger = require('../common/nodejs/logger').new('ca-crypto-gen');
-const peerUtil = require('../common/nodejs/peer');
-const ordererUtil = require('../common/nodejs/orderer');
 const affiliationUtil = require('../common/nodejs/affiliationService');
 const globalConfig = require('../config/orgs');
 const {TLS} = globalConfig;
 
-exports.initAdmin = async (url, {mspId, domain}, cryptoPath, nodeType) => {
+exports.initAdmin = async (caService, {mspId, domain}, cryptoPath, nodeType) => {
 	const enrollmentID = cryptoPath.userName;
 	const enrollmentSecret = 'passwd';
-	const caService = await getCaService(url, domain);
 
-	const type =`${nodeType}User`
+	const type = `${nodeType}User`;
 	const userFull = cryptoPath[`${nodeType}UserHostName`];
 	const user = await userUtil.loadFromLocal(cryptoPath, nodeType, {mspId}, undefined);
 	if (user) {
@@ -33,28 +29,33 @@ exports.initAdmin = async (url, {mspId, domain}, cryptoPath, nodeType) => {
 
 	return await userUtil.build(userFull, result, mspId);
 };
-const getCaService = async (url, domain) => {
+const getCaService = async (url, domain, swarm) => {
 	if (TLS) {
-		const container_name = `ca.${domain}`;
+		const caHostName = `ca.${domain}`;
+		let container_name;
+		if (swarm) {
+			const serviceName = dockerUtil.swarmServiceName(caHostName);
+			container_name = await dockerUtil.inflateContainerName(serviceName);
+			if (!container_name) throw `service ${serviceName} not assigned to current node`;
+		} else {
+			container_name = caHostName;
+		}
 		const from = caUtil.container.caCert;
-		const to = `${container_name}-cert.pem`;
+		const to = `${caHostName}-cert.pem`;
 		await dockerCmd.copy(container_name, from, to);
 
-		//FIXME debug only
-		await  dockerCmd.copy(container_name, caUtil.container.tlsCert, `tlsca.${domain}-cert.pem`);
-		const pem = fs.readFileSync(to).toString();
+		const pem = fs.readFileSync(to);
 		return caUtil.new(url, [pem]);
 	}
 	return caUtil.new(url);
 };
-exports.init = async (url, {mspId, domain, affiliationRoot = domain}, cryptoPath, nodeType) => {
-	logger.debug('init', {url, affiliationRoot, mspId, domain},cryptoPath,nodeType);
-	const ca = await getCaService(url, domain);
-	const affiliationService = ca.newAffiliationService();
+exports.init = async (caService, {mspId, domain, affiliationRoot = domain}, cryptoPath, nodeType) => {
+	logger.debug('init', {affiliationRoot, mspId, domain}, cryptoPath, nodeType);
+	const affiliationService = caService.newAffiliationService();
 	const force = true;//true to create recursively
 
 
-	const adminUser = await exports.initAdmin(url, {mspId, domain}, cryptoPath, nodeType);
+	const adminUser = await exports.initAdmin(caService, {mspId, domain}, cryptoPath, nodeType);
 	const promises = [affiliationUtil.creatIfNotExist(affiliationService, {name: `${affiliationRoot}.user`, force}, adminUser),
 		affiliationUtil.creatIfNotExist(affiliationService, {name: `${affiliationRoot}.peer`, force}, adminUser),
 		affiliationUtil.creatIfNotExist(affiliationService, {name: `${affiliationRoot}.orderer`, force}, adminUser)];
@@ -62,12 +63,11 @@ exports.init = async (url, {mspId, domain, affiliationRoot = domain}, cryptoPath
 	return adminUser;
 
 };
-exports.genOrderer = async (url, cryptoPath, {affiliationRoot}, admin) => {
+exports.genOrderer = async (caService, cryptoPath, {affiliationRoot}, admin) => {
 
 	const type = 'orderer';
 	const {ordererHostName, ordererOrgName: domain} = cryptoPath;
 	if (!affiliationRoot) affiliationRoot = domain;
-	const caService = await getCaService(url, domain);
 	const ordererMSPRoot = cryptoPath.MSP(type);
 
 	const exist = cryptoPath.cryptoExistLocal(type);
@@ -79,7 +79,7 @@ exports.genOrderer = async (url, cryptoPath, {affiliationRoot}, admin) => {
 	const enrollmentID = ordererHostName;
 	const enrollmentSecret = 'passwd';
 	const certificate = userUtil.getCertificate(admin);
-	caUtil.peer.toAdminCerts({certificate}, cryptoPath,type);
+	caUtil.peer.toAdminCerts({certificate}, cryptoPath, type);
 	await caUtil.register(caService, {
 		enrollmentID,
 		enrollmentSecret,
@@ -88,7 +88,7 @@ exports.genOrderer = async (url, cryptoPath, {affiliationRoot}, admin) => {
 	}, admin);
 
 	const result = await caService.enroll({enrollmentID, enrollmentSecret});
-	caUtil.toMSP(result, cryptoPath,type);
+	caUtil.toMSP(result, cryptoPath, type);
 	if (TLS) {
 		const tlsResult = await caService.enroll({enrollmentID, enrollmentSecret, profile: 'tls'});
 		caUtil.toTLS(tlsResult, cryptoPath, type);
@@ -99,19 +99,17 @@ exports.genOrderer = async (url, cryptoPath, {affiliationRoot}, admin) => {
 };
 /**
  *
- * @param url
- * @param peersDir
+ * @param caService
  * @param {path.CryptoPath} cryptoPath
  * @param affiliationRoot
  * @param admin
  * @returns {*}
  */
-exports.genPeer = async (url, cryptoPath, {affiliationRoot}, admin) => {
+exports.genPeer = async (caService, cryptoPath, {affiliationRoot}, admin) => {
 	const type = 'peer';
 
-	const {peerHostName, peerOrgName: domain, peerName} = cryptoPath;
+	const {peerHostName, peerOrgName: domain} = cryptoPath;
 	if (!affiliationRoot) affiliationRoot = domain;
-	const caService = await getCaService(url, domain);
 	const peerMSPRoot = cryptoPath.MSP(type);
 
 	const exist = cryptoPath.cryptoExistLocal(type);
@@ -123,7 +121,7 @@ exports.genPeer = async (url, cryptoPath, {affiliationRoot}, admin) => {
 	const enrollmentID = peerHostName;
 	const enrollmentSecret = 'passwd';
 	const certificate = userUtil.getCertificate(admin);
-	caUtil.peer.toAdminCerts({certificate}, cryptoPath,type);
+	caUtil.peer.toAdminCerts({certificate}, cryptoPath, type);
 	await caUtil.register(caService, {
 		enrollmentID,
 		enrollmentSecret,
@@ -131,7 +129,7 @@ exports.genPeer = async (url, cryptoPath, {affiliationRoot}, admin) => {
 		affiliation: `${affiliationRoot}.peer`
 	}, admin);
 	const result = await caService.enroll({enrollmentID, enrollmentSecret});
-	caUtil.toMSP(result, cryptoPath,type);
+	caUtil.toMSP(result, cryptoPath, type);
 	if (TLS) {
 		const tlsResult = await caService.enroll({enrollmentID, enrollmentSecret, profile: 'tls'});
 		caUtil.toTLS(tlsResult, cryptoPath, type);
@@ -140,7 +138,7 @@ exports.genPeer = async (url, cryptoPath, {affiliationRoot}, admin) => {
 };
 
 
-exports.genAll = async () => {
+exports.genAll = async (swarm) => {
 
 	const caCryptoConfig = globalConfig.docker.volumes.MSPROOT.dir;
 	const {type} = globalConfig.orderer;
@@ -165,7 +163,8 @@ exports.genAll = async () => {
 					}
 				});
 				const caUrl = `${protocol}://localhost:${ordererConfig.ca.portHost}`;
-				const admin = await exports.init(caUrl, {mspId, domain}, cryptoPath, nodeType);
+				const caService = await getCaService(caUrl, domain, swarm);
+				const admin = await exports.init(caService, {mspId, domain}, cryptoPath, nodeType);
 
 				const promises = [];
 				for (const ordererName in ordererConfig.orderers) {
@@ -178,7 +177,7 @@ exports.genAll = async () => {
 							name: 'Admin'
 						}
 					});
-					promises.push(exports.genOrderer(caUrl, cryptoPath, {ordererName, domain}, admin));
+					promises.push(exports.genOrderer(caService, cryptoPath, {ordererName, domain}, admin));
 				}
 				await Promise.all(promises);
 
@@ -200,9 +199,10 @@ exports.genAll = async () => {
 			});
 
 			const caUrl = `${protocol}://localhost:${ordererConfig.ca.portHost}`;
-			const admin = await exports.init(caUrl, {mspId, domain}, cryptoPath, nodeType);
+			const caService = await getCaService(caUrl, domain, swarm);
+			const admin = await exports.init(caService, {mspId, domain}, cryptoPath, nodeType);
 			const ordererName = ordererConfig.container_name;
-			await exports.genOrderer(caUrl, cryptoPath,{ordererName, domain}, admin);
+			await exports.genOrderer(caService, cryptoPath, {ordererName, domain}, admin);
 		}
 	}
 	//gen peers
@@ -212,7 +212,6 @@ exports.genAll = async () => {
 		for (const domain in peerOrgs) {
 			const peerOrgConfig = peerOrgs[domain];
 			const mspId = peerOrgConfig.MSP.id;
-			const caUrl = `${protocol}://localhost:${peerOrgConfig.ca.portHost}`;
 			const cryptoPath = new CryptoPath(caCryptoConfig, {
 				peer: {
 					org: domain
@@ -221,7 +220,9 @@ exports.genAll = async () => {
 					name: 'Admin'
 				}
 			});
-			const admin = await exports.init(caUrl, {mspId, domain}, cryptoPath, cryptoType);
+			const caUrl = `${protocol}://localhost:${peerOrgConfig.ca.portHost}`;
+			const caService = await getCaService(caUrl, domain, swarm);
+			const admin = await exports.init(caService, {mspId, domain}, cryptoPath, cryptoType);
 			const promises = [];
 			for (let peerIndex = 0; peerIndex < peerOrgConfig.peers.length; peerIndex++) {
 				const peerName = `peer${peerIndex}`;
@@ -233,7 +234,7 @@ exports.genAll = async () => {
 						name: 'Admin'
 					}
 				});
-				promises.push(exports.genPeer(caUrl, cryptoPath, {peerName, domain}, admin));
+				promises.push(exports.genPeer(caService, cryptoPath, {peerName, domain}, admin));
 			}
 			await Promise.all(promises);
 		}
