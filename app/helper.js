@@ -185,7 +185,7 @@ const getUserClient = async (username, orgName, client) => {
 			name: username
 		}
 	});
-	const user = await userUtil.loadFromLocal(cryptoPath, nodeType, {mspId}, client.getCryptoSuite());
+	const user = await userUtil.loadFromLocal(cryptoPath, nodeType, mspId, client.getCryptoSuite());
 	//FIXME this._signingIdentity._signer._key.getSKI is not a function
 	await client.setUserContext(user, true);
 	return client;

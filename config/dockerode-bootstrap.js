@@ -336,7 +336,7 @@ exports.up = async (swarm) => {
 		if (swarm) await tasksWaitUntilLive(kafkaServices);
 	}
 	if (swarm) await tasksWaitUntilLive(caServices);
-	await require('./ca-crypto-gen').genAll(swarm);
+	await require('./caCryptoGen').genAll(swarm);
 
 	const MSPROOT = globalConfig.docker.volumes.MSPROOT.dir;
 	const CONFIGTX = globalConfig.docker.volumes.CONFIGTX.dir;
