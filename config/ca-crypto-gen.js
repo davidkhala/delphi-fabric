@@ -63,7 +63,14 @@ exports.init = async (caService, {mspId, domain, affiliationRoot = domain}, cryp
 	return adminUser;
 
 };
-exports.genOrderer = async (caService, cryptoPath, {affiliationRoot}, admin) => {
+/**
+ * @param caService
+ * @param cryptoPath
+ * @param admin
+ * @param affiliationRoot
+ * @returns {Promise<*>}
+ */
+exports.genOrderer = async (caService, cryptoPath, admin, affiliationRoot) => {
 
 	const type = 'orderer';
 	const {ordererHostName, ordererOrgName: domain} = cryptoPath;
@@ -105,7 +112,7 @@ exports.genOrderer = async (caService, cryptoPath, {affiliationRoot}, admin) => 
  * @param admin
  * @returns {*}
  */
-exports.genPeer = async (caService, cryptoPath, {affiliationRoot}, admin) => {
+exports.genPeer = async (caService, cryptoPath, admin, affiliationRoot) => {
 	const type = 'peer';
 
 	const {peerHostName, peerOrgName: domain} = cryptoPath;
@@ -177,7 +184,7 @@ exports.genAll = async (swarm) => {
 							name: 'Admin'
 						}
 					});
-					promises.push(exports.genOrderer(caService, cryptoPath, {ordererName, domain}, admin));
+					promises.push(exports.genOrderer(caService, cryptoPath, admin));
 				}
 				await Promise.all(promises);
 
@@ -201,8 +208,7 @@ exports.genAll = async (swarm) => {
 			const caUrl = `${protocol}://localhost:${ordererConfig.ca.portHost}`;
 			const caService = await getCaService(caUrl, domain, swarm);
 			const admin = await exports.init(caService, {mspId, domain}, cryptoPath, nodeType);
-			const ordererName = ordererConfig.container_name;
-			await exports.genOrderer(caService, cryptoPath, {ordererName, domain}, admin);
+			await exports.genOrderer(caService, cryptoPath, admin);
 		}
 	}
 	//gen peers
@@ -234,7 +240,7 @@ exports.genAll = async (swarm) => {
 						name: 'Admin'
 					}
 				});
-				promises.push(exports.genPeer(caService, cryptoPath, {peerName, domain}, admin));
+				promises.push(exports.genPeer(caService, cryptoPath, admin));
 			}
 			await Promise.all(promises);
 		}
