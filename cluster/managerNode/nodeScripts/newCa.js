@@ -1,40 +1,42 @@
 const config = require('./config');
 const fabricDockerode = require('../../../common/nodejs/fabric-dockerode');
-const dockerUtil = require('../../../common/docker/nodejs/dockerode-util');
-const Request = require('request');
-const swarmBaseUrl = `${config.swarmServer.url}:${config.swarmServer.port}`;
+const logger = require('../../../common/nodejs/logger').new('newCa')
+const {tasksWaitUntilLive,serviceDelete,swarmServiceName, tasksWaitUntilDead} = require('../../../common/docker/nodejs/dockerode-util');
 const ordererOrg = 'NewConsensus';
 const peerOrg = 'NEW';
 const container_name = {
 	ordererCA: `ca.${ordererOrg}`,
 	peerCA: `ca.${peerOrg}`
 };
-const globalConfigPromise = async () => {
-	return new Promise((resolve, reject) => {
-		Request.get(`${swarmBaseUrl}/config/orgs`, (err, resp, body) => {
-			if (err) reject(err);
-			body = JSON.parse(body);
-			resolve(body);
-		});
-	});
-};
-const asyncTask = async ()=>{
-	const body = await globalConfigPromise();
+const globalConfigPromise = require('./globalConfigPromise');
+const asyncTask = async () => {
+	const body = await globalConfigPromise;
 	const imageTag = `x86_64-${body.docker.fabricTag}`;
-	const {network} = body.docker;
-	await fabricDockerode.deployCA({
+	const {docker: {network}, TLS} = body;
+	const ordererCAServiceName=swarmServiceName(container_name.ordererCA);
+	const peerCAServiceName =swarmServiceName(container_name.peerCA);
+	await serviceDelete(ordererCAServiceName);
+	await serviceDelete(peerCAServiceName);
+	try {
+		await tasksWaitUntilDead({services:[ordererCAServiceName,peerCAServiceName]});
+	}catch(err){
+		if(err.toString().includes('not found')){
+			logger.warn(err);
+		}else throw err;
+	}
+	const ordererCA = await fabricDockerode.deployCA({
 		Name: container_name.ordererCA,
 		port: config.orderer.orgs.NewConsensus.ca.portHost,
-		network, imageTag,
-		Constraints: config.swarm.Constraints
+		network, imageTag, TLS
 	});
-	await fabricDockerode.deployCA({
+	const peerCA = await fabricDockerode.deployCA({
 		Name: container_name.peerCA,
 		port: config.orgs.NEW.ca.portHost,
-		Constraints: config.swarm.Constraints,
-		network, imageTag
+		network, imageTag, TLS
 	});
-	const task = await dockerUtil.findTask({service: 'ca-NEW'});
+	const caServices = [ordererCA, peerCA];
+
+	await tasksWaitUntilLive(caServices);
 };
 asyncTask();
 

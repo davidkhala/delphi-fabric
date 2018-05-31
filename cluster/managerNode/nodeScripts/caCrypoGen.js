@@ -1,37 +1,64 @@
 const config = require('./config');
-const cryptoRoot = config.MSPROOT;
+const home = require('os').homedir();
+const path = require('path');
+const cryptoRoot = path.resolve(home, config.MSPROOT);
 const ordererOrg = 'NewConsensus';
-const ordererCAurl = `http://localhost:${config.orderer.orgs[ordererOrg].ca.portHost}`;
-const ordererName = 'orderer0';
-const ordererPort = config.orderer.orgs.NewConsensus.orderers.orderer0.portHost;
-const ordererMSPID = config.orderer.orgs.NewConsensus.MSP.id;
-const caCryptoGen = require('../../../common/nodejs/ca-crypto-gen');
-const pathUtil = require('../../../common/nodejs/path');
 
+
+const ordererName = 'orderer0';
+const fs = require('fs');
+const caCryptoGen = require('../../../common/nodejs/ca-crypto-gen');
+const {CryptoPath} = require('../../../common/nodejs/path');
+const dockerUtil = require('../../../common/docker/nodejs/dockerode-util');
+const dockerCmd = require('../../../common/docker/nodejs/dockerCmd');
+const caUtil = require('../../../common/nodejs/ca');
 const peerOrg = 'NEW';
 const peerName = 'newContainer';
-const cryptoPath = new pathUtil.CryptoPath(cryptoRoot, {
-	orderer: {
-		org: ordererOrg, name: ordererName
-	}, peer: {
-		org: peerOrg, name: peerName
+const globalConfigPromise = require('./globalConfigPromise');
+const getCaService = async (url, domain, TLS) => {
+	if (TLS) {
+		const caHostName = `ca.${domain}`;
+		const serviceName = dockerUtil.swarmServiceName(caHostName);
+		const container_name = await dockerUtil.inflateContainerName(serviceName);
+		if (!container_name) throw `service ${serviceName} not assigned to current node`;
+		const from = caUtil.container.caCert;
+		const to = `${caHostName}-cert.pem`;
+		await dockerCmd.copy(container_name, from, to);
+
+		const pem = fs.readFileSync(to);
+		console.log({url});
+		return caUtil.new(url, [pem]);
 	}
-});
+	return caUtil.new(url);
+};
+const asyncTask = async () => {
+	const {TLS} = await globalConfigPromise;
+	const ordererConfig = config.orderer.orgs[ordererOrg];
+	const ordererCAurl = `http${TLS ? 's' : ''}://localhost:${ordererConfig.ca.portHost}`;
+	const ordererCaService = await getCaService(ordererCAurl, ordererOrg, TLS);
+	let cryptoPath = new CryptoPath(cryptoRoot, {
+		orderer: {
+			org: ordererOrg,name:ordererName
+		},
+		user:{name:'Admin'}
+	});
+	const ordererAdmin = await caCryptoGen.init(ordererCaService, cryptoPath, 'orderer', ordererConfig.MSP.id);
+	await caCryptoGen.genOrderer(ordererCaService, cryptoPath, ordererAdmin, {TLS});
 
-caCryptoGen.init(ordererCAurl, {mspId: ordererMSPID, domain: ordererOrg}, cryptoPath.ordererUsers()).then(() => {
-	return caCryptoGen.genOrderer(ordererCAurl, orderersDir,
-		{ordererName, domain: ordererOrg, ordererPort, mspId: ordererMSPID},
-		cryptoPath.ordererUsers());
-});
-const peerCAURL = `http://localhost:${config.orgs.NEW.ca.portHost}`;
-const peersDir = cryptoPath.peers();
-const peerMSPID = config.orgs.NEW.MSP.id;
+	const peerConfig = config.orgs[peerOrg];
+	const peerCAURL = `http${TLS ? 's' : ''}://localhost:${peerConfig.ca.portHost}`;
+	cryptoPath = new CryptoPath(cryptoRoot, {
+		peer: {
+			org: peerOrg, name: peerName
+		},
+		user:{name:'Admin'}
+	});
+	const peerCaService = await getCaService(peerCAURL, peerOrg, TLS);
+	const peerAdmin = await caCryptoGen.init(peerCaService, cryptoPath, 'peer', peerConfig.MSP.id);
+	await caCryptoGen.genPeer(peerCaService, cryptoPath, peerAdmin, {TLS});
+};
 
-caCryptoGen.init(peerCAURL, {mspId: peerMSPID, domain: peerOrg}, cryptoPath.peerUsers()).then(() => {
-	return caCryptoGen.genPeer(peerCAURL, peersDir,
-		{peerName, domain: peerOrg, mspId: peerMSPID},
-		cryptoPath.peerUsers());
-});
 
+asyncTask();
 
 

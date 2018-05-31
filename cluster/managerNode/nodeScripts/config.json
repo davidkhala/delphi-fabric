@@ -1,5 +1,5 @@
 {
-    "MSPROOT": "/home/david/Documents/delphi-fabric/config/ca-crypto-config",
+    "MSPROOT": "Documents/delphi-fabric/config/ca-crypto-config",
     "CONFIGTX":"/home/david/Documents/nfs/CONFIGTX",
     "BLOCK_FILE":"tk.block",
     "swarmServer": {
@@ -9,9 +9,6 @@
     "signServer":{
         "port":4002,
         "cache":"cache/"
-    },
-    "swarm":{
-        "Constraints":["node.hostname==david-Project"]
     },
     "orderer":{
         "orgs":{
