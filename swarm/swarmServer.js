@@ -5,6 +5,8 @@ const swarmConfig = require('./swarm.json').swarmServer;
 const {port, couchDB: {url}} = swarmConfig;
 const app = require('../express/baseApp').run(port);
 const {db = 'Redis'} = process.env;
+const path = require('path');
+const {homeResolve} = require('../common/nodejs/path');
 logger.info('server start', {db});
 
 class dbInterface {
@@ -185,8 +187,8 @@ app.post('/manager/leave', async (req, res) => {
 app.use('/channel', require('./signaturesRouter'));
 app.get('/block', async (req, res) => {
 	const globalConfig = require('../config/orgs');
-	const path = require('path');
-	const blockFile = path.resolve(globalConfig.docker.volumes.CONFIGTX.dir, globalConfig.orderer.genesis_block.file);
+	const dir = homeResolve(globalConfig.docker.volumes.CONFIGTX.dir);
+	const blockFile = path.resolve(dir, globalConfig.orderer.genesis_block.file);
 	res.sendFile(blockFile);
 });
 app.get('/', async (req, res) => {

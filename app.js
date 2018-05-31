@@ -1,5 +1,6 @@
 const logger = require('./common/nodejs/logger').new('express API');
 const golangUtil = require('./common/nodejs/golang');
+const {homeResolve} = require('./common/nodejs/path');
 const express = require('express');
 const bodyParser = require('body-parser');
 const http = require('http');
@@ -8,10 +9,10 @@ const fs = require('fs');
 const app = express();
 const cors = require('cors');
 const {host, port} = require('./app/config.json');
-const companyConfig = require('./config/orgs.json');
-const channelsConfig = companyConfig.channels;
+const globalConfig = require('./config/orgs.json');
+const channelsConfig = globalConfig.channels;
 const chaincodesConfig = require('./config/chaincode.json');
-const CONFIGTXDir = companyConfig.docker.volumes.CONFIGTX.dir;
+const CONFIGTXDir = homeResolve(globalConfig.docker.volumes.CONFIGTX.dir);
 
 const wsCommon = require('./express/webSocketCommon');
 const helper = require('./app/helper.js');

@@ -93,7 +93,7 @@ govendor: to import third-party package in vendor folder
 - not to use docker-compose and docker stack deploy to run docker services on swarm, use npm dockerode 
 - kafka on swarm
 - CA in command base is preferred
-
+- use relative path via ``const os = require('os');;`` in ``path.homeResolve``
 
 ## TODO
 - TLS
@@ -109,7 +109,6 @@ govendor: to import third-party package in vendor folder
 - ?update system channel ``testchainid``
 - there is a trend to use golang/dep instead of govendor https://gerrit.hyperledger.org/r/#/c/19113/
 - multiple priv-file creation is witnessed in app/cryptoKeyStore, investigate problem of state store, crypto-store
-- use relative path via ``const os = require('os');console.log(os.homedir());``
 - refactor: to use pathUtil.CryptoPath class instead of peer_hostname_full
 - change default keystore path: /home/david/.hfc-key-store/ still having files even when bootstrap
 - simplify portMap design from [{7051:port}] to {port: port,eventHubPort:port2}

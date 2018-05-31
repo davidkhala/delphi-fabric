@@ -5,8 +5,10 @@ const logger = require('../common/nodejs/logger').new('dockerode-bootstrap');
 const peerUtil = require('../common/nodejs/peer');
 const dockerodeUtil = require('../common/nodejs/fabric-dockerode');
 const channelUtil = require('../common/nodejs/channel');
-const {CryptoPath} = require('../common/nodejs/path');
+const {CryptoPath,homeResolve} = require('../common/nodejs/path');
 
+const MSPROOT = homeResolve(globalConfig.docker.volumes.MSPROOT.dir);
+const CONFIGTX = homeResolve(globalConfig.docker.volumes.CONFIGTX.dir);
 const arch = 'x86_64';
 const {
 	containerDelete, networkRemove, volumeCreateIfNotExist, networkCreateIfNotExist,
@@ -105,7 +107,7 @@ exports.volumesAction = async (toStop) => {
 			await volumeRemove(Name);
 			continue;
 		}
-		const path = globalConfig.docker.volumes[Name].dir;
+		const path = homeResolve(globalConfig.docker.volumes[Name].dir);
 		await volumeCreateIfNotExist({Name, path});
 	}
 };
@@ -314,8 +316,7 @@ exports.down = async (swarm) => {
 	logger.info(`[done] clear stateDBCacheDir ${nodeAppConfigJson.stateDBCacheDir}`);
 
 
-	const MSPROOT = globalConfig.docker.volumes.MSPROOT.dir;
-	const CONFIGTX = globalConfig.docker.volumes.CONFIGTX.dir;
+
 	fsExtra.removeSync(MSPROOT);
 	logger.info(`[done] clear MSPROOT ${MSPROOT}`);
 	fsExtra.removeSync(CONFIGTX);
@@ -327,7 +328,7 @@ exports.up = async (swarm) => {
 	await pruneSystem();
 	await module.exports.volumesAction();
 	await networkCreateIfNotExist({Name: network}, swarm);
-	const caServices = await module.exports.runCAs(undefined, swarm);
+	const caServices = await exports.runCAs(undefined, swarm);
 
 	if (type === 'kafka') {
 		const zkServices = await exports.runZookeepers(undefined, swarm);
@@ -338,8 +339,6 @@ exports.up = async (swarm) => {
 	if (swarm) await tasksWaitUntilLive(caServices);
 	await require('./caCryptoGen').genAll(swarm);
 
-	const MSPROOT = globalConfig.docker.volumes.MSPROOT.dir;
-	const CONFIGTX = globalConfig.docker.volumes.CONFIGTX.dir;
 	const PROFILE_BLOCK = globalConfig.orderer.genesis_block.profile;
 	const configtxFile = path.resolve(__dirname, 'configtx.yaml');
 	require('./configtx.js').gen({MSPROOT, PROFILE_BLOCK, configtxFile});

@@ -4,13 +4,14 @@ const {joinChannel} = require('./join-channel');
 const helper = require('./helper');
 const logger = require('../common/nodejs/logger').new('testChannel');
 const configtxlator = require('../common/nodejs/configtxlator');
+const {homeResolve} = require('../common/nodejs/path');
 const channelName = 'allchannel';
 
 const globalConfig = require('../config/orgs.json');
 const {TLS} = globalConfig;
 const channelConfig = globalConfig.channels[channelName];
 
-const channelConfigFile = `${globalConfig.docker.volumes.CONFIGTX.dir}/${channelConfig.file}`;
+const channelConfigFile = `${homeResolve(globalConfig.docker.volumes.CONFIGTX.dir)}/${channelConfig.file}`;
 const joinAllfcn = async () => {
 
 

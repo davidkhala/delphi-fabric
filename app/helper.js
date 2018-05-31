@@ -2,17 +2,16 @@ const logger = require('../common/nodejs/logger').new('Helper');
 const globalConfig = require('../config/orgs.json');
 
 const orgsConfig = globalConfig.orgs;
-const CRYPTO_CONFIG_DIR = globalConfig.docker.volumes.MSPROOT.dir;
 const channelsConfig = globalConfig.channels;
 const ordererConfig = globalConfig.orderer;
 const ClientUtil = require('../common/nodejs/client');
 const EventHubUtil = require('../common/nodejs/eventHub');
 const peerUtil = require('../common/nodejs/peer');
-const pathUtil = require('../common/nodejs/path');
+const {CryptoPath,homeResolve} = require('../common/nodejs/path');
+const CRYPTO_CONFIG_DIR = homeResolve(globalConfig.docker.volumes.MSPROOT.dir);
 const userUtil = require('../common/nodejs/user');
 const OrdererUtil = require('../common/nodejs/orderer');
 const channelUtil = require('../common/nodejs/channel');
-const {CryptoPath} = pathUtil;
 
 
 // peerConfig: "portMap": [{	"host": 8051,		"container": 7051},{	"host": 8053,		"container": 7053}]

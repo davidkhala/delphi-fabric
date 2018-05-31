@@ -9,7 +9,7 @@ const userUtil = require('../../common/nodejs/user');
 const signUtil = require('../../common/nodejs/multiSign');
 const clientUtil = require('../../common/nodejs/client');
 const pathUtil = require('../../common/nodejs/path');
-const {CryptoPath} = pathUtil;
+const {CryptoPath,homeResolve} = pathUtil;
 const fs = require('fs');
 
 app.post('/', cache.single('proto'), async (req, res) => {
@@ -18,7 +18,7 @@ app.post('/', cache.single('proto'), async (req, res) => {
 	logger.info('sign request',{proto});
 	const globalConfig = require('../../config/orgs');
 
-	const caCryptoConfig = globalConfig.docker.volumes.MSPROOT.dir;
+	const caCryptoConfig = homeResolve(globalConfig.docker.volumes.MSPROOT.dir);
 
 
 	let signatures = [];
