@@ -92,6 +92,7 @@ govendor: to import third-party package in vendor folder
 - remove global domain
 - not to use docker-compose and docker stack deploy to run docker services on swarm, use npm dockerode 
 - kafka on swarm
+- CA in command base is preferred
 
 
 ## TODO
@@ -117,7 +118,7 @@ govendor: to import third-party package in vendor folder
 - user server design instead of nfs
 - docker version problem in ver. 18.x 
 - slave node in swarm should use another code repository.
-- CA in command base is preferred
+- to avoid port conflict, use Redis as implement of swarmServer
 
 ### TODO master slave design
 - slave: each org has 1 ca, then 1 orderer,1 peer

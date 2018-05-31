@@ -1,20 +1,19 @@
 {
   "name": "delphi-fabric",
-  "version": "2.0.0",
-  "description": "based on balance-transfer example: node program to demonstrate using node.js SDK APIs",
+  "version": "3.0.0",
+  "description": "node program to demonstrate using node.js SDK APIs",
   "keywords": [
     "v1.x fabric node-sdk java-sdk sample"
   ],
   "engines": {
-    "node": ">=6.9.5",
-    "npm": ">=3.10.10"
+    "node": ">=8.11.2",
+    "npm": ">=5.6.0"
   },
   "license": "Apache-2.0",
   "dependencies": {
     "body-parser": "^1.17.1",
     "cookie-parser": "^1.4.3",
     "cors": "^2.8.3",
-    "eslint": "^4.19.1",
     "express": "^4.16.2",
     "fabric-ca-client": "1.1.0",
     "fabric-client": "1.1.0",
@@ -22,16 +21,13 @@
     "js-yaml": "^3.10.0",
     "log4js": "^2.6.0",
     "multer": "^1.3.0",
-    "nano": "^6.4.3",
-    "oauth2-server": "^3.0.0",
     "ping": "^0.2.2",
     "request": "^2.81.0",
     "request-promise-native": "^1.0.5",
-    "simple-oauth2": "^1.5.2",
     "ws": "^3.3.2"
   },
   "devDependencies": {
-    "winston": "^2.4.2",
     "x509": "^0.3.2"
+    "eslint": "^4.19.1"
   }
 }
