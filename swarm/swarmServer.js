@@ -4,8 +4,9 @@ const logger = require('../common/nodejs/logger').new('swarm-server');
 const swarmConfig = require('./swarm.json').swarmServer;
 const {port, couchDB: {url}} = swarmConfig;
 const app = require('../express/baseApp').run(port);
-const {db = 'Couchdb'} = process.env;
-logger.info('server start',{db});
+const {db = 'Redis'} = process.env;
+logger.info('server start', {db});
+
 class dbInterface {
 	constructor({url, name}) {
 		this.url = url;
@@ -64,12 +65,13 @@ const dbMap = {
 
 		async get(key) {
 			const connection = await this.connect();
-			return await connection.get(key);
+			const value = await connection.get(key);
+			return JSON.parse(value);
 		}
 
 		async set(key, value) {
 			const connection = await this.connect();
-			return await connection.set(key,value);
+			return await connection.set(key, JSON.stringify(value));
 		}
 
 		run() {
@@ -187,9 +189,17 @@ app.get('/block', async (req, res) => {
 	const blockFile = path.resolve(globalConfig.docker.volumes.CONFIGTX.dir, globalConfig.orderer.genesis_block.file);
 	res.sendFile(blockFile);
 });
-app.get('/', (req, res) => {
-	res.json({
-		errCode: 'success',
-		errMessage: 'pong'
-	});
+app.get('/', async (req, res) => {
+	try {
+		//touch
+		const connection = await new dbMap[db]({url});
+		res.json({
+			errCode: 'success',
+			message: 'pong'
+		});
+	} catch (err) {
+		logger.error(err);
+		res.status(400).send(err);
+	}
+
 });

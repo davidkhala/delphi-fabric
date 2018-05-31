@@ -9,6 +9,9 @@ const requestBuilder = ({uri, body}) => {
 	};
 };
 //TODO have not cover all API yet
+exports.ping = async (serverBaseUrl)=>{
+	const result = await requestPromise(`${serverBaseUrl}/`);
+};
 exports.manager = {
 	join: async (serverBaseUrl, {ip, hostname}) => {
 		logger.info('managerJoin', {serverBaseUrl, ip, hostname});
@@ -30,20 +33,6 @@ exports.leader = {
 		return await requestPromise(requestBuilder({
 			uri:`${serverBaseUrl}/leader/update`,
 			body:{ip,hostname,managerToken}
-		}));
-	}
-};
-exports.volume = {
-	get: async (baseUrl, {key}) => {
-		return await requestPromise(requestBuilder({
-			uri: `${baseUrl}/volume/get`,
-			body: {key}
-		}));
-	},
-	set: async (baseUrl, {key, value}) => {
-		return await requestPromise(requestBuilder({
-			uri: `${baseUrl}/volume/set`,
-			body: {key, value}
 		}));
 	}
 };

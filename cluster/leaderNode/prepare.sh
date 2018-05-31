@@ -14,8 +14,11 @@ fi
 swarmServerPort=$(jq ".swarmServer.port" $SWARM_CONFIG)
 swarmServerIP=$(jq -r ".swarmServer.url" $SWARM_CONFIG)
 swarmBaseUrl=${swarmServerIP}:${swarmServerPort}
-if ! curl -s $swarmBaseUrl/; then
-	echo no response from swarmServer $swarmBaseUrl
+
+pingResp=$(curl -sS $swarmBaseUrl/)
+pingErrcode=$(echo $pingResp |jq -r ".errCode")
+if [ $pingErrcode != "success" ]; then
+	echo invalid response from swarmServer $swarmBaseUrl === $pingResp
 	exit 1
 else echo
 fi
@@ -25,7 +28,7 @@ if ! ip addr show | grep "inet ${advertiseAddr}"; then
 	ip addr show | grep "inet "
 	exit 1
 fi
-CONFIG_JSON=$(curl -s ${swarmBaseUrl}/config/orgs)
+CONFIG_JSON=$(curl -sS ${swarmBaseUrl}/config/orgs)
 ### setup swarm
 utilsDir=$root/common/docker/utils
 
@@ -37,7 +40,7 @@ fi
 thisHostName=$($root/common/ubuntu/hostname.sh get)
 
 joinToken=$($root/common/docker/utils/swarm.sh managerToken)
-node -e "require('$root/swarm/swarmServerClient').leader.update('$swarmBaseUrl', {ip:'$advertiseAddr', hostname:'$thisHostName', managerToken:'$joinToken'})"
+curl -sS -X POST ${swarmBaseUrl}/leader/update -d "{\"ip\":\"$advertiseAddr\",\"hostname\":\"$thisHostName\",\"managerToken\":\"$joinToken\"}" -H "Content-Type: application/json"
 
 fabricTag=$(echo $CONFIG_JSON | jq -r ".docker.fabricTag")
 thirdPartyTag=$(echo $CONFIG_JSON | jq -r ".docker.thirdPartyTag")
