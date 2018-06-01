@@ -3,16 +3,21 @@ const fsExtra = require('fs-extra');
 const path = require('path');
 const logger = require('../common/nodejs/logger').new('dockerode-bootstrap');
 const peerUtil = require('../common/nodejs/peer');
-const dockerodeUtil = require('../common/nodejs/fabric-dockerode');
+const {
+	deployCA,runCA,
+	deployKafka, runKafka, runZookeeper, deployZookeeper,
+	deployPeer, runPeer, runOrderer, deployOrderer,
+	chaincodeClean, tasksWaitUntilLive, imagePullCCENV,
+} = require('../common/nodejs/fabric-dockerode');
 const channelUtil = require('../common/nodejs/channel');
-const {CryptoPath,homeResolve} = require('../common/nodejs/path');
+const {CryptoPath, homeResolve} = require('../common/nodejs/path');
 
 const MSPROOT = homeResolve(globalConfig.docker.volumes.MSPROOT.dir);
 const CONFIGTX = homeResolve(globalConfig.docker.volumes.CONFIGTX.dir);
 const arch = 'x86_64';
 const {
 	containerDelete, networkRemove, volumeCreateIfNotExist, networkCreateIfNotExist,
-	swarmServiceName, serviceDelete, tasksWaitUntilLive, constraintSelf,
+	swarmServiceName, serviceDelete, constraintSelf,
 	volumeRemove, prune: {system: pruneSystem}
 } = require('../common/docker/nodejs/dockerode-util');
 const {docker: {fabricTag, network, thirdPartyTag}, TLS} = globalConfig;
@@ -22,7 +27,7 @@ const exec = util.promisify(require('child_process').exec);
 const runConfigtxGenShell = path.resolve(path.dirname(__dirname), 'common', 'bin-manage', 'runConfigtxgen.sh');
 
 exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'}, toStop, swarm) => {
-	const {orderer: {type, genesis_block: {file: BLOCK_FILE}}, orgs: peerOrgs} = globalConfig;
+	const {orderer: {type, genesis_block: {file: BLOCK_FILE}}} = globalConfig;
 	const CONFIGTXVolume = volumeName.CONFIGTX;
 	const MSPROOTVolume = volumeName.MSPROOT;
 	const imageTag = `${arch}-${fabricTag}`;
@@ -50,7 +55,7 @@ exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPRO
 		} else {
 			if (swarm) {
 				const Constraints = await constraintSelf();
-				return dockerodeUtil.deployOrderer({
+				return deployOrderer({
 					Name: container_name,
 					imageTag,
 					network,
@@ -65,7 +70,7 @@ exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPRO
 					Constraints,
 				});
 			} else {
-				return dockerodeUtil.runOrderer({
+				return runOrderer({
 					container_name, imageTag, port, network,
 					BLOCK_FILE, CONFIGTXVolume,
 					msp: {
@@ -115,7 +120,7 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 	const imageTag = `${arch}-${fabricTag}`;
 	const orgsConfig = globalConfig.orgs;
 	const results = [];
-	if (!tostop) await dockerodeUtil.imagePullCCENV(imageTag);
+	if (!tostop) await imagePullCCENV(imageTag);
 	for (const domain in orgsConfig) {
 		const orgConfig = orgsConfig[domain];
 		const peersConfig = orgConfig.peers;
@@ -150,7 +155,7 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 			if (swarm) {
 				const Constraints = await constraintSelf();
 
-				const peer = await dockerodeUtil.deployPeer({
+				const peer = await deployPeer({
 					Name: container_name, port, eventHubPort, imageTag, network,
 					peerHostName,
 					msp: {
@@ -163,7 +168,7 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 				});
 				results.push(peer);
 			} else {
-				const peer = await dockerodeUtil.runPeer({
+				const peer = await runPeer({
 					container_name, port, eventHubPort, imageTag, network,
 					peerHostName, tls,
 					msp: {
@@ -198,9 +203,9 @@ exports.runCAs = async (toStop, swarm) => {
 			}
 		} else {
 			if (swarm) {
-				return await dockerodeUtil.deployCA({Name: container_name, network, imageTag, port, TLS});
+				return await deployCA({Name: container_name, network, imageTag, port, TLS});
 			} else {
-				return await dockerodeUtil.runCA({container_name, port, network, imageTag, TLS});
+				return await runCA({container_name, port, network, imageTag, TLS});
 			}
 		}
 	};
@@ -246,12 +251,12 @@ exports.runZookeepers = async (toStop, swarm) => {
 			}
 		} else {
 			if (swarm) {
-				const service = await dockerodeUtil.deployZookeeper({
+				const service = await deployZookeeper({
 					Name: zookeeper, network, imageTag, MY_ID
 				}, zkConfigs);
 				results.push(service);
 			} else {
-				const container = await dockerodeUtil.runZookeeper({
+				const container = await runZookeeper({
 					container_name: zookeeper, MY_ID, imageTag, network
 				}, zkConfigs);
 				results.push(container);
@@ -279,12 +284,12 @@ exports.runKafkas = async (toStop, swarm) => {
 			}
 		} else {
 			if (swarm) {
-				const service = await dockerodeUtil.deployKafka({
+				const service = await deployKafka({
 					Name: kafka, network, imageTag, BROKER_ID
 				}, zookeepers, {N, M});
 				results.push(service);
 			} else {
-				const container = await dockerodeUtil.runKafka({
+				const container = await runKafka({
 					container_name: kafka, network, imageTag, BROKER_ID
 				}, zookeepers, {N, M});
 				results.push(container);
@@ -308,13 +313,12 @@ exports.down = async (swarm) => {
 	}
 	await pruneSystem(swarm);
 	await networkRemove(network);
-	await dockerodeUtil.chaincodeClean();
+	await chaincodeClean();
 	await module.exports.volumesAction(toStop);
 
 	const nodeAppConfigJson = require('../app/config');
 	fsExtra.removeSync(nodeAppConfigJson.stateDBCacheDir);
 	logger.info(`[done] clear stateDBCacheDir ${nodeAppConfigJson.stateDBCacheDir}`);
-
 
 
 	fsExtra.removeSync(MSPROOT);

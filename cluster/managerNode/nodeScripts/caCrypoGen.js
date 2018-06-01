@@ -1,20 +1,19 @@
 const config = require('./config');
-const home = require('os').homedir();
-const path = require('path');
-const cryptoRoot = path.resolve(home, config.MSPROOT);
+
 const ordererOrg = 'NewConsensus';
 
 
 const ordererName = 'orderer0';
 const fs = require('fs');
 const caCryptoGen = require('../../../common/nodejs/ca-crypto-gen');
-const {CryptoPath} = require('../../../common/nodejs/path');
+const {CryptoPath,homeResolve} = require('../../../common/nodejs/path');
+const cryptoRoot = homeResolve(config.MSPROOT);
 const dockerUtil = require('../../../common/docker/nodejs/dockerode-util');
 const dockerCmd = require('../../../common/docker/nodejs/dockerCmd');
 const caUtil = require('../../../common/nodejs/ca');
 const peerOrg = 'NEW';
 const peerName = 'newContainer';
-const globalConfigPromise = require('./globalConfigPromise');
+const {globalConfig} = require('./swarmClient');
 const getCaService = async (url, domain, TLS) => {
 	if (TLS) {
 		const caHostName = `ca.${domain}`;
@@ -26,13 +25,12 @@ const getCaService = async (url, domain, TLS) => {
 		await dockerCmd.copy(container_name, from, to);
 
 		const pem = fs.readFileSync(to);
-		console.log({url});
 		return caUtil.new(url, [pem]);
 	}
 	return caUtil.new(url);
 };
 const asyncTask = async () => {
-	const {TLS} = await globalConfigPromise;
+	const {TLS} = await globalConfig;
 	const ordererConfig = config.orderer.orgs[ordererOrg];
 	const ordererCAurl = `http${TLS ? 's' : ''}://localhost:${ordererConfig.ca.portHost}`;
 	const ordererCaService = await getCaService(ordererCAurl, ordererOrg, TLS);
