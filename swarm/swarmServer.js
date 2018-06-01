@@ -6,8 +6,10 @@ const {port, couchDB: {url}} = swarmConfig;
 const app = require('../express/baseApp').run(port);
 const {db = 'Redis'} = process.env;
 const path = require('path');
+const fs = require('fs');
 const {homeResolve} = require('../common/nodejs/path');
-logger.info('server start', {db});
+const {sha2_256} = require('fabric-client/lib/hash');
+logger.info('server start', {db, port});
 
 class dbInterface {
 	constructor({url, name}) {
@@ -189,7 +191,9 @@ app.get('/block', async (req, res) => {
 	const globalConfig = require('../config/orgs');
 	const dir = homeResolve(globalConfig.docker.volumes.CONFIGTX.dir);
 	const blockFile = path.resolve(dir, globalConfig.orderer.genesis_block.file);
-	res.sendFile(blockFile);
+	const buffer = fs.readFileSync(blockFile,'binary');
+	logger.info('check buffer hash', sha2_256(buffer));
+	res.send(buffer);
 });
 app.get('/', async (req, res) => {
 	try {
