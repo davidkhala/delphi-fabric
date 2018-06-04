@@ -35,14 +35,18 @@ router.post('/getSignatures', multerCache.single('proto'), async (req, res) => {
 			logger.warn('No managers found');
 		}
 		logger.debug({ips});
-		const promises = ips.map((ip) => {
-			return serverClient.getSignatures(`http://${ip}:${signServerPort}`, protoPath);
+		const promises = ips.map(async (ip) => {
+			const resp = await serverClient.getSignatures(`http://${ip}:${signServerPort}`, protoPath);
+
+			return JSON.parse(resp).signatures;
 		});
 		const resp = await Promise.all(promises);
-		res.send(resp);
+		const joinedArray = resp.reduce((accumulator, currentValue) => accumulator.concat(currentValue));
+		res.send(joinedArray);
 
 	} catch (err) {
-		res.status(400).send(err);
+		logger.error(err);
+		res.status(400).send(err.toString());
 	}
 
 });

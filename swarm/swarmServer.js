@@ -112,7 +112,7 @@ app.use('/config', require('../express/configExpose'));
 app.get('/leader', async (req, res) => {
 	const connection = await new dbMap[db]({url, name: swarmDoc});
 	const value = await connection.get(leaderKey);
-	logger.debug('leader info',value);
+	logger.debug('leader info', value);
 	res.json(value);
 });
 app.post('/leader/update', async (req, res) => {
@@ -126,7 +126,7 @@ app.post('/leader/update', async (req, res) => {
 app.get('/manager', async (req, res) => {
 	const connection = await new dbMap[db]({url, name: swarmDoc});
 	const value = await connection.get(managerKey);
-	logger.debug('manager list',value);
+	logger.debug('manager list', value);
 	res.json(value);
 
 });
@@ -205,7 +205,7 @@ app.get('/', async (req, res) => {
 		});
 	} catch (err) {
 		logger.error(err);
-		res.status(400).send(err);
+		res.status(400).send(err.toString());
 	}
 
 });
