@@ -1,39 +1,42 @@
 const config = require('./config');
-const fabricDockerUtil = require('../../../common/nodejs/fabric-dockerode');
-const dockerodeUtil = require('../../../common/docker/nodejs/dockerode-util');
-const Request = require('request');
-const swarmBaseUrl = `${config.swarmServer.url}:${config.swarmServer.port}`;
-const pathUtil = require('../../../common/nodejs/path');
+const {deployPeer} = require('../../../common/nodejs/fabric-dockerode');
+const {swarmServiceName, serviceClear, taskLiveWaiter} = require('../../../common/docker/nodejs/dockerode-util');
+const {CryptoPath} = require('../../../common/nodejs/path');
 const peerUtil = require('../../../common/nodejs/peer');
 const MSPROOTvolumeName = 'MSPROOT';
-const CONFIGTXVolume = 'CONFIGTX';
 const peerName = 'newContainer';
 const peerOrg = 'NEW';
 const portMap = config.orgs[peerOrg].peers[peerName].portMap;
-Request.get(`${swarmBaseUrl}/config/orgs`, async (err, resp, body) => {
-	if (err) throw err;
-	body = JSON.parse(body);
-	const imageTag = `x86_64-${body.docker.fabricTag}`;
-	const {network} = body.docker;
-	const cryptoPath = new pathUtil.CryptoPath(peerUtil.container.MSPROOT, {
+const {globalConfig} = require('./swarmClient');
+
+const asyncTask = async () => {
+	const {docker: {network, fabricTag}, TLS} = await globalConfig;
+	const cryptoType = 'peer';
+	const imageTag = `x86_64-${fabricTag}`;
+
+	const cryptoPath = new CryptoPath(peerUtil.container.MSPROOT, {
 		peer: {
 			name: peerName,
 			org: peerOrg
 		}
 	});
-	const promises = [
-		dockerodeUtil.volumeCreateIfNotExist({Name: MSPROOTvolumeName, path: config.MSPROOT}),
-		dockerodeUtil.volumeCreateIfNotExist({Name: CONFIGTXVolume, path: config.CONFIGTX})
-	];
-	await Promise.all(promises);
-	await fabricDockerUtil.deployPeer({
-		Name: `${peerName}.${peerOrg}`, network, imageTag,
-		Constraints: config.swarm.Constraints,
+	const {peerHostName} = cryptoPath;
+	const Name = `${peerName}.${peerOrg}`;
+	const serviceName = swarmServiceName(Name);
+	await serviceClear(serviceName);
+
+	//Stateful: use volume as orderer
+	const tls = TLS ? cryptoPath.TLSFile(cryptoType) : undefined;
+	const peerService = await deployPeer({
+		Name, network, imageTag,
 		port: portMap.port, eventHubPort: portMap.eventHubPort,
 		msp: {
 			volumeName: MSPROOTvolumeName,
-			configPath: cryptoPath.peerMSP(),
+			configPath: cryptoPath.MSP(cryptoType),
 			id: config.orgs[peerOrg].MSP.id
-		}, peer_hostName_full: `${peerName}.${peerOrg}`
+		}, peerHostName,
+		tls
 	});
-});
+	await taskLiveWaiter(peerService);
+};
+asyncTask();
