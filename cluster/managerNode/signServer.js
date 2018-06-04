@@ -1,7 +1,7 @@
 const config = require('./nodeScripts/config');
-const signServerPort = config.signServer.port;
+const {port} = config.signServer;
 const logger = require('../../common/nodejs/logger').new('sign server');
-const {app} = require('../../common/nodejs/baseApp').run(signServerPort);
+const {app} = require('../../common/nodejs/baseApp').run(port);
 const Multer = require('multer');
 const cache = Multer({dest: config.signServer.cache});
 const userUtil = require('../../common/nodejs/user');

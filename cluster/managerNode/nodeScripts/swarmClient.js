@@ -9,4 +9,4 @@ exports.globalConfig = new Promise((resolve, reject) => {
 		resolve(body);
 	});
 });
-exports.block = (filePath)=>require('./swarmServerClient').block(swarmBaseUrl,filePath);
+exports.block = (filePath)=>require('../../../common/nodejs/express/serverClient').block(swarmBaseUrl,filePath);

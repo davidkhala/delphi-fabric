@@ -2,76 +2,58 @@ const express = require('express');
 const router = express.Router();
 const logger = require('../common/nodejs/logger').new('router signature');
 const signUtil = require('../common/nodejs/multiSign');
+const serverClient = require('../common/nodejs/express/serverClient');
 const Multer = require('multer');
 const fs = require('fs');
 const path = require('path');
-const signServerConfig = require('./swarm.json').signServer;
-const signServerPort = signServerConfig.port;
-const signCache = signServerConfig.cache;
-const cache = Multer({dest: signServerConfig.cache});
+const {port: signServerPort} = require('./swarm.json').signServer;
+const {cache, port: swarmServerPort} = require('./swarm.json').swarmServer;
 
-const swarmConfig = require('./swarm.json').swarmServer;
-const {couchDB: {url}} = swarmConfig;
-const swarmDoc = 'swarm';
-const leaderKey = 'leaderNode';
-const managerKey = 'managerNodes';
+const multerCache = Multer({dest: cache});
 const Request = require('request');
 
-const FabricCouchDB = require('fabric-client/lib/impl/CouchDBKeyValueStore');
-router.post('/getSignatures', cache.single('proto'), async (req, res) => {
-	const proto = req.file;
+const {sha2_256} = require('fabric-client/lib/hash');
 
-	logger.debug(proto);
+router.post('/getSignatures', multerCache.single('proto'), async (req, res) => {
+	try {
+		if (!req.file) throw 'no attachment found';
+		const protoPath = req.file.path;
 
-	const connection = await new FabricCouchDB({url, name: swarmDoc});
+		const proto = fs.readFileSync(protoPath);
+		logger.debug('proto hash ', sha2_256(proto));
+		let ips = [];
+		const swarmServerUrl = `http://localhost:${swarmServerPort}`;
+		const leaderInfo = JSON.parse(await serverClient.leader.info(swarmServerUrl));
+		if (!leaderInfo || !leaderInfo.ip) throw 'no leader found';
+		logger.debug({leaderInfo});
+		ips.push(leaderInfo.ip);
+		const managers = JSON.parse(await serverClient.manager.info(swarmServerUrl));
 
-	let ips = [];
-	const leaderValue = await connection.getValue(leaderKey);
-	if (leaderValue) {
-		const {ip} = leaderValue;
-		ips.push(ip);
-	} else {
-		res.send('No leader found');
-	}
-	const managers = await connection.getValue(managerKey);
-	if (managers) {
-		ips = ips.concat(Object.keys(managers));
-	} else {
-		logger.warn('No managers found');
-	}
-	logger.debug({ips});
-	const promises = ips.map((ip) => {
-		return new Promise((resolve, reject) => {
-			const formData = {
-				proto: fs.createReadStream(proto.path)
-			};
-			Request.post({url: `http://${ip}:${signServerPort}`, formData}, (err, resp, body) => {
-				if (body) {
-					const {signatures} = body;
-					logger.debug({signatures}, 'from', ip);
-					resolve({signatures});
-				} else {
-					reject(`no response from ${ip}:${signServerPort}`);
-				}
-			});
+		if (managers) {
+			ips = ips.concat(Object.keys(managers));
+		} else {
+			logger.warn('No managers found');
+		}
+		logger.debug({ips});
+		const promises = ips.map((ip) => {
+			return serverClient.getSignatures(`http://${ip}:${signServerPort}`, protoPath);
 		});
-
-	});
-	Promise.all(promises).then(resp => {
+		const resp = await Promise.all(promises);
 		res.send(resp);
-	}).catch(err => {
-		res.send(err);
-	});
+
+	} catch (err) {
+		res.status(400).send(err);
+	}
 
 });
-router.post('/newOrg', cache.fields([{name: 'admins'}, {name: 'root_certs'}, {name: 'tls_root_certs'}])
+router.post('/newOrg', multerCache.fields([{name: 'admins'}, {name: 'root_certs'}, {name: 'tls_root_certs'}])
 	, async (req, res) => {
 		try {
 			const adminCerts = req.files['admins'];
 			const rootCerts = req.files['root_certs'];
 			const tlsRootCerts = req.files['tls_root_certs'];
 			logger.debug({adminCerts, rootCerts, tlsRootCerts});
-			const {channelName, MSPID, MSPName, orderer: ordererFlag, peer: peerFlag} = req.body;
+			const {channelName, MSPID, MSPName, nodeType} = req.body;
 			const configtxlatorUtil = require('../common/nodejs/configtxlator');
 			const helper = require('../app/helper');
 

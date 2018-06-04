@@ -2,9 +2,11 @@
   "swarmServer": {
     "port": 4001,
     "url":"http://192.168.0.158",
+    "cache":"cache/",
     "couchDB": {
       "url": "http://192.168.0.158:5984"
-    }
+    },
+    "redis":{}
   },
   "signServer":{
     "port":4002,
