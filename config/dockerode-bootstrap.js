@@ -330,7 +330,7 @@ exports.down = async (swarm) => {
 exports.up = async (swarm) => {
 	const {orderer: {type}} = globalConfig;
 	await pruneSystem();
-	await module.exports.volumesAction();
+	await exports.volumesAction();
 	await networkCreateIfNotExist({Name: network}, swarm);
 	const caServices = await exports.runCAs(undefined, swarm);
 

@@ -1,112 +1,43 @@
-const singerServerConfig = require('../../swarm/swarm.json').signServer;
-const signServerPort = singerServerConfig.port;
+const {port, cache} = require('../../swarm/swarm.json').signServer;
 const logger = require('../../common/nodejs/logger').new('sign server');
-const app = require('../../express/baseApp').run(signServerPort);
+const {app} = require('../../common/nodejs/baseApp').run(port);
 const Multer = require('multer');
-const cache = Multer({dest: singerServerConfig.cache});
-
-const userUtil = require('../../common/nodejs/user');
+const multerCache = Multer({dest: cache});
 const signUtil = require('../../common/nodejs/multiSign');
-const clientUtil = require('../../common/nodejs/client');
-const pathUtil = require('../../common/nodejs/path');
-const {CryptoPath,homeResolve} = pathUtil;
+const globalConfig = require('../../config/orgs');
 const fs = require('fs');
-
-app.post('/', cache.single('proto'), async (req, res) => {
-
+const {sha2_256} = require('fabric-client/lib/hash');
+const helper = require('../../app/helper');
+app.post('/', multerCache.single('proto'), async (req, res) => {
 	const proto = fs.readFileSync(req.file.path);
-	logger.info('sign request',{proto});
-	const globalConfig = require('../../config/orgs');
-
-	const caCryptoConfig = homeResolve(globalConfig.docker.volumes.MSPROOT.dir);
+	logger.info('sign request', 'hash', sha2_256(proto));
 
 
 	let signatures = [];
-	let promise = Promise.resolve();
+	const clientPromises = [];
 	if (globalConfig.orderer.type === 'kafka') {
-
-		const clientPromises = [];
 		for (const ordererOrg in globalConfig.orderer.kafka.orgs) {
-			const ordererOrgConfig = globalConfig.orderer.kafka.orgs[ordererOrg];
-			const mspId = ordererOrgConfig.MSP.id;
-			const cryptoPath = new CryptoPath(caCryptoConfig, {
-				orderer: {org: ordererOrg},
-				user: {name: 'Admin'}
-			});
-
-			const ordererClient = clientUtil.new();
-
-			clientPromises.push(userUtil.loadFromLocal(cryptoPath.ordererUserMSP(), ordererClient.getCryptoSuite(),
-				{
-					username: 'Admin', domain: ordererOrg, mspId
-				}).then(ordererAdmin => ordererClient.setUserContext(ordererAdmin, true))
-				.then(() => ordererClient));
-
+			clientPromises.push(helper.getOrgAdmin(ordererOrg));
 		}
-
-		promise = promise.then(() => {
-			return signUtil.signs(clientPromises, proto);
-		}).then(({signatures: ordererAdminSigns}) => {
-			signatures = signatures.concat(ordererAdminSigns);
-			return Promise.resolve();
-		});
-
 	} else {
-		const clientPromises = [];
 		const ordererOrg = globalConfig.orderer.solo.orgName;
-		const ordererOrgConfig = globalConfig.orderer.solo;
-		const mspId = ordererOrgConfig.MSP.id;
-		const cryptoPath = new CryptoPath(caCryptoConfig, {
-			orderer: {org: ordererOrg},
-			user: {name: 'Admin'}
-		});
-
-		const ordererClient = clientUtil.new();
-
-		clientPromises.push(userUtil.loadFromLocal(cryptoPath.ordererUserMSP(), ordererClient.getCryptoSuite(),
-			{
-				username: 'Admin', domain: ordererOrg, mspId
-			}).then(ordererAdmin => ordererClient.setUserContext(ordererAdmin, true))
-			.then(() => ordererClient));
-
-		promise = promise.then(() => {
-			return signUtil.signs(clientPromises, proto);
-		}).then(({signatures: ordererAdminSigns}) => {
-			signatures = signatures.concat(ordererAdminSigns);
-			return Promise.resolve();
-		});
-
+		clientPromises.push(helper.getOrgAdmin(ordererOrg));
 
 	}
+	const {signatures: ordererAdminSigns} = await signUtil.signs(clientPromises, proto);
+	signatures = signatures.concat(ordererAdminSigns);
 	const peerClientPromises = [];
 
 	for (const domain in globalConfig.orgs) {
-		const peerOrgConfig = globalConfig.orgs[domain];
-		const peerClient = clientUtil.new();
-
-		const cryptoPath = new CryptoPath(caCryptoConfig, {
-			peer: {org: domain},
-			user: {name: 'Admin'}
-		});
-		peerClientPromises.push(
-			userUtil.loadFromLocal(cryptoPath.peerUserMSP(), peerClient.getCryptoSuite(),
-				{
-					username: 'Admin', domain,
-					mspId: peerOrgConfig.MSP.id
-				}).then(userAdmin => peerClient.setUserContext(userAdmin, true))
-				.then(() => peerClient));
-
-
+		peerClientPromises.push(helper.getOrgAdmin(domain));
 	}
 
-	return promise.then(() => {
-		return signUtil.signs(peerClientPromises, proto);
-	}).then(({signatures: peerAdminSigns}) => {
-		signatures = signatures.concat(peerAdminSigns);
 
-		res.send({signatures:signUtil.toBase64(signatures)
-			,proto
-		});
+	const {signatures: peerAdminSigns} = await signUtil.signs(peerClientPromises, proto);
+	signatures = signatures.concat(peerAdminSigns);
+
+	res.send({
+		signatures: signUtil.toBase64(signatures)//TODO needed in http?
 	});
 
 });

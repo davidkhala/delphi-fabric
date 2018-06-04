@@ -3,7 +3,7 @@
 const logger = require('../common/nodejs/logger').new('swarm-server');
 const swarmConfig = require('./swarm.json').swarmServer;
 const {port, couchDB: {url}} = swarmConfig;
-const app = require('../express/baseApp').run(port);
+const {app} = require('../common/nodejs/baseApp').run(port);
 const {db = 'Redis'} = process.env;
 const path = require('path');
 const fs = require('fs');
@@ -191,7 +191,7 @@ app.get('/block', async (req, res) => {
 	const globalConfig = require('../config/orgs');
 	const dir = homeResolve(globalConfig.docker.volumes.CONFIGTX.dir);
 	const blockFile = path.resolve(dir, globalConfig.orderer.genesis_block.file);
-	const buffer = fs.readFileSync(blockFile,'binary');
+	const buffer = fs.readFileSync(blockFile, 'binary');
 	logger.info('check buffer hash', sha2_256(buffer));
 	res.send(buffer);
 });

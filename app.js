@@ -1,13 +1,8 @@
 const logger = require('./common/nodejs/logger').new('express API');
 const golangUtil = require('./common/nodejs/golang');
 const {homeResolve} = require('./common/nodejs/path');
-const express = require('express');
-const bodyParser = require('body-parser');
-const http = require('http');
 const path = require('path');
 const fs = require('fs');
-const app = express();
-const cors = require('cors');
 const {host, port} = require('./app/config.json');
 const globalConfig = require('./config/orgs.json');
 const channelsConfig = globalConfig.channels;
@@ -20,30 +15,16 @@ const {createChannel} = require('./app/create-channel');
 const joinChannel = require('./app/join-channel').joinChannel;
 
 const Query = require('./common/nodejs/query');
+const {app, server} = require('./common/nodejs/baseApp').run(port, host);
 const {install} = require('./app/install-chaincode.js');
 
-app.options('*', cors());
-app.use(cors());
-//support parsing of application/json type post data
-app.use(bodyParser.json());
-//support parsing of application/x-www-form-urlencoded post data
-app.use(bodyParser.urlencoded({
-	extended: true
-}));
+
 app.use('/config', require('./express/configExpose'));
 
 app.get('/', (req, res, next) => {
 	res.send('pong from davids server');
 });
 
-///////////////////////////////////////////////////////////////////////////////
-//////////////////////////////// START SERVER /////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-const server = http.createServer(app).listen(port, function () {
-});
-logger.info('****************** SERVER STARTED ************************');
-logger.info(`**************  http://${host}:${port}    ******************`);
-server.timeout = 240000;
 
 const WebSocket = require('ws');
 const ws = new WebSocket.Server({server});
@@ -130,7 +111,7 @@ app.post('/channel/create/:channelName', (req, res) => {
 	logger.debug({orgName, channelName, channelConfigFile});
 
 	if (!fs.existsSync(channelConfigFile)) {
-		res.json(getErrorMessage(`channelConfigFile ${channelConfigFile} not exist`));
+		res.json(`channelConfigFile ${channelConfigFile} not exist`);
 		return;
 	}
 
