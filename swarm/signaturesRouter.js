@@ -87,6 +87,7 @@ router.post('/newOrg', cache.fields([{name: 'admins'}, {name: 'root_certs'}, {na
 					return original_config;
 				} else {
 
+					//FIXME configtxlatorUtil
 					return configtxlatorUtil.newPeerOrg(original_config, MSPName, MSPID,
 						{
 							admins: adminCerts ? adminCerts.map(({path}) => path) : [],

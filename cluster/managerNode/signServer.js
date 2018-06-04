@@ -11,11 +11,13 @@ const pathUtil = require('../../common/nodejs/path');
 const {CryptoPath} = pathUtil;
 
 
+/**
+ * return two signatures: 1 from orderer 1 from peer
+ */
 app.post('/', cache.single('proto'), async (req, res) => {
 	logger.info('sign request');
 	const proto = req.file;
 
-	//TODO assuming we return two signatures: 1 from orderer 1 from peer
 	const caCryptoConfig = config.MSPROOT;
 	const ordererClient = clientUtil.new();
 
