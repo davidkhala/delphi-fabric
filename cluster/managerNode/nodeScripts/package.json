@@ -2,6 +2,6 @@
   "name": "fabric-swarm-manager",
   "version": "0.0.1",
   "dependencies": {
-
+    "fs-extra": "^6.0.1"
   }
 }

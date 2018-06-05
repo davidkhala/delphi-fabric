@@ -1,5 +1,5 @@
 const config = require('./config');
-const logger = require('../../../common/nodejs/logger').new('newCa')
+const logger = require('../../../common/nodejs/logger').new('newCa');
 const {serviceClear, swarmServiceName} = require('../../../common/docker/nodejs/dockerode-util');
 const {tasksWaitUntilLive, deployCA} = require('../../../common/nodejs/fabric-dockerode');
 const ordererOrg = 'NewConsensus';
@@ -20,12 +20,12 @@ const asyncTask = async () => {
 	if (process.env.action === 'down') return;
 	const ordererCA = await deployCA({
 		Name: container_name.ordererCA,
-		port: config.orderer.orgs.NewConsensus.ca.portHost,
+		port: config.orderer.orgs[ordererOrg].ca.portHost,
 		network, imageTag, TLS
 	});
 	const peerCA = await deployCA({
 		Name: container_name.peerCA,
-		port: config.orgs.NEW.ca.portHost,
+		port: config.orgs[peerOrg].ca.portHost,
 		network, imageTag, TLS
 	});
 	const caServices = [ordererCA, peerCA];

@@ -68,7 +68,8 @@ exports.genAll = async (swarm) => {
 						},
 						user: {
 							name: 'Admin'
-						}
+						},
+						password:'passwd',
 					});
 					promises.push(genOrderer(caService, cryptoPath, admin, {TLS}));
 				}
@@ -86,6 +87,7 @@ exports.genAll = async (swarm) => {
 				orderer: {
 					org: domain, name: ordererConfig.container_name
 				},
+				password:'passwd',
 				user: {
 					name: 'Admin'
 				}
@@ -122,9 +124,10 @@ exports.genAll = async (swarm) => {
 					peer: {
 						org: domain, name: peerName
 					},
+					password:'passwd',
 					user: {
 						name: 'Admin'
-					}
+					},
 				});
 				promises.push(genPeer(caService, cryptoPath, admin, {TLS}));
 			}
