@@ -24,6 +24,7 @@ const asyncTask = async () => {
 	const Name = `${peerName}.${peerOrg}`;
 	const serviceName = swarmServiceName(Name);
 	await serviceClear(serviceName);
+	if (process.env.action === 'down') return;
 
 	//Stateful: use volume as orderer
 	const tls = TLS ? cryptoPath.TLSFile(cryptoType) : undefined;

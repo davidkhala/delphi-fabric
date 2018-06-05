@@ -33,7 +33,6 @@
     },
     "channels":{
         "allchannel":{
-            "file":"all.tx"
         }
     },
     "orgs":{

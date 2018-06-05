@@ -44,7 +44,7 @@ app.post('/', cache.single('proto'), async (req, res) => {
 		const {signatures: peerAdminSigns} = await signUtil.signs([Promise.resolve(peerClient)], proto);
 		signatures = signatures.concat(peerAdminSigns);
 
-		res.send({signatures});
+		res.send({signatures:signUtil.toBase64(signatures)});
 	} catch (err) {
 		logger.error(err);
 		res.status(400).send(err.toString());

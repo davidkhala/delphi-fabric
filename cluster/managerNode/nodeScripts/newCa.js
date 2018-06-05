@@ -1,7 +1,7 @@
 const config = require('./config');
 const logger = require('../../../common/nodejs/logger').new('newCa')
-const {tasksWaitUntilLive, serviceDelete, swarmServiceName} = require('../../../common/docker/nodejs/dockerode-util');
-const {tasksWaitUntilDead, deployCA} = require('../../../common/nodejs/fabric-dockerode');
+const {serviceClear, swarmServiceName} = require('../../../common/docker/nodejs/dockerode-util');
+const {tasksWaitUntilLive, deployCA} = require('../../../common/nodejs/fabric-dockerode');
 const ordererOrg = 'NewConsensus';
 const peerOrg = 'NEW';
 const container_name = {
@@ -15,15 +15,9 @@ const asyncTask = async () => {
 	const imageTag = `x86_64-${fabricTag}`;
 	const ordererCAServiceName = swarmServiceName(container_name.ordererCA);
 	const peerCAServiceName = swarmServiceName(container_name.peerCA);
-	await serviceDelete(ordererCAServiceName);
-	await serviceDelete(peerCAServiceName);
-	try {
-		await tasksWaitUntilDead({services: [ordererCAServiceName, peerCAServiceName]});
-	} catch (err) {
-		if (err.toString().includes('not found')) {
-			logger.warn(err);
-		} else throw err;
-	}
+	await serviceClear(ordererCAServiceName);
+	await serviceClear(peerCAServiceName);
+	if (process.env.action === 'down') return;
 	const ordererCA = await deployCA({
 		Name: container_name.ordererCA,
 		port: config.orderer.orgs.NewConsensus.ca.portHost,
