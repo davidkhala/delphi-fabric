@@ -3,6 +3,9 @@ const router = express.Router();
 const logger = require('../common/nodejs/logger').new('router signature');
 const signUtil = require('../common/nodejs/multiSign');
 const serverClient = require('../common/nodejs/express/serverClient');
+const configtxlatorUtil = require('../common/nodejs/configtxlator');
+const {ConfigFactory} = configtxlatorUtil;
+const helper = require('../app/helper');
 const Multer = require('multer');
 const fs = require('fs');
 const path = require('path');
@@ -53,56 +56,42 @@ router.post('/getSignatures', multerCache.single('proto'), async (req, res) => {
 router.post('/newOrg', multerCache.fields([{name: 'admins'}, {name: 'root_certs'}, {name: 'tls_root_certs'}])
 	, async (req, res) => {
 		try {
-			const adminCerts = req.files['admins'];
-			const rootCerts = req.files['root_certs'];
-			const tlsRootCerts = req.files['tls_root_certs'];
-			logger.debug({adminCerts, rootCerts, tlsRootCerts});
+			const admins = req.files['admins'].map(({path}) => path);
+			const root_certs = req.files['root_certs'].map(({path}) => path);
+			const tls_root_certs = req.files['tls_root_certs'].map(({path}) => path);
+			logger.debug({admins, root_certs, tls_root_certs});
 			const {channelName, MSPID, MSPName, nodeType} = req.body;
-			const configtxlatorUtil = require('../common/nodejs/configtxlator');
-			const helper = require('../app/helper');
 
-			const client = await helper.getOrgAdmin('TK.Teeking.com');
+			const randomOrg = helper.randomOrg();
+			const client = await helper.getOrgAdmin(randomOrg);
 			const channel = helper.prepareChannel(channelName, client, true);
 
 			const onUpdate = (original_config) => {
 				logger.debug('channel.getOrganizations() before', channel.getOrganizations());
-				if (channel.getOrganizations().find((entry) => {
-					return entry.id === MSPID;
-				})) {
-					logger.warn(MSPID, 'msp exist in channel', channel.getName());
-					return original_config;
-				} else {
-
-					//FIXME configtxlatorUtil
-					return configtxlatorUtil.newPeerOrg(original_config, MSPName, MSPID,
-						{
-							admins: adminCerts ? adminCerts.map(({path}) => path) : [],
-							root_certs: rootCerts ? rootCerts.map(({path}) => path) : [],
-							tls_root_certs: tlsRootCerts ? tlsRootCerts.map(({path}) => path) : []
-						});
-				}
+				//No update checking should be implemented in channel update
+				const config = new ConfigFactory(original_config);
+				return config.newOrg(MSPName, MSPID, nodeType, {admins, root_certs, tls_root_certs}).build();
 			};
 
-			const peer = helper.newPeers([0], 'TK.Teeking.com')[0];
+			const peer = helper.newPeers([0], randomOrg)[0];
 			const peerEventHub = helper.bindEventHub(peer, client);
-			const signatureCollector = (proto) => {
-				const tempFile = path.resolve(signCache, 'proto');
+			const signatureCollector = async (proto) => {
+				const tempFile = path.resolve(cache, 'proto');
 				fs.writeFileSync(tempFile, proto);
-				return new Promise((resolve, reject) => {
+				const body = await new Promise((resolve, reject) => {
 
 					const formData = {
 						proto: fs.createReadStream(tempFile)
 					};
-					Request.post({url: `http://localhost:${signServerPort}`, formData}, (err, resp, body) => {
+					Request.post({url: `http://localhost:${swarmServerPort}/channel/getSignatures`, formData}, (err, resp, body) => {
 						if (err) reject(err);
-						const {signatures, proto} = JSON.parse(body);
-						logger.debug(signatures);
-						resolve({
-							signatures: signUtil.fromBase64(signatures),
-							proto: new Buffer(proto, 'binary')
-						});
+						resolve(body);
 					});
 				});
+				const signatures = JSON.parse(body);
+				return {
+					signatures: signUtil.fromBase64(signatures),
+				};
 
 			};
 
@@ -112,7 +101,7 @@ router.post('/newOrg', multerCache.fields([{name: 'admins'}, {name: 'root_certs'
 			logger.debug('channel.getOrganizations() after', channel.getOrganizations());
 			res.json(channel.getOrganizations());
 		} catch (err) {
-			res.send(err);
+			res.status(400).send(err.toString());
 		}
 
 	});

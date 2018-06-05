@@ -5,6 +5,7 @@ const helper = require('./helper');
 const logger = require('../common/nodejs/logger').new('testChannel');
 const configtxlator = require('../common/nodejs/configtxlator');
 const {homeResolve} = require('../common/nodejs/path');
+const fs = require('fs');
 const channelName = 'allchannel';
 
 const globalConfig = require('../config/orgs.json');
@@ -43,7 +44,7 @@ const joinAllfcn = async () => {
 
 };
 const task = async () => {
-	const client = await helper.getOrgAdmin('BU.Delphi.com');
+	const client = await helper.getOrgAdmin();
 	const ordererUrl = `${TLS ? 'grpcs' : 'grpc'}://localhost:7050`;
 	logger.info({ordererUrl});
 	try {
@@ -59,7 +60,7 @@ const task = async () => {
 	const channel = helper.prepareChannel(channelName, client);
 	try {
 		const {original_config} = await configtxlator.getChannelConfigReadable(channel);
-		const fs = require('fs');
+
 		fs.writeFileSync(`${channelName}.json`, original_config);
 	} catch (e) {
 		logger.error(e);

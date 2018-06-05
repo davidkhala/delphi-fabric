@@ -7,12 +7,12 @@ const ordererConfig = globalConfig.orderer;
 const ClientUtil = require('../common/nodejs/client');
 const EventHubUtil = require('../common/nodejs/eventHub');
 const peerUtil = require('../common/nodejs/peer');
-const {CryptoPath,homeResolve} = require('../common/nodejs/path');
+const {CryptoPath, homeResolve} = require('../common/nodejs/path');
 const CRYPTO_CONFIG_DIR = homeResolve(globalConfig.docker.volumes.MSPROOT.dir);
 const userUtil = require('../common/nodejs/user');
 const OrdererUtil = require('../common/nodejs/orderer');
 const channelUtil = require('../common/nodejs/channel');
-
+const {randomKeyOf} = require('../common/nodejs/helper');
 
 // peerConfig: "portMap": [{	"host": 8051,		"container": 7051},{	"host": 8053,		"container": 7053}]
 const preparePeer = (orgName, peerIndex, peerConfig) => {
@@ -172,8 +172,6 @@ const getMspID = (orgName) => {
 	return {mspId: target.MSP.id, nodeType};
 };
 
-const rawAdminUsername = 'Admin';
-
 const getUserClient = async (username, orgName, client) => {
 	const {mspId, nodeType} = getMspID(orgName);
 	const cryptoPath = new CryptoPath(CRYPTO_CONFIG_DIR, {
@@ -193,9 +191,15 @@ const getUserClient = async (username, orgName, client) => {
 
 const getAdminClient = (orgName) => {
 	const client = ClientUtil.new();
-	return getUserClient(rawAdminUsername, orgName, client);
+	if (!orgName) {
+		orgName = exports.randomOrg();
+		logger.info('undefined orgName, use', orgName);
+	}
+	return getUserClient(userUtil.adminName, orgName, client);
 };
-
+exports.randomOrg = () => {
+	return randomKeyOf(globalConfig.orgs);
+};
 exports.preparePeer = preparePeer;
 exports.bindEventHub = bindEventHub;
 exports.getOrgAdmin = getAdminClient;

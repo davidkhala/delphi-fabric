@@ -94,6 +94,10 @@ govendor: to import third-party package in vendor folder
 - kafka on swarm
 - CA in command base is preferred
 - use relative path via ``const os = require('os');;`` in ``path.homeResolve``
+- to avoid port conflict, use Redis as implement of swarmServer
+- use path.resolve to replace `${path}/filename`
+- refactor: to use pathUtil.CryptoPath class instead of peer_hostname_full
+- user server design instead of nfs
 
 ## TODO
 - TLS
@@ -104,20 +108,16 @@ govendor: to import third-party package in vendor folder
 - chaincode version string format
 - javascript chaincode
 - chaincode uninstall
-- use path.resolve to replace `${path}/filename`
-- function new() -> classify
 - ?update system channel ``testchainid``
 - there is a trend to use golang/dep instead of govendor https://gerrit.hyperledger.org/r/#/c/19113/
 - multiple priv-file creation is witnessed in app/cryptoKeyStore, investigate problem of state store, crypto-store
-- refactor: to use pathUtil.CryptoPath class instead of peer_hostname_full
 - change default keystore path: /home/david/.hfc-key-store/ still having files even when bootstrap
 - simplify portMap design from [{7051:port}] to {port: port,eventHubPort:port2}
 - adding kafka/zookeeper online
 - stateStore problem
-- user server design instead of nfs
 - docker version problem in ver. 18.x 
 - slave node in swarm should use another code repository.
-- to avoid port conflict, use Redis as implement of swarmServer
+- can Organization name replaced by MSP name?
 
 ### TODO master slave design
 - slave: each org has 1 ca, then 1 orderer,1 peer
@@ -132,3 +132,4 @@ govendor: to import third-party package in vendor folder
  
 ## Abandoned tasks
 - docker volume plugin
+- function new() -> classify
