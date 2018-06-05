@@ -33,4 +33,6 @@ else
 	if ! go version; then
 		$CURRENT/common/install.sh golang
 	fi
+	# finally
+    sudo apt autoremove -y
 fi

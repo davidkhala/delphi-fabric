@@ -5,6 +5,3 @@ root=$(dirname $(dirname $CURRENT))
 
 $root/install.sh
 
-
-# finally
-sudo apt autoremove -y

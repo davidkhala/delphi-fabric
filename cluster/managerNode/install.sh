@@ -4,7 +4,7 @@ CURRENT=$(cd $(dirname ${BASH_SOURCE}) && pwd)
 root=$(dirname $(dirname $CURRENT))
 
 if [ -z "$(ls -A $root/common)" ]; then
-	git submodule update --init --recursive
+	$root/install.sh gitSync
 fi
 
 $root/common/install.sh
