@@ -150,7 +150,7 @@ const bindEventHub = (richPeer, client) => {
 	return EventHubUtil.new(client, {eventHubPort, pem, peerHostName});
 
 };
-const getMspID = (orgName) => {
+const findOrgConfig = (orgName) => {
 	let target;
 	let nodeType;
 	if (orgsConfig[orgName]) {
@@ -169,7 +169,11 @@ const getMspID = (orgName) => {
 		}
 	}
 	if (!target) throw `${orgName} not found`;
-	return {mspId: target.MSP.id, nodeType};
+	return {config: target, nodeType};
+};
+const getMspID = (orgName) => {
+	const {config, nodeType} = findOrgConfig(orgName);
+	return {mspId: config.MSP.id, nodeType};
 };
 
 const getUserClient = async (username, orgName, client) => {
@@ -189,18 +193,29 @@ const getUserClient = async (username, orgName, client) => {
 };
 
 
-const getAdminClient = (orgName) => {
+const getAdminClient = (orgName, nodeType) => {
 	const client = ClientUtil.new();
 	if (!orgName) {
-		orgName = exports.randomOrg();
-		logger.info('undefined orgName, use', orgName);
+		orgName = exports.randomOrg(nodeType);
 	}
 	return getUserClient(userUtil.adminName, orgName, client);
 };
-exports.randomOrg = () => {
-	return randomKeyOf(globalConfig.orgs);
+exports.randomOrg = (nodeType) => {
+	let orgName;
+	if (nodeType === 'peer') {
+		orgName = randomKeyOf(globalConfig.orgs);
+	} else if (nodeType === 'orderer') {
+		if (globalConfig.orderer.type === 'solo') {
+			orgName = globalConfig.orderer.solo.orgName;
+		} else {
+			orgName = randomKeyOf(globalConfig.orderer.kafka.orgs);
+		}
+	} else {
+		throw `invalid nodeType ${nodeType}`;
+	}
+	logger.info(`random ${nodeType} org`, orgName);
+	return orgName;
 };
 exports.preparePeer = preparePeer;
 exports.bindEventHub = bindEventHub;
 exports.getOrgAdmin = getAdminClient;
-exports.JSONReadable = (data) => JSON.stringify(data, null, 2);

@@ -16,8 +16,8 @@ const MSPROOT = homeResolve(globalConfig.docker.volumes.MSPROOT.dir);
 const CONFIGTX = homeResolve(globalConfig.docker.volumes.CONFIGTX.dir);
 const arch = 'x86_64';
 const {
-	containerDelete, networkRemove, volumeCreateIfNotExist, networkCreateIfNotExist,
-	swarmServiceName, serviceDelete, constraintSelf,
+	containerDelete, volumeCreateIfNotExist, networkCreateIfNotExist,
+	swarmServiceName, serviceClear, constraintSelf,
 	volumeRemove, prune: {system: pruneSystem}
 } = require('../common/docker/nodejs/dockerode-util');
 const {docker: {fabricTag, network, thirdPartyTag}, TLS} = globalConfig;
@@ -48,7 +48,7 @@ exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPRO
 
 		if (toStop) {
 			if (swarm) {
-				return serviceDelete(serviceName);
+				return serviceClear(serviceName);
 			} else {
 				return containerDelete(container_name);
 			}
@@ -132,7 +132,7 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 
 			if (tostop) {
 				if (swarm) {
-					await serviceDelete(swarmServiceName(container_name));
+					await serviceClear(swarmServiceName(container_name));
 				} else {
 					await containerDelete(container_name);
 				}
@@ -197,7 +197,7 @@ exports.runCAs = async (toStop, swarm) => {
 
 		if (toStop) {
 			if (swarm) {
-				return await serviceDelete(serviceName);
+				return await serviceClear(serviceName);
 			} else {
 				return await containerDelete(container_name);
 			}
@@ -245,7 +245,7 @@ exports.runZookeepers = async (toStop, swarm) => {
 		const {MY_ID} = zkConfig;
 		if (toStop) {
 			if (swarm) {
-				await serviceDelete(zookeeper);
+				await serviceClear(zookeeper);
 			} else {
 				await containerDelete(zookeeper);
 			}
@@ -278,7 +278,7 @@ exports.runKafkas = async (toStop, swarm) => {
 		const {BROKER_ID} = kafkaConfig;
 		if (toStop) {
 			if (swarm) {
-				await serviceDelete(kafka);
+				await serviceClear(kafka);
 			} else {
 				await containerDelete(kafka);
 			}
@@ -303,18 +303,17 @@ exports.down = async (swarm) => {
 	const {orderer: {type}} = globalConfig;
 
 	const toStop = true;
-	await module.exports.runCAs(toStop, swarm);
+	await exports.runCAs(toStop, swarm);
 
-	await module.exports.runPeers(undefined, toStop, swarm);
-	await module.exports.runOrderers(undefined, toStop, swarm);
+	await exports.runPeers(undefined, toStop, swarm);
+	await exports.runOrderers(undefined, toStop, swarm);
 	if (type === 'kafka') {
-		await module.exports.runKafkas(toStop, swarm);
-		await module.exports.runZookeepers(toStop, swarm);
+		await exports.runKafkas(toStop, swarm);
+		await exports.runZookeepers(toStop, swarm);
 	}
 	await pruneSystem(swarm);
-	await networkRemove(network);
 	await chaincodeClean();
-	await module.exports.volumesAction(toStop);
+	await exports.volumesAction(toStop);
 
 	const nodeAppConfigJson = require('../app/config');
 	fsExtra.removeSync(nodeAppConfigJson.stateDBCacheDir);
