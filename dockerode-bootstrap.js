@@ -29,6 +29,7 @@ const nodeServers = {
 	swarmServer: path.resolve(__dirname, 'swarm', 'swarmServer.js'),
 	signServer: path.resolve(__dirname, 'cluster', 'leaderNode', 'signServer.js')
 };
+const configtxlatorServer = require('./common/bin-manage/runConfigtxlator');
 
 exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'}, toStop, swarm) => {
 	const {orderer: {type, genesis_block: {file: BLOCK_FILE}}} = globalConfig;
@@ -331,8 +332,7 @@ exports.down = async (swarm) => {
 	for (const [name, script] of Object.entries(nodeServers)) {
 		await pm2Manager.kill({name, script});
 	}
-
-	logger.info('done down');
+	await configtxlatorServer.run('down');
 };
 
 exports.up = async (swarm) => {
@@ -379,5 +379,6 @@ exports.up = async (swarm) => {
 	for (const [name, script] of Object.entries(nodeServers)) {
 		await pm2Manager.run({name, script});
 	}
+	await configtxlatorServer.run('up');
 
 };
