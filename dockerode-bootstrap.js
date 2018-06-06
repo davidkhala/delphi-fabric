@@ -11,7 +11,7 @@ const {
 } = require('./common/nodejs/fabric-dockerode');
 const channelUtil = require('./common/nodejs/channel');
 const {CryptoPath, homeResolve} = require('./common/nodejs/path');
-const pm2Manager = require('./common/nodejs/express/pm2Manager');
+const {PM2} = require('./common/nodejs/express/pm2Manager');
 const MSPROOT = homeResolve(globalConfig.docker.volumes.MSPROOT.dir);
 const CONFIGTX = homeResolve(globalConfig.docker.volumes.CONFIGTX.dir);
 const arch = 'x86_64';
@@ -357,7 +357,9 @@ exports.down = async (swarm) => {
 	fsExtra.removeSync(CONFIGTX);
 	logger.info(`[done] clear CONFIGTX ${CONFIGTX}`);
 	for (const [name, script] of Object.entries(nodeServers)) {
-		await pm2Manager.kill({name, script});
+		const pm2 = await new PM2().connect();
+		await pm2.delete({name, script});
+		pm2.disconnect();
 	}
 	await configtxlatorServer.run('down');
 	logger.debug('[done] down');
@@ -400,7 +402,9 @@ exports.up = async (swarm) => {
 
 	//swarm server and signServer
 	for (const [name, script] of Object.entries(nodeServers)) {
-		await pm2Manager.run({name, script});
+		const pm2 = await new PM2().connect();
+		await pm2.run({name, script});
+		pm2.disconnect();
 	}
 	await configtxlatorServer.run('up');
 

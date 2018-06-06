@@ -52,9 +52,3 @@ $root/common/bin-manage/pullBIN.sh -v $fabricTag
 $root/cluster/prepare.sh updateNODESDK $fabricTag
 
 $root/cluster/prepare.sh updateChaincode
-
-function configServer() {
-	# TODO not exposed to manager
-	$root/install.sh couchdb
-	node $root/swarm/swarmServer.js
-}
