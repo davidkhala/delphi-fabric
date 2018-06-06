@@ -24,7 +24,11 @@ const {docker: {fabricTag, network, thirdPartyTag}, TLS} = globalConfig;
 
 const util = require('util');
 const exec = util.promisify(require('child_process').exec);
-const runConfigtxGenShell = path.resolve(path.dirname(__dirname), 'common', 'bin-manage', 'runConfigtxgen.sh');
+const runConfigtxGenShell = path.resolve(__dirname, 'common', 'bin-manage', 'runConfigtxgen.sh');
+const nodeServers = {
+	swarmServer: path.resolve(__dirname, 'swarm', 'swarmServer.js'),
+	signServer: path.resolve(__dirname, 'cluster', 'leaderNode', 'signServer.js')
+};
 
 exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'}, toStop, swarm) => {
 	const {orderer: {type, genesis_block: {file: BLOCK_FILE}}} = globalConfig;
@@ -324,14 +328,13 @@ exports.down = async (swarm) => {
 	logger.info(`[done] clear MSPROOT ${MSPROOT}`);
 	fsExtra.removeSync(CONFIGTX);
 	logger.info(`[done] clear CONFIGTX ${CONFIGTX}`);
-	for (const [name, script] in Object.entries(nodeServers)) {
+	for (const [name, script] of Object.entries(nodeServers)) {
 		await pm2Manager.kill({name, script});
 	}
+
+	logger.info('done down');
 };
-const nodeServers = {
-	swarmServer: path.resolve(__dirname, 'swarm', 'swarmServer.js'),
-	signServer: path.resolve(__dirname, 'cluster', 'leaderNode', 'signServer.js')
-};
+
 exports.up = async (swarm) => {
 	const {orderer: {type}} = globalConfig;
 	await exports.volumesAction();
@@ -373,7 +376,7 @@ exports.up = async (swarm) => {
 	if (swarm) await tasksWaitUntilLive(peerServices);
 
 	//swarm server and signServer
-	for (const [name, script] in Object.entries(nodeServers)) {
+	for (const [name, script] of Object.entries(nodeServers)) {
 		await pm2Manager.run({name, script});
 	}
 
