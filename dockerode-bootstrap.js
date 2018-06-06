@@ -1,17 +1,17 @@
-const globalConfig = require('./orgs.json');
+const globalConfig = require('./config/orgs.json');
 const fsExtra = require('fs-extra');
 const path = require('path');
-const logger = require('../common/nodejs/logger').new('dockerode-bootstrap');
-const peerUtil = require('../common/nodejs/peer');
+const logger = require('./common/nodejs/logger').new('dockerode-bootstrap');
+const peerUtil = require('./common/nodejs/peer');
 const {
-	deployCA,runCA,
+	deployCA, runCA,
 	deployKafka, runKafka, runZookeeper, deployZookeeper,
 	deployPeer, runPeer, runOrderer, deployOrderer,
 	chaincodeClean, tasksWaitUntilLive, imagePullCCENV,
-} = require('../common/nodejs/fabric-dockerode');
-const channelUtil = require('../common/nodejs/channel');
-const {CryptoPath, homeResolve} = require('../common/nodejs/path');
-
+} = require('./common/nodejs/fabric-dockerode');
+const channelUtil = require('./common/nodejs/channel');
+const {CryptoPath, homeResolve} = require('./common/nodejs/path');
+const pm2Manager = require('./common/nodejs/express/pm2Manager');
 const MSPROOT = homeResolve(globalConfig.docker.volumes.MSPROOT.dir);
 const CONFIGTX = homeResolve(globalConfig.docker.volumes.CONFIGTX.dir);
 const arch = 'x86_64';
@@ -19,7 +19,7 @@ const {
 	containerDelete, volumeCreateIfNotExist, networkCreateIfNotExist,
 	swarmServiceName, serviceClear, constraintSelf,
 	volumeRemove, prune: {system: pruneSystem}
-} = require('../common/docker/nodejs/dockerode-util');
+} = require('./common/docker/nodejs/dockerode-util');
 const {docker: {fabricTag, network, thirdPartyTag}, TLS} = globalConfig;
 
 const util = require('util');
@@ -315,7 +315,7 @@ exports.down = async (swarm) => {
 	await chaincodeClean();
 	await exports.volumesAction(toStop);
 
-	const nodeAppConfigJson = require('../app/config');
+	const nodeAppConfigJson = require('./app/config');
 	fsExtra.removeSync(nodeAppConfigJson.stateDBCacheDir);
 	logger.info(`[done] clear stateDBCacheDir ${nodeAppConfigJson.stateDBCacheDir}`);
 
@@ -324,11 +324,16 @@ exports.down = async (swarm) => {
 	logger.info(`[done] clear MSPROOT ${MSPROOT}`);
 	fsExtra.removeSync(CONFIGTX);
 	logger.info(`[done] clear CONFIGTX ${CONFIGTX}`);
+	for (const [name, script] in Object.entries(nodeServers)) {
+		await pm2Manager.kill({name, script});
+	}
 };
-
+const nodeServers = {
+	swarmServer: path.resolve(__dirname, 'swarm', 'swarmServer.js'),
+	signServer: path.resolve(__dirname, 'cluster', 'leaderNode', 'signServer.js')
+};
 exports.up = async (swarm) => {
 	const {orderer: {type}} = globalConfig;
-	await pruneSystem();
 	await exports.volumesAction();
 	await networkCreateIfNotExist({Name: network}, swarm);
 	const caServices = await exports.runCAs(undefined, swarm);
@@ -340,11 +345,11 @@ exports.up = async (swarm) => {
 		if (swarm) await tasksWaitUntilLive(kafkaServices);
 	}
 	if (swarm) await tasksWaitUntilLive(caServices);
-	await require('./caCryptoGen').genAll(swarm);
+	await require('./config/caCryptoGen').genAll(swarm);
 
 	const PROFILE_BLOCK = globalConfig.orderer.genesis_block.profile;
 	const configtxFile = path.resolve(__dirname, 'configtx.yaml');
-	require('./configtx.js').gen({MSPROOT, PROFILE_BLOCK, configtxFile});
+	require('./config/configtx.js').gen({MSPROOT, PROFILE_BLOCK, configtxFile});
 
 
 	const BLOCK_FILE = globalConfig.orderer.genesis_block.file;
@@ -366,5 +371,10 @@ exports.up = async (swarm) => {
 
 	const peerServices = await module.exports.runPeers(undefined, undefined, swarm);
 	if (swarm) await tasksWaitUntilLive(peerServices);
+
+	//swarm server and signServer
+	for (const [name, script] in Object.entries(nodeServers)) {
+		await pm2Manager.run({name, script});
+	}
 
 };

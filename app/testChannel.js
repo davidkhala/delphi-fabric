@@ -44,7 +44,7 @@ const joinAllfcn = async () => {
 
 };
 const task = async () => {
-	const client = await helper.getOrgAdmin();
+	const client = await helper.getOrgAdmin(undefined, 'orderer');
 	const ordererUrl = `${TLS ? 'grpcs' : 'grpc'}://localhost:7050`;
 	logger.info({ordererUrl});
 	try {
@@ -57,7 +57,8 @@ const task = async () => {
 			await joinAllfcn();
 		} else throw err;
 	}
-	const channel = helper.prepareChannel(channelName, client);
+	const peerClient = await helper.getOrgAdmin(undefined, 'peer'); //only peer user can read channel
+	const channel = helper.prepareChannel(channelName, peerClient);
 	try {
 		const {original_config} = await configtxlator.getChannelConfigReadable(channel);
 

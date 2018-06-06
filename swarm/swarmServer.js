@@ -198,7 +198,7 @@ app.get('/block', async (req, res) => {
 app.get('/', async (req, res) => {
 	try {
 		//touch
-		await new dbMap[db]({url});
+		await new dbMap[db]({url,name:swarmDoc});
 		res.json({
 			errCode: 'success',
 			message: 'pong'

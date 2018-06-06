@@ -59,22 +59,24 @@ router.post('/newOrg', multerCache.fields([{name: 'admins'}, {name: 'root_certs'
 			const admins = req.files['admins'].map(({path}) => path);
 			const root_certs = req.files['root_certs'].map(({path}) => path);
 			const tls_root_certs = req.files['tls_root_certs'].map(({path}) => path);
-			logger.debug({admins, root_certs, tls_root_certs});
+			logger.debug('newOrg', {admins, root_certs, tls_root_certs});
 			const {channelName, MSPID, MSPName, nodeType} = req.body;
 
-			const randomOrg = helper.randomOrg();
+			const randomOrg = helper.randomOrg(nodeType);
 			const client = await helper.getOrgAdmin(randomOrg);
-			const channel = helper.prepareChannel(channelName, client, true);
+			const randomPeerOrg = helper.randomOrg('peer');
+			const peerClient = await helper.getOrgAdmin(randomPeerOrg);
+			const peerChannel = helper.prepareChannel(channelName, peerClient, true);
 
 			const onUpdate = (original_config) => {
-				logger.debug('channel.getOrganizations() before', channel.getOrganizations());
+				logger.debug('channel.getOrganizations() before', peerChannel.getOrganizations());
 				//No update checking should be implemented in channel update
 				const config = new ConfigFactory(original_config);
 				return config.newOrg(MSPName, MSPID, nodeType, {admins, root_certs, tls_root_certs}).build();
 			};
 
-			const peer = helper.newPeers([0], randomOrg)[0];
-			const peerEventHub = helper.bindEventHub(peer, client);
+			const peer = helper.newPeers([0], randomPeerOrg)[0];
+			const peerEventHub = helper.bindEventHub(peer, peerClient);
 			const signatureCollector = async (proto) => {
 				const tempFile = path.resolve(cache, 'proto');
 				fs.writeFileSync(tempFile, proto);
@@ -96,11 +98,12 @@ router.post('/newOrg', multerCache.fields([{name: 'admins'}, {name: 'root_certs'
 			};
 
 
-			await configtxlatorUtil.channelUpdate(channel, onUpdate, signatureCollector, peerEventHub);
-			await channel.initialize();
-			logger.debug('channel.getOrganizations() after', channel.getOrganizations());
-			res.json(channel.getOrganizations());
+			await configtxlatorUtil.channelUpdate(peerChannel, onUpdate, signatureCollector, peerEventHub);
+			await peerChannel.initialize();
+			logger.debug('channel.getOrganizations() after', peerChannel.getOrganizations());
+			res.json(peerChannel.getOrganizations());
 		} catch (err) {
+			logger.error(err);
 			res.status(400).send(err.toString());
 		}
 

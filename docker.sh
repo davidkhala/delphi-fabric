@@ -3,10 +3,10 @@ set -e
 CURRENT=$(cd $(dirname ${BASH_SOURCE}) && pwd)
 
 function down() {
-	node -e "require('./config/dockerode-bootstrap').down()"
+	node -e "require('./dockerode-bootstrap').down()"
 }
 function up() {
-	node -e "require('./config/dockerode-bootstrap').up()"
+	node -e "require('./dockerode-bootstrap').up()"
 }
 
 if [ "$1" == "up" ]; then
