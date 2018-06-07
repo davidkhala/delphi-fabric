@@ -1,4 +1,6 @@
 .idea/
 dist/
 node_modules/
-/cache/
+/swarm/cache
+/cluster/leaderNode/cache
+

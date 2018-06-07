@@ -12,7 +12,7 @@ const globalConfig = require('../config/orgs.json');
 const {TLS} = globalConfig;
 const channelConfig = globalConfig.channels[channelName];
 
-const channelConfigFile = `${homeResolve(globalConfig.docker.volumes.CONFIGTX.dir)}/${channelConfig.file}`;
+const channelConfigFile = homeResolve(globalConfig.docker.volumes.CONFIGTX.dir,channelConfig.file);
 const joinAllfcn = async () => {
 
 

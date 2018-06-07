@@ -223,5 +223,5 @@ exports.run = () => {
 };
 exports.clean = () => {
 	logger.info('clean');
-	fsExtra.removeSync(cache);
+	fsExtra.removeSync(homeResolve(cache));
 };

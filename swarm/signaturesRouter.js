@@ -8,11 +8,10 @@ const {ConfigFactory} = configtxlatorUtil;
 const helper = require('../app/helper');
 const Multer = require('multer');
 const fs = require('fs');
-const path = require('path');
 const {port: signServerPort} = require('./swarm.json').signServer;
 const {cache, port: swarmServerPort} = require('./swarm.json').swarmServer;
-
-const multerCache = Multer({dest: cache});
+const {homeResolve} = require('../common/nodejs/path');
+const multerCache = Multer({dest: homeResolve(cache)});
 const Request = require('request');
 
 const {sha2_256} = require('fabric-client/lib/hash');
@@ -54,7 +53,7 @@ router.post('/getSwarmSignatures', multerCache.single('proto'), async (req, res)
 
 });
 const signatureCollector = async (proto) => {
-	const tempFile = path.resolve(cache, 'proto');
+	const tempFile = homeResolve(cache,'proto');
 	fs.writeFileSync(tempFile, proto);
 	const body = await new Promise((resolve, reject) => {
 
@@ -75,7 +74,7 @@ const signatureCollector = async (proto) => {
 router.post('/newOrderer', async (req, res) => {
 	try {
 		const {address, channelName} = req.body;
-		logger.debug('newOrderer', address,channelName);
+		logger.debug('newOrderer', address, channelName);
 
 		const randomPeerOrg = helper.randomOrg('peer');
 		const peerClient = await helper.getOrgAdmin(randomPeerOrg);
@@ -93,7 +92,7 @@ router.post('/newOrderer', async (req, res) => {
 		await configtxlatorUtil.channelUpdate(peerChannel, onUpdate, signatureCollector, peerEventHub);
 		await peerChannel.initialize();
 		logger.debug('channel.getOrganizations() after(peer org)', peerChannel.getOrganizations());
-		res.json({newOrderer:address});
+		res.json({newOrderer: address});
 	} catch (err) {
 		logger.error(err);
 		res.status(400).send(err.toString());
