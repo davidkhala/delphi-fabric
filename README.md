@@ -118,6 +118,10 @@ govendor: to import third-party package in vendor folder
 - docker version problem in ver. 18.x 
 - slave node in swarm should use another code repository.
 - can Organization name replaced by MSP name?
+- pm2 to runConfigtxlator? without shell?
+- use nodejs scripts to replace runConfigtxgen.sh and runCryptogen.sh
+- move couchdb server to container based
+- swarm server and sign server cleaner
 
 ### TODO master slave design
 - slave: each org has 1 ca, then 1 orderer,1 peer

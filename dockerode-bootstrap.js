@@ -1,6 +1,7 @@
 const globalConfig = require('./config/orgs.json');
 const fsExtra = require('fs-extra');
 const path = require('path');
+const util = require('util');
 const logger = require('./common/nodejs/logger').new('dockerode-bootstrap');
 const peerUtil = require('./common/nodejs/peer');
 const {
@@ -20,14 +21,16 @@ const {
 	swarmServiceName, serviceClear, constraintSelf, serviceDelete,
 	volumeRemove, prune: {system: pruneSystem}
 } = require('./common/docker/nodejs/dockerode-util');
+const {advertiseAddr, joinToken} = require('./common/docker/nodejs/dockerCmd');
+const {hostname} = require('./common/nodejs/helper');
 const {docker: {fabricTag, network, thirdPartyTag}, TLS} = globalConfig;
 
-const util = require('util');
+const serverClient = require('./common/nodejs/express/serverClient');
 const exec = util.promisify(require('child_process').exec);
 const runConfigtxGenShell = path.resolve(__dirname, 'common', 'bin-manage', 'runConfigtxgen.sh');
 const nodeServers = {
-	swarmServer: path.resolve(__dirname, 'swarm', 'swarmServer.js'),
-	signServer: path.resolve(__dirname, 'cluster', 'leaderNode', 'signServer.js')
+	swarmServer: path.resolve(__dirname, 'swarm', 'swarmServerPM2.js'),
+	signServer: path.resolve(__dirname, 'cluster', 'leaderNode', 'signServerPM2.js')
 };
 const configtxlatorServer = require('./common/bin-manage/runConfigtxlator');
 
@@ -361,6 +364,8 @@ exports.down = async (swarm) => {
 		await pm2.delete({name, script});
 		pm2.disconnect();
 	}
+	require('./swarm/swarmServer').clean();
+	require('./cluster/leaderNode/signServer').clean();
 	await configtxlatorServer.run('down');
 	logger.debug('[done] down');
 };
@@ -400,13 +405,22 @@ exports.up = async (swarm) => {
 
 	await exports.runPeers(undefined, undefined, swarm);
 
-	//swarm server and signServer
+	//TODO plug-in swarm server and signServer
 	for (const [name, script] of Object.entries(nodeServers)) {
 		const pm2 = await new PM2().connect();
 		await pm2.run({name, script});
 		pm2.disconnect();
 	}
 	await configtxlatorServer.run('up');
+	logger.info('[start]swarm Server init steps');
+	const {address:ip} = await advertiseAddr();
+	const managerToken = await joinToken();
+	const {port} = require('./swarm/swarm').swarmServer;
+	const swarmServerUrl = `http://localhost:${port}`;
+	await serverClient.ping(swarmServerUrl);
+	await serverClient.leader.update(swarmServerUrl, {ip, hostname, managerToken});
 
 	logger.debug('[done] up');
+
+
 };
