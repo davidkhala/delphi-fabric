@@ -7,6 +7,7 @@ function down() {
 }
 function up() {
 	node -e "require('./dockerode-bootstrap').up(true)"
+	node app/testChannel.js
 }
 if [ "$1" == "up" ]; then
 	up
