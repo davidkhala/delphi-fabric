@@ -8,7 +8,7 @@ const {
 	deployCA, runCA,
 	deployKafka, runKafka, runZookeeper, deployZookeeper,
 	deployPeer, runPeer, runOrderer, deployOrderer,
-	chaincodeClean, tasksWaitUntilLive, imagePullCCENV, tasksWaitUntilDead
+	chaincodeClean, tasksWaitUntilLive, imagePull, tasksWaitUntilDead
 } = require('./common/nodejs/fabric-dockerode');
 const channelUtil = require('./common/nodejs/channel');
 const {CryptoPath, homeResolve} = require('./common/nodejs/path');
@@ -33,7 +33,10 @@ const nodeServers = {
 	signServer: path.resolve(__dirname, 'cluster', 'leaderNode', 'signServerPM2.js')
 };
 const configtxlatorServer = require('./common/bin-manage/runConfigtxlator');
-
+//TODO
+exports.prepare = async ()=>{
+	await imagePull({fabricTag,thirdPartyTag,arch});
+};
 exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'}, toStop, swarm) => {
 	const {orderer: {type, genesis_block: {file: BLOCK_FILE}}} = globalConfig;
 	const CONFIGTXVolume = volumeName.CONFIGTX;
@@ -134,7 +137,6 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 	const imageTag = `${arch}-${fabricTag}`;
 	const orgsConfig = globalConfig.orgs;
 	const peers = [];
-	if (!tostop) await imagePullCCENV(imageTag);
 	for (const domain in orgsConfig) {
 		const orgConfig = orgsConfig[domain];
 		const peersConfig = orgConfig.peers;

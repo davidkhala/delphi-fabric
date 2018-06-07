@@ -25,7 +25,7 @@ router.post('/getSwarmSignatures', multerCache.single('proto'), async (req, res)
 		logger.debug('proto hash ', sha2_256(proto));
 		let ips = [];
 		const swarmServerUrl = `http://localhost:${swarmServerPort}`;
-		const leaderInfo = JSON.parse(await serverClient.leader.info(swarmServerUrl));
+		const leaderInfo = await serverClient.leader.info(swarmServerUrl);
 		if (!leaderInfo || !leaderInfo.ip) throw 'no leader found';
 		logger.debug({leaderInfo});
 		ips.push(leaderInfo.ip);

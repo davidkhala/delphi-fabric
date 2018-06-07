@@ -10,8 +10,7 @@ const container_name = {
 };
 const {globalConfig} = require('./swarmClient');
 const asyncTask = async () => {
-	const body = await globalConfig;
-	const {docker: {network, fabricTag}, TLS} = body;
+	const {docker: {network, fabricTag}, TLS} = await globalConfig();
 	const imageTag = `x86_64-${fabricTag}`;
 	const ordererCAServiceName = swarmServiceName(container_name.ordererCA);
 	const peerCAServiceName = swarmServiceName(container_name.peerCA);

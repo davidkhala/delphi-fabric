@@ -10,7 +10,7 @@ const portMap = config.orgs[peerOrg].peers[peerName].portMap;
 const {globalConfig} = require('./swarmClient');
 
 const asyncTask = async () => {
-	const {docker: {network, fabricTag}, TLS} = await globalConfig;
+	const {docker: {network, fabricTag}, TLS} = await globalConfig();
 	const cryptoType = 'peer';
 	const imageTag = `x86_64-${fabricTag}`;
 

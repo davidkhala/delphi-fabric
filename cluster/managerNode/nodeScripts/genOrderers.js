@@ -9,11 +9,11 @@ const CONFIGTXVolume = 'CONFIGTX';
 const {CryptoPath, homeResolve} = require('../../../common/nodejs/path');
 const peerUtil = require('../../../common/nodejs/peer');
 const port = config.orderer.orgs[ordererOrg].orderers[ordererName].portHost;
-const {globalConfig, block, newOrg} = require('./swarmClient');
+const {globalConfig, block, newOrg,newOrderer} = require('./swarmClient');
 const path = require('path');
 const channelName = 'allchannel';
 const asyncTask = async () => {
-	const {docker: {network, fabricTag}, TLS} = await globalConfig;
+	const {docker: {network, fabricTag}, TLS} = await globalConfig();
 	const CONFIGTXdir = homeResolve(config.CONFIGTX);
 	const MSPROOTDir = homeResolve(config.MSPROOT);
 	const blockFilePath = path.resolve(CONFIGTXdir, config.BLOCK_FILE);
@@ -53,12 +53,14 @@ const asyncTask = async () => {
 	});
 
 	await taskLiveWaiter(ordererService);
-	// TODO do  channel update
+	// TODO do channel update
 	const hostCryptoPath = new CryptoPath(MSPROOTDir, {
 		orderer: {name: ordererName, org: ordererOrg},
 		user:{name:'Admin'}
 	});
-	const resp = await newOrg(hostCryptoPath, cryptoType, channelName, ordererOrg);
-	logger.debug(resp);
+	const respNewOrg = await newOrg(hostCryptoPath, cryptoType, channelName, ordererOrg);
+	logger.debug(respNewOrg);
+	const respNewOrderer = await newOrderer(hostCryptoPath.ordererHostName,channelName);
+	logger.debug(respNewOrderer);
 };
 asyncTask();

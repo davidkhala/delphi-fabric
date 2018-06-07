@@ -31,7 +31,7 @@ const getCaService = async (url, domain, TLS) => {
 const asyncTask = async () => {
 	fsExtra.removeSync(cryptoRoot);
 	if(process.env.action ==='down') return;
-	const {TLS} = await globalConfig;
+	const {TLS} = await globalConfig();
 	const ordererConfig = config.orderer.orgs[ordererOrg];
 	const ordererCAurl = `http${TLS ? 's' : ''}://localhost:${ordererConfig.ca.portHost}`;
 	const ordererCaService = await getCaService(ordererCAurl, ordererOrg, TLS);
