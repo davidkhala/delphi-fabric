@@ -202,7 +202,7 @@ exports.run = () => {
 		const dir = homeResolve(globalConfig.docker.volumes.CONFIGTX.dir);
 		const blockFile = path.resolve(dir, globalConfig.orderer.genesis_block.file);
 		const buffer = fs.readFileSync(blockFile, 'binary');
-		logger.info('check buffer hash', sha2_256(buffer));
+		logger.info('GET block','check buffer hash', sha2_256(buffer));
 		res.send(buffer);
 	});
 	app.get('/', async (req, res) => {
