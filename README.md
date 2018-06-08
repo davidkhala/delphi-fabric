@@ -116,7 +116,7 @@ govendor: to import third-party package in vendor folder
 - use nodejs scripts to replace runConfigtxgen.sh and runCryptogen.sh
 - move couchdb server to container based
 - swarm server and sign server cleaner
-
+- take care of docker swarm init --force-new-cluster
 ### TODO master slave design
 - slave: each org has 1 ca, then 1 orderer,1 peer
 - master & slave: signature server 

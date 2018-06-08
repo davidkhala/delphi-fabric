@@ -1,7 +1,5 @@
 //TODO send manager info to swarm Server
-const config = require('./config');
 const swarmClient = require('./swarmClient');
-const swarmBaseUrl = `${config.swarmServer.url}:${config.swarmServer.port}`;
 const {imagePull} = require('../../../common/nodejs/fabric-dockerode');
 const {swarmJoin, swarmLeave,swarmBelongs} = require('../../../common/docker/nodejs/dockerode-util');
 const dockerCmdUtil = require('../../../common/docker/nodejs/dockerCmd');

@@ -1,5 +1,5 @@
 const config = require('./config');
-const {deployPeer} = require('../../../common/nodejs/fabric-dockerode');
+const {deployPeer, chaincodeClean} = require('../../../common/nodejs/fabric-dockerode');
 const {swarmServiceName, serviceClear, taskLiveWaiter} = require('../../../common/docker/nodejs/dockerode-util');
 const {CryptoPath} = require('../../../common/nodejs/path');
 const peerUtil = require('../../../common/nodejs/peer');
@@ -24,6 +24,7 @@ const asyncTask = async () => {
 	const Name = `${peerName}.${peerOrg}`;
 	const serviceName = swarmServiceName(Name);
 	await serviceClear(serviceName);
+	await chaincodeClean();
 	if (process.env.action === 'down') return;
 
 	//Stateful: use volume as orderer
