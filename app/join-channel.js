@@ -49,7 +49,6 @@ exports.joinChannel = async (channel, peers, client) => {
 	}
 
 	const data = await channel.joinChannel(request);
-	logger.debug({data});
 	//FIXME bug design in fabric: error message occurred in Promise.resolve/then
 	const joinedBefore = [];
 	const joinedBeforeSymptom = '(status: 500, message: Cannot create ledger from genesis block, due to LedgerID already exists)';

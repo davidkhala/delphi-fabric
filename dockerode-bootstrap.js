@@ -361,13 +361,16 @@ exports.down = async (swarm) => {
 	logger.info(`[done] clear MSPROOT ${MSPROOT}`);
 	fsExtra.removeSync(CONFIGTX);
 	logger.info(`[done] clear CONFIGTX ${CONFIGTX}`);
-	for (const [name, script] of Object.entries(nodeServers)) {
-		const pm2 = await new PM2().connect();
-		await pm2.delete({name, script});
-		pm2.disconnect();
+	if(swarm){
+		for (const [name, script] of Object.entries(nodeServers)) {
+			const pm2 = await new PM2().connect();
+			await pm2.delete({name, script});
+			pm2.disconnect();
+		}
+		require('./swarm/swarmServer').clean();
+		require('./cluster/leaderNode/signServer').clean();
 	}
-	require('./swarm/swarmServer').clean();
-	require('./cluster/leaderNode/signServer').clean();
+
 	await configtxlatorServer.run('down');
 	logger.debug('[done] down');
 };
@@ -407,20 +410,22 @@ exports.up = async (swarm) => {
 
 	await exports.runPeers(undefined, undefined, swarm);
 
-	//TODO plug-in swarm server and signServer
-	for (const [name, script] of Object.entries(nodeServers)) {
-		const pm2 = await new PM2().connect();
-		await pm2.run({name, script});
-		pm2.disconnect();
+	if(swarm){
+		for (const [name, script] of Object.entries(nodeServers)) {
+			const pm2 = await new PM2().connect();
+			await pm2.run({name, script});
+			pm2.disconnect();
+		}
+		logger.info('[start]swarm Server init steps');
+		const {address:ip} = await advertiseAddr();
+		const managerToken = await joinToken();
+		const {port} = require('./swarm/swarm').swarmServer;
+		const swarmServerUrl = `http://localhost:${port}`;
+		await serverClient.ping(swarmServerUrl);
+		await serverClient.leader.update(swarmServerUrl, {ip, hostname:hostname(), managerToken});
 	}
+
 	await configtxlatorServer.run('up');
-	logger.info('[start]swarm Server init steps');
-	const {address:ip} = await advertiseAddr();
-	const managerToken = await joinToken();
-	const {port} = require('./swarm/swarm').swarmServer;
-	const swarmServerUrl = `http://localhost:${port}`;
-	await serverClient.ping(swarmServerUrl);
-	await serverClient.leader.update(swarmServerUrl, {ip, hostname:hostname(), managerToken});
 
 	logger.debug('[done] up');
 
