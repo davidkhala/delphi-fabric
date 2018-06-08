@@ -420,7 +420,7 @@ exports.up = async (swarm) => {
 	const {port} = require('./swarm/swarm').swarmServer;
 	const swarmServerUrl = `http://localhost:${port}`;
 	await serverClient.ping(swarmServerUrl);
-	await serverClient.leader.update(swarmServerUrl, {ip, hostname, managerToken});
+	await serverClient.leader.update(swarmServerUrl, {ip, hostname:hostname(), managerToken});
 
 	logger.debug('[done] up');
 

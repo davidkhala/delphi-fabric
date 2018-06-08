@@ -4,13 +4,13 @@ const Request = require('request');
 const logger = require('../../../common/nodejs/logger').new('api caller');
 const serverClient = require('../../../common/nodejs/express/serverClient');
 const {errHandler} = serverClient;
-exports.globalConfig =()=> new Promise((resolve, reject) => {
-	Request.get(`${swarmBaseUrl}/config/orgs`, errHandler(resolve,reject,true));
+exports.globalConfig = () => new Promise((resolve, reject) => {
+	Request.get(`${swarmBaseUrl}/config/orgs`, errHandler(resolve, reject, true));
 });
 exports.touch = () => new Promise((resolve, reject) => {
-	Request.get(swarmBaseUrl, errHandler(resolve,reject));
+	Request.get(swarmBaseUrl, errHandler(resolve, reject));
 });
-exports.leader = ()=>serverClient.leader.info(swarmBaseUrl);
+exports.leader = () => serverClient.leader.info(swarmBaseUrl);
 
 exports.block = (filePath) => serverClient.block(swarmBaseUrl, filePath);
 exports.newOrg = (cryptoPath, nodeType, channelName, orgName) => {
@@ -41,6 +41,12 @@ exports.newOrderer = (ordererHostName, channelName) => {
 		const form = {
 			address, channelName
 		};
-		Request.post({url: `${swarmBaseUrl}/channel/newOrderer`, form}, errHandler(resolve,reject));
+		Request.post({url: `${swarmBaseUrl}/channel/newOrderer`, form}, errHandler(resolve, reject));
 	});
+};
+exports.managerJoin = (ip, hostname) => {
+	return serverClient.manager.join(swarmBaseUrl, {ip, hostname});
+};
+exports.managerLeave = (ip) => {
+	return serverClient.manager.leave(swarmBaseUrl, {ip});
 };
