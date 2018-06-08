@@ -48,17 +48,11 @@ Major configuration
 Test on single host
 -----------------------
 **steps**
-1. run `$ ./testLocal.sh`
-    - it includes
-        1. update fabric binary files 
-        2. update npm fabric-ca-client, npm fabric-client 
-        3. update golang chaincode 
+1. run `$ ./docker.sh` to clean and restart network
 
-2. run `$ ./docker.sh` to clean and restart network
-
-3. run `$ node app/testChannel.js` to create-channel and join-channel
-4. `$ node app/testInstall.js` to install chaincode and instantiate chaincode
-5. `$ node app/testInvoke.js` to invoke chaincode
+2. run `$ node app/testChannel.js` to create-channel and join-channel
+3. `$ node app/testInstall.js` to install chaincode and instantiate chaincode
+4. `$ node app/testInvoke.js` to invoke chaincode
 
 channel update 
 -----------------------
