@@ -8,7 +8,8 @@ const {
 	deployCA, runCA,
 	deployKafka, runKafka, runZookeeper, deployZookeeper,
 	deployPeer, runPeer, runOrderer, deployOrderer,
-	chaincodeClean, tasksWaitUntilLive, imagePull, tasksWaitUntilDead
+	chaincodeClean, tasksWaitUntilLive, fabricImagePull, tasksWaitUntilDead
+	,swarmIPInit
 } = require('./common/nodejs/fabric-dockerode');
 const channelUtil = require('./common/nodejs/channel');
 const {CryptoPath, homeResolve} = require('./common/nodejs/path');
@@ -18,7 +19,7 @@ const CONFIGTX = homeResolve(globalConfig.docker.volumes.CONFIGTX.dir);
 const arch = 'x86_64';
 const {
 	containerDelete, volumeCreateIfNotExist, networkCreateIfNotExist,
-	swarmServiceName, serviceClear, constraintSelf, serviceDelete,
+	swarmServiceName, constraintSelf, serviceDelete,
 	volumeRemove, prune: {system: pruneSystem}
 } = require('./common/docker/nodejs/dockerode-util');
 const {advertiseAddr, joinToken} = require('./common/docker/nodejs/dockerCmd');
@@ -33,10 +34,7 @@ const nodeServers = {
 	signServer: path.resolve(__dirname, 'cluster', 'leaderNode', 'signServerPM2.js')
 };
 const configtxlatorServer = require('./common/bin-manage/runConfigtxlator');
-//TODO
-exports.prepare = async ()=>{
-	await imagePull({fabricTag,thirdPartyTag,arch});
-};
+
 exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'}, toStop, swarm) => {
 	const {orderer: {type, genesis_block: {file: BLOCK_FILE}}} = globalConfig;
 	const CONFIGTXVolume = volumeName.CONFIGTX;
@@ -376,8 +374,9 @@ exports.down = async (swarm) => {
 };
 
 exports.up = async (swarm) => {
-	await networkCreateIfNotExist({Name: network}, swarm);
+	await fabricImagePull({fabricTag,thirdPartyTag,arch});
 	if(swarm){
+		await swarmIPInit();
 		for (const [name, script] of Object.entries(nodeServers)) {
 			const pm2 = await new PM2().connect();
 			await pm2.run({name, script});
@@ -391,8 +390,10 @@ exports.up = async (swarm) => {
 		await serverClient.ping(swarmServerUrl);
 		await serverClient.leader.update(swarmServerUrl, {ip, hostname:hostname(), managerToken});
 	}
-
 	await configtxlatorServer.run('up');
+
+	await networkCreateIfNotExist({Name: network}, swarm);
+
 	const {orderer: {type}} = globalConfig;
 	await exports.volumesAction();
 	await exports.runCAs(undefined, swarm);

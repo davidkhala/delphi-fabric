@@ -92,7 +92,7 @@ govendor: to import third-party package in vendor folder
 - use path.resolve to replace `${path}/filename`
 - refactor: to use pathUtil.CryptoPath class instead of peer_hostname_full
 - user server design instead of nfs
-
+- Deprecated manager join, leave and info since it could be get with docker node inspect
 ## TODO
 - TLS
 - java sdk and docker-swarm: keep update
