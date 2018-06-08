@@ -14,6 +14,7 @@ const peerOrg = 'NEW';
 const peerName = 'newContainer';
 const {globalConfig} = require('./swarmClient');
 const fsExtra = require('fs-extra');
+const {PM2} = require('../../../common/nodejs/express/pm2Manager');
 const getCaService = async (url, domain, TLS) => {
 	if (TLS) {
 		const caHostName = `ca.${domain}`;
@@ -30,7 +31,7 @@ const getCaService = async (url, domain, TLS) => {
 };
 const asyncTask = async () => {
 	fsExtra.removeSync(cryptoRoot);
-	if(process.env.action ==='down') return;
+	if (process.env.action === 'down') return;
 	const {TLS} = await globalConfig();
 	const ordererConfig = config.orderer.orgs[ordererOrg];
 	const ordererCAurl = `http${TLS ? 's' : ''}://localhost:${ordererConfig.ca.portHost}`;
@@ -43,7 +44,7 @@ const asyncTask = async () => {
 			org: peerOrg, name: peerName
 		},
 		user: {name: 'Admin'},
-		password:'passwd'
+		password: 'passwd'
 	});
 	const ordererAdmin = await caCryptoGen.init(ordererCaService, cryptoPath, 'orderer', ordererConfig.MSP.id);
 	await caCryptoGen.genOrderer(ordererCaService, cryptoPath, ordererAdmin, {TLS});
@@ -53,6 +54,11 @@ const asyncTask = async () => {
 	const peerCaService = await getCaService(peerCAURL, peerOrg, TLS);
 	const peerAdmin = await caCryptoGen.init(peerCaService, cryptoPath, 'peer', peerConfig.MSP.id);
 	await caCryptoGen.genPeer(peerCaService, cryptoPath, peerAdmin, {TLS});
+	const pm2 = await (new PM2().connect());
+
+	const script = homeResolve(config.signServer.path);
+	await pm2.run({name: 'signServer', script});
+	pm2.disconnect();
 };
 
 
