@@ -4,6 +4,7 @@ const logger = require('../common/nodejs/logger').new('router signature');
 const signUtil = require('../common/nodejs/multiSign');
 const serverClient = require('../common/nodejs/express/serverClient');
 const configtxlatorUtil = require('../common/nodejs/configtxlator');
+const {nodeList} = require('../common/docker/nodejs/dockerode-util');
 const {ConfigFactory} = configtxlatorUtil;
 const helper = require('../app/helper');
 const Multer = require('multer');
@@ -23,19 +24,9 @@ router.post('/getSwarmSignatures', multerCache.single('proto'), async (req, res)
 
 		const proto = fs.readFileSync(protoPath);
 		logger.debug('proto hash ', sha2_256(proto));
-		let ips = [];
 		const swarmServerUrl = `http://localhost:${swarmServerPort}`;
-		const leaderInfo = await serverClient.leader.info(swarmServerUrl);
-		if (!leaderInfo || !leaderInfo.ip) throw 'no leader found';
-		logger.debug({leaderInfo});
-		ips.push(leaderInfo.ip);
-		const managers = JSON.parse(await serverClient.manager.info(swarmServerUrl));
+		const ips = await nodeList(true).map(node=>node.Status.Addr);
 
-		if (managers) {
-			ips = ips.concat(Object.keys(managers));
-		} else {
-			logger.warn('No managers found');
-		}
 		logger.debug({ips});
 		const promises = ips.map(async (ip) => {
 			const resp = await serverClient.getSignatures(`http://${ip}:${signServerPort}`, protoPath);

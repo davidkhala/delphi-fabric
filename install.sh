@@ -8,8 +8,6 @@ for ((i = 2; i <= ${#}; i++)); do
 	remain_params="$remain_params $j"
 done
 
-
-
 utilsDir=$CURRENT/common/docker/utils/
 function gitSync() {
 	git pull
@@ -53,17 +51,17 @@ else
 	fi
 	$CURRENT/common/install.sh
 
-    CONFIG_JSON=$CURRENT/config/orgs.json
+	CONFIG_JSON=$CURRENT/config/orgs.json
 
-    fabricTag=$(jq -r ".docker.fabricTag" $CONFIG_JSON)
+	fabricTag=$(jq -r ".docker.fabricTag" $CONFIG_JSON)
 
-    ./common/bin-manage/pullBIN.sh -v $fabricTag
-    updateNODESDK $fabricTag
+	./common/bin-manage/pullBIN.sh -v $fabricTag
+	updateNODESDK $fabricTag
 	npm install
 	if ! go version; then
 		$CURRENT/common/install.sh golang
 	fi
 	updateChaincode
 	# finally
-    sudo apt autoremove -y
+	sudo apt autoremove -y
 fi

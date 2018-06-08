@@ -376,9 +376,25 @@ exports.down = async (swarm) => {
 };
 
 exports.up = async (swarm) => {
+	await networkCreateIfNotExist({Name: network}, swarm);
+	if(swarm){
+		for (const [name, script] of Object.entries(nodeServers)) {
+			const pm2 = await new PM2().connect();
+			await pm2.run({name, script});
+			pm2.disconnect();
+		}
+		logger.info('[start]swarm Server init steps');
+		const {address:ip} = await advertiseAddr();
+		const managerToken = await joinToken();
+		const {port} = require('./swarm/swarm').swarmServer;
+		const swarmServerUrl = `http://localhost:${port}`;
+		await serverClient.ping(swarmServerUrl);
+		await serverClient.leader.update(swarmServerUrl, {ip, hostname:hostname(), managerToken});
+	}
+
+	await configtxlatorServer.run('up');
 	const {orderer: {type}} = globalConfig;
 	await exports.volumesAction();
-	await networkCreateIfNotExist({Name: network}, swarm);
 	await exports.runCAs(undefined, swarm);
 
 	if (type === 'kafka') {
@@ -410,22 +426,7 @@ exports.up = async (swarm) => {
 
 	await exports.runPeers(undefined, undefined, swarm);
 
-	if(swarm){
-		for (const [name, script] of Object.entries(nodeServers)) {
-			const pm2 = await new PM2().connect();
-			await pm2.run({name, script});
-			pm2.disconnect();
-		}
-		logger.info('[start]swarm Server init steps');
-		const {address:ip} = await advertiseAddr();
-		const managerToken = await joinToken();
-		const {port} = require('./swarm/swarm').swarmServer;
-		const swarmServerUrl = `http://localhost:${port}`;
-		await serverClient.ping(swarmServerUrl);
-		await serverClient.leader.update(swarmServerUrl, {ip, hostname:hostname(), managerToken});
-	}
 
-	await configtxlatorServer.run('up');
 
 	logger.debug('[done] up');
 

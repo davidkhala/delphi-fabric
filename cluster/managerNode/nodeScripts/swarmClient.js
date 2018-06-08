@@ -44,9 +44,3 @@ exports.newOrderer = (ordererHostName, channelName) => {
 		Request.post({url: `${swarmBaseUrl}/channel/newOrderer`, form}, errHandler(resolve, reject));
 	});
 };
-exports.managerJoin = (ip, hostname) => {
-	return serverClient.manager.join(swarmBaseUrl, {ip, hostname});
-};
-exports.managerLeave = (ip) => {
-	return serverClient.manager.leave(swarmBaseUrl, {ip});
-};

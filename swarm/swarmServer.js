@@ -113,7 +113,6 @@ const dbMap = {
 
 const swarmDoc = 'swarm';
 const leaderKey = 'leaderNode';
-const managerKey = 'managerNodes';
 
 exports.run = () => {
 	const {app} = require('../common/nodejs/baseApp').run(port);
@@ -133,76 +132,13 @@ exports.run = () => {
 		res.json(value);
 	});
 
-	app.get('/manager', async (req, res) => {
-		const connection = await new dbMap[db]({name: swarmDoc});
-		const value = await connection.get(managerKey);
-		logger.debug('manager list', value);
-		res.json(value);
-
-	});
-	/**
-	 * TODO: how to identify a node? ip /hostname or id?
-	 */
-	app.post('/manager/join', async (req, res) => {
-		const {ip, hostname} = req.body;
-		logger.debug('manager join', {ip, hostname});
-
-		const connection = await new dbMap[db]({name: swarmDoc});
-		const leaderValue = await connection.get(leaderKey);
-		if (leaderValue) {
-			if (leaderValue.ip === ip) {
-				res.send(`request.ip ${ip} conflict with ${leaderKey}.ip`);
-				return;
-			}
-			if (leaderValue.hostname === hostname) {
-				res.send(`request.hostname ${hostname} conflict with ${leaderKey}.hostname`);
-				return;
-			}
-		}
-
-		const value = await connection.get(managerKey);
-		let newValue;
-		if (value) {
-			newValue = value;
-			if (newValue[ip]) {
-				newValue[ip].hostname = hostname;
-			} else {
-				newValue[ip] = {hostname};
-			}
-
-		} else {
-			newValue = {[ip]: {hostname}};
-		}
-		await connection.set(managerKey, newValue);
-		res.json({ip, hostname});
-
-	});
-	app.post('/manager/leave', async (req, res) => {
-		const {ip} = req.body;
-		logger.debug('manager leave', {ip});
-		const connection = await new dbMap[db]({name: swarmDoc});
-
-		const value = await connection.get(managerKey);
-		let newValue;
-		if (value) {
-			newValue = value;
-			if (newValue[ip]) {
-				delete newValue[ip];
-			}
-		} else {
-			newValue = {};
-		}
-		await connection.set(managerKey, newValue);
-		res.json({ip});
-	});
-
 	app.use('/channel', require('./signaturesRouter'));
 	app.get('/block', async (req, res) => {
 		const globalConfig = require('../config/orgs');
 		const dir = homeResolve(globalConfig.docker.volumes.CONFIGTX.dir);
 		const blockFile = path.resolve(dir, globalConfig.orderer.genesis_block.file);
 		const buffer = fs.readFileSync(blockFile, 'binary');
-		logger.info('GET block','check buffer hash', sha2_256(buffer));
+		logger.info('GET block', 'check buffer hash', sha2_256(buffer));
 		res.send(buffer);
 	});
 	app.get('/', async (req, res) => {

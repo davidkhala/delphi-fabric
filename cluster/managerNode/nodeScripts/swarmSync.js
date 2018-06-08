@@ -23,9 +23,6 @@ const asyncTask = async () => {
 
 
 
-	const ip = commonHelper.ip()[0];
-	const hostname = commonHelper.hostname();
 
-	await swarmClient.managerJoin(ip, hostname);
 };
 asyncTask();
