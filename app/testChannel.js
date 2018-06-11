@@ -13,7 +13,7 @@ const {TLS} = globalConfig;
 const channelConfig = globalConfig.channels[channelName];
 
 const channelConfigFile = homeResolve(globalConfig.docker.volumes.CONFIGTX.dir,channelConfig.file);
-const joinAllfcn = async () => {
+const joinAllfcn = async (channelName) => {
 
 
 	for (const orgName in  channelConfig.orgs) {
@@ -49,20 +49,28 @@ const task = async () => {
 	logger.info({ordererUrl});
 	try {
 		await createChannel(client, channelName, channelConfigFile, ['BU.Delphi.com', 'ENG.Delphi.com'], ordererUrl);
-		await joinAllfcn();
+		await joinAllfcn(channelName);
 	} catch (err) {
 		if (err.toString().includes('Error: BAD_REQUEST') ||
 			(err.status && err.status.includes('BAD_REQUEST'))) {
 			//existing swallow
-			await joinAllfcn();
+			await joinAllfcn(channelName);
 		} else throw err;
 	}
 	const peerClient = await helper.getOrgAdmin(undefined, 'peer'); //only peer user can read channel
-	const channel = helper.prepareChannel(channelName, peerClient);
 	try {
+		const channel = helper.prepareChannel(channelName, peerClient);
 		const {original_config} = await configtxlator.getChannelConfigReadable(channel);
 
 		fs.writeFileSync(`${channelName}.json`, original_config);
+	} catch (e) {
+		logger.error(e);
+	}
+	try {
+		const channel = helper.prepareChannel(undefined, client);
+		const {original_config} = await configtxlator.getChannelConfigReadable(channel,'orderer');
+
+		fs.writeFileSync('testchainid.json', original_config);
 	} catch (e) {
 		logger.error(e);
 	}

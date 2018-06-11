@@ -24,8 +24,9 @@ router.post('/getSwarmSignatures', multerCache.single('proto'), async (req, res)
 
 		const proto = fs.readFileSync(protoPath);
 		logger.debug('proto hash ', sha2_256(proto));
-		const swarmServerUrl = `http://localhost:${swarmServerPort}`;
-		const ips = await nodeList(true).map(node=>node.Status.Addr);
+
+		const nodes = await nodeList(true);
+		const ips = nodes.map(node => node.Status.Addr);
 
 		logger.debug({ips});
 		const promises = ips.map(async (ip) => {
@@ -44,7 +45,7 @@ router.post('/getSwarmSignatures', multerCache.single('proto'), async (req, res)
 
 });
 const signatureCollector = async (proto) => {
-	const tempFile = homeResolve(cache,'proto');
+	const tempFile = homeResolve(cache, 'proto');
 	fs.writeFileSync(tempFile, proto);
 	const body = await new Promise((resolve, reject) => {
 

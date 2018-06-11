@@ -52,15 +52,19 @@ const preparePeer = (orgName, peerIndex, peerConfig) => {
 
 
 /**
-
  * @param client
- * @param channelName
+ * @param channelName default to system channel
  * @param isRenew
  */
 exports.prepareChannel = (channelName, client, isRenew) => {
 
-	const channelConfig = channelsConfig[channelName];
-	channelUtil.nameMatcher(channelName, true);
+	const systemChannel = channelUtil.genesis;
+	if (!channelName) {
+		logger.warn('default to using system channel');
+		channelName = systemChannel;
+	} else {
+		channelUtil.nameMatcher(channelName, true);
+	}
 
 	if (isRenew) {
 		delete client._channels[channelName];
@@ -106,18 +110,34 @@ exports.prepareChannel = (channelName, client, isRenew) => {
 		channel.addOrderer(orderer);
 	}
 
-	for (const orgName in channelConfig.orgs) {
-		const orgConfigInChannel = channelConfig.orgs[orgName];
-		for (const peerIndex of orgConfigInChannel.peerIndexes) {
-			const peerConfig = orgsConfig[orgName].peers[peerIndex];
+	if (channelName !== systemChannel) {
+		const channelConfig = channelsConfig[channelName];
 
-			const peer = preparePeer(orgName, peerIndex, peerConfig);
-			channel.addPeer(peer);
+		for (const orgName in channelConfig.orgs) {
+			const orgConfigInChannel = channelConfig.orgs[orgName];
+			for (const peerIndex of orgConfigInChannel.peerIndexes) {
+				const peerConfig = orgsConfig[orgName].peers[peerIndex];
 
+				const peer = preparePeer(orgName, peerIndex, peerConfig);
+				channel.addPeer(peer);
+
+			}
+		}
+		channel.eventWaitTime = channelConfig.eventWaitTime;
+		channel.orgs = channelConfig.orgs;
+	} else {
+		//TODO adding all existing orgs to allign with configtx.js, take care
+		for (const orgName in orgsConfig) {
+			const orgConfig = orgsConfig[orgName];
+
+			for (const peerIndex in orgConfig.peers) {
+				const peerConfig = orgConfig.peers[peerIndex];
+				const peer = preparePeer(orgName, peerIndex, peerConfig);
+				channel.addPeer(peer);
+			}
 		}
 	}
-	channel.eventWaitTime = channelsConfig[channelName].eventWaitTime;
-	channel.orgs = channelsConfig[channelName].orgs;
+
 	return channel;
 };
 

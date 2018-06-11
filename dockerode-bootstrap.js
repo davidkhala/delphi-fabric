@@ -389,7 +389,7 @@ exports.up = async (swarm) => {
 			await swarmRenew();
 			for (const [name, script] of Object.entries(nodeServers)) {
 				const pm2 = await new PM2().connect();
-				await pm2.run({name, script});
+				await pm2.reRun({name, script});
 				pm2.disconnect();
 			}
 			logger.info('[start]swarm Server init steps');
