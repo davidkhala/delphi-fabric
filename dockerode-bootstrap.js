@@ -9,7 +9,7 @@ const {
 	deployKafka, runKafka, runZookeeper, deployZookeeper,
 	deployPeer, runPeer, runOrderer, deployOrderer,
 	chaincodeClean, tasksWaitUntilLive, fabricImagePull, tasksWaitUntilDead
-	,swarmIPInit
+	, swarmRenew
 } = require('./common/nodejs/fabric-dockerode');
 const channelUtil = require('./common/nodejs/channel');
 const {CryptoPath, homeResolve} = require('./common/nodejs/path');
@@ -20,7 +20,7 @@ const arch = 'x86_64';
 const {
 	containerDelete, volumeCreateIfNotExist, networkCreateIfNotExist,
 	swarmServiceName, constraintSelf, serviceDelete,
-	volumeRemove, prune: {system: pruneSystem}
+	volumeRemove, prune: {system: pruneSystem},
 } = require('./common/docker/nodejs/dockerode-util');
 const {advertiseAddr, joinToken} = require('./common/docker/nodejs/dockerCmd');
 const {hostname} = require('./common/nodejs/helper');
@@ -338,98 +338,110 @@ exports.down = async (swarm) => {
 	const {orderer: {type}} = globalConfig;
 
 	const toStop = true;
-	await exports.runCAs(toStop, swarm);
-
-	await exports.runPeers(undefined, toStop, swarm);
-	await exports.runOrderers(undefined, toStop, swarm);
-	if (type === 'kafka') {
-		await exports.runKafkas(toStop, swarm);
-		await exports.runZookeepers(toStop, swarm);
-	}
-	await pruneSystem(swarm);
-	await chaincodeClean();
-	await exports.volumesAction(toStop);
-
-	const nodeAppConfigJson = require('./app/config');
-	fsExtra.removeSync(nodeAppConfigJson.stateDBCacheDir);
-	logger.info(`[done] clear stateDBCacheDir ${nodeAppConfigJson.stateDBCacheDir}`);
-
-
-	fsExtra.removeSync(MSPROOT);
-	logger.info(`[done] clear MSPROOT ${MSPROOT}`);
-	fsExtra.removeSync(CONFIGTX);
-	logger.info(`[done] clear CONFIGTX ${CONFIGTX}`);
-	if(swarm){
-		for (const [name, script] of Object.entries(nodeServers)) {
-			const pm2 = await new PM2().connect();
-			await pm2.delete({name, script});
-			pm2.disconnect();
+	try {
+		if (swarm) {
+			await swarmRenew();
 		}
-		require('./swarm/swarmServer').clean();
-		require('./cluster/leaderNode/signServer').clean();
-	}
+		await exports.runCAs(toStop, swarm);
 
-	await configtxlatorServer.run('down');
+		await exports.runPeers(undefined, toStop, swarm);
+		await exports.runOrderers(undefined, toStop, swarm);
+		if (type === 'kafka') {
+			await exports.runKafkas(toStop, swarm);
+			await exports.runZookeepers(toStop, swarm);
+		}
+		await pruneSystem(swarm);
+		await chaincodeClean();
+		await exports.volumesAction(toStop);
+
+		const nodeAppConfigJson = require('./app/config');
+		fsExtra.removeSync(nodeAppConfigJson.stateDBCacheDir);
+		logger.info(`[done] clear stateDBCacheDir ${nodeAppConfigJson.stateDBCacheDir}`);
+
+
+		fsExtra.removeSync(MSPROOT);
+		logger.info(`[done] clear MSPROOT ${MSPROOT}`);
+		fsExtra.removeSync(CONFIGTX);
+		logger.info(`[done] clear CONFIGTX ${CONFIGTX}`);
+		if (swarm) {
+			for (const [name, script] of Object.entries(nodeServers)) {
+				const pm2 = await new PM2().connect();
+				await pm2.delete({name, script});
+				pm2.disconnect();
+			}
+			require('./swarm/swarmServer').clean();
+			require('./cluster/leaderNode/signServer').clean();
+		}
+
+		await configtxlatorServer.run('down');
+
+	} catch (err) {
+		logger.error(err);
+		process.exit(1);
+	}
 	logger.debug('[done] down');
 };
 
 exports.up = async (swarm) => {
-	await fabricImagePull({fabricTag,thirdPartyTag,arch});
-	if(swarm){
-		await swarmIPInit();
-		for (const [name, script] of Object.entries(nodeServers)) {
-			const pm2 = await new PM2().connect();
-			await pm2.run({name, script});
-			pm2.disconnect();
+	try {
+		await fabricImagePull({fabricTag, thirdPartyTag, arch});
+		if (swarm) {
+			await swarmRenew();
+			for (const [name, script] of Object.entries(nodeServers)) {
+				const pm2 = await new PM2().connect();
+				await pm2.run({name, script});
+				pm2.disconnect();
+			}
+			logger.info('[start]swarm Server init steps');
+			const {address: ip} = await advertiseAddr();
+			const managerToken = await joinToken();
+			const {port} = require('./swarm/swarm').swarmServer;
+			const swarmServerUrl = `http://localhost:${port}`;
+			await serverClient.ping(swarmServerUrl);
+			await serverClient.leader.update(swarmServerUrl, {ip, hostname: hostname(), managerToken});
 		}
-		logger.info('[start]swarm Server init steps');
-		const {address:ip} = await advertiseAddr();
-		const managerToken = await joinToken();
-		const {port} = require('./swarm/swarm').swarmServer;
-		const swarmServerUrl = `http://localhost:${port}`;
-		await serverClient.ping(swarmServerUrl);
-		await serverClient.leader.update(swarmServerUrl, {ip, hostname:hostname(), managerToken});
+		await configtxlatorServer.run('up');
+
+		await networkCreateIfNotExist({Name: network}, swarm);
+
+		const {orderer: {type}} = globalConfig;
+		await exports.volumesAction();
+		await exports.runCAs(undefined, swarm);
+
+		if (type === 'kafka') {
+			await exports.runZookeepers(undefined, swarm);
+			await exports.runKafkas(undefined, swarm);
+		}
+		await require('./config/caCryptoGen').genAll(swarm);
+
+		const PROFILE_BLOCK = globalConfig.orderer.genesis_block.profile;
+		const configtxFile = path.resolve(__dirname, 'configtx.yaml');
+		require('./config/configtx.js').gen({MSPROOT, PROFILE_BLOCK, configtxFile});
+
+
+		const BLOCK_FILE = globalConfig.orderer.genesis_block.file;
+		const config_dir = path.dirname(configtxFile);
+		fsExtra.ensureDirSync(CONFIGTX);
+		await exec(`${runConfigtxGenShell} block create ${path.resolve(CONFIGTX, BLOCK_FILE)} -p ${PROFILE_BLOCK} -i ${config_dir}`);
+
+		const channelsConfig = globalConfig.channels;
+		for (const channelName in channelsConfig) {
+			channelUtil.nameMatcher(channelName, true);
+			const channelConfig = channelsConfig[channelName];
+			const channelFile = path.resolve(CONFIGTX, channelConfig.file);
+			await exec(`${runConfigtxGenShell} channel create ${channelFile} -p ${channelName} -i ${config_dir} -c ${channelName}`);
+		}
+
+
+		await exports.runOrderers(undefined, undefined, swarm);
+
+		await exports.runPeers(undefined, undefined, swarm);
+
+	} catch (err) {
+		logger.error(err);
+		process.exit(1);
 	}
-	await configtxlatorServer.run('up');
-
-	await networkCreateIfNotExist({Name: network}, swarm);
-
-	const {orderer: {type}} = globalConfig;
-	await exports.volumesAction();
-	await exports.runCAs(undefined, swarm);
-
-	if (type === 'kafka') {
-		await exports.runZookeepers(undefined, swarm);
-		await exports.runKafkas(undefined, swarm);
-	}
-	await require('./config/caCryptoGen').genAll(swarm);
-
-	const PROFILE_BLOCK = globalConfig.orderer.genesis_block.profile;
-	const configtxFile = path.resolve(__dirname, 'configtx.yaml');
-	require('./config/configtx.js').gen({MSPROOT, PROFILE_BLOCK, configtxFile});
-
-
-	const BLOCK_FILE = globalConfig.orderer.genesis_block.file;
-	const config_dir = path.dirname(configtxFile);
-	fsExtra.ensureDirSync(CONFIGTX);
-	await exec(`${runConfigtxGenShell} block create ${path.resolve(CONFIGTX, BLOCK_FILE)} -p ${PROFILE_BLOCK} -i ${config_dir}`);
-
-	const channelsConfig = globalConfig.channels;
-	for (const channelName in channelsConfig) {
-		channelUtil.nameMatcher(channelName, true);
-		const channelConfig = channelsConfig[channelName];
-		const channelFile = path.resolve(CONFIGTX, channelConfig.file);
-		await exec(`${runConfigtxGenShell} channel create ${channelFile} -p ${channelName} -i ${config_dir} -c ${channelName}`);
-	}
-
-
-	await exports.runOrderers(undefined, undefined, swarm);
-
-	await exports.runPeers(undefined, undefined, swarm);
-
-
 
 	logger.debug('[done] up');
-
 
 };
