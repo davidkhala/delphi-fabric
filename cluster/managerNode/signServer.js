@@ -25,13 +25,13 @@ app.post('/', cache.single('proto'), async (req, res) => {
 		const proto = fs.readFileSync(req.file.path);
 		logger.info('sign request', 'hash', sha2_256(proto));
 
-		const ordererClient = clientUtil.new();
-
 		const cryptoPath = new CryptoPath(homeResolve(config.MSPROOT), {
 			orderer: {name: ordererName, org: ordererOrg,},
 			peer: {name: peerName, org: peerOrg},
 			user: {name: 'Admin'}
 		});
+
+		const ordererClient = clientUtil.new();
 		const ordererAdmin = await userUtil.loadFromLocal(cryptoPath, 'orderer', config.orderer.orgs[ordererOrg].MSP.id, ordererClient.getCryptoSuite());
 		await ordererClient.setUserContext(ordererAdmin, true);
 		const peerClient = clientUtil.new();

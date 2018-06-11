@@ -31,6 +31,11 @@ const getCaService = async (url, domain, TLS) => {
 };
 const asyncTask = async () => {
 	fsExtra.removeSync(cryptoRoot);
+	const pm2 = new PM2();
+	await pm2.connect();
+	const signServerProcessName = 'signServer';
+	await pm2.delete({name:signServerProcessName});
+	pm2.disconnect();
 	if (process.env.action === 'down') return;
 	const {TLS} = await globalConfig();
 	const ordererConfig = config.orderer.orgs[ordererOrg];
@@ -54,10 +59,11 @@ const asyncTask = async () => {
 	const peerCaService = await getCaService(peerCAURL, peerOrg, TLS);
 	const peerAdmin = await caCryptoGen.init(peerCaService, cryptoPath, 'peer', peerConfig.MSP.id);
 	await caCryptoGen.genPeer(peerCaService, cryptoPath, peerAdmin, {TLS});
-	const pm2 = await (new PM2().connect());
+
 
 	const script = homeResolve(config.signServer.path);
-	await pm2.run({name: 'signServer', script});
+	await pm2.connect();
+	await pm2.run({name: signServerProcessName, script});
 	pm2.disconnect();
 };
 
