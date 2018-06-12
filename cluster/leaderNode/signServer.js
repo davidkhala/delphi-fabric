@@ -21,11 +21,11 @@ exports.run = () => {
 		const clientPromises = [];
 		if (globalConfig.orderer.type === 'kafka') {
 			for (const ordererOrg in globalConfig.orderer.kafka.orgs) {
-				clientPromises.push(helper.getOrgAdmin(ordererOrg));
+				clientPromises.push(helper.getOrgAdmin(ordererOrg, 'orderer'));
 			}
 		} else {
 			const ordererOrg = globalConfig.orderer.solo.orgName;
-			clientPromises.push(helper.getOrgAdmin(ordererOrg));
+			clientPromises.push(helper.getOrgAdmin(ordererOrg, 'orderer'));
 
 		}
 		const {signatures: ordererAdminSigns} = await signUtil.signs(clientPromises, proto);
@@ -33,7 +33,7 @@ exports.run = () => {
 		const peerClientPromises = [];
 
 		for (const domain in globalConfig.orgs) {
-			peerClientPromises.push(helper.getOrgAdmin(domain));
+			peerClientPromises.push(helper.getOrgAdmin(domain,'peer'));
 		}
 
 

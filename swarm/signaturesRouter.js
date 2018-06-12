@@ -59,6 +59,7 @@ const signatureCollector = async (proto) => {
 		});
 	});
 	const {signatures} = JSON.parse(body);
+	logger.debug('signatureCollector got',signatures.length);
 	return {
 		signatures: signUtil.fromBase64(signatures),
 	};
