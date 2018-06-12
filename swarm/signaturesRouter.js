@@ -129,7 +129,7 @@ router.post('/newOrg', multerCache.fields([{name: 'admins'}, {name: 'root_certs'
 
 			await configtxlatorUtil.channelUpdate(channel, onUpdate, signatureCollector, peerEventHub,{nodeType,peer});
 			const {original_config} = await configtxlatorUtil.getChannelConfigReadable(channel, nodeType);
-			res.json(original_config);
+			res.send(original_config);
 		} catch (err) {
 			logger.error(err);
 			res.status(400).send(err.toString());
