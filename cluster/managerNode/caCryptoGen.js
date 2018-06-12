@@ -3,18 +3,19 @@ const config = require('./config');
 const ordererOrg = 'NewConsensus';
 const ordererName = 'orderer0';
 const fs = require('fs');
-const logger = require('../../../common/nodejs/logger').new('caCryptogen');
-const caCryptoGen = require('../../../common/nodejs/ca-crypto-gen');
-const {CryptoPath, homeResolve} = require('../../../common/nodejs/path');
+const logger = require('../../common/nodejs/logger').new('caCryptogen');
+const caCryptoGen = require('../../common/nodejs/ca-crypto-gen');
+const {CryptoPath, homeResolve} = require('../../common/nodejs/path');
 const cryptoRoot = homeResolve(config.MSPROOT);
-const dockerUtil = require('../../../common/docker/nodejs/dockerode-util');
-const dockerCmd = require('../../../common/docker/nodejs/dockerCmd');
-const caUtil = require('../../../common/nodejs/ca');
+const dockerUtil = require('../../common/docker/nodejs/dockerode-util');
+const dockerCmd = require('../../common/docker/nodejs/dockerCmd');
+const caUtil = require('../../common/nodejs/ca');
 const peerOrg = 'NEW';
 const peerName = 'newContainer';
 const {globalConfig} = require('./swarmClient');
 const fsExtra = require('fs-extra');
-const {PM2} = require('../../../common/nodejs/express/pm2Manager');
+const {PM2} = require('../../common/nodejs/express/pm2Manager');
+const signServer = require('./signServer');
 const getCaService = async (url, domain, TLS) => {
 	if (TLS) {
 		const caHostName = `ca.${domain}`;
@@ -36,6 +37,7 @@ const asyncTask = async () => {
 	const signServerProcessName = 'signServer';
 	await pm2.delete({name: signServerProcessName});
 	pm2.disconnect();
+	signServer.clean();
 	if (process.env.action === 'down') {
 		logger.info('[done] down');
 		return;

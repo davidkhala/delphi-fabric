@@ -1,11 +1,11 @@
 //TODO send manager info to swarm Server
 const swarmClient = require('./swarmClient');
-const {fabricImagePull,swarmIPJoin} = require('../../../common/nodejs/fabric-dockerode');
-const {swarmLeave,swarmBelongs} = require('../../../common/docker/nodejs/dockerode-util');
-const dockerCmdUtil = require('../../../common/docker/nodejs/dockerCmd');
+const {fabricImagePull,swarmIPJoin} = require('../../common/nodejs/fabric-dockerode');
+const {swarmLeave,swarmBelongs} = require('../../common/docker/nodejs/dockerode-util');
+const dockerCmdUtil = require('../../common/docker/nodejs/dockerCmd');
 const arch = 'x86_64';
-const commonHelper = require('../../../common/nodejs/helper');
-const logger = require('../../../common/nodejs/logger').new('prepare');
+const commonHelper = require('../../common/nodejs/helper');
+const logger = require('../../common/nodejs/logger').new('prepare');
 const asyncTask = async () => {
 	await swarmClient.touch();
 	const {managerToken} = await swarmClient.leader();

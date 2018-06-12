@@ -1,10 +1,10 @@
 const config = require('./config');
 const swarmBaseUrl = `${config.swarmServer.url}:${config.swarmServer.port}`;
 const Request = require('request');
-const logger = require('../../../common/nodejs/logger').new('api caller');
-const serverClient = require('../../../common/nodejs/express/serverClient');
+const logger = require('../../common/nodejs/logger').new('api caller');
+const serverClient = require('../../common/nodejs/express/serverClient');
 const {errHandler} = serverClient;
-const {ConfigFactory}= require('../../../common/nodejs/configtxlator');
+const {ConfigFactory}= require('../../common/nodejs/configtxlator');
 exports.globalConfig = () => new Promise((resolve, reject) => {
 	Request.get(`${swarmBaseUrl}/config/orgs`, errHandler(resolve, reject, true));
 });

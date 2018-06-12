@@ -1,4 +1,4 @@
-const config = require('./nodeScripts/config');
+const config = require('./config');
 const logger = require('../../common/nodejs/logger').new('sign server');
 const fsExtra = require('fs-extra');
 const userUtil = require('../../common/nodejs/user');

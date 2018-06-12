@@ -1,7 +1,7 @@
 const config = require('./config');
-const logger = require('../../../common/nodejs/logger').new('newCa');
-const {serviceClear, swarmServiceName} = require('../../../common/docker/nodejs/dockerode-util');
-const {tasksWaitUntilLive, deployCA} = require('../../../common/nodejs/fabric-dockerode');
+const logger = require('../../common/nodejs/logger').new('newCa');
+const {serviceClear, swarmServiceName} = require('../../common/docker/nodejs/dockerode-util');
+const {tasksWaitUntilLive, deployCA} = require('../../common/nodejs/fabric-dockerode');
 const ordererOrg = 'NewConsensus';
 const peerOrg = 'NEW';
 const container_name = {

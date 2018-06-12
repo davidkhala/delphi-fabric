@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
 CURRENT=$(cd $(dirname ${BASH_SOURCE}) && pwd)
 function down(){
-    action=down node $CURRENT/nodeScripts/genPeer.js
-    action=down node $CURRENT/nodeScripts/genOrderers.js
-    action=down node $CURRENT/nodeScripts/caCryptoGen.js
-    action=down node $CURRENT/nodeScripts/newCa.js
-    action=down node $CURRENT/nodeScripts/swarmSync.js
+#    action=down node $CURRENT/genPeer.js
+    action=down node $CURRENT/genOrderers.js
+    action=down node $CURRENT/caCryptoGen.js
+    action=down node $CURRENT/newCa.js
+    action=down node $CURRENT/swarmSync.js
 }
 function up(){
-    node $CURRENT/nodeScripts/swarmSync.js
-    node $CURRENT/nodeScripts/newCa.js
-    node $CURRENT/nodeScripts/caCryptoGen.js
-    node $CURRENT/nodeScripts/genOrderers.js
-    node $CURRENT/nodeScripts/genPeer.js
+    node $CURRENT/swarmSync.js
+    node $CURRENT/newCa.js
+    node $CURRENT/caCryptoGen.js
+    node $CURRENT/genOrderers.js
+#    node $CURRENT/genPeer.js
 }
 if [ "$1" == "up" ]; then
 	up

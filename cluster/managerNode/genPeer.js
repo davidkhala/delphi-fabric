@@ -1,15 +1,15 @@
 const config = require('./config');
-const {deployPeer, chaincodeClean} = require('../../../common/nodejs/fabric-dockerode');
-const {swarmServiceName, serviceClear, taskLiveWaiter} = require('../../../common/docker/nodejs/dockerode-util');
-const {CryptoPath} = require('../../../common/nodejs/path');
-const peerUtil = require('../../../common/nodejs/peer');
+const {deployPeer, chaincodeClean} = require('../../common/nodejs/fabric-dockerode');
+const {swarmServiceName, serviceClear, taskLiveWaiter} = require('../../common/docker/nodejs/dockerode-util');
+const {CryptoPath} = require('../../common/nodejs/path');
+const peerUtil = require('../../common/nodejs/peer');
 const MSPROOTvolumeName = 'MSPROOT';
 const peerName = 'newContainer';
 const peerOrg = 'NEW';
 const portMap = config.orgs[peerOrg].peers[peerName].portMap;
 const {globalConfig} = require('./swarmClient');
-const {} = require('../../../app/join-channel');
-const logger = require('../../../common/nodejs/logger').new('genPeer');
+const {} = require('../../app/join-channel');
+const logger = require('../../common/nodejs/logger').new('genPeer');
 const asyncTask = async () => {
 	const cryptoType = 'peer';
 
