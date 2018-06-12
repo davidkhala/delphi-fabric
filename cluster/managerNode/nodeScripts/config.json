@@ -9,7 +9,7 @@
   "signServer": {
     "port": 4002,
     "cache": "Documents/delphi-fabric/cluster/managerNode/cache/",
-    "path": "Documents/delphi-fabric/cluster/managerNode/signServer.js"
+    "path": "Documents/delphi-fabric/cluster/managerNode/signServerPM2.js"
   },
   "orderer": {
     "orgs": {

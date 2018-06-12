@@ -35,6 +35,12 @@ const asyncTask = async () => {
 
 	await tasksWaitUntilLive(caServices);
 };
-asyncTask();
+try {
+	asyncTask();
+}catch (err) {
+	logger.error(err);
+	process.exit(1);
+}
+
 
 

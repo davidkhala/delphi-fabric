@@ -20,8 +20,8 @@ const asyncTask = async () => {
 	const {docker: {network, thirdPartyTag, fabricTag}, TLS} = await swarmClient.globalConfig();
 	await fabricImagePull({fabricTag, thirdPartyTag, arch});
 	await swarmIPJoin({AdvertiseAddr, JoinToken});
-
-
+	const node = await dockerCmdUtil.nodeSelf(true);
+	logger.info('this node',node);
 
 
 };

@@ -1,5 +1,5 @@
 const config = require('./config');
-const {volumeReCreate, deployOrderer} = require('../../../common/nodejs/fabric-dockerode');
+const {deployOrderer} = require('../../../common/nodejs/fabric-dockerode');
 const {swarmServiceName, serviceClear, taskLiveWaiter, volumeRemove, volumeCreateIfNotExist} = require('../../../common/docker/nodejs/dockerode-util');
 const logger = require('../../../common/nodejs/logger').new('genOrderer');
 const ordererOrg = 'NewConsensus';
@@ -11,7 +11,6 @@ const peerUtil = require('../../../common/nodejs/peer');
 const port = config.orderer.orgs[ordererOrg].orderers[ordererName].portHost;
 const {globalConfig, block, newOrg, newOrderer} = require('./swarmClient');
 const path = require('path');
-const channelName = 'allchannel';
 const asyncTask = async () => {
 
 	const Name = `${ordererName}.${ordererOrg}`;
@@ -46,14 +45,14 @@ const asyncTask = async () => {
 	const configPath = cryptoPath.MSP(cryptoType);
 
 	// TODO do channel update first before orderer up
-	// const hostCryptoPath = new CryptoPath(MSPROOTDir, {
-	// 	orderer: {name: ordererName, org: ordererOrg},
-	// 	user:{name:'Admin'}
-	// });
-	// const respNewOrg = await newOrg(hostCryptoPath, cryptoType, channelName, ordererOrg);
-	// logger.debug({respNewOrg});
-	// const respNewOrderer = await newOrderer(hostCryptoPath.ordererHostName,channelName);
-	// logger.debug({respNewOrderer});
+	const hostCryptoPath = new CryptoPath(MSPROOTDir, {
+		orderer: {name: ordererName, org: ordererOrg},
+		user:{name:'Admin'}
+	});
+	await newOrg(hostCryptoPath, cryptoType,undefined, ordererOrg);
+
+	const respNewOrderer = await newOrderer(hostCryptoPath.ordererHostName);
+	logger.debug({respNewOrderer});
 
 	const ordererService = await deployOrderer({
 		Name,
@@ -70,4 +69,9 @@ const asyncTask = async () => {
 	await taskLiveWaiter(ordererService);
 
 };
-asyncTask();
+try {
+	asyncTask();
+}catch (err) {
+	logger.error(err)
+	process.exit(1);
+}

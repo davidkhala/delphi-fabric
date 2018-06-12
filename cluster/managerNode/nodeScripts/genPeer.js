@@ -47,4 +47,10 @@ const asyncTask = async () => {
 	await taskLiveWaiter(peerService);
 
 };
-asyncTask();
+try {
+
+	asyncTask();
+}catch (err) {
+	logger.error(err);
+	process.exit(1);
+}
