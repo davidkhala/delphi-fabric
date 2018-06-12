@@ -9,13 +9,13 @@ const container_name = {
 	peerCA: `ca.${peerOrg}`
 };
 const {globalConfig} = require('./swarmClient');
-const asyncTask = async () => {
+const asyncTask = async (action) => {
 
-	const ordererCAServiceName = swarmServiceName(container_name.ordererCA);
-	const peerCAServiceName = swarmServiceName(container_name.peerCA);
-	await serviceClear(ordererCAServiceName);
-	await serviceClear(peerCAServiceName);
-	if (process.env.action === 'down') {
+	if (action === 'down') {
+		const ordererCAServiceName = swarmServiceName(container_name.ordererCA);
+		const peerCAServiceName = swarmServiceName(container_name.peerCA);
+		await serviceClear(ordererCAServiceName);
+		await serviceClear(peerCAServiceName);
 		logger.info('[done] down');
 		return;
 	}
@@ -36,8 +36,8 @@ const asyncTask = async () => {
 	await tasksWaitUntilLive(caServices);
 };
 try {
-	asyncTask();
-}catch (err) {
+	asyncTask(process.env.action);
+} catch (err) {
 	logger.error(err);
 	process.exit(1);
 }

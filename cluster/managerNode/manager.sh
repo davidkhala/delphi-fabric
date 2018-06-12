@@ -14,10 +14,12 @@ function up(){
     node $CURRENT/genOrderers.js
 #    node $CURRENT/genPeer.js
 }
-if [ "$1" == "up" ]; then
-	up
-elif [ "$1" == "down" ]; then
-	down
+function orderer(){
+    action=down node $CURRENT/genOrderers.js
+    node $CURRENT/genOrderers.js
+}
+if [ -n "$1" ];then
+    $1
 else
 	down
 	up

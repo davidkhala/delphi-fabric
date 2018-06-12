@@ -30,15 +30,16 @@ const getCaService = async (url, domain, TLS) => {
 	}
 	return caUtil.new(url);
 };
-const asyncTask = async () => {
+const asyncTask = async (action) => {
 	fsExtra.removeSync(cryptoRoot);
 	const pm2 = new PM2();
-	await pm2.connect();
 	const signServerProcessName = 'signServer';
-	await pm2.delete({name: signServerProcessName});
-	pm2.disconnect();
-	signServer.clean();
-	if (process.env.action === 'down') {
+
+	if (action === 'down') {
+		await pm2.connect();
+		await pm2.delete({name: signServerProcessName});
+		pm2.disconnect();
+		signServer.clean();
 		logger.info('[done] down');
 		return;
 	}
@@ -73,6 +74,6 @@ const asyncTask = async () => {
 };
 
 
-asyncTask();
+asyncTask(process.env.action);
 
 

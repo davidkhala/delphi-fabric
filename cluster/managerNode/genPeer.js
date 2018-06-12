@@ -10,7 +10,7 @@ const portMap = config.orgs[peerOrg].peers[peerName].portMap;
 const {globalConfig} = require('./swarmClient');
 const {} = require('../../app/join-channel');
 const logger = require('../../common/nodejs/logger').new('genPeer');
-const asyncTask = async () => {
+const asyncTask = async (action) => {
 	const cryptoType = 'peer';
 
 	const cryptoPath = new CryptoPath(peerUtil.container.MSPROOT, {
@@ -21,10 +21,10 @@ const asyncTask = async () => {
 	});
 	const {peerHostName} = cryptoPath;
 	const Name = `${peerName}.${peerOrg}`;
-	const serviceName = swarmServiceName(Name);
-	await serviceClear(serviceName);
-	await chaincodeClean();
-	if (process.env.action === 'down') {
+	if (action === 'down') {
+		const serviceName = swarmServiceName(Name);
+		await serviceClear(serviceName);
+		await chaincodeClean();
 		logger.info('[done] down');
 		return;
 	}
@@ -49,7 +49,7 @@ const asyncTask = async () => {
 };
 try {
 
-	asyncTask();
+	asyncTask(process.env.action);
 }catch (err) {
 	logger.error(err);
 	process.exit(1);

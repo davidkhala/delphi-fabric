@@ -11,15 +11,15 @@ const peerUtil = require('../../common/nodejs/peer');
 const port = config.orderer.orgs[ordererOrg].orderers[ordererName].portHost;
 const {globalConfig, block, newOrg, newOrderer} = require('./swarmClient');
 const path = require('path');
-const asyncTask = async () => {
+const asyncTask = async (action) => {
 
 	const Name = `${ordererName}.${ordererOrg}`;
-	const serviceName = swarmServiceName(Name);
-	await serviceClear(serviceName);
+	if (action === 'down') {
+		const serviceName = swarmServiceName(Name);
+		await serviceClear(serviceName);
 
-	await volumeRemove(MSPROOTvolumeName);
-	await volumeRemove(CONFIGTXvolumeName);
-	if (process.env.action === 'down') {
+		await volumeRemove(MSPROOTvolumeName);
+		await volumeRemove(CONFIGTXvolumeName);
 		logger.info('[done] down');
 		return;
 	}
@@ -47,31 +47,34 @@ const asyncTask = async () => {
 	// TODO do channel update first before orderer up
 	const hostCryptoPath = new CryptoPath(MSPROOTDir, {
 		orderer: {name: ordererName, org: ordererOrg},
-		user:{name:'Admin'}
+		user: {name: 'Admin'}
 	});
-	await newOrg(hostCryptoPath, cryptoType,undefined, ordererOrg);
+	await newOrg(hostCryptoPath, cryptoType, undefined, ordererOrg);
 
 	const respNewOrderer = await newOrderer(hostCryptoPath.ordererHostName);
 	logger.debug({respNewOrderer});
 
-	const ordererService = await deployOrderer({
-		Name,
-		imageTag, network, port,
-		msp: {
-			volumeName: MSPROOTvolumeName, id,
-			configPath
-		}, CONFIGTXVolume: CONFIGTXvolumeName,
-		BLOCK_FILE: config.BLOCK_FILE,
-		kafkas: true,
-		tls
-	});
+	setTimeout(async () => {
+		const ordererService = await deployOrderer({
+			Name,
+			imageTag, network, port,
+			msp: {
+				volumeName: MSPROOTvolumeName, id,
+				configPath
+			}, CONFIGTXVolume: CONFIGTXvolumeName,
+			BLOCK_FILE: config.BLOCK_FILE,
+			kafkas: true,
+			tls
+		});
 
-	await taskLiveWaiter(ordererService);
+		await taskLiveWaiter(ordererService);
+	}, 2000,);
+
 
 };
 try {
-	asyncTask();
-}catch (err) {
-	logger.error(err)
+	asyncTask(process.env.action);
+} catch (err) {
+	logger.error(err);
 	process.exit(1);
 }
