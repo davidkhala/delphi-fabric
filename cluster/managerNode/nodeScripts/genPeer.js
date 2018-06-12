@@ -8,11 +8,10 @@ const peerName = 'newContainer';
 const peerOrg = 'NEW';
 const portMap = config.orgs[peerOrg].peers[peerName].portMap;
 const {globalConfig} = require('./swarmClient');
-
+const {} = require('../../../app/join-channel');
+const logger = require('../../../common/nodejs/logger').new('genPeer');
 const asyncTask = async () => {
-	const {docker: {network, fabricTag}, TLS} = await globalConfig();
 	const cryptoType = 'peer';
-	const imageTag = `x86_64-${fabricTag}`;
 
 	const cryptoPath = new CryptoPath(peerUtil.container.MSPROOT, {
 		peer: {
@@ -25,7 +24,13 @@ const asyncTask = async () => {
 	const serviceName = swarmServiceName(Name);
 	await serviceClear(serviceName);
 	await chaincodeClean();
-	if (process.env.action === 'down') return;
+	if (process.env.action === 'down') {
+		logger.info('[done] down');
+		return;
+	}
+
+	const {docker: {network, fabricTag}, TLS} = await globalConfig();
+	const imageTag = `x86_64-${fabricTag}`;
 
 	//Stateful: use volume as orderer
 	const tls = TLS ? cryptoPath.TLSFile(cryptoType) : undefined;
@@ -40,5 +45,6 @@ const asyncTask = async () => {
 		tls
 	});
 	await taskLiveWaiter(peerService);
+
 };
 asyncTask();

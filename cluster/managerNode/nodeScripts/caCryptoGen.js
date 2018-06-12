@@ -34,9 +34,12 @@ const asyncTask = async () => {
 	const pm2 = new PM2();
 	await pm2.connect();
 	const signServerProcessName = 'signServer';
-	await pm2.delete({name:signServerProcessName});
+	await pm2.delete({name: signServerProcessName});
 	pm2.disconnect();
-	if (process.env.action === 'down') return;
+	if (process.env.action === 'down') {
+		logger.info('[done] down');
+		return;
+	}
 	const {TLS} = await globalConfig();
 	const ordererConfig = config.orderer.orgs[ordererOrg];
 	const ordererCAurl = `http${TLS ? 's' : ''}://localhost:${ordererConfig.ca.portHost}`;

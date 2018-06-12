@@ -10,13 +10,17 @@ const container_name = {
 };
 const {globalConfig} = require('./swarmClient');
 const asyncTask = async () => {
-	const {docker: {network, fabricTag}, TLS} = await globalConfig();
-	const imageTag = `x86_64-${fabricTag}`;
+
 	const ordererCAServiceName = swarmServiceName(container_name.ordererCA);
 	const peerCAServiceName = swarmServiceName(container_name.peerCA);
 	await serviceClear(ordererCAServiceName);
 	await serviceClear(peerCAServiceName);
-	if (process.env.action === 'down') return;
+	if (process.env.action === 'down') {
+		logger.info('[done] down');
+		return;
+	}
+	const {docker: {network, fabricTag}, TLS} = await globalConfig();
+	const imageTag = `x86_64-${fabricTag}`;
 	const ordererCA = await deployCA({
 		Name: container_name.ordererCA,
 		port: config.orderer.orgs[ordererOrg].ca.portHost,
