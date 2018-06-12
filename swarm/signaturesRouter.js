@@ -15,6 +15,7 @@ const {homeResolve} = require('../common/nodejs/path');
 const multerCache = Multer({dest: homeResolve(cache)});
 const Request = require('request');
 
+const channelUtil = require('../common/nodejs/channel');
 const {sha2_256} = require('fabric-client/lib/hash');
 
 router.post('/getSwarmSignatures', multerCache.single('proto'), async (req, res) => {
@@ -65,12 +66,12 @@ const signatureCollector = async (proto) => {
 };
 router.post('/newOrderer', async (req, res) => {
 	try {
-		const {address, channelName} = req.body;
-		logger.debug('newOrderer', address, channelName);
+		const {address} = req.body;
+		logger.debug('/newOrderer', {address});
 
-		const randomPeerOrg = helper.randomOrg('peer');
-		const peerClient = await helper.getOrgAdmin(randomPeerOrg);
-		const peerChannel = helper.prepareChannel(channelName, peerClient, true);
+		const randomOrdererOrg = helper.randomOrg('orderer');
+		const ordererClient = await helper.getOrgAdmin(randomOrdererOrg, 'orderer');
+		const ordererChannel = helper.prepareChannel(undefined, ordererClient, true);
 
 		const onUpdate = (original_config) => {
 			const config = new ConfigFactory(original_config);
@@ -78,12 +79,13 @@ router.post('/newOrderer', async (req, res) => {
 			return config.build();
 		};
 
+		const randomPeerOrg = helper.randomOrg('peer');
 		const peer = helper.newPeers([0], randomPeerOrg)[0];
+		const peerClient = await helper.getOrgAdmin(randomPeerOrg, 'peer');
+
 		const peerEventHub = helper.bindEventHub(peer, peerClient);
 
-		await configtxlatorUtil.channelUpdate(peerChannel, onUpdate, signatureCollector, peerEventHub);
-		await peerChannel.initialize();
-		logger.debug('channel.getOrganizations() after(peer org)', peerChannel.getOrganizations());
+		await configtxlatorUtil.channelUpdate(ordererChannel, onUpdate, signatureCollector, peerEventHub,{nodeType:'orderer',peer});
 		res.json({newOrderer: address});
 	} catch (err) {
 		logger.error(err);
@@ -96,28 +98,37 @@ router.post('/newOrg', multerCache.fields([{name: 'admins'}, {name: 'root_certs'
 			const admins = req.files['admins'].map(({path}) => path);
 			const root_certs = req.files['root_certs'].map(({path}) => path);
 			const tls_root_certs = req.files['tls_root_certs'].map(({path}) => path);
-			const {channelName, MSPID, MSPName, nodeType} = req.body;
-			logger.debug('newOrg', {channelName, MSPID, MSPName, nodeType}, {admins, root_certs, tls_root_certs});
+			const {MSPID, MSPName, nodeType} = req.body;
 
+			let channelName;
 			const randomPeerOrg = helper.randomOrg('peer');
-			const peerClient = await helper.getOrgAdmin(randomPeerOrg);
-			const peerChannel = helper.prepareChannel(channelName, peerClient, true);
+			const peerClient = await helper.getOrgAdmin(randomPeerOrg, 'peer');
+			const peer = helper.newPeers([0], randomPeerOrg)[0];
+			const peerEventHub = helper.bindEventHub(peer, peerClient);
+			if (nodeType === 'orderer') {
+				channelName = channelUtil.genesis;
+			} else {
+				channelName = req.body.channelName;
+
+			}
+			const ramdomOrg = helper.randomOrg(nodeType);
+			const client = await helper.getOrgAdmin(ramdomOrg,nodeType);
+			const channel = helper.prepareChannel(channelName, client, true);
+
+
+			logger.debug('/newOrg', {channelName, MSPID, MSPName, nodeType}, {admins, root_certs, tls_root_certs});
+
 
 			const onUpdate = (original_config) => {
-				logger.debug('channel.getOrganizations() before(peer org)', peerChannel.getOrganizations());
 				//No update checking should be implemented in channel update
 				const config = new ConfigFactory(original_config);
 				return config.newOrg(MSPName, MSPID, nodeType, {admins, root_certs, tls_root_certs}).build();
 			};
 
-			const peer = helper.newPeers([0], randomPeerOrg)[0];
-			const peerEventHub = helper.bindEventHub(peer, peerClient);
 
-
-			await configtxlatorUtil.channelUpdate(peerChannel, onUpdate, signatureCollector, peerEventHub);
-			await peerChannel.initialize();
-			logger.debug('channel.getOrganizations() after(peer org)', peerChannel.getOrganizations());
-			res.json(peerChannel.getOrganizations());
+			await configtxlatorUtil.channelUpdate(channel, onUpdate, signatureCollector, peerEventHub,{nodeType,peer});
+			const {original_config} = await configtxlatorUtil.getChannelConfigReadable(channel, nodeType);
+			res.json(original_config);
 		} catch (err) {
 			logger.error(err);
 			res.status(400).send(err.toString());

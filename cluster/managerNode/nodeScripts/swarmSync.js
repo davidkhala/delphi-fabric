@@ -1,7 +1,7 @@
 //TODO send manager info to swarm Server
 const swarmClient = require('./swarmClient');
-const {fabricImagePull} = require('../../../common/nodejs/fabric-dockerode');
-const {swarmJoin, swarmLeave,swarmBelongs} = require('../../../common/docker/nodejs/dockerode-util');
+const {fabricImagePull,swarmIPJoin} = require('../../../common/nodejs/fabric-dockerode');
+const {swarmLeave,swarmBelongs} = require('../../../common/docker/nodejs/dockerode-util');
 const dockerCmdUtil = require('../../../common/docker/nodejs/dockerCmd');
 const arch = 'x86_64';
 const commonHelper = require('../../../common/nodejs/helper');
@@ -19,7 +19,7 @@ const asyncTask = async () => {
 	if (process.env.action === 'down') return;
 	const {docker: {network, thirdPartyTag, fabricTag}, TLS} = await swarmClient.globalConfig();
 	await fabricImagePull({fabricTag, thirdPartyTag, arch});
-	await swarmJoin({AdvertiseAddr, JoinToken});
+	await swarmIPJoin({AdvertiseAddr, JoinToken});
 
 
 

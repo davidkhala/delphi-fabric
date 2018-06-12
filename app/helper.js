@@ -58,10 +58,9 @@ const preparePeer = (orgName, peerIndex, peerConfig) => {
  */
 exports.prepareChannel = (channelName, client, isRenew) => {
 
-	const systemChannel = channelUtil.genesis;
 	if (!channelName) {
-		logger.warn('default to using system channel');
-		channelName = systemChannel;
+		logger.warn('default to using system channel', channelUtil.genesis);
+		channelName = channelUtil.genesis;
 	} else {
 		channelUtil.nameMatcher(channelName, true);
 	}
@@ -110,7 +109,7 @@ exports.prepareChannel = (channelName, client, isRenew) => {
 		channel.addOrderer(orderer);
 	}
 
-	if (channelName !== systemChannel) {
+	if (channelName !== channelUtil.genesis) {
 		const channelConfig = channelsConfig[channelName];
 
 		for (const orgName in channelConfig.orgs) {
@@ -126,16 +125,16 @@ exports.prepareChannel = (channelName, client, isRenew) => {
 		channel.eventWaitTime = channelConfig.eventWaitTime;
 		channel.orgs = channelConfig.orgs;
 	} else {
-		//TODO adding all existing orgs to allign with configtx.js, take care
-		for (const orgName in orgsConfig) {
-			const orgConfig = orgsConfig[orgName];
-
-			for (const peerIndex in orgConfig.peers) {
-				const peerConfig = orgConfig.peers[peerIndex];
-				const peer = preparePeer(orgName, peerIndex, peerConfig);
-				channel.addPeer(peer);
-			}
-		}
+		// //TODO adding all existing orgs to allign with configtx.js, take care
+		// for (const orgName in orgsConfig) {
+		// 	const orgConfig = orgsConfig[orgName];
+		//
+		// 	for (const peerIndex in orgConfig.peers) {
+		// 		const peerConfig = orgConfig.peers[peerIndex];
+		// 		const peer = preparePeer(orgName, peerIndex, peerConfig);
+		// 		channel.addPeer(peer);
+		// 	}
+		// }
 	}
 
 	return channel;
