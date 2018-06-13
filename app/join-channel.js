@@ -3,15 +3,11 @@ const logger = require('../common/nodejs/logger').new('Join-Channel');
 const EventHubUtil = require('../common/nodejs/eventHub');
 
 //we could let peers from different org to join channel in 1 request
-exports.joinChannel = async (channel, peers, client) => {
+exports.joinChannel = async (channel, peers, Orderer) => {
 	logger.debug({channelName: channel.getName(), peersSize: peers.length});
 
-	if (client) {
-		channel._clientContext = client;
-	} else {
-		client = channel._clientContext;
-	}
-	const genesis_block = await channel.getGenesisBlock({txId: client.newTransactionID()});
+	const client = channel._clientContext;
+	const genesis_block = await channel.getGenesisBlock({Orderer});
 	logger.debug('signature identity', client.getUserContext().getName());
 	const request = {
 		targets: peers,

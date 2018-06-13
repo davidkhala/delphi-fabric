@@ -45,7 +45,7 @@ const joinAllfcn = async (channelName) => {
 };
 const task = async () => {
 	const client = await helper.getOrgAdmin(undefined, 'orderer');
-	const ordererUrl = `${TLS ? 'grpcs' : 'grpc'}://localhost:7050`;
+	const ordererUrl = `${TLS ? 'grpcs' : 'grpc'}://localhost:8050`;
 	logger.info({ordererUrl});
 	try {
 		await createChannel(client, channelName, channelConfigFile, ['BU.Delphi.com', 'ENG.Delphi.com'], ordererUrl);
