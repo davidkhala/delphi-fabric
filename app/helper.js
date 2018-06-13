@@ -58,20 +58,13 @@ const preparePeer = (orgName, peerIndex, peerConfig) => {
  */
 exports.prepareChannel = (channelName, client, isRenew) => {
 
-	if (!channelName) {
-		logger.warn('default to using system channel', channelUtil.genesis);
-		channelName = channelUtil.genesis;
-	} else {
-		channelUtil.nameMatcher(channelName, true);
-	}
-
 	if (isRenew) {
 		delete client._channels[channelName];
 	} else {
 		if (client._channels[channelName]) return client._channels[channelName];
 	}
 
-	const channel = client.newChannel(channelName);//NOTE throw exception if exist
+	const channel = channelUtil.new(client,channelName);
 	const newOrderer = (ordererName, domain, ordererSingleConfig) => {
 		const nodeType = 'orderer';
 		const ordererPort = ordererSingleConfig.portHost;
@@ -124,17 +117,6 @@ exports.prepareChannel = (channelName, client, isRenew) => {
 		}
 		channel.eventWaitTime = channelConfig.eventWaitTime;
 		channel.orgs = channelConfig.orgs;
-	} else {
-		// //TODO adding all existing orgs to allign with configtx.js, take care
-		// for (const orgName in orgsConfig) {
-		// 	const orgConfig = orgsConfig[orgName];
-		//
-		// 	for (const peerIndex in orgConfig.peers) {
-		// 		const peerConfig = orgConfig.peers[peerIndex];
-		// 		const peer = preparePeer(orgName, peerIndex, peerConfig);
-		// 		channel.addPeer(peer);
-		// 	}
-		// }
 	}
 
 	return channel;
