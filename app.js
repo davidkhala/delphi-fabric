@@ -8,11 +8,11 @@ const globalConfig = require('./config/orgs.json');
 const channelsConfig = globalConfig.channels;
 const chaincodesConfig = require('./config/chaincode.json');
 const CONFIGTXDir = homeResolve(globalConfig.docker.volumes.CONFIGTX.dir);
-
+const EventHubUtil = require('./common/nodejs/eventHub');
 const wsCommon = require('./express/webSocketCommon');
 const helper = require('./app/helper.js');
 const {createChannel} = require('./app/create-channel');
-const joinChannel = require('./common/nodejs/join-channel').joinChannel;
+const {joinChannel} = require('./common/nodejs/join-channel');
 
 const Query = require('./common/nodejs/query');
 const {app, server} = require('./common/nodejs/baseApp').run(port, host);
@@ -79,7 +79,7 @@ const invalid = require('./express/formValid').invalid();
 const errorCodeMap = require('./express/errorCodeMap.json');
 const errorSyntaxHandle = (err, res) => {
 	let status = 500;
-	for (let errorMessage in errorCodeMap) {
+	for (const errorMessage in errorCodeMap) {
 		if (err.toString().includes(errorMessage)) {
 			status = errorCodeMap[errorMessage];
 			break;
@@ -90,7 +90,7 @@ const errorSyntaxHandle = (err, res) => {
 };
 
 // Create Channel
-app.post('/channel/create/:channelName', (req, res) => {
+app.post('/channel/create/:channelName', async (req, res) => {
 
 	logger.info('<<<<<<<<<<<<<<<<< C R E A T E  C H A N N E L >>>>>>>>>>>>>>>>>');
 	const {channelName} = req.params;
@@ -98,12 +98,12 @@ app.post('/channel/create/:channelName', (req, res) => {
 
 	const invalidChannelName = invalid.channelName({channelName});
 	if (invalidChannelName) {
-		res.send(invalidChannelName);
+		errorSyntaxHandle(invalidChannelName, res);
 		return;
 	}
 	const invalidOrgName = invalid.orgName({orgName});
 	if (invalidOrgName) {
-		res.send(invalidOrgName);
+		errorSyntaxHandle(invalidOrgName, res);
 		return;
 	}
 	const channelFileName = channelsConfig[channelName].file;
@@ -111,16 +111,18 @@ app.post('/channel/create/:channelName', (req, res) => {
 	logger.debug({orgName, channelName, channelConfigFile});
 
 	if (!fs.existsSync(channelConfigFile)) {
-		res.json(`channelConfigFile ${channelConfigFile} not exist`);
+		errorSyntaxHandle(`channelConfigFile ${channelConfigFile} not exist`, res);
 		return;
 	}
 
-	helper.getOrgAdmin(orgName).then((client) => createChannel(client, channelName, channelConfigFile, [orgName]).then((message) => {
+	try {
+		const client = await helper.getOrgAdmin(orgName);
+		await createChannel(client, channelName, channelConfigFile, [orgName]);
 		res.send(`channel ${channelName} created successfully by ${orgName} with configuration in ${channelConfigFile}`);
-	})).catch(err => {
+	} catch (err) {
 		logger.error(err);
 		errorSyntaxHandle(err, res);
-	});
+	}
 });
 // Join Channel
 app.post('/channel/join/:channelName', async (req, res) => {
@@ -129,7 +131,7 @@ app.post('/channel/join/:channelName', async (req, res) => {
 
 	const invalidChannelName = invalid.channelName({channelName});
 	if (invalidChannelName) {
-		res.send(invalidChannelName);
+		errorSyntaxHandle(invalidChannelName, res);
 		return;
 	}
 
@@ -138,17 +140,19 @@ app.post('/channel/join/:channelName', async (req, res) => {
 
 	const invalidPeer = invalid.peer({orgName, peerIndex});
 	if (invalidPeer) {
-		res.send(invalidPeer);
+		errorSyntaxHandle(invalidPeer, res);
 		return;
 	}
 
-	const peers = helper.newPeers([peerIndex], orgName);
-
-
 	try {
-		const client = await helper.getOrgAdmin(orgName);
+		const peer = helper.newPeers([peerIndex], orgName)[0];
+		const client = await helper.getOrgAdmin(orgName,'peer');
 		const channel = helper.prepareChannel(channelName, client);
-		await joinChannel(channel, peers);
+		const eventHubPort = peer.peerConfig.eventHub.port;
+		const pem = peer.pem;
+		const peerHostName = peer._options['grpc.ssl_target_name_override'];
+		const eventHub = EventHubUtil.new(client, {eventHubPort, pem, peerHostName});
+		await joinChannel(channel, peer, eventHub);
 		res.send(`peer${peerIndex}.${orgName} has joined channel ${channelName} successfully`);
 	} catch (err) {
 		errorSyntaxHandle(err, res);
