@@ -1,9 +1,10 @@
 const {createChannel} = require('./create-channel');
-const {joinChannel} = require('./join-channel');
+const {joinChannel} = require('../common/nodejs/join-channel');
 
 const helper = require('./helper');
 const logger = require('../common/nodejs/logger').new('testChannel');
 const configtxlator = require('../common/nodejs/configtxlator');
+const EventHubUtil = require('../common/nodejs/eventHub');
 const {homeResolve} = require('../common/nodejs/path');
 const fs = require('fs');
 const channelName = 'allchannel';
@@ -12,7 +13,7 @@ const globalConfig = require('../config/orgs.json');
 const {TLS} = globalConfig;
 const channelConfig = globalConfig.channels[channelName];
 
-const channelConfigFile = homeResolve(globalConfig.docker.volumes.CONFIGTX.dir,channelConfig.file);
+const channelConfigFile = homeResolve(globalConfig.docker.volumes.CONFIGTX.dir, channelConfig.file);
 const joinAllfcn = async (channelName) => {
 
 
@@ -23,23 +24,31 @@ const joinAllfcn = async (channelName) => {
 		const client = await helper.getOrgAdmin(orgName);
 
 		const channel = helper.prepareChannel(channelName, client);
-		const loopJoinChannel = async () => {
-			try {
-				return await joinChannel(channel, peers);
-			} catch (err) {
-				if (err.toString().includes('Invalid results returned ::NOT_FOUND')
-					|| err.toString().includes('SERVICE_UNAVAILABLE')) {
-					logger.warn('loopJoinChannel...');
-					await new Promise(resolve => {
-						setTimeout(() => {
-							resolve(loopJoinChannel());
-						}, 1000);
-					});
+		for (const peer of peers) {
+
+			const eventHubPort = peer.peerConfig.eventHub.port;
+			const pem = peer.pem;
+			const peerHostName = peer._options['grpc.ssl_target_name_override'];
+			const eventHub = EventHubUtil.new(client, {eventHubPort, pem, peerHostName});
+
+			const loopJoinChannel = async () => {
+				try {
+					return await joinChannel(channel, peer, eventHub);
+				} catch (err) {
+					if (err.toString().includes('Invalid results returned ::NOT_FOUND')
+						|| err.toString().includes('SERVICE_UNAVAILABLE')) {
+						logger.warn('loopJoinChannel...');
+						await new Promise(resolve => {
+							setTimeout(() => {
+								resolve(loopJoinChannel());
+							}, 1000);
+						});
+					}
+					else throw err;
 				}
-				else throw err;
-			}
-		};
-		await loopJoinChannel();
+			};
+			await loopJoinChannel();
+		}
 	}
 
 };
@@ -68,7 +77,7 @@ const task = async () => {
 	}
 	try {
 		const channel = helper.prepareChannel(undefined, client);
-		const {original_config} = await configtxlator.getChannelConfigReadable(channel,'orderer');
+		const {original_config} = await configtxlator.getChannelConfigReadable(channel, 'orderer');
 
 		fs.writeFileSync('testchainid.json', original_config);
 	} catch (e) {
