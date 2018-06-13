@@ -4,7 +4,7 @@ const {fabricImagePull, swarmIPJoin} = require('../../common/nodejs/fabric-docke
 const {swarmLeave, swarmBelongs} = require('../../common/docker/nodejs/dockerode-util');
 const dockerCmdUtil = require('../../common/docker/nodejs/dockerCmd');
 const arch = 'x86_64';
-const logger = require('../../common/nodejs/logger').new('prepare');
+const logger = require('../../common/nodejs/logger').new('swarmSync');
 const asyncTask = async (action) => {
 	await swarmClient.touch();
 	const {managerToken} = await swarmClient.leader();

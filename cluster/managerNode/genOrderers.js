@@ -12,7 +12,7 @@ const port = config.orderer.orgs[ordererOrg].orderers[ordererName].portHost;
 const {globalConfig, block, newOrg, newOrderer} = require('./swarmClient');
 const path = require('path');
 const asyncTask = async (action) => {
-
+	logger.debug('[start] genOrderer');
 	const Name = `${ordererName}.${ordererOrg}`;
 	if (action === 'down') {
 		const serviceName = swarmServiceName(Name);
@@ -44,32 +44,29 @@ const asyncTask = async (action) => {
 	const tls = TLS ? cryptoPath.TLSFile(cryptoType) : undefined;
 	const configPath = cryptoPath.MSP(cryptoType);
 
-	// TODO do channel update first before orderer up
+	// TODO try to do channel update after orderer up
 	const hostCryptoPath = new CryptoPath(MSPROOTDir, {
 		orderer: {name: ordererName, org: ordererOrg},
 		user: {name: 'Admin'}
 	});
+
+	const ordererService = await deployOrderer({
+		Name,
+		imageTag, network, port,
+		msp: {
+			volumeName: MSPROOTvolumeName, id,
+			configPath
+		}, CONFIGTXVolume: CONFIGTXvolumeName,
+		BLOCK_FILE: config.BLOCK_FILE,
+		kafkas: true,
+		tls
+	});
+
+	await taskLiveWaiter(ordererService);
 	await newOrg(hostCryptoPath, cryptoType, undefined, ordererOrg);
 
 	const respNewOrderer = await newOrderer(hostCryptoPath.ordererHostName);
 	logger.debug({respNewOrderer});
-
-	setTimeout(async () => {
-		const ordererService = await deployOrderer({
-			Name,
-			imageTag, network, port,
-			msp: {
-				volumeName: MSPROOTvolumeName, id,
-				configPath
-			}, CONFIGTXVolume: CONFIGTXvolumeName,
-			BLOCK_FILE: config.BLOCK_FILE,
-			kafkas: true,
-			tls
-		});
-
-		await taskLiveWaiter(ordererService);
-	}, 2000,);
-
 
 };
 try {

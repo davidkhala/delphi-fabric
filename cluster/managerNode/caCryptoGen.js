@@ -31,11 +31,12 @@ const getCaService = async (url, domain, TLS) => {
 	return caUtil.new(url);
 };
 const asyncTask = async (action) => {
-	fsExtra.removeSync(cryptoRoot);
+	logger.debug('[start] caCryptogen');
 	const pm2 = new PM2();
 	const signServerProcessName = 'signServer';
 
 	if (action === 'down') {
+		fsExtra.removeSync(cryptoRoot);
 		await pm2.connect();
 		await pm2.delete({name: signServerProcessName});
 		pm2.disconnect();
@@ -44,9 +45,7 @@ const asyncTask = async (action) => {
 		return;
 	}
 	const {TLS} = await globalConfig();
-	const ordererConfig = config.orderer.orgs[ordererOrg];
-	const ordererCAurl = `http${TLS ? 's' : ''}://localhost:${ordererConfig.ca.portHost}`;
-	const ordererCaService = await getCaService(ordererCAurl, ordererOrg, TLS);
+
 	const cryptoPath = new CryptoPath(cryptoRoot, {
 		orderer: {
 			org: ordererOrg, name: ordererName
@@ -57,14 +56,25 @@ const asyncTask = async (action) => {
 		user: {name: 'Admin'},
 		password: 'passwd'
 	});
-	const ordererAdmin = await caCryptoGen.init(ordererCaService, cryptoPath, 'orderer', ordererConfig.MSP.id);
-	await caCryptoGen.genOrderer(ordererCaService, cryptoPath, ordererAdmin, {TLS});
+	if (fs.existsSync(cryptoPath.orderers())) {
+		logger.info('orderers exist, skipping create');
+	} else {
+		const ordererConfig = config.orderer.orgs[ordererOrg];
+		const ordererCAurl = `http${TLS ? 's' : ''}://localhost:${ordererConfig.ca.portHost}`;
+		const ordererCaService = await getCaService(ordererCAurl, ordererOrg, TLS);
+		const ordererAdmin = await caCryptoGen.init(ordererCaService, cryptoPath, 'orderer', ordererConfig.MSP.id);
+		await caCryptoGen.genOrderer(ordererCaService, cryptoPath, ordererAdmin, {TLS});
+	}
 
-	const peerConfig = config.orgs[peerOrg];
-	const peerCAURL = `http${TLS ? 's' : ''}://localhost:${peerConfig.ca.portHost}`;
-	const peerCaService = await getCaService(peerCAURL, peerOrg, TLS);
-	const peerAdmin = await caCryptoGen.init(peerCaService, cryptoPath, 'peer', peerConfig.MSP.id);
-	await caCryptoGen.genPeer(peerCaService, cryptoPath, peerAdmin, {TLS});
+	if (fs.existsSync(cryptoPath.peers())) {
+		logger.info('peers exist, skipping create');
+	} else {
+		const peerConfig = config.orgs[peerOrg];
+		const peerCAURL = `http${TLS ? 's' : ''}://localhost:${peerConfig.ca.portHost}`;
+		const peerCaService = await getCaService(peerCAURL, peerOrg, TLS);
+		const peerAdmin = await caCryptoGen.init(peerCaService, cryptoPath, 'peer', peerConfig.MSP.id);
+		await caCryptoGen.genPeer(peerCaService, cryptoPath, peerAdmin, {TLS});
+	}
 
 
 	const script = homeResolve(config.signServer.path);
@@ -73,7 +83,12 @@ const asyncTask = async (action) => {
 	pm2.disconnect();
 };
 
+try {
+	asyncTask(process.env.action);
+} catch (err) {
+	logger.error(err);
+	process.exit(1);
+}
 
-asyncTask(process.env.action);
 
 
