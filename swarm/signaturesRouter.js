@@ -96,9 +96,9 @@ router.post('/newOrderer', async (req, res) => {
 router.post('/newOrg', multerCache.fields([{name: 'admins'}, {name: 'root_certs'}, {name: 'tls_root_certs'}])
 	, async (req, res) => {
 		try {
-			const admins = req.files['admins'].map(({path}) => path);
-			const root_certs = req.files['root_certs'].map(({path}) => path);
-			const tls_root_certs = req.files['tls_root_certs'].map(({path}) => path);
+			const admins = req.files['admins']?req.files['admins'].map(({path}) => path):[];
+			const root_certs = req.files['root_certs']?req.files['root_certs'].map(({path}) => path):[];
+			const tls_root_certs = req.files['tls_root_certs']?req.files['tls_root_certs'].map(({path}) => path):[];
 			const {MSPID, MSPName, nodeType} = req.body;
 
 			let channelName;
