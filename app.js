@@ -11,8 +11,8 @@ const CONFIGTXDir = homeResolve(globalConfig.docker.volumes.CONFIGTX.dir);
 const EventHubUtil = require('./common/nodejs/eventHub');
 const wsCommon = require('./express/webSocketCommon');
 const helper = require('./app/helper.js');
-const {createChannel} = require('./app/create-channel');
-const {joinChannel} = require('./common/nodejs/join-channel');
+const {create:createChannel} = require('./app/channelHelper');
+const {join:joinChannel} = require('./common/nodejs/channel');
 
 const Query = require('./common/nodejs/query');
 const {app, server} = require('./common/nodejs/baseApp').run(port, host);

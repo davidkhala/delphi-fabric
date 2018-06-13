@@ -1,5 +1,5 @@
-const {createChannel} = require('./create-channel');
-const {joinChannel} = require('../common/nodejs/join-channel');
+const {create:createChannel} = require('./channelHelper');
+const {join:joinChannel} = require('../common/nodejs/channel');
 
 const helper = require('./helper');
 const logger = require('../common/nodejs/logger').new('testChannel');
