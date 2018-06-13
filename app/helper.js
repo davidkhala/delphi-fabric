@@ -64,7 +64,7 @@ exports.prepareChannel = (channelName, client, isRenew) => {
 		if (client._channels[channelName]) return client._channels[channelName];
 	}
 
-	const channel = channelUtil.new(client,channelName);
+	const channel = channelUtil.new(client, channelName);
 	const newOrderer = (ordererName, domain, ordererSingleConfig) => {
 		const nodeType = 'orderer';
 		const ordererPort = ordererSingleConfig.portHost;
@@ -102,7 +102,7 @@ exports.prepareChannel = (channelName, client, isRenew) => {
 		channel.addOrderer(orderer);
 	}
 
-	if (channelName !== channelUtil.genesis) {
+	if (channelName && channelName !== channelUtil.genesis) {
 		const channelConfig = channelsConfig[channelName];
 
 		for (const orgName in channelConfig.orgs) {
