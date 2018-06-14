@@ -82,9 +82,8 @@ router.post('/newOrderer', async (req, res) => {
 
 		const randomPeerOrg = helper.randomOrg('peer');
 		const peer = helper.newPeers([0], randomPeerOrg)[0];
-		const peerClient = await helper.getOrgAdmin(randomPeerOrg, 'peer');
 
-		const peerEventHub = helper.bindEventHub(peer, peerClient);
+		const peerEventHub = await peer.eventHubPromise;
 
 		await configtxlatorUtil.channelUpdate(ordererChannel, onUpdate, signatureCollector, peerEventHub,{nodeType:'orderer',peer});
 		res.json({newOrderer: address});
@@ -103,9 +102,8 @@ router.post('/newOrg', multerCache.fields([{name: 'admins'}, {name: 'root_certs'
 
 			let channelName;
 			const randomPeerOrg = helper.randomOrg('peer');
-			const peerClient = await helper.getOrgAdmin(randomPeerOrg, 'peer');
 			const peer = helper.newPeers([0], randomPeerOrg)[0];
-			const peerEventHub = helper.bindEventHub(peer, peerClient);
+			const peerEventHub = await peer.eventHubPromise;
 			if (nodeType === 'orderer') {
 				channelName = channelUtil.genesis;
 			} else {

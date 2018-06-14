@@ -16,7 +16,7 @@ const {join:joinChannel} = require('./common/nodejs/channel');
 
 const Query = require('./common/nodejs/query');
 const {app, server} = require('./common/nodejs/baseApp').run(port, host);
-const {install} = require('./app/install-chaincode.js');
+const {install} = require('./common/nodejs/chaincode');
 
 
 app.use('/config', require('./express/configExpose'));
@@ -148,10 +148,7 @@ app.post('/channel/join/:channelName', async (req, res) => {
 		const peer = helper.newPeers([peerIndex], orgName)[0];
 		const client = await helper.getOrgAdmin(orgName,'peer');
 		const channel = helper.prepareChannel(channelName, client);
-		const eventHubPort = peer.peerConfig.eventHub.port;
-		const pem = peer.pem;
-		const peerHostName = peer._options['grpc.ssl_target_name_override'];
-		const eventHub = EventHubUtil.new(client, {eventHubPort, pem, peerHostName});
+		const eventHub = await peer.eventHubPromise;
 		await joinChannel(channel, peer, eventHub);
 		res.send(`peer${peerIndex}.${orgName} has joined channel ${channelName} successfully`);
 	} catch (err) {

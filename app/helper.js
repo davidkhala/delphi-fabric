@@ -15,7 +15,7 @@ const channelUtil = require('../common/nodejs/channel');
 const {randomKeyOf} = require('../common/nodejs/helper');
 
 // peerConfig: "portMap": [{	"host": 8051,		"container": 7051},{	"host": 8053,		"container": 7053}]
-const preparePeer = (orgName, peerIndex, peerConfig) => {
+exports.preparePeer = (orgName, peerIndex, peerConfig) => {
 	let peerPort;
 	let eventHubPort;
 	for (const portMapEach of peerConfig.portMap) {
@@ -27,13 +27,11 @@ const preparePeer = (orgName, peerIndex, peerConfig) => {
 		}
 	}
 	let peer;
+	const cryptoPath = new CryptoPath(CRYPTO_CONFIG_DIR,
+		{peer: {name: `peer${peerIndex}`, org: orgName}});
+	const {peerHostName} = cryptoPath;
 	if (globalConfig.TLS) {
-
-		const nodeType = 'peer';
-		const cryptoPath = new CryptoPath(CRYPTO_CONFIG_DIR,
-			{peer: {name: `peer${peerIndex}`, org: orgName}});
-		const {peerHostName} = cryptoPath;
-		const {caCert} = cryptoPath.TLSFile(nodeType);
+		const {caCert} = cryptoPath.TLSFile('peer');
 		peer = peerUtil.new({peerPort, cert: caCert, peerHostName});
 	} else {
 		peer = peerUtil.new({peerPort});
@@ -41,10 +39,11 @@ const preparePeer = (orgName, peerIndex, peerConfig) => {
 	//NOTE append more info
 	peer.peerConfig = peerConfig;
 
-	peer.peerConfig.eventHub = {
-		port: eventHubPort,
-		clientPromise: exports.getOrgAdmin(orgName),
+	const eventHubPromise = async (pem,peerHostName)=>{
+		const eventHubClient = exports.getOrgAdmin(orgName,'peer');
+		return EventHubUtil.new(eventHubClient,{eventHubPort, pem, peerHostName});
 	};
+	peer.eventHubPromise =eventHubPromise(peer.pem,peerHostName);
 	peer.peerConfig.orgName = orgName;
 	peer.peerConfig.peerIndex = peerIndex;
 	return peer;
@@ -110,7 +109,7 @@ exports.prepareChannel = (channelName, client, isRenew) => {
 			for (const peerIndex of orgConfigInChannel.peerIndexes) {
 				const peerConfig = orgsConfig[orgName].peers[peerIndex];
 
-				const peer = preparePeer(orgName, peerIndex, peerConfig);
+				const peer = exports.preparePeer(orgName, peerIndex, peerConfig);
 				channel.addPeer(peer);
 
 			}
@@ -131,26 +130,13 @@ exports.newPeers = (peerIndexes, orgName) => {
 
 		const peerConfig = orgsConfig[orgName].peers[index];
 		if (!peerConfig) continue;
-		const peer = preparePeer(orgName, index, peerConfig);
+		const peer = exports.preparePeer(orgName, index, peerConfig);
 		targets.push(peer);
 	}
 	return targets;
 
 };
-/**
- *  NOTE newEventHub binds to clientContext
- *  eventhub error { Error: event message must be properly signed by an identity from the same organization as the peer}
- * @param richPeer
- * @param client
- */
-const bindEventHub = (richPeer, client) => {
 
-	const eventHubPort = richPeer.peerConfig.eventHub.port;
-	const pem = richPeer.pem;
-	const peerHostName = richPeer._options['grpc.ssl_target_name_override'];
-	return EventHubUtil.new(client, {eventHubPort, pem, peerHostName});
-
-};
 const findOrgConfig = (orgName) => {
 	let target;
 	let nodeType;
@@ -194,7 +180,7 @@ const getUserClient = async (username, orgName, client) => {
 };
 
 
-const getAdminClient = (orgName, nodeType) => {
+exports.getOrgAdmin = (orgName, nodeType) => {
 	const client = ClientUtil.new();
 	if (!orgName) {
 		orgName = exports.randomOrg(nodeType);
@@ -217,6 +203,3 @@ exports.randomOrg = (nodeType) => {
 	logger.info(`random ${nodeType} org`, orgName);
 	return orgName;
 };
-exports.preparePeer = preparePeer;
-exports.bindEventHub = bindEventHub;
-exports.getOrgAdmin = getAdminClient;

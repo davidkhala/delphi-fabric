@@ -3,7 +3,7 @@ const router = express.Router();
 const logger = require('../common/nodejs/logger').new('http-chaincode');
 const helper = require('../app/helper.js');
 const invalid = require('./formValid').invalid();
-const {reducer} = require('../common/nodejs/chaincode');
+const {reducer,instantiate,upgrade} = require('../common/nodejs/chaincode');
 const errorHandle = (err, res) => {
 	const errorCodeMap = require('./errorCodeMap.json');
 
@@ -57,7 +57,7 @@ router.post('/invoke', (req, res) => {
 
 });
 router.post('/instantiate', (req, res) => {
-	const {instantiate} = require('../app/instantiate-chaincode');
+
 	logger.debug('==================== INSTANTIATE CHAINCODE ==================');
 
 	const {chaincodeId, chaincodeVersion, channelName, fcn, args: argsString, peerIndex, orgName} = req.body;
@@ -96,7 +96,7 @@ router.post('/instantiate', (req, res) => {
 	});
 });
 router.post('/upgrade', (req, res) => {
-	const {upgrade} = require('../app/instantiate-chaincode');
+
 	logger.debug('==================== upgrade CHAINCODE ==================');
 
 	const {chaincodeId, chaincodeVersion, channelName, fcn, args: argsString, peerIndex, orgName} = req.body;

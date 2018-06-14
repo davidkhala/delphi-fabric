@@ -25,11 +25,7 @@ const joinAllfcn = async (channelName) => {
 
 		const channel = helper.prepareChannel(channelName, client);
 		for (const peer of peers) {
-
-			const eventHubPort = peer.peerConfig.eventHub.port;
-			const pem = peer.pem;
-			const peerHostName = peer._options['grpc.ssl_target_name_override'];
-			const eventHub = EventHubUtil.new(client, {eventHubPort, pem, peerHostName});
+			const eventHub = await peer.eventHubPromise;
 
 			const loopJoinChannel = async () => {
 				try {

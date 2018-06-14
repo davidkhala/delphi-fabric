@@ -1,6 +1,6 @@
 const helper = require('../app/helper.js');
 const logger = require('../common/nodejs/logger').new('ws-chaincode');
-const { reducer } = require('../common/nodejs/chaincode');
+const { reducer,instantiate,upgrade } = require('../common/nodejs/chaincode');
 
 const errorHandle = (err, ws, errCB) => {
 	const errorCodeMap = require('./errorCodeMap.json');
@@ -67,7 +67,7 @@ exports.invoke = ({ chaincodeId }, ws) => {
 exports.instantiate = ({ chaincodeId }, ws) => {
 	const invalid = require('./formValid').invalid();
 
-	const { instantiate } = require('../app/instantiate-chaincode');
+
 	return (message) => {
 		logger.debug('==================== INSTANTIATE CHAINCODE ==================');
 
@@ -110,8 +110,6 @@ exports.instantiate = ({ chaincodeId }, ws) => {
 };
 exports.upgrade = ({  chaincodeId }, ws) => {
 	const invalid = require('./formValid').invalid();
-
-	const { upgrade } = require('../app/instantiate-chaincode');
 	return (message) => {
 		logger.debug('==================== upgrade CHAINCODE ==================');
 
