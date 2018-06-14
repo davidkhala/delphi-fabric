@@ -1,12 +1,12 @@
 const helper = require('../app/helper.js');
 const logger = require('../common/nodejs/logger').new('ws-chaincode');
-const { reducer,instantiate,upgrade } = require('../common/nodejs/chaincode');
-
+const {reducer,} = require('../common/nodejs/chaincode');
+const {instantiate, upgrade,invoke} = require('../app/chaincodeHelper');
 const errorHandle = (err, ws, errCB) => {
 	const errorCodeMap = require('./errorCodeMap.json');
 
 	let status = 500;
-	for (let errorMessage in errorCodeMap) {
+	for (const errorMessage in errorCodeMap) {
 		if (err.toString().includes(errorMessage)) {
 			status = errorCodeMap[errorMessage];
 			break;
@@ -19,21 +19,20 @@ const errorHandle = (err, ws, errCB) => {
 	});
 
 };
-exports.invoke = ({ chaincodeId }, ws) => {
-	const { invoke } = require('../app/invoke-chaincode.js');
+exports.invoke = ({chaincodeId}, ws) => {
 	const invalid = require('./formValid').invalid();
 	return (message) => {
 		logger.debug('==================== INVOKE CHAINCODE ==================');
-		const { fcn, args: argsString, orgName, peerIndex, channelName } = JSON.parse(message);
+		const {fcn, args: argsString, orgName, peerIndex, channelName} = JSON.parse(message);
 		const args = argsString ? JSON.parse(argsString) : [];
-		logger.debug({ chaincodeId, fcn, args, orgName, peerIndex, channelName });
-		const invalidPeer = invalid.peer({ peerIndex, orgName });
+		logger.debug({chaincodeId, fcn, args, orgName, peerIndex, channelName});
+		const invalidPeer = invalid.peer({peerIndex, orgName});
 		if (invalidPeer) return errorHandle(invalidPeer, ws);
 
-		const invalidChannelName = invalid.channelName({ channelName });
+		const invalidChannelName = invalid.channelName({channelName});
 		if (invalidChannelName) return errorHandle(invalidChannelName, ws);
 
-		const invalidArgs = invalid.args({ args });
+		const invalidArgs = invalid.args({args});
 		if (invalidArgs) return errorHandle(invalidArgs, ws);
 
 		helper.getOrgAdmin(orgName).then((client) => {
@@ -44,7 +43,7 @@ exports.invoke = ({ chaincodeId }, ws) => {
 				args
 			}).then((message) => {
 				const data = reducer(message);
-				const sendContent = JSON.stringify({ data: data.responses, status: 200 });
+				const sendContent = JSON.stringify({data: data.responses, status: 200});
 				ws.send(sendContent, (err) => {
 					if (err) {
 						logger.error(err);
@@ -53,7 +52,7 @@ exports.invoke = ({ chaincodeId }, ws) => {
 
 			}).catch(err => {
 				logger.error(err);
-				const { proposalResponses } = err;
+				const {proposalResponses} = err;
 				if (proposalResponses) {
 					errorHandle(proposalResponses, ws);
 				} else {
@@ -64,24 +63,24 @@ exports.invoke = ({ chaincodeId }, ws) => {
 
 	};
 };
-exports.instantiate = ({ chaincodeId }, ws) => {
+exports.instantiate = ({chaincodeId}, ws) => {
 	const invalid = require('./formValid').invalid();
 
 
 	return (message) => {
 		logger.debug('==================== INSTANTIATE CHAINCODE ==================');
 
-		const { chaincodeVersion, channelName, fcn, args: argsString, peerIndex, orgName } = JSON.parse(message);
+		const {chaincodeVersion, channelName, fcn, args: argsString, peerIndex, orgName} = JSON.parse(message);
 
-		logger.debug({ channelName, chaincodeId, chaincodeVersion, fcn, argsString, peerIndex, orgName });
+		logger.debug({channelName, chaincodeId, chaincodeVersion, fcn, argsString, peerIndex, orgName});
 		const args = argsString ? JSON.parse(argsString) : [];
-		const invalidPeer = invalid.peer({ orgName, peerIndex });
+		const invalidPeer = invalid.peer({orgName, peerIndex});
 		if (invalidPeer) return errorHandle(invalidPeer, ws);
 
-		const invalidChannelName = invalid.channelName({ channelName });
+		const invalidChannelName = invalid.channelName({channelName});
 		if (invalidChannelName) return errorHandle(invalidChannelName, ws);
 
-		const invalidArgs = invalid.args({ args });
+		const invalidArgs = invalid.args({args});
 		if (invalidArgs) return errorHandle(invalidArgs, ws);
 		return helper.getOrgAdmin(orgName).then((client) => {
 			const channel = helper.prepareChannel(channelName, client);
@@ -91,14 +90,14 @@ exports.instantiate = ({ chaincodeId }, ws) => {
 				args
 			}).then((_) => {
 				const sendContent = JSON.stringify(
-					{ data: `instantiate request has been processed successfully with ${message}`, status: 200 });
+					{data: `instantiate request has been processed successfully with ${message}`, status: 200});
 				ws.send(sendContent, (err) => {
 					if (err) {
 						logger.error(err);
 					}
 				});
 			}).catch(err => {
-				const { proposalResponses } = err;
+				const {proposalResponses} = err;
 				if (proposalResponses) {
 					errorHandle(proposalResponses, ws);
 				} else {
@@ -108,20 +107,20 @@ exports.instantiate = ({ chaincodeId }, ws) => {
 		});
 	};
 };
-exports.upgrade = ({  chaincodeId }, ws) => {
+exports.upgrade = ({chaincodeId}, ws) => {
 	const invalid = require('./formValid').invalid();
 	return (message) => {
 		logger.debug('==================== upgrade CHAINCODE ==================');
 
-		const { chaincodeVersion, channelName, fcn, args: argsString, peerIndex, orgName } = JSON.parse(message);
+		const {chaincodeVersion, channelName, fcn, args: argsString, peerIndex, orgName} = JSON.parse(message);
 		const args = argsString ? JSON.parse(argsString) : [];
-		logger.debug({ channelName, chaincodeId, chaincodeVersion, fcn, args, peerIndex, orgName });
-		const invalidPeer = invalid.peer({ orgName, peerIndex });
+		logger.debug({channelName, chaincodeId, chaincodeVersion, fcn, args, peerIndex, orgName});
+		const invalidPeer = invalid.peer({orgName, peerIndex});
 		if (invalidPeer) return errorHandle(invalidPeer, ws);
-		const invalidChannelName = invalid.channelName({ channelName });
+		const invalidChannelName = invalid.channelName({channelName});
 		if (invalidChannelName) return errorHandle(invalidChannelName, ws);
 
-		const invalidArgs = invalid.args({ args });
+		const invalidArgs = invalid.args({args});
 		if (invalidArgs) return errorHandle(invalidArgs, ws);
 		helper.getOrgAdmin(orgName).then((client) => {
 			const channel = helper.prepareChannel(channelName, client);
@@ -131,14 +130,14 @@ exports.upgrade = ({  chaincodeId }, ws) => {
 				args
 			}).then((_) => {
 				const sendContent = JSON.stringify(
-					{ data: `upgrade request has been processed successfully with ${message}`, status: 200 });
+					{data: `upgrade request has been processed successfully with ${message}`, status: 200});
 				ws.send(sendContent, (err) => {
 					if (err) {
 						logger.error(err);
 					}
 				});
 			}).catch(err => {
-				const { proposalResponses } = err;
+				const {proposalResponses} = err;
 				if (proposalResponses) {
 					errorHandle(proposalResponses, ws);
 				} else {

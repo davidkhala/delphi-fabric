@@ -1,5 +1,5 @@
-const {install,instantiate} = require('../common/nodejs/chaincode');
-
+const {install} = require('../common/nodejs/chaincode');
+const {instantiate} = require('./chaincodeHelper');
 const helper = require('./helper');
 const logger = require('../common/nodejs/logger').new('testInstall');
 const chaincodeConfig = require('../config/chaincode.json');
@@ -30,10 +30,8 @@ const task = async () => {
 	const channel = helper.prepareChannel(channelName, client, true);
 	return instantiate(channel, peers, {chaincodeId, chaincodeVersion, args: instantiate_args});
 };
-task().catch(err=>{
+task().catch(err => {
 	logger.error(err);
 });
-
-
 
 //todo query installed

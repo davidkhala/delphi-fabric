@@ -3,12 +3,13 @@ const router = express.Router();
 const logger = require('../common/nodejs/logger').new('http-chaincode');
 const helper = require('../app/helper.js');
 const invalid = require('./formValid').invalid();
-const {reducer,instantiate,upgrade} = require('../common/nodejs/chaincode');
+const {reducer,} = require('../common/nodejs/chaincode');
+const {instantiate, upgrade,invoke} = require('../app/chaincodeHelper');
 const errorHandle = (err, res) => {
 	const errorCodeMap = require('./errorCodeMap.json');
 
 	let status = 500;
-	for (let errorMessage in errorCodeMap) {
+	for (const errorMessage in errorCodeMap) {
 		if (err.toString().includes(errorMessage)) {
 			status = errorCodeMap[errorMessage];
 			break;
@@ -20,7 +21,6 @@ const errorHandle = (err, res) => {
 
 router.post('/invoke', (req, res) => {
 	const {chaincodeId, fcn, args: argsString, orgName, peerIndex, channelName} = req.body;
-	const {invoke} = require('../app/invoke-chaincode.js');
 
 	logger.debug('==================== INVOKE CHAINCODE ==================');
 	const args = argsString ? JSON.parse(argsString) : [];
@@ -56,7 +56,7 @@ router.post('/invoke', (req, res) => {
 	});
 
 });
-router.post('/instantiate', (req, res) => {
+router.post('/instantiate', async (req, res) => {
 
 	logger.debug('==================== INSTANTIATE CHAINCODE ==================');
 
@@ -77,24 +77,26 @@ router.post('/instantiate', (req, res) => {
 		if (invalidPeer) return errorHandle(invalidPeer, res);
 		peers = helper.newPeers([peerIndex], orgName);
 	}
-	return helper.getOrgAdmin(orgName).then((client) => {
+	try {
+		const client = await helper.getOrgAdmin(orgName);
 		const channel = helper.prepareChannel(channelName, client);
-		return instantiate(channel, peers, {
+		const result = await instantiate(channel, peers, {
 			chaincodeId, chaincodeVersion, fcn,
 			args
-		}).then((_) => {
-			logger.debug(_);
-			res.json({data: 'instantiate request has been processed successfully '});
-		}).catch(err => {
-			const {proposalResponses} = err;
-			if (proposalResponses) {
-				errorHandle(proposalResponses, res);
-			} else {
-				errorHandle(err, res);
-			}
 		});
-	});
+		logger.debug(result);
+		res.json({data: 'instantiate request has been processed successfully '});
+	} catch (err) {
+		const {proposalResponses} = err;
+		if (proposalResponses) {
+			errorHandle(proposalResponses, res);
+		} else {
+			errorHandle(err, res);
+		}
+	}
 });
+
+
 router.post('/upgrade', (req, res) => {
 
 	logger.debug('==================== upgrade CHAINCODE ==================');

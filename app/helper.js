@@ -40,7 +40,7 @@ exports.preparePeer = (orgName, peerIndex, peerConfig) => {
 	peer.peerConfig = peerConfig;
 
 	const eventHubPromise = async (pem,peerHostName)=>{
-		const eventHubClient = exports.getOrgAdmin(orgName,'peer');
+		const eventHubClient = await exports.getOrgAdmin(orgName,'peer');
 		return EventHubUtil.new(eventHubClient,{eventHubPort, pem, peerHostName});
 	};
 	peer.eventHubPromise =eventHubPromise(peer.pem,peerHostName);

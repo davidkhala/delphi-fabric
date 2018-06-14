@@ -20,7 +20,7 @@ const updateInstallAll = async () => {
 
 };
 
-const doTest = async () => {
+const task = async () => {
 	let orgName = 'PM.Delphi.com';
 	let client = await helper.getOrgAdmin(orgName);
 	let peers = helper.newPeers([0], orgName)[0];
@@ -44,6 +44,6 @@ const doTest = async () => {
 	return await upgrade(channel, peers, {chaincodeId, chaincodeVersion, args});
 	//	NOTE: found all peers in channel will create chaincode container with new version for each, but the old version chaincode container remains
 };
-doTest();
+task();
 
 
