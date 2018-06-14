@@ -415,7 +415,7 @@ exports.up = async (swarm) => {
 		await require('./config/caCryptoGen').genAll(swarm);
 
 		const PROFILE_BLOCK = globalConfig.orderer.genesis_block.profile;
-		const configtxFile = path.resolve(__dirname, 'configtx.yaml');
+		const configtxFile = path.resolve(__dirname,'config','configtx.yaml');
 		require('./config/configtx.js').gen({MSPROOT, PROFILE_BLOCK, configtxFile});
 
 
