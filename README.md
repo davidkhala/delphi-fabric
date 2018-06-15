@@ -102,7 +102,7 @@ govendor: to import third-party package in vendor folder
 - move couchdb server to container based
 - swarm server and sign server cleaner
 - take care of docker swarm init --force-new-cluster
-
+- using Atom for Mac default keymap, align with bret Harrison
 ## New feature, patch required for node-sdk
  
 - feature: implement configtx in node-sdk??
