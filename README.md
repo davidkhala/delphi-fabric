@@ -58,11 +58,16 @@ Test on single host
 
 Test on docker swarm
 -----------------------
+I have migrated codes in `cluster/managerNode` to new repository [Fabric-swarm-manager](https://github.com/davidkhala/fabric-swarm-manager)
+`fabric-swarm-manager` is used on new managerNode machine `slave` to play with existing cluster
+Current machine is noted as `master` 
+
 **steps**
-1. run `$ ./docker-swarm.sh` to restart network
-2. run `$ node app/testChannel.js` to create-channel and join-channel
-3. `$ node app/testInstall.js` to install chaincode and instantiate chaincode
-4. `$ node app/testInvoke.js` to invoke chaincode
+1. [master] run `$ ./docker-swarm.sh` to restart network
+2. [master] run `$ node app/testChannel.js` to create-channel and join-channel
+3. [slave] run `$./manager.sh` to prepare for it self
+3. [master] `$ node app/testInstall.js` to install chaincode and instantiate chaincode
+4. [master] `$ node app/testInvoke.js` to invoke chaincode
 
 
 govendor: to import third-party package in vendor folder
@@ -103,6 +108,7 @@ govendor: to import third-party package in vendor folder
 - swarm server and sign server cleaner
 - take care of docker swarm init --force-new-cluster
 - using Atom for Mac default keymap, align with bret Harrison
+- will block file name be a problem in signature cache? take care docker cp from container for multiple request  
 ## New feature, patch required for node-sdk
  
 - feature: implement configtx in node-sdk??
