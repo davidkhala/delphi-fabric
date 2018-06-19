@@ -92,13 +92,13 @@ router.post('/newOrderer', async (req, res) => {
 		res.status(400).send(err.toString());
 	}
 });
-router.post('/newOrg', multerCache.fields([{name: 'admins'}, {name: 'root_certs'}, {name: 'tls_root_certs'}])
+router.post('/createOrUpdateOrg', multerCache.fields([{name: 'admins'}, {name: 'root_certs'}, {name: 'tls_root_certs'}])
 	, async (req, res) => {
 		try {
 			const admins = req.files['admins']?req.files['admins'].map(({path}) => path):[];
 			const root_certs = req.files['root_certs']?req.files['root_certs'].map(({path}) => path):[];
 			const tls_root_certs = req.files['tls_root_certs']?req.files['tls_root_certs'].map(({path}) => path):[];
-			const {MSPID, MSPName, nodeType} = req.body;
+			const {MSPID, MSPName, nodeType,skip} = req.body;
 
 			let channelName;
 			const randomPeerOrg = helper.randomOrg('peer');
@@ -115,13 +115,13 @@ router.post('/newOrg', multerCache.fields([{name: 'admins'}, {name: 'root_certs'
 			const channel = helper.prepareChannel(channelName, client, true);
 
 
-			logger.debug('/newOrg', {channelName, MSPID, MSPName, nodeType}, {admins, root_certs, tls_root_certs});
+			logger.debug('/createOrUpdateOrg', {channelName, MSPID, MSPName, nodeType}, {admins, root_certs, tls_root_certs});
 
 
 			const onUpdate = (original_config) => {
 				//No update checking should be implemented in channel update
 				const config = new ConfigFactory(original_config);
-				return config.newOrg(MSPName, MSPID, nodeType, {admins, root_certs, tls_root_certs}).build();
+				return config.createOrUpdateOrg(MSPName, MSPID, nodeType, {admins, root_certs, tls_root_certs},skip).build();
 			};
 
 
