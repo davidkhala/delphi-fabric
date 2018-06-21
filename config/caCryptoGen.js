@@ -4,7 +4,7 @@ const fs = require('fs');
 const {genPeer, init, genOrderer} = require('../common/nodejs/ca-crypto-gen');
 const pathUtil = require('../common/nodejs/path');
 const dockerCmd = require('../common/docker/nodejs/dockerCmd');
-const dockerUtil = require('../common/docker/nodejs/dockerode-util');
+const {swarmServiceName, inflateContainerName} = require('../common/docker/nodejs/dockerode-util');
 const {CryptoPath, homeResolve} = pathUtil;
 const logger = require('../common/nodejs/logger').new('ca-crypto-gen');
 const globalConfig = require('../config/orgs');
@@ -15,8 +15,8 @@ const getCaService = async (url, domain, swarm) => {
 		const caHostName = `ca.${domain}`;
 		let container_name;
 		if (swarm) {
-			const serviceName = dockerUtil.swarmServiceName(caHostName);
-			container_name = await dockerUtil.inflateContainerName(serviceName);
+			const serviceName = swarmServiceName(caHostName);
+			container_name = await inflateContainerName(serviceName);
 			if (!container_name) throw `service ${serviceName} not assigned to current node`;
 		} else {
 			container_name = caHostName;
@@ -69,7 +69,7 @@ exports.genAll = async (swarm) => {
 						user: {
 							name: 'Admin'
 						},
-						password:'passwd',
+						password: 'passwd',
 					});
 					promises.push(genOrderer(caService, cryptoPath, admin, {TLS}));
 				}
@@ -87,7 +87,7 @@ exports.genAll = async (swarm) => {
 				orderer: {
 					org: domain, name: ordererConfig.container_name
 				},
-				password:'passwd',
+				password: 'passwd',
 				user: {
 					name: 'Admin'
 				}
@@ -124,7 +124,7 @@ exports.genAll = async (swarm) => {
 					peer: {
 						org: domain, name: peerName
 					},
-					password:'passwd',
+					password: 'passwd',
 					user: {
 						name: 'Admin'
 					},

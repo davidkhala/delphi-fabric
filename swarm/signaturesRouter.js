@@ -3,9 +3,8 @@ const router = express.Router();
 const logger = require('../common/nodejs/logger').new('router signature');
 const signUtil = require('../common/nodejs/multiSign');
 const serverClient = require('../common/nodejs/express/serverClient');
-const configtxlatorUtil = require('../common/nodejs/configtxlator');
+const {channelUpdate, ConfigFactory, getChannelConfigReadable} = require('../common/nodejs/configtxlator');
 const {nodeList} = require('../common/docker/nodejs/dockerode-util');
-const {ConfigFactory} = configtxlatorUtil;
 const helper = require('../app/helper');
 const Multer = require('multer');
 const fs = require('fs');
@@ -13,7 +12,7 @@ const {port: signServerPort} = require('./swarm.json').signServer;
 const {cache, port: swarmServerPort} = require('./swarm.json').swarmServer;
 const {homeResolve} = require('../common/nodejs/path');
 const multerCache = Multer({dest: homeResolve(cache)});
-const Request = require('request');
+const {RequestPromise} = require('../common/nodejs/express/serverClient');
 
 const channelUtil = require('../common/nodejs/channel');
 const {sha2_256} = require('fabric-client/lib/hash');
@@ -48,18 +47,16 @@ router.post('/getSwarmSignatures', multerCache.single('proto'), async (req, res)
 const signatureCollector = async (proto) => {
 	const tempFile = homeResolve(cache, 'proto');
 	fs.writeFileSync(tempFile, proto);
-	const body = await new Promise((resolve, reject) => {
-
-		const formData = {
-			proto: fs.createReadStream(tempFile)
-		};
-		Request.post({url: `http://localhost:${swarmServerPort}/channel/getSwarmSignatures`, formData}, (err, resp, body) => {
-			if (err) reject(err);
-			resolve(body);
-		});
+	const formData = {
+		proto: fs.createReadStream(tempFile)
+	};
+	const body = await RequestPromise({
+		url: `http://localhost:${swarmServerPort}/channel/getSwarmSignatures`,
+		formData
 	});
-	const {signatures} = JSON.parse(body);
-	logger.debug('signatureCollector got',signatures.length);
+
+	const {signatures} = body;
+	logger.debug('signatureCollector got', signatures.length);
 	return {
 		signatures: signUtil.fromBase64(signatures),
 	};
@@ -80,12 +77,10 @@ router.post('/newOrderer', async (req, res) => {
 			return config.build();
 		};
 
-		const randomPeerOrg = helper.randomOrg('peer');
-		const peer = helper.newPeers([0], randomPeerOrg)[0];
 
-		const peerEventHub = await peer.eventHubPromise;
+		const peerEventHub = undefined;
 
-		await configtxlatorUtil.channelUpdate(ordererChannel, onUpdate, signatureCollector, peerEventHub,{nodeType:'orderer',peer});
+		await channelUpdate(ordererChannel, onUpdate, signatureCollector, peerEventHub, {nodeType: 'orderer'});
 		res.json({newOrderer: address});
 	} catch (err) {
 		logger.error(err);
@@ -95,10 +90,10 @@ router.post('/newOrderer', async (req, res) => {
 router.post('/createOrUpdateOrg', multerCache.fields([{name: 'admins'}, {name: 'root_certs'}, {name: 'tls_root_certs'}])
 	, async (req, res) => {
 		try {
-			const admins = req.files['admins']?req.files['admins'].map(({path}) => path):[];
-			const root_certs = req.files['root_certs']?req.files['root_certs'].map(({path}) => path):[];
-			const tls_root_certs = req.files['tls_root_certs']?req.files['tls_root_certs'].map(({path}) => path):[];
-			const {MSPID, MSPName, nodeType,skip} = req.body;
+			const admins = req.files['admins'] ? req.files['admins'].map(({path}) => path) : [];
+			const root_certs = req.files['root_certs'] ? req.files['root_certs'].map(({path}) => path) : [];
+			const tls_root_certs = req.files['tls_root_certs'] ? req.files['tls_root_certs'].map(({path}) => path) : [];
+			const {MSPID, MSPName, nodeType, skip} = req.body;
 
 			let channelName;
 			const randomPeerOrg = helper.randomOrg('peer');
@@ -111,7 +106,7 @@ router.post('/createOrUpdateOrg', multerCache.fields([{name: 'admins'}, {name: '
 
 			}
 			const ramdomOrg = helper.randomOrg(nodeType);
-			const client = await helper.getOrgAdmin(ramdomOrg,nodeType);
+			const client = await helper.getOrgAdmin(ramdomOrg, nodeType);
 			const channel = helper.prepareChannel(channelName, client, true);
 
 
@@ -121,12 +116,12 @@ router.post('/createOrUpdateOrg', multerCache.fields([{name: 'admins'}, {name: '
 			const onUpdate = (original_config) => {
 				//No update checking should be implemented in channel update
 				const config = new ConfigFactory(original_config);
-				return config.createOrUpdateOrg(MSPName, MSPID, nodeType, {admins, root_certs, tls_root_certs},skip).build();
+				return config.createOrUpdateOrg(MSPName, MSPID, nodeType, {admins, root_certs, tls_root_certs}, skip).build();
 			};
 
 
-			await configtxlatorUtil.channelUpdate(channel, onUpdate, signatureCollector, peerEventHub,{nodeType,peer});
-			const {original_config} = await configtxlatorUtil.getChannelConfigReadable(channel, nodeType);
+			await channelUpdate(channel, onUpdate, signatureCollector, peerEventHub, {nodeType, peer});
+			const {original_config} = await getChannelConfigReadable(channel, nodeType);
 			res.send(original_config);
 		} catch (err) {
 			logger.error(err);

@@ -106,7 +106,9 @@ govendor: to import third-party package in vendor folder
 - move couchdb server to container based
 - take care of docker swarm init --force-new-cluster
 - using Atom for Mac default keymap, align with bret Harrison
-- will block file name be a problem in signature cache? take care docker cp from container for multiple request  
+- will block file name be a problem in signature cache? take care docker cp from container for multiple request
+- new orderer with same org 
+- try to make pm2 signServer, swarmServer aslo run in single mode
 ## New feature, patch required for node-sdk
  
 - feature: implement configtx in node-sdk??

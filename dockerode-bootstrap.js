@@ -363,15 +363,13 @@ exports.down = async (swarm) => {
 		logger.info(`[done] clear MSPROOT ${MSPROOT}`);
 		fsExtra.removeSync(CONFIGTX);
 		logger.info(`[done] clear CONFIGTX ${CONFIGTX}`);
-		if (swarm) {
-			for (const [name, script] of Object.entries(nodeServers)) {
-				const pm2 = await new PM2().connect();
-				await pm2.delete({name, script});
-				pm2.disconnect();
-			}
-			require('./swarm/swarmServer').clean();
-			require('./cluster/leaderNode/signServer').clean();
+		for (const [name, script] of Object.entries(nodeServers)) {
+			const pm2 = await new PM2().connect();
+			await pm2.delete({name, script});
+			pm2.disconnect();
 		}
+		require('./swarm/swarmServer').clean();
+		require('./cluster/leaderNode/signServer').clean();
 
 		await configtxlatorServer.run('down');
 
@@ -385,14 +383,15 @@ exports.down = async (swarm) => {
 exports.up = async (swarm) => {
 	try {
 		await fabricImagePull({fabricTag, thirdPartyTag, arch});
+		for (const [name, script] of Object.entries(nodeServers)) {
+			const pm2 = await new PM2().connect();
+			await pm2.reRun({name, script});
+			pm2.disconnect();
+		}
+		logger.info('[start]swarm Server init steps');
 		if (swarm) {
 			await swarmRenew();
-			for (const [name, script] of Object.entries(nodeServers)) {
-				const pm2 = await new PM2().connect();
-				await pm2.reRun({name, script});
-				pm2.disconnect();
-			}
-			logger.info('[start]swarm Server init steps');
+
 			const {address: ip} = await advertiseAddr();
 			const managerToken = await joinToken();
 			const {port} = require('./swarm/swarm').swarmServer;
@@ -415,7 +414,7 @@ exports.up = async (swarm) => {
 		await require('./config/caCryptoGen').genAll(swarm);
 
 		const PROFILE_BLOCK = globalConfig.orderer.genesis_block.profile;
-		const configtxFile = path.resolve(__dirname,'config','configtx.yaml');
+		const configtxFile = path.resolve(__dirname, 'config', 'configtx.yaml');
 		require('./config/configtx.js').gen({MSPROOT, PROFILE_BLOCK, configtxFile});
 
 

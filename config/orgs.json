@@ -75,9 +75,6 @@
             },
             "orderer1": {
               "portHost": 8050
-            },
-            "orderer2": {
-              "portHost": 9050
             }
           }
         }
