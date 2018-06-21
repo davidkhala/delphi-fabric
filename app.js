@@ -15,7 +15,7 @@ const {create:createChannel} = require('./app/channelHelper');
 const {join:joinChannel} = require('./common/nodejs/channel');
 
 const Query = require('./common/nodejs/query');
-const {app, server} = require('./common/nodejs/baseApp').run(port, host);
+const {app, server} = require('./common/nodejs/express/baseApp').run(port, host);
 const {install} = require('./common/nodejs/chaincode');
 
 

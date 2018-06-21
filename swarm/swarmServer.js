@@ -115,7 +115,7 @@ const swarmDoc = 'swarm';
 const leaderKey = 'leaderNode';
 
 exports.run = () => {
-	const {app} = require('../common/nodejs/baseApp').run(port);
+	const {app} = require('../common/nodejs/express/baseApp').run(port);
 	app.use('/config', require('../express/configExpose'));
 
 	app.get('/leader', async (req, res) => {
