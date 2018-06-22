@@ -30,9 +30,16 @@ router.post('/getSwarmSignatures', multerCache.single('proto'), async (req, res)
 
 		logger.debug({ips});
 		const promises = ips.map(async (ip) => {
-			const resp = await serverClient.getSignatures(`http://${ip}:${signServerPort}`, protoPath);
-
-			return JSON.parse(resp).signatures;
+			const url = `http://${ip}:${signServerPort}`;
+			try {
+				const resp = await serverClient.getSignatures(url, protoPath);
+				logger.info('success to getSignatures from',url);
+				return resp.signatures;
+			}catch (e) {
+				logger.error('failed to getSignatures from',url, e);
+				//TODO error tolerance;
+				return [];
+			}
 		});
 		const resp = await Promise.all(promises);
 		const joinedArray = resp.reduce((accumulator, currentValue) => accumulator.concat(currentValue));
@@ -50,12 +57,10 @@ const signatureCollector = async (proto) => {
 	const formData = {
 		proto: fs.createReadStream(tempFile)
 	};
-	const body = await RequestPromise({
-		url: `http://localhost:${swarmServerPort}/channel/getSwarmSignatures`,
-		formData
-	});
+	const url = `http://localhost:${swarmServerPort}/channel/getSwarmSignatures`;
+	const resp = await RequestPromise({url, formData});
 
-	const {signatures} = body;
+	const {signatures} = resp;
 	logger.debug('signatureCollector got', signatures.length);
 	return {
 		signatures: signUtil.fromBase64(signatures),
