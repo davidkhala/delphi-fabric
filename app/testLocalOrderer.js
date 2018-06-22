@@ -1,17 +1,22 @@
 const globalConfig = require('../config/orgs');
-const {TLS, docker: {volumes: {MSPROOT: {dir: mspDir}}}} = globalConfig;
+const {TLS, docker: {fabricTag, network, volumes: {MSPROOT: {dir: mspDir}}}, orderer: {genesis_block: {file: BLOCK_FILE}}} = globalConfig;
 const protocol = TLS ? 'https' : 'http';
 
+const logger = require('../common/nodejs/logger').new('local orderer');
 const {CryptoPath, homeResolve} = require('../common/nodejs/path');
 const {genOrderer} = require('../common/nodejs/ca-crypto-gen');
 const caUtil = require('../common/nodejs/ca');
-const {swarmServiceName, inflateContainerName} = require('../common/docker/nodejs/dockerode-util');
+const {swarmServiceName, inflateContainerName,containerDelete} = require('../common/docker/nodejs/dockerode-util');
+const {runOrderer} = require('../common/nodejs/fabric-dockerode');
 const dockerCmd = require('../common/docker/nodejs/dockerCmd');
-const {ConfigFactory,channelUpdate,getChannelConfigReadable}= require('../common/nodejs/configtxlator');
+const {RequestPromise} = require('../common/nodejs/express/serverClient');
+const peerUtil = require('../common/nodejs/peer');
 const caCryptoConfig = homeResolve(mspDir);
 const fs = require('fs');
 const helper = require('./helper');
 const nodeType = 'orderer';
+const arch = 'x86_64';
+const imageTag = `${arch}-${fabricTag}`;
 const getCaService = async (url, domain, swarm) => {
 	if (TLS) {
 		const caHostName = `ca.${domain}`;
@@ -33,21 +38,8 @@ const getCaService = async (url, domain, swarm) => {
 	return caUtil.new(url);
 };
 
-const startContainer = async () => {
 
-};
-const stopContainer = async () => {
-
-};
 const run = async () => {
-	if(process.env.action ==='down'){
-		await stopContainer();
-		return;
-	}
-
-	const ordererName = 'orderer3';
-	const orgName = 'DelphiConsensus.Delphi.com';
-	const swarm = false;
 	const hostCryptoPath = new CryptoPath(caCryptoConfig, {
 		orderer: {
 			org: orgName, name: ordererName
@@ -57,37 +49,65 @@ const run = async () => {
 			name: 'Admin'
 		}
 	});
+	const container_name = hostCryptoPath.ordererHostName;
+	if (process.env.action === 'down') {
+		await containerDelete(container_name);
+		return;
+	}
+
+	const ordererName = 'orderer3';
+	const orgName = 'DelphiConsensus.Delphi.com';
+	const swarm = false;
+
 	/////////update address
 	const ordererAdress = `${hostCryptoPath.ordererHostName}:7050`;
 
 
-	const {port} = require('../swarm/swarm.json').swarmServer;
+	const {port: swarmServerPort} = require('../swarm/swarm.json').swarmServer;
+	const url = `http://localhost:${swarmServerPort}/channel/newOrderer`;
 
-	Request.post({url:})
 	const ordererConfig = globalConfig.orderer.kafka.orgs[orgName];
-
 	const caUrl = `${protocol}://localhost:${ordererConfig.ca.portHost}`;
-	const caService = await getCaService(caUrl, orgName, swarm);
-	const adminClient = await helper.getOrgAdmin(orgName, nodeType);
-	const admin = adminClient._userContext;
-	await genOrderer(caService, hostCryptoPath, admin, {TLS});
+
+	try {
+		const caService = await getCaService(caUrl, orgName, swarm);
+		const adminClient = await helper.getOrgAdmin(orgName, nodeType);
+		const admin = adminClient._userContext;
+		await RequestPromise({url, body: {address: ordererAdress}});
+
+		await genOrderer(caService, hostCryptoPath, admin, {TLS});
 
 
-	const randomOrdererOrg = helper.randomOrg('orderer');
-	const ordererClient = await helper.getOrgAdmin(randomOrdererOrg, 'orderer');
-	const ordererChannel = helper.prepareChannel(undefined, ordererClient, true);
+		const {MSPROOT} = peerUtil.container;
 
-	const onUpdate = (original_config) => {
-		const config = new ConfigFactory(original_config);
-		config.addOrdererAddress(ordererAdress);
-		return config.build();
-	};
+		const cryptoPath = new CryptoPath(MSPROOT, {
+			orderer: {
+				org: orgName, name: ordererName
+			},
+			password: 'passwd',
+			user: {
+				name: 'Admin'
+			}
+		});
+		const tls = TLS ? cryptoPath.TLSFile(nodeType) : undefined;
+		const configPath = cryptoPath.MSP(nodeType);
+		await runOrderer({
+			container_name, imageTag,
+			port: 9050, network,
+			BLOCK_FILE, CONFIGTXVolume: 'CONFIGTX',
+			msp: {
+				id: ordererConfig.MSP.id,
+				configPath,
+				volumeName: 'MSPROOT'
+			},
+			kafkas: true,
+			tls
+		});
 
+	} catch (e) {
+		logger.error(e);
+		process.exit(1);
+	}
 
-	const peerEventHub = undefined;
-
-	await channelUpdate(ordererChannel, onUpdate, signatureCollector, peerEventHub, {nodeType: 'orderer'});
-
-	await startContainer();
 };
 run();

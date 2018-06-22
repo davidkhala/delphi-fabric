@@ -3,6 +3,7 @@ const {instantiate} = require('./chaincodeHelper');
 const helper = require('./helper');
 const logger = require('../common/nodejs/logger').new('testInstall');
 const chaincodeConfig = require('../config/chaincode.json');
+const globalConfig = require('../config/orgs');
 const chaincodeId = 'adminChaincode';
 
 const chaincodePath = chaincodeConfig.chaincodes[chaincodeId].path;
@@ -20,18 +21,21 @@ const deploy = async (orgName, peerIndexes) => {
 };
 
 const task = async () => {
-	await deploy('BU.Delphi.com', [0]);
-	await deploy('ENG.Delphi.com', [0]);
-	await deploy('PM.Delphi.com', [0]);
-	await deploy('ASTRI.Delphi.com', [0]);
-	const orgName = 'BU.Delphi.com';
-	const peers = helper.newPeers([0], orgName);
-	const client = await helper.getOrgAdmin(orgName);
-	const channel = helper.prepareChannel(channelName, client, true);
-	return instantiate(channel, peers, {chaincodeId, chaincodeVersion, args: instantiate_args});
+	try {
+		for (const peerOrg in globalConfig.orgs) {
+			await deploy(peerOrg, [0]);
+		}
+
+		const peerOrg = helper.randomOrg('peer');
+		const peers = helper.newPeers([0], peerOrg);
+		const client = await helper.getOrgAdmin(peerOrg);
+		const channel = helper.prepareChannel(channelName, client, true);
+		return instantiate(channel, peers, {chaincodeId, chaincodeVersion, args: instantiate_args});
+	} catch (e) {
+		logger.error(e);
+		process.exit(1);
+	}
 };
-task().catch(err => {
-	logger.error(err);
-});
+task();
 
 //todo query installed

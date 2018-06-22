@@ -9,7 +9,7 @@ const chaincodeId = 'adminChaincode';
 const fcn = '';
 const args = [];
 const peerIndexes = [0];
-const orgName = 'PM.Delphi.com';
+const orgName = helper.randomOrg('peer');
 const channelName = 'allchannel';
 
 const peers = helper.newPeers(peerIndexes, orgName);
@@ -21,5 +21,17 @@ const task = async () => {
 	const result = reducer({txEventResponses, proposalResponses});
 	logger.info(result);
 };
-task();
+exports.run = async (times, interval = 10000) => {
+	const {sleep} = require('../common/nodejs/helper');
+	if (Number.isInteger(times)) {
+		for (let i = 0; i < times; i++) {
+			await task();
+			await sleep(interval);
+		}
+	} else {
+		await task();
+		await sleep(interval);
+		await exports.run(times, interval);
+	}
+};
 
