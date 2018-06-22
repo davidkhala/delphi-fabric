@@ -50,10 +50,10 @@ const joinAllfcn = async (channelName) => {
 };
 const task = async () => {
 	const client = await helper.getOrgAdmin(undefined, 'orderer');
-	const ordererUrl = `${TLS ? 'grpcs' : 'grpc'}://localhost:8050`;
+	const ordererUrl = `${TLS ? 'grpcs' : 'grpc'}://localhost:7050`;
 	logger.info({ordererUrl});
 	try {
-		await createChannel(client, channelName, channelConfigFile, ['BU.Delphi.com', 'ENG.Delphi.com'], ordererUrl);
+		await createChannel(client, channelName, channelConfigFile, ['ASTRI.Delphi.com'], ordererUrl);
 		await joinAllfcn(channelName);
 	} catch (err) {
 		if (err.toString().includes('Error: BAD_REQUEST') ||

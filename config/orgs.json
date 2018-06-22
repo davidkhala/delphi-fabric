@@ -86,21 +86,6 @@
       "file": "all.tx",
       "eventWaitTime": 30000,
       "orgs": {
-        "BU.Delphi.com": {
-          "peerIndexes": [
-            0
-          ]
-        },
-        "PM.Delphi.com": {
-          "peerIndexes": [
-            0
-          ]
-        },
-        "ENG.Delphi.com": {
-          "peerIndexes": [
-            0
-          ]
-        },
         "ASTRI.Delphi.com": {
           "peerIndexes": [
             0
@@ -110,78 +95,6 @@
     }
   },
   "orgs": {
-    "BU.Delphi.com": {
-      "peers": [
-        {
-          "container_name": "bu",
-          "portMap": [
-            {
-              "host": 6051,
-              "container": 7051
-            },
-            {
-              "host": 6053,
-              "container": 7053
-            }
-          ]
-        }
-      ],
-      "ca": {
-        "portHost": 6054
-      },
-      "MSP": {
-        "name": "BUMSPName",
-        "id": "BUMSP"
-      }
-    },
-    "PM.Delphi.com": {
-      "peers": [
-        {
-          "container_name": "pm",
-          "portMap": [
-            {
-              "host": 8051,
-              "container": 7051
-            },
-            {
-              "host": 8053,
-              "container": 7053
-            }
-          ]
-        }
-      ],
-      "ca": {
-        "portHost": 8054
-      },
-      "MSP": {
-        "name": "PMMSPName",
-        "id": "PMMSP"
-      }
-    },
-    "ENG.Delphi.com": {
-      "peers": [
-        {
-          "container_name": "eng",
-          "portMap": [
-            {
-              "host": 9051,
-              "container": 7051
-            },
-            {
-              "host": 9053,
-              "container": 7053
-            }
-          ]
-        }
-      ],
-      "ca": {
-        "portHost": 9054
-      },
-      "MSP": {
-        "name": "ENGMSPName",
-        "id": "ENGMSP"
-      }
-    },
     "ASTRI.Delphi.com": {
       "peers": [
         {

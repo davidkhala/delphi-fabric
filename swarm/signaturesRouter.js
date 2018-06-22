@@ -89,6 +89,7 @@ router.post('/newOrderer', async (req, res) => {
 });
 router.post('/createOrUpdateOrg', multerCache.fields([{name: 'admins'}, {name: 'root_certs'}, {name: 'tls_root_certs'}])
 	, async (req, res) => {
+		logger.debug('[start]createOrUpdateOrg');
 		try {
 			const admins = req.files['admins'] ? req.files['admins'].map(({path}) => path) : [];
 			const root_certs = req.files['root_certs'] ? req.files['root_certs'].map(({path}) => path) : [];
