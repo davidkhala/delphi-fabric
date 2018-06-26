@@ -1,10 +1,9 @@
-const {create:createChannel} = require('./channelHelper');
-const {join:joinChannel} = require('../common/nodejs/channel');
+const {create: createChannel} = require('./channelHelper');
+const {join: joinChannel} = require('../common/nodejs/channel');
 
 const helper = require('./helper');
 const logger = require('../common/nodejs/logger').new('testChannel');
 const configtxlator = require('../common/nodejs/configtxlator');
-const EventHubUtil = require('../common/nodejs/eventHub');
 const {homeResolve} = require('../common/nodejs/path');
 const fs = require('fs');
 const channelName = 'allchannel';
@@ -49,11 +48,14 @@ const joinAllfcn = async (channelName) => {
 
 };
 const task = async () => {
-	const client = await helper.getOrgAdmin(undefined, 'orderer');
-	const ordererUrl = `${TLS ? 'grpcs' : 'grpc'}://localhost:7050`;
-	logger.info({ordererUrl});
+	const ordererOrg = helper.randomOrg('orderer');
+	const {portHost: ordererHostPort} = helper.findOrgConfig(ordererOrg);
+	const client = await helper.getOrgAdmin(ordererOrg, 'orderer');
+	const ordererUrl = `${TLS ? 'grpcs' : 'grpc'}://localhost:${ordererHostPort}`;
+	const peerOrg = helper.randomOrg('peer');
+	logger.info({ordererUrl, peerOrg});
 	try {
-		await createChannel(client, channelName, channelConfigFile, ['ASTRI.Delphi.com'], ordererUrl);
+		await createChannel(client, channelName, channelConfigFile, [peerOrg], ordererUrl);
 		await joinAllfcn(channelName);
 	} catch (err) {
 		if (err.toString().includes('Error: BAD_REQUEST') ||

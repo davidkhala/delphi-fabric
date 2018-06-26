@@ -359,9 +359,9 @@ exports.down = async (swarm) => {
 		logger.info(`[done] clear stateDBCacheDir ${nodeAppConfigJson.stateDBCacheDir}`);
 
 
-		fsExtra.removeSync(MSPROOT);
+		fsExtra.emptyDirSync(MSPROOT);//TODO taking care nfs
 		logger.info(`[done] clear MSPROOT ${MSPROOT}`);
-		fsExtra.removeSync(CONFIGTX);
+		fsExtra.emptyDirSync(CONFIGTX);//TODO taking care nfs
 		logger.info(`[done] clear CONFIGTX ${CONFIGTX}`);
 		for (const [name, script] of Object.entries(nodeServers)) {
 			const pm2 = await new PM2().connect();

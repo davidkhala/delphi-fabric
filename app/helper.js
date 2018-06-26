@@ -39,11 +39,11 @@ exports.preparePeer = (orgName, peerIndex, peerConfig) => {
 	//NOTE append more info
 	peer.peerConfig = peerConfig;
 
-	const eventHubPromise = async (pem,peerHostName)=>{
-		const eventHubClient = await exports.getOrgAdmin(orgName,'peer');
-		return EventHubUtil.new(eventHubClient,{eventHubPort, pem, peerHostName});
+	const eventHubPromise = async (pem, peerHostName) => {
+		const eventHubClient = await exports.getOrgAdmin(orgName, 'peer');
+		return EventHubUtil.new(eventHubClient, {eventHubPort, pem, peerHostName});
 	};
-	peer.eventHubPromise =eventHubPromise(peer.pem,peerHostName);
+	peer.eventHubPromise = eventHubPromise(peer.pem, peerHostName);
 	peer.peerConfig.orgName = orgName;
 	peer.peerConfig.peerIndex = peerIndex;
 	return peer;
@@ -137,9 +137,10 @@ exports.newPeers = (peerIndexes, orgName) => {
 
 };
 
-const findOrgConfig = (orgName) => {
+exports.findOrgConfig = (orgName, ordererName) => {
 	let target;
 	let nodeType;
+	let portHost;//TODO random getter
 	if (orgsConfig[orgName]) {
 		target = orgsConfig[orgName];
 		nodeType = 'peer';
@@ -148,23 +149,25 @@ const findOrgConfig = (orgName) => {
 		if (ordererConfig.type === 'kafka') {
 			if (ordererConfig.kafka.orgs[orgName]) {
 				target = ordererConfig.kafka.orgs[orgName];
+				if (!ordererName) {
+					ordererName = randomKeyOf(target.orderers);
+				}
+				portHost = target.orderers[ordererName].portHost;
 			}
 		} else {
 			if (ordererConfig.solo.orgName === orgName) {
 				target = ordererConfig.solo;
+				portHost = target.portHost;
 			}
 		}
 	}
 	if (!target) throw `${orgName} not found`;
-	return {config: target, nodeType};
-};
-const getMspID = (orgName) => {
-	const {config, nodeType} = findOrgConfig(orgName);
-	return {mspId: config.MSP.id, nodeType};
+	return {config: target, portHost, nodeType};
 };
 
 const getUserClient = async (username, orgName, client) => {
-	const {mspId, nodeType} = getMspID(orgName);
+	const {config, nodeType} = exports.findOrgConfig(orgName);
+	const mspId = config.MSP.id;
 	const cryptoPath = new CryptoPath(CRYPTO_CONFIG_DIR, {
 		[nodeType]: {
 			org: orgName
