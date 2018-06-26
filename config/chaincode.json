@@ -6,11 +6,11 @@
     "adminChaincode": {
       "path": "github.com/davidkhala/chaincode/golang/admin"
     },
-    "vendorChaincode": {
-      "path": "github.com/davidkhala/chaincode/golang/vendorCC"
-    },
     "hashChaincode": {
       "path": "github.com/davidkhala/chaincode/golang/hashChaincode"
+    },
+    "stress":{
+      "path": "github.com/davidkhala/chaincode/golang/stress"
     }
   }
 }

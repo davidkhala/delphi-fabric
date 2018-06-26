@@ -63,5 +63,11 @@ else
 	fi
 	updateChaincode
 	# finally
-	sudo apt autoremove -y
+	if [ $(uname)=="Darwin" ] ;then
+        :
+	else
+	    sudo apt autoremove -y
+	fi
+
+
 fi
