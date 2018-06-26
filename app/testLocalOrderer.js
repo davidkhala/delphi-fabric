@@ -1,22 +1,24 @@
 const globalConfig = require('../config/orgs');
 const {TLS, docker: {fabricTag, network, volumes: {MSPROOT: {dir: mspDir}}}, orderer: {genesis_block: {file: BLOCK_FILE}}} = globalConfig;
 const protocol = TLS ? 'https' : 'http';
-
+const fsExtra = require('fs-extra');
 const logger = require('../common/nodejs/logger').new('local orderer');
 const {CryptoPath, homeResolve} = require('../common/nodejs/path');
-const {genOrderer} = require('../common/nodejs/ca-crypto-gen');
+const {genOrderer, init} = require('../common/nodejs/ca-crypto-gen');
 const caUtil = require('../common/nodejs/ca');
-const {swarmServiceName, inflateContainerName,containerDelete} = require('../common/docker/nodejs/dockerode-util');
-const {runOrderer} = require('../common/nodejs/fabric-dockerode');
+const {swarmServiceName, inflateContainerName, containerDelete} = require('../common/docker/nodejs/dockerode-util');
+const {runOrderer, runCA} = require('../common/nodejs/fabric-dockerode');
 const dockerCmd = require('../common/docker/nodejs/dockerCmd');
 const {RequestPromise} = require('../common/nodejs/express/serverClient');
 const peerUtil = require('../common/nodejs/peer');
 const caCryptoConfig = homeResolve(mspDir);
+const {port: swarmServerPort} = require('../swarm/swarm.json').swarmServer;
 const fs = require('fs');
 const helper = require('./helper');
 const nodeType = 'orderer';
 const arch = 'x86_64';
 const imageTag = `${arch}-${fabricTag}`;
+const commonHelper = require('../common/nodejs/helper');
 const getCaService = async (url, domain, swarm) => {
 	if (TLS) {
 		const caHostName = `ca.${domain}`;
@@ -38,8 +40,70 @@ const getCaService = async (url, domain, swarm) => {
 	return caUtil.new(url);
 };
 
+const ordererName = 'orderer3';
+const channelName = 'allchannel';
+const serverClient = require('../common/nodejs/express/serverClient');
+const runWithNewOrg = async (action) => {
+	const orgName = 'NewConsensus.Delphi.com';
+	const mspName = 'NewConsensus';
+	const mspid = 'NewConsensusMSP';
+	const caContainerName = `ca.${orgName}`;
+	const port = 9054;
+	const hostCryptoPath = new CryptoPath(caCryptoConfig, {
+		orderer: {
+			org: orgName, name: ordererName
+		},
+		password: 'passwd',
+		user: {
+			name: 'Admin'
+		}
+	});
+	if (action === 'down') {
+		await containerDelete(caContainerName);
+		await run(orgName, undefined, undefined, action, mspid);
+		fsExtra.emptyDirSync(hostCryptoPath.ordererOrg());
+		return;
+	}
+	await runCA({container_name: caContainerName, port, network, imageTag, TLS});
 
-const run = async () => {
+	const caUrl = `${protocol}://localhost:${port}`;
+	const caService = await getCaService(caUrl, orgName, false);
+
+	await commonHelper.sleep(2000);
+
+	const admin = await init(caService, hostCryptoPath, nodeType, mspid, {TLS});
+
+	const {msp: {admincerts, cacerts, tlscacerts}} = hostCryptoPath.OrgFile(nodeType);
+
+
+	const baseUrl = `http://localhost:${swarmServerPort}`;
+	await serverClient.createOrUpdateOrg(baseUrl, channelName, mspid, mspName, nodeType, {
+		admins: [admincerts],
+		root_certs: [cacerts],
+		tls_root_certs: [tlscacerts]
+	}, false);
+	await run(orgName, caService, admin, action, mspid);
+};
+const runWithExistOrg = async (action) => {
+	const orgName = 'DelphiConsensus.Delphi.com';
+	const ordererConfig = globalConfig.orderer.kafka.orgs[orgName];
+	const mspid = ordererConfig.MSP.id;
+	const caUrl = `${protocol}://localhost:${ordererConfig.ca.portHost}`;
+	const caService = await getCaService(caUrl, orgName, false);
+	const adminClient = await helper.getOrgAdmin(orgName, nodeType);
+	const admin = adminClient._userContext;
+	await run(orgName, caService, admin, action, mspid);
+};
+/**
+ *
+ * @param orgName
+ * @param caService
+ * @param admin
+ * @param action
+ * @param mspid
+ * @returns {Promise<void>}
+ */
+const run = async (orgName, caService, admin, action, mspid) => {
 	const hostCryptoPath = new CryptoPath(caCryptoConfig, {
 		orderer: {
 			org: orgName, name: ordererName
@@ -50,29 +114,20 @@ const run = async () => {
 		}
 	});
 	const container_name = hostCryptoPath.ordererHostName;
-	if (process.env.action === 'down') {
+	if (action === 'down') {
 		await containerDelete(container_name);
 		return;
 	}
 
-	const ordererName = 'orderer3';
-	const orgName = 'DelphiConsensus.Delphi.com';
-	const swarm = false;
 
 	/////////update address
 	const ordererAdress = `${hostCryptoPath.ordererHostName}:7050`;
 
 
-	const {port: swarmServerPort} = require('../swarm/swarm.json').swarmServer;
 	const url = `http://localhost:${swarmServerPort}/channel/newOrderer`;
 
-	const ordererConfig = globalConfig.orderer.kafka.orgs[orgName];
-	const caUrl = `${protocol}://localhost:${ordererConfig.ca.portHost}`;
 
 	try {
-		const caService = await getCaService(caUrl, orgName, swarm);
-		const adminClient = await helper.getOrgAdmin(orgName, nodeType);
-		const admin = adminClient._userContext;
 		await RequestPromise({url, body: {address: ordererAdress}});
 
 		await genOrderer(caService, hostCryptoPath, admin, {TLS});
@@ -96,7 +151,7 @@ const run = async () => {
 			port: 9050, network,
 			BLOCK_FILE, CONFIGTXVolume: 'CONFIGTX',
 			msp: {
-				id: ordererConfig.MSP.id,
+				id: mspid,
 				configPath,
 				volumeName: 'MSPROOT'
 			},
@@ -110,4 +165,4 @@ const run = async () => {
 	}
 
 };
-run();
+runWithExistOrg(process.env.action);
