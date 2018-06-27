@@ -6,7 +6,7 @@ const logger = require('../common/nodejs/logger').new('local orderer');
 const {CryptoPath, homeResolve} = require('../common/nodejs/path');
 const {genOrderer, init} = require('../common/nodejs/ca-crypto-gen');
 const caUtil = require('../common/nodejs/ca');
-const {swarmServiceName, inflateContainerName, containerDelete} = require('../common/docker/nodejs/dockerode-util');
+const {swarmServiceName, inflateContainerName, containerDelete,containerStart} = require('../common/docker/nodejs/dockerode-util');
 const {runOrderer, runCA} = require('../common/nodejs/fabric-dockerode');
 const dockerCmd = require('../common/docker/nodejs/dockerCmd');
 const {RequestPromise} = require('../common/nodejs/express/serverClient');
@@ -82,7 +82,91 @@ const runWithNewOrg = async (action) => {
 		root_certs: [cacerts],
 		tls_root_certs: [tlscacerts]
 	}, false);
-	await run(orgName, caService, admin, action, mspid);
+
+	const container_name = hostCryptoPath.ordererHostName;
+	if (action === 'down') {
+		await containerDelete(container_name);
+		return;
+	}
+
+
+	/////////update address
+	const ordererAdress = `${hostCryptoPath.ordererHostName}:7050`;
+
+
+	const url = `http://localhost:${swarmServerPort}/channel/newOrderer`;
+
+
+	try {
+		await RequestPromise({url, body: {address: ordererAdress}});
+
+		await genOrderer(caService, hostCryptoPath, admin, {TLS});
+
+
+		const {MSPROOT} = peerUtil.container;
+
+		const cryptoPath = new CryptoPath(MSPROOT, {
+			orderer: {
+				org: orgName, name: ordererName
+			},
+			password: 'passwd',
+			user: {
+				name: 'Admin'
+			}
+		});
+		const ordererUtil = require('../common/nodejs/orderer');
+		const tls = TLS ? cryptoPath.TLSFile(nodeType) : undefined;
+		const configPath = cryptoPath.MSP(nodeType);
+		const Image = `hyperledger/fabric-orderer:${imageTag}`;
+		const Cmd = ['orderer'];
+		const Env = ordererUtil.envBuilder({
+			BLOCK_FILE, msp: {
+				configPath, id:mspid
+			}, kafkas:true, tls
+		});
+
+		const createOptions = {
+			name: container_name,
+			Env,
+			Volumes: {
+				[peerUtil.container.MSPROOT]: {},
+				[ordererUtil.container.CONFIGTX]: {},
+				[ordererUtil.container.state]:{}
+			},
+			Cmd,
+			Image,
+			ExposedPorts: {
+				'7050': {},
+			},
+			Hostconfig: {
+				Binds: [
+					`MSPROOT:${peerUtil.container.MSPROOT}`,
+					`CONFIGTX:${ordererUtil.container.CONFIGTX}`,
+					`ledger:${ordererUtil.container.state}`
+				],
+				PortBindings: {
+					'7050': [
+						{
+							HostPort: '9050'
+						}
+					]
+				},
+			},
+			NetworkingConfig: {
+				EndpointsConfig: {
+					[network]: {
+						Aliases: [container_name]
+					}
+				}
+			}
+		};
+		return containerStart(createOptions);
+
+	} catch (e) {
+		logger.error(e);
+		process.exit(1);
+	}
+
 };
 const runWithExistOrg = async (action) => {
 	const orgName = 'DelphiConsensus.Delphi.com';
@@ -165,4 +249,4 @@ const run = async (orgName, caService, admin, action, mspid) => {
 	}
 
 };
-runWithExistOrg(process.env.action);
+runWithNewOrg(process.env.action);
