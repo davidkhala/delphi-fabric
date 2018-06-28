@@ -69,10 +69,9 @@ Current machine is noted as `master`
 3. [master] `$ node app/testInstall.js` to install chaincode and instantiate chaincode
 4. [master] `$ node app/testInvoke.js` to invoke chaincode
 
-
-govendor: to import third-party package in vendor folder
+dep: to import third-party package in vendor folder
 --------
-  - govendor could only be run under system $GOPATH, then the location of chaincode cannot be arbitrary again
+  - dep could only be run under system $GOPATH, 
   - my sample chaincodes have been migrated to ``github.com/davidkhala/chaincode``
 
 
@@ -84,6 +83,8 @@ govendor: to import third-party package in vendor folder
 - swarm mode: network server to manage ip:hostname
 - stress test in nodejs: Caliper
 - update system channel ``testchainid``
+- use golang/dep instead of govendor
+
 ## TODO
 - TLS
 - java sdk and docker-swarm: keep update
@@ -93,7 +94,6 @@ govendor: to import third-party package in vendor folder
 - chaincode version string format
 - javascript chaincode
 - chaincode uninstall
-- there is a trend to use golang/dep instead of govendor https://gerrit.hyperledger.org/r/#/c/19113/
 - multiple priv-file creation is witnessed in app/cryptoKeyStore, investigate problem of state store, crypto-store
 - change default keystore path: /home/david/.hfc-key-store/ still having files even when bootstrap
 - simplify portMap design from [{7051:port}] to {port: port,eventHubPort:port2}
