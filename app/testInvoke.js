@@ -12,6 +12,7 @@ const channelName = 'allchannel';
 
 const peers = helper.newPeers(peerIndexes, orgName);
 
+const {sleep} = require('../common/nodejs/helper');
 const task = async () => {
 	const client = await helper.getOrgAdmin(orgName);
 	const channel = helper.prepareChannel(channelName, client, true);
@@ -19,8 +20,7 @@ const task = async () => {
 	const result = reducer({txEventResponses, proposalResponses});
 	logger.info(result);
 };
-exports.run = async (times, interval = 10000) => {
-	const {sleep} = require('../common/nodejs/helper');
+const run = async (times, interval = 10000) => {
 	if (Number.isInteger(times)) {
 		for (let i = 0; i < times; i++) {
 			await task();
@@ -32,4 +32,5 @@ exports.run = async (times, interval = 10000) => {
 		await exports.run(times, interval);
 	}
 };
+run(process.env.times,process.env.interval);
 

@@ -351,7 +351,7 @@ exports.down = async (swarm) => {
 			await exports.runZookeepers(toStop, swarm);
 		}
 		await pruneSystem(swarm);
-		await chaincodeClean();
+		await chaincodeClean(true);
 		await exports.volumesAction(toStop);
 
 		const nodeAppConfigJson = require('./app/config');
