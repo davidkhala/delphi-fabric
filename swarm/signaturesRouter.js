@@ -33,10 +33,10 @@ router.post('/getSwarmSignatures', multerCache.single('proto'), async (req, res)
 			const url = `http://${ip}:${signServerPort}`;
 			try {
 				const resp = await serverClient.getSignatures(url, protoPath);
-				logger.info('success to getSignatures from',url);
+				logger.info('success to getSignatures from', url);
 				return resp.signatures;
-			}catch (e) {
-				logger.error('failed to getSignatures from',url, e);
+			} catch (e) {
+				logger.error('failed to getSignatures from', url, e);
 				//TODO error tolerance;
 				return [];
 			}
@@ -92,6 +92,22 @@ router.post('/newOrderer', async (req, res) => {
 		res.status(400).send(err.toString());
 	}
 });
+router.post('/getChannelConfig', async (req, res) => {
+
+	const {nodeType} = req.body;
+	let channelName;
+	if (nodeType === 'orderer') {
+		channelName = channelUtil.genesis;
+	} else {
+		channelName = req.body.channelName;
+	}
+	logger.debug('/getChannelConfig',{nodeType,channelName});
+	const ramdomOrg = helper.randomOrg(nodeType);
+	const client = await helper.getOrgAdmin(ramdomOrg, nodeType);
+	const channel = helper.prepareChannel(channelName, client, true);
+	const {original_config} = await getChannelConfigReadable(channel, nodeType);
+	res.send(original_config);
+});
 router.post('/createOrUpdateOrg', multerCache.fields([{name: 'admins'}, {name: 'root_certs'}, {name: 'tls_root_certs'}])
 	, async (req, res) => {
 		logger.debug('[start]createOrUpdateOrg');
@@ -109,7 +125,6 @@ router.post('/createOrUpdateOrg', multerCache.fields([{name: 'admins'}, {name: '
 				channelName = channelUtil.genesis;
 			} else {
 				channelName = req.body.channelName;
-
 			}
 			const ramdomOrg = helper.randomOrg(nodeType);
 			const client = await helper.getOrgAdmin(ramdomOrg, nodeType);
