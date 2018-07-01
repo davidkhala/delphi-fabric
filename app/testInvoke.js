@@ -29,7 +29,7 @@ const run = async (times, interval = 10000) => {
 	} else {
 		await task();
 		await sleep(interval);
-		await exports.run(times, interval);
+		await run(times, interval);
 	}
 };
 run(process.env.times,process.env.interval);

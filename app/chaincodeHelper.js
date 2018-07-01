@@ -1,4 +1,4 @@
-const helper = require('./helper.js');
+const {randomKeyOf} = require('../common/nodejs/helper');
 const {instantiate, upgrade,invoke} = require('../common/nodejs/chaincode');
 const logUtil = require('../common/nodejs/logger');
 
@@ -35,5 +35,7 @@ exports.invoke = async (channel, richPeers, {chaincodeId, fcn, args}) => {
 		const eventHub = await peer.eventHubPromise;
 		eventHubs.push(eventHub);
 	}
-	return invoke(channel, richPeers, eventHubs, {chaincodeId, args, fcn}, eventWaitTime);
+	const orderers = channel.getOrderers();
+	const orderer = orderers[randomKeyOf(orderers)]
+	return invoke(channel, richPeers, eventHubs, {chaincodeId, args, fcn},orderer, eventWaitTime);
 };
