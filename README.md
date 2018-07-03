@@ -84,14 +84,15 @@ dep: to import third-party package in vendor folder
 - stress test in nodejs: Caliper
 - update system channel ``testchainid``
 - use golang/dep instead of govendor
-
+- new orderer with same org
+- make pm2 signServer, swarmServer also run in single mode
 ## TODO
 - TLS
 - java sdk and docker-swarm: keep update
 - endorsement policy config
 - test backup and recover
 - cooperate with official network_config.json
-- chaincode version string format
+- chaincode version,ID string format
 - javascript chaincode
 - chaincode uninstall
 - multiple priv-file creation is witnessed in app/cryptoKeyStore, investigate problem of state store, crypto-store
@@ -107,8 +108,6 @@ dep: to import third-party package in vendor folder
 - take care of docker swarm init --force-new-cluster
 - using Atom for Mac default keymap, align with bret Harrison
 - will block file name be a problem in signature cache? take care docker cp from container for multiple request
-- new orderer with same org 
-- try to make pm2 signServer, swarmServer aslo run in single mode
 ## New feature, patch required for node-sdk
  
 - feature: implement configtx in node-sdk??
