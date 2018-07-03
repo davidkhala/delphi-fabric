@@ -11,7 +11,6 @@ const fsExtra = require('fs-extra');
 const {homeResolve} = require('../common/nodejs/path');
 const {sha2_256} = require('fabric-client/lib/hash');
 const dockerUtil = require('../common/docker/nodejs/dockerode-util');
-logger.info('server start', {db, port});
 
 class dbInterface {
 	constructor({url, port, name}) {
@@ -21,7 +20,7 @@ class dbInterface {
 	}
 
 	async get(key) {
-		throw 'to be implement';
+		throw Error(`get(${key}) to be implement`);
 	}
 
 	async set(key, value) {
@@ -30,25 +29,34 @@ class dbInterface {
 
 	async connect() {
 		if (!this.connection) {
+			await this.run();
 			this.connection = await this._connectBuilder();
 		}
 		return this.connection;
 	}
 
+	async run() {
+		throw Error('run() to be implement');
+	}
+
 	async clear() {
-		throw 'to be implement';
+		throw Error('clear() to be implement');
 	}
 
 	async _connectBuilder() {
-		throw 'to be implement';
+		throw Error('_connectBuilder() to be implement');
 	}
 }
 
 const dbMap = {
 	Couchdb: class extends dbInterface {
+		constructor({url, name, port = '6984'}) {
+			super({url, name, port});
+		}
+
 		async _connectBuilder() {
 			const FabricCouchDB = require('fabric-client/lib/impl/CouchDBKeyValueStore');
-			return await new FabricCouchDB({url: 'http://localhost:5984', name: this.name});
+			return await new FabricCouchDB({url: `http://localhost:${this.port}`, name: this.name});
 		}
 
 		async get(key) {
@@ -60,6 +68,31 @@ const dbMap = {
 			const connection = await this.connect();
 			return await connection.setValue(key, value);
 		}
+
+		run() {
+
+			const createOptions = {
+				name: this.name,
+				Image: 'hyperledger/fabric-couchdb:latest',
+				ExposedPorts: {
+					'5984': {},
+				},
+				Hostconfig: {
+					PortBindings: {
+						'5984': [
+							{
+								HostPort: this.port
+							}
+						]
+					},
+				},
+			};
+			return dockerUtil.containerStart(createOptions);
+		}
+
+		async clear() {
+			return dockerUtil.containerDelete(this.name);
+		}
 	},
 	Redis: class extends dbInterface {
 		constructor({url, name, port = '6379'}) {
@@ -67,7 +100,6 @@ const dbMap = {
 		}
 
 		async _connectBuilder() {
-			const container = await this.run();
 			const ioRedis = require('ioredis');
 			const redis = new ioRedis(parseInt(this.port));
 			return redis;
@@ -115,11 +147,12 @@ const swarmDoc = 'swarm';
 const leaderKey = 'leaderNode';
 
 exports.run = () => {
+	logger.info('server start', {db, port});
 	const {app} = require('../common/nodejs/express/baseApp').run(port);
 	app.use('/config', require('../express/configExpose'));
 
 	app.get('/leader', async (req, res) => {
-		const connection = await new dbMap[db]({name: swarmDoc});
+		const connection = new dbMap[db]({name: swarmDoc});
 		const value = await connection.get(leaderKey);
 		logger.debug('leader info', value);
 		res.json(value);
@@ -127,7 +160,7 @@ exports.run = () => {
 	app.post('/leader/update', async (req, res) => {
 		const {ip, hostname, managerToken, workerToken} = req.body;
 		logger.debug('leader update', {ip, hostname, managerToken, workerToken});
-		const connection = await new dbMap[db]({name: swarmDoc});
+		const connection = new dbMap[db]({name: swarmDoc});
 		const value = await connection.set(leaderKey, {ip, hostname, managerToken, workerToken});
 		res.json(value);
 	});
@@ -144,7 +177,7 @@ exports.run = () => {
 	app.get('/', async (req, res) => {
 		try {
 			//touch
-			await new dbMap[db]({name: swarmDoc});
+			new dbMap[db]({name: swarmDoc});
 			res.json({
 				errCode: 'success',
 				message: 'pong'
@@ -155,9 +188,13 @@ exports.run = () => {
 		}
 
 	});
+	//TODO app.post('/docker/genOrderer'
+	//TODO app.post('/docker/genPeer'
 	return app;
 };
-exports.clean = () => {
+exports.clean = async () => {
 	logger.info('clean');
 	fsExtra.emptyDirSync(homeResolve(cache));
+	const connection = new dbMap[db]({name: swarmDoc});
+	await connection.clear();
 };
