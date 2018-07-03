@@ -4,7 +4,7 @@ const logger = require('../common/nodejs/logger').new('router signature');
 const signUtil = require('../common/nodejs/multiSign');
 const serverClient = require('../common/nodejs/express/serverClient');
 const {channelUpdate, ConfigFactory, getChannelConfigReadable} = require('../common/nodejs/configtxlator');
-const {nodeList} = require('../common/docker/nodejs/dockerode-util');
+const {nodeList, prune: {nodes: pruneNodes}} = require('../common/docker/nodejs/dockerode-util');
 const helper = require('../app/helper');
 const Multer = require('multer');
 const fs = require('fs');
@@ -25,6 +25,7 @@ router.post('/getSwarmSignatures', multerCache.single('proto'), async (req, res)
 		const proto = fs.readFileSync(protoPath);
 		logger.debug('proto hash ', sha2_256(proto));
 
+		await pruneNodes();
 		const nodes = await nodeList(true);
 		const ips = nodes.map(node => node.Status.Addr);
 
@@ -101,7 +102,7 @@ router.post('/getChannelConfig', async (req, res) => {
 	} else {
 		channelName = req.body.channelName;
 	}
-	logger.debug('/getChannelConfig',{nodeType,channelName});
+	logger.debug('/getChannelConfig', {nodeType, channelName});
 	const ramdomOrg = helper.randomOrg(nodeType);
 	const client = await helper.getOrgAdmin(ramdomOrg, nodeType);
 	const channel = helper.prepareChannel(channelName, client, true);
