@@ -125,10 +125,10 @@ exports.run = () => {
 		res.json(value);
 	});
 	app.post('/leader/update', async (req, res) => {
-		const {ip, hostname, managerToken} = req.body;
-		logger.debug('leader update', {ip, hostname, managerToken});
+		const {ip, hostname, managerToken, workerToken} = req.body;
+		logger.debug('leader update', {ip, hostname, managerToken, workerToken});
 		const connection = await new dbMap[db]({name: swarmDoc});
-		const value = await connection.set(leaderKey, {ip, hostname, managerToken});
+		const value = await connection.set(leaderKey, {ip, hostname, managerToken, workerToken});
 		res.json(value);
 	});
 

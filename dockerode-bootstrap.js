@@ -394,10 +394,11 @@ exports.up = async (swarm) => {
 
 			const {address: ip} = await advertiseAddr();
 			const managerToken = await joinToken();
+			const workerToken = await joinToken('worker');
 			const {port} = require('./swarm/swarm').swarmServer;
 			const swarmServerUrl = `http://localhost:${port}`;
 			await serverClient.ping(swarmServerUrl);
-			await serverClient.leader.update(swarmServerUrl, {ip, hostname: hostname(), managerToken});
+			await serverClient.leader.update(swarmServerUrl, {ip, hostname: hostname(), managerToken, workerToken});
 		}
 		await configtxlatorServer.run('up');
 
