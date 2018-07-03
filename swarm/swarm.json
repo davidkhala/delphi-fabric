@@ -9,6 +9,6 @@
   },
   "signServer":{
     "port":4002,
-    "cache":"Documents/delphi-fabric/cluster/leaderNode/cache/"
+    "cache":"Documents/delphi-fabric/swarm/cache/"
   }
 }

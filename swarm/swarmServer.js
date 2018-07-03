@@ -159,5 +159,5 @@ exports.run = () => {
 };
 exports.clean = () => {
 	logger.info('clean');
-	fsExtra.removeSync(homeResolve(cache));
+	fsExtra.emptyDirSync(homeResolve(cache));
 };

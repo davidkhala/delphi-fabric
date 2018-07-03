@@ -1,15 +1,15 @@
-const {port, cache} = require('../../swarm/swarm.json').signServer;
-const logger = require('../../common/nodejs/logger').new('sign server');
+const {port, cache} = require('./swarm.json').signServer;
+const logger = require('../common/nodejs/logger').new('sign server');
 
-const signUtil = require('../../common/nodejs/multiSign');
-const globalConfig = require('../../config/orgs');
+const signUtil = require('../common/nodejs/multiSign');
+const globalConfig = require('../config/orgs');
 const fs = require('fs');
 const fsExtra = require('fs-extra');
 const {sha2_256} = require('fabric-client/lib/hash');
-const helper = require('../../app/helper');
-const {homeResolve} = require('../../common/nodejs/path');
+const helper = require('../app/helper');
+const {homeResolve} = require('../common/nodejs/path');
 exports.run = () => {
-	const {app} = require('../../common/nodejs/express/baseApp').run(port);
+	const {app} = require('../common/nodejs/express/baseApp').run(port);
 	const Multer = require('multer');
 	const multerCache = Multer({dest: homeResolve(cache)});
 	app.post('/', multerCache.single('proto'), async (req, res) => {
@@ -49,5 +49,5 @@ exports.run = () => {
 };
 exports.clean = () => {
 	logger.info('clean');
-	fsExtra.removeSync(homeResolve(cache));
+	fsExtra.emptyDirSync(homeResolve(cache));
 };

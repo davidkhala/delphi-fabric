@@ -1,5 +1,5 @@
 {
-  "TLS": true,
+  "TLS": false,
   "docker": {
     "fabricTag": "1.1.0",
     "thirdPartyTag": "0.4.6",
@@ -72,8 +72,19 @@
           "orderers": {
             "orderer0": {
               "portHost": 7050
-            },
-            "orderer1": {
+            }
+          }
+        },
+        "ICDD.ASTRI.org": {
+          "MSP": {
+            "name": "ICDDMSPName",
+            "id": "ICDDMSP"
+          },
+          "ca": {
+            "portHost": 8454
+          },
+          "orderers": {
+            "orderer0": {
               "portHost": 8050
             }
           }
@@ -86,6 +97,11 @@
       "file": "all.tx",
       "eventWaitTime": 30000,
       "orgs": {
+        "BU.Delphi.com": {
+          "peerIndexes": [
+            0
+          ]
+        },
         "ASTRI.Delphi.com": {
           "peerIndexes": [
             0
@@ -95,6 +111,30 @@
     }
   },
   "orgs": {
+    "BU.Delphi.com": {
+      "peers": [
+        {
+          "container_name": "bu",
+          "portMap": [
+            {
+              "host": 6051,
+              "container": 7051
+            },
+            {
+              "host": 6053,
+              "container": 7053
+            }
+          ]
+        }
+      ],
+      "ca": {
+        "portHost": 6054
+      },
+      "MSP": {
+        "name": "BUMSPName",
+        "id": "BUMSP"
+      }
+    },
     "ASTRI.Delphi.com": {
       "peers": [
         {

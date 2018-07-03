@@ -31,7 +31,7 @@ const exec = util.promisify(require('child_process').exec);
 const runConfigtxGenShell = path.resolve(__dirname, 'common', 'bin-manage', 'runConfigtxgen.sh');
 const nodeServers = {
 	swarmServer: path.resolve(__dirname, 'swarm', 'swarmServerPM2.js'),
-	signServer: path.resolve(__dirname, 'cluster', 'leaderNode', 'signServerPM2.js')
+	signServer: path.resolve(__dirname, 'swarm', 'signServerPM2.js')
 };
 const configtxlatorServer = require('./common/bin-manage/runConfigtxlator');
 
@@ -369,7 +369,7 @@ exports.down = async (swarm) => {
 			pm2.disconnect();
 		}
 		require('./swarm/swarmServer').clean();
-		require('./cluster/leaderNode/signServer').clean();
+		require('./swarm/signServer').clean();
 
 		await configtxlatorServer.run('down');
 

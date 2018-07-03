@@ -2,5 +2,4 @@
 dist/
 node_modules/
 /swarm/cache
-/cluster/leaderNode/cache
 
