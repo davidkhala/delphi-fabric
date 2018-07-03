@@ -31,17 +31,6 @@ function pullKafka() {
 function updateChaincode() {
 	go get -u "github.com/davidkhala/chaincode" # FIXME: please use your own chaincode as in config/chaincode.json
 }
-function updateNODESDK() {
-	local VERSION=$1
-	if npm list fabric-client@$VERSION --depth=0; then : # --depth=0 => list only top level modules
-	else
-		npm install fabric-client@$VERSION --save --save-exact
-	fi
-	if npm list fabric-ca-client@$VERSION --depth=0; then :
-	else
-		npm install fabric-ca-client@$VERSION --save --save-exact
-	fi
-}
 
 if [ -n "$fcn" ]; then
 	$fcn $remain_params
@@ -56,7 +45,6 @@ else
 	fabricTag=$(jq -r ".docker.fabricTag" $CONFIG_JSON)
 
 	./common/bin-manage/pullBIN.sh -v $fabricTag
-	updateNODESDK $fabricTag
 	npm install
 	if ! go version; then
 		$CURRENT/common/install.sh golang

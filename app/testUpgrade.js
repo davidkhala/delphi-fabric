@@ -6,7 +6,6 @@ const {updateInstall, nextVersion, upgrade} = require('../common/nodejs/chaincod
 
 const chaincodeId = process.env.name ? process.env.name : 'adminChaincode';
 
-const EventHubUtil = require('../common/nodejs/eventHub');
 const args = [];
 
 const channelName = 'allchannel';
