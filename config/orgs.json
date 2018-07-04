@@ -13,6 +13,12 @@
       }
     }
   },
+  "ledger": {
+    "couchDB": {
+      "container_name": "couchDB",
+      "port": 5984
+    }
+  },
   "orderer": {
     "type": "kafka",
     "genesis_block": {
