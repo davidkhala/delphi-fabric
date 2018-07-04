@@ -5,6 +5,7 @@ const util = require('util');
 const logger = require('./common/nodejs/logger').new('dockerode-bootstrap');
 const peerUtil = require('./common/nodejs/peer');
 const {
+	runCouchDB,
 	deployCA, runCA,
 	deployKafka, runKafka, runZookeeper, deployZookeeper,
 	deployPeer, runPeer, runOrderer, deployOrderer,
@@ -135,6 +136,19 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 	const imageTag = `${arch}-${fabricTag}`;
 	const orgsConfig = globalConfig.orgs;
 	const peers = [];
+	const couchDB = globalConfig.ledger.couchDB ? globalConfig.ledger.couchDB : undefined;
+
+	if (couchDB) {
+		//	TODO run couchDB on swarm??
+		const {container_name, port} = couchDB;
+		if (tostop) {
+			await containerDelete(container_name);
+		} else {
+			const imageTag = `${arch}-${thirdPartyTag}`;
+			await runCouchDB({imageTag, container_name, port, network});
+		}
+	}
+
 	for (const domain in orgsConfig) {
 		const orgConfig = orgsConfig[domain];
 		const peersConfig = orgConfig.peers;
@@ -179,6 +193,7 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 					},
 					tls,
 					Constraints,
+					couchDB,
 				});
 				peers.push(peer);
 			} else {
@@ -188,8 +203,8 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 					msp: {
 						id,
 						volumeName: volumeName.MSPROOT,
-						configPath,
-					}
+						configPath
+					},couchDB
 				});
 			}
 
