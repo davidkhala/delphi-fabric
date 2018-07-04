@@ -14,18 +14,9 @@ const OrdererUtil = require('../common/nodejs/orderer');
 const channelUtil = require('../common/nodejs/channel');
 const {randomKeyOf} = require('../common/nodejs/helper');
 
-// peerConfig: "portMap": [{	"host": 8051,		"container": 7051},{	"host": 8053,		"container": 7053}]
 exports.preparePeer = (orgName, peerIndex, peerConfig) => {
-	let peerPort;
-	let eventHubPort;
-	for (const portMapEach of peerConfig.portMap) {
-		if (portMapEach.container === 7051) {
-			peerPort = portMapEach.host;
-		}
-		if (portMapEach.container === 7053) {
-			eventHubPort = portMapEach.host;
-		}
-	}
+	const {port: peerPort, eventHubPort} = peerConfig.portMap;
+
 	let peer;
 	const cryptoPath = new CryptoPath(CRYPTO_CONFIG_DIR,
 		{peer: {name: `peer${peerIndex}`, org: orgName}});

@@ -115,16 +115,10 @@
       "peers": [
         {
           "container_name": "bu",
-          "portMap": [
-            {
-              "host": 6051,
-              "container": 7051
-            },
-            {
-              "host": 6053,
-              "container": 7053
-            }
-          ]
+          "portMap": {
+            "port": 6051,
+            "eventHubPort": 6053
+          }
         }
       ],
       "ca": {
@@ -139,16 +133,10 @@
       "peers": [
         {
           "container_name": "astri",
-          "portMap": [
-            {
-              "host": 7051,
-              "container": 7051
-            },
-            {
-              "host": 7053,
-              "container": 7053
-            }
-          ]
+          "portMap": {
+            "port": 7051,
+            "eventHubPort": 7053
+          }
         }
       ],
       "ca": {

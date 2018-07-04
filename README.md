@@ -97,7 +97,6 @@ dep: to import third-party package in vendor folder
 - chaincode uninstall
 - multiple priv-file creation is witnessed in app/cryptoKeyStore, investigate problem of state store, crypto-store
 - change default keystore path: /home/david/.hfc-key-store/ still having files even when bootstrap
-- simplify portMap design from [{7051:port}] to {port: port,eventHubPort:port2}
 - adding kafka/zookeeper online
 - stateStore problem
 - docker version problem in ver. 18.x 
@@ -108,6 +107,7 @@ dep: to import third-party package in vendor folder
 - take care of docker swarm init --force-new-cluster
 - using Atom for Mac default keymap, align with bret Harrison
 - will block file name be a problem in signature cache? take care docker cp from container for multiple request
+- to support couchdb ledger
 ## New feature, patch required for node-sdk
  
 - feature: implement configtx in node-sdk??

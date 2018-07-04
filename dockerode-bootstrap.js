@@ -163,8 +163,7 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 			const cryptoType = 'peer';
 			const tls = TLS ? cryptoPath.TLSFile(cryptoType) : undefined;
 
-			const port = portMap.find(portEntry => portEntry.container === 7051).host;
-			const eventHubPort = portMap.find(portEntry => portEntry.container === 7053).host;
+			const {port, eventHubPort} = portMap;
 			const type = 'peer';
 			const configPath = cryptoPath.MSP(type);
 			if (swarm) {
