@@ -20,9 +20,9 @@ Installation
 ----
  
 **Requirements & dependencies**
-  * fabric: 1.1.0 (for docker image, binary tool and fabric-sdk)
+  * fabric: 1.2.0 (for docker image, binary tool and fabric-sdk)
   * docker-ce 17.12.x-ce (API version 1.35)
-  * golang 1.9.2 : align with docker version
+  * golang 1.10 : align with docker version
   * node 8.10, npm 5.6 : npm install卡死的话，可以考虑添加淘宝的源
         - ``$ npm config set registry  https://registry.npm.taobao.org/``
   * java 1.8.0_151 (optional for java-sdk)
@@ -108,6 +108,9 @@ dep: to import third-party package in vendor folder
 - using Atom for Mac default keymap, align with bret Harrison
 - will block file name be a problem in signature cache? take care docker cp from container for multiple request
 - to support couchdb ledger
+- fabric-ca CRUD user and identityService
+- cross chaincode invoke on same channel and differed channel
+- chaincode setEvent
 ## New feature, patch required for node-sdk
  
 - feature: implement configtx in node-sdk??

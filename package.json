@@ -1,6 +1,6 @@
 {
   "name": "delphi-fabric",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "node program to demonstrate using node.js SDK APIs",
   "keywords": [
     "v1.x fabric node-sdk java-sdk sample"

@@ -29,7 +29,9 @@ function pullKafka() {
 	$utilsDir/docker.sh pullIfNotExist hyperledger/fabric-zookeeper:$IMAGE_TAG
 }
 function updateChaincode() {
+    set +e
 	go get -u "github.com/davidkhala/chaincode" # FIXME: please use your own chaincode as in config/chaincode.json
+	set -e
 }
 
 if [ -n "$fcn" ]; then
@@ -44,7 +46,7 @@ else
 
 	fabricTag=$(jq -r ".docker.fabricTag" $CONFIG_JSON)
 
-	./common/bin-manage/pullBIN.sh -v $fabricTag
+	./common/bin-manage/pull1_2.sh
 	npm install
 	if ! go version; then
 		$CURRENT/common/install.sh golang
