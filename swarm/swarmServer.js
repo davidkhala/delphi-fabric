@@ -9,7 +9,7 @@ const fs = require('fs');
 const fsExtra = require('fs-extra');
 
 const {homeResolve} = require('../common/nodejs/path');
-const {sha2_256} = require('fabric-client/lib/hash');
+const {sha2_256} = require('../common/nodejs/helper');
 const dockerUtil = require('../common/docker/nodejs/dockerode-util');
 
 class dbInterface {

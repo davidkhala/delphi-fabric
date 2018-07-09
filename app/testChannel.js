@@ -31,7 +31,7 @@ const joinAllfcn = async (channelName) => {
 					return await joinChannel(channel, peer, eventHub);
 				} catch (err) {
 					if (err.toString().includes('Invalid results returned ::NOT_FOUND')
-						|| err.toString().includes('SERVICE_UNAVAILABLE')) {
+						|| err.toString().includes('UNAVAILABLE')) {
 						logger.warn('loopJoinChannel...');
 						await new Promise(resolve => {
 							setTimeout(() => {

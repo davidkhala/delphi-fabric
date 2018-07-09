@@ -20,7 +20,7 @@ Installation
 ----
  
 **Requirements & dependencies**
-  * fabric: 1.2.0 (for docker image, binary tool and fabric-sdk)
+  * fabric: 1.1.0 (for docker image, binary tool and fabric-sdk)
   * docker-ce 17.12.x-ce (API version 1.35)
   * golang 1.10 : align with docker version
   * node 8.10, npm 5.6 : npm install卡死的话，可以考虑添加淘宝的源
@@ -111,6 +111,7 @@ dep: to import third-party package in vendor folder
 - fabric-ca CRUD user and identityService
 - cross chaincode invoke on same channel and differed channel
 - chaincode setEvent
+- 1.2 not ready: eventHub failed to catch block
 ## New feature, patch required for node-sdk
  
 - feature: implement configtx in node-sdk??

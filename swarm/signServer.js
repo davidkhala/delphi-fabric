@@ -5,7 +5,7 @@ const signUtil = require('../common/nodejs/multiSign');
 const globalConfig = require('../config/orgs');
 const fs = require('fs');
 const fsExtra = require('fs-extra');
-const {sha2_256} = require('fabric-client/lib/hash');
+const {sha2_256} = require('../common/nodejs/helper');
 const helper = require('../app/helper');
 const {homeResolve} = require('../common/nodejs/path');
 exports.run = () => {

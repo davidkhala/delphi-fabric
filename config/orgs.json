@@ -1,8 +1,8 @@
 {
   "TLS": false,
   "docker": {
-    "fabricTag": "1.2.0",
-    "thirdPartyTag": "0.4.10",
+    "fabricTag": "1.1.0",
+    "thirdPartyTag": "0.4.6",
     "network": "delphiNetwork",
     "volumes": {
       "CONFIGTX": {

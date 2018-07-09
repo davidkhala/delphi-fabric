@@ -1,6 +1,9 @@
 {
   "chaincodes": {
-    "delphiChaincode": {
+    "trade": {
+      "path": "github.com/davidkhala/chaincode/golang/trade"
+    },
+    "delphi": {
       "path": "github.com/davidkhala/chaincode/golang/delphi"
     },
     "adminChaincode": {

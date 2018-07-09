@@ -15,7 +15,7 @@ const multerCache = Multer({dest: homeResolve(cache)});
 const {RequestPromise} = require('../common/nodejs/express/serverClient');
 
 const channelUtil = require('../common/nodejs/channel');
-const {sha2_256} = require('fabric-client/lib/hash');
+const {sha2_256} = require('../common/nodejs/helper');
 
 router.post('/getSwarmSignatures', multerCache.single('proto'), async (req, res) => {
 	try {

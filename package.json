@@ -1,6 +1,6 @@
 {
   "name": "delphi-fabric",
-  "version": "3.1.0",
+  "version": "1.1.0",
   "description": "node program to demonstrate using node.js SDK APIs",
   "keywords": [
     "v1.x fabric node-sdk java-sdk sample"
@@ -14,8 +14,6 @@
     "body-parser": "^1.17.1",
     "cors": "^2.8.3",
     "express": "^4.16.2",
-    "fabric-ca-client": "1.1.0",
-    "fabric-client": "1.1.0",
     "fs-extra": "^2.0.0",
     "ioredis": "^3.2.2",
     "js-yaml": "^3.10.0",
