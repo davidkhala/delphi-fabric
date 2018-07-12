@@ -14,6 +14,7 @@
     }
   },
   "ledger": {
+    "storage":"couchDB",
     "couchDB": {
       "container_name": "couchDB",
       "port": 5984

@@ -136,7 +136,7 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 	const imageTag = ImageTag({arch, tag: fabricTag});
 	const orgsConfig = globalConfig.orgs;
 	const peers = [];
-	const couchDB = globalConfig.ledger.couchDB ? globalConfig.ledger.couchDB : undefined;
+	const couchDB = globalConfig.ledger.storage==='couchDB' ? globalConfig.ledger.couchDB : undefined;
 
 	if (couchDB) {
 		//	TODO run couchDB on swarm??
