@@ -1,15 +1,17 @@
 const caUtil = require('../common/nodejs/ca');
 
 const fs = require('fs');
-const {genPeer, init, genOrderer} = require('../common/nodejs/ca-crypto-gen');
+const {initAdmin, genPeer, init, genOrderer, genUser} = require('../common/nodejs/ca-crypto-gen');
 const pathUtil = require('../common/nodejs/path');
 const dockerCmd = require('../common/docker/nodejs/dockerCmd');
 const {swarmServiceName, inflateContainerName} = require('../common/docker/nodejs/dockerode-util');
 const {CryptoPath, homeResolve} = pathUtil;
-const logger = require('../common/nodejs/logger').new('ca-crypto-gen');
+const logger = require('../common/nodejs/logger').new('caCryptoGen');
 const globalConfig = require('../config/orgs');
+const userUtil = require('../common/nodejs/user');
+const helper = require('../app/helper');
 const {TLS} = globalConfig;
-
+const protocol = TLS ? 'https' : 'http';
 const getCaService = async (url, domain, swarm) => {
 	if (TLS) {
 		const caHostName = `ca.${domain}`;
@@ -30,12 +32,43 @@ const getCaService = async (url, domain, swarm) => {
 	}
 	return caUtil.new(url);
 };
+exports.genUser = async ({userName, password}, orgName, swarm) => {
+	logger.debug('genUser', {userName, password, orgName, swarm});
+	const {config, nodeType} = helper.findOrgConfig(orgName);
+	const mspId = config.MSP.id;
+	const caUrl = `${protocol}://localhost:${config.ca.portHost}`;
+	const caCryptoConfig = homeResolve(globalConfig.docker.volumes.MSPROOT.dir);
+	const caService = await getCaService(caUrl, orgName, swarm);
+
+	const cryptoPath = new CryptoPath(caCryptoConfig, {
+		[nodeType]: {
+			org: orgName
+		},
+		user: {
+			name: userName
+		},
+		password
+	});
+	const adminCryptoPath = new CryptoPath(caCryptoConfig, {
+		[nodeType]: {
+			org: orgName
+		},
+		user: {
+			name: userUtil.adminName,
+		},
+		password: userUtil.adminPwd
+	});
+
+	const admin = await initAdmin(caService, adminCryptoPath, nodeType, mspId, TLS);
+	return await genUser(caService, cryptoPath, nodeType, admin, {TLS, affiliationRoot: orgName});
+
+};
 
 exports.genAll = async (swarm) => {
 
 	const caCryptoConfig = homeResolve(globalConfig.docker.volumes.MSPROOT.dir);
 	const {type} = globalConfig.orderer;
-	const protocol = TLS ? 'https' : 'http';
+
 	//gen orderers
 	{
 		const nodeType = 'orderer';
@@ -47,17 +80,18 @@ exports.genAll = async (swarm) => {
 				const ordererConfig = ordererOrgs[domain];
 				const mspId = ordererConfig.MSP.id;
 
-				const cryptoPath = new CryptoPath(caCryptoConfig, {
+				const caUrl = `${protocol}://localhost:${ordererConfig.ca.portHost}`;
+				const caService = await getCaService(caUrl, domain, swarm);
+				const adminCryptoPath = new CryptoPath(caCryptoConfig, {
 					orderer: {
 						org: domain
 					},
 					user: {
-						name: 'Admin'
-					}
+						name: userUtil.adminName
+					},
+					password: userUtil.adminPwd
 				});
-				const caUrl = `${protocol}://localhost:${ordererConfig.ca.portHost}`;
-				const caService = await getCaService(caUrl, domain, swarm);
-				const admin = await init(caService, cryptoPath, nodeType, mspId);
+				const admin = await init(caService, adminCryptoPath, nodeType, mspId);
 
 				const promises = [];
 				for (const ordererName in ordererConfig.orderers) {
@@ -65,11 +99,7 @@ exports.genAll = async (swarm) => {
 					const cryptoPath = new CryptoPath(caCryptoConfig, {
 						orderer: {
 							org: domain, name: ordererName
-						},
-						user: {
-							name: 'Admin'
-						},
-						password: 'passwd',
+						}
 					});
 					promises.push(genOrderer(caService, cryptoPath, admin, {TLS}));
 				}
@@ -83,19 +113,24 @@ exports.genAll = async (swarm) => {
 			const mspId = ordererConfig.MSP.id;
 
 			const domain = ordererConfig.orgName;
-			const cryptoPath = new CryptoPath(caCryptoConfig, {
+			const adminCryptoPath = new CryptoPath(caCryptoConfig, {
 				orderer: {
-					org: domain, name: ordererConfig.container_name
+					org: domain
 				},
-				password: 'passwd',
+				password: userUtil.adminPwd,
 				user: {
-					name: 'Admin'
+					name: userUtil.adminName
 				}
 			});
 
 			const caUrl = `${protocol}://localhost:${ordererConfig.ca.portHost}`;
 			const caService = await getCaService(caUrl, domain, swarm);
-			const admin = await init(caService, cryptoPath, nodeType, mspId);
+			const admin = await init(caService, adminCryptoPath, nodeType, mspId);
+			const cryptoPath = new CryptoPath(caCryptoConfig, {
+				orderer: {
+					org: domain, name: ordererConfig.container_name
+				},
+			});
 			await genOrderer(caService, cryptoPath, admin, {TLS});
 		}
 	}
@@ -106,28 +141,25 @@ exports.genAll = async (swarm) => {
 		for (const domain in peerOrgs) {
 			const peerOrgConfig = peerOrgs[domain];
 			const mspId = peerOrgConfig.MSP.id;
-			const cryptoPath = new CryptoPath(caCryptoConfig, {
+			const adminCryptoPath = new CryptoPath(caCryptoConfig, {
 				peer: {
 					org: domain
 				},
 				user: {
-					name: 'Admin'
-				}
+					name: userUtil.adminName
+				},
+				password: userUtil.adminPwd
 			});
 			const caUrl = `${protocol}://localhost:${peerOrgConfig.ca.portHost}`;
 			const caService = await getCaService(caUrl, domain, swarm);
-			const admin = await init(caService, cryptoPath, nodeType, mspId);
+			const admin = await init(caService, adminCryptoPath, nodeType, mspId);
 			const promises = [];
 			for (let peerIndex = 0; peerIndex < peerOrgConfig.peers.length; peerIndex++) {
 				const peerName = `peer${peerIndex}`;
 				const cryptoPath = new CryptoPath(caCryptoConfig, {
 					peer: {
 						org: domain, name: peerName
-					},
-					password: 'passwd',
-					user: {
-						name: 'Admin'
-					},
+					}
 				});
 				promises.push(genPeer(caService, cryptoPath, admin, {TLS}));
 			}

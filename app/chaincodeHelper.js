@@ -1,7 +1,8 @@
 const {randomKeyOf} = require('../common/nodejs/helper');
-const {instantiate, upgrade,invoke} = require('../common/nodejs/chaincode');
+const {instantiate, upgrade, invoke} = require('../common/nodejs/chaincode');
 const logUtil = require('../common/nodejs/logger');
-
+const ClientUtil = require('../common/nodejs/client');
+const ChannelUtil = require('../common/nodejs/channel');
 exports.instantiate = async (channel, richPeers, {chaincodeId, chaincodeVersion, args, fcn}) => {
 	const logger = logUtil.new('instantiate-Helper');
 
@@ -27,7 +28,7 @@ exports.upgrade = async (channel, richPeers, {chaincodeId, chaincodeVersion, arg
 	}
 	return upgrade(channel, richPeers, eventHubs, {chaincodeId, chaincodeVersion, args, fcn}, eventWaitTime);
 };
-exports.invoke = async (channel, richPeers, {chaincodeId, fcn, args}) => {
+exports.invoke = async (channel, richPeers, {chaincodeId, fcn, args}, nonAdminUser) => {
 	const logger = logUtil.new('invoke-Helper');
 	const {eventWaitTime} = channel;
 	const eventHubs = [];
@@ -36,6 +37,12 @@ exports.invoke = async (channel, richPeers, {chaincodeId, fcn, args}) => {
 		eventHubs.push(eventHub);
 	}
 	const orderers = channel.getOrderers();
-	const orderer = orderers[randomKeyOf(orderers)]
-	return invoke(channel, richPeers, eventHubs, {chaincodeId, args, fcn},orderer, eventWaitTime);
+	const orderer = orderers[randomKeyOf(orderers)];
+	if (nonAdminUser) {
+		const client = ClientUtil.new();
+		await client.setUserContext(nonAdminUser, true);
+		ChannelUtil.setClientContext(channel,client);
+	}
+
+	return invoke(channel, richPeers, eventHubs, {chaincodeId, args, fcn}, orderer, eventWaitTime);
 };

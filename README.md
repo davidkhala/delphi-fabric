@@ -86,6 +86,7 @@ dep: to import third-party package in vendor folder
 - use golang/dep instead of govendor
 - new orderer with same org
 - make pm2 signServer, swarmServer also run in single mode
+- fabric-ca CRUD user and identityService
 ## TODO
 - TLS
 - java sdk and docker-swarm: keep update
@@ -108,7 +109,6 @@ dep: to import third-party package in vendor folder
 - using Atom for Mac default keymap, align with bret Harrison
 - will block file name be a problem in signature cache? take care docker cp from container for multiple request
 - to support couchdb ledger
-- fabric-ca CRUD user and identityService
 - cross chaincode invoke on same channel and differed channel
 - chaincode setEvent
 - 1.2 not ready: eventHub failed to catch block
