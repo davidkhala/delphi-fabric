@@ -4,7 +4,7 @@ const logger = require('../common/nodejs/logger').new('http-chaincode');
 const helper = require('../app/helper.js');
 const invalid = require('./formValid').invalid();
 const {reducer,} = require('../common/nodejs/chaincode');
-const {instantiate, upgrade,invoke} = require('../app/chaincodeHelper');
+const {instantiate, upgrade, invoke} = require('../app/chaincodeHelper');
 const errorHandle = (err, res) => {
 	const errorCodeMap = require('./errorCodeMap.json');
 

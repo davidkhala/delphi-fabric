@@ -1,7 +1,8 @@
 const helper = require('../app/helper.js');
 const logger = require('../common/nodejs/logger').new('ws-chaincode');
 const {reducer,} = require('../common/nodejs/chaincode');
-const {instantiate, upgrade,invoke} = require('../app/chaincodeHelper');
+const {instantiate, upgrade, invoke} = require('../app/chaincodeHelper');
+const invalid = require('./formValid').invalid();
 const errorHandle = (err, ws, errCB) => {
 	const errorCodeMap = require('./errorCodeMap.json');
 
@@ -12,15 +13,16 @@ const errorHandle = (err, ws, errCB) => {
 			break;
 		}
 	}
-	ws.send(JSON.stringify({data: err.toString(), status}), err => {
+	ws.send(JSON.stringify({error: err.toString(), status}), err => {
 		if (err) {
 			if (errCB) errCB(err);
 		}
 	});
 
 };
+
 exports.invoke = ({chaincodeId}, ws) => {
-	const invalid = require('./formValid').invalid();
+
 	return (message) => {
 		logger.debug('==================== INVOKE CHAINCODE ==================');
 		const {fcn, args: argsString, orgName, peerIndex, channelName} = JSON.parse(message);
@@ -64,10 +66,9 @@ exports.invoke = ({chaincodeId}, ws) => {
 	};
 };
 exports.instantiate = ({chaincodeId}, ws) => {
-	const invalid = require('./formValid').invalid();
 
 
-	return (message) => {
+	return async (message) => {
 		logger.debug('==================== INSTANTIATE CHAINCODE ==================');
 
 		const {chaincodeVersion, channelName, fcn, args: argsString, peerIndex, orgName} = JSON.parse(message);
@@ -82,33 +83,31 @@ exports.instantiate = ({chaincodeId}, ws) => {
 
 		const invalidArgs = invalid.args({args});
 		if (invalidArgs) return errorHandle(invalidArgs, ws);
-		return helper.getOrgAdmin(orgName).then((client) => {
-			const channel = helper.prepareChannel(channelName, client);
-			const peers = helper.newPeers([peerIndex], orgName);
-			return instantiate(channel, undefined, {
-				chaincodeId, chaincodeVersion, fcn,
-				args
-			}).then((_) => {
-				const sendContent = JSON.stringify(
-					{data: `instantiate request has been processed successfully with ${message}`, status: 200});
-				ws.send(sendContent, (err) => {
-					if (err) {
-						logger.error(err);
-					}
-				});
-			}).catch(err => {
-				const {proposalResponses} = err;
-				if (proposalResponses) {
-					errorHandle(proposalResponses, ws);
-				} else {
-					errorHandle(err, ws);
+		const client = await helper.getOrgAdmin(orgName);
+		const channel = helper.prepareChannel(channelName, client);
+		const peers = helper.newPeers([peerIndex], orgName);
+		await instantiate(channel, peers, {
+			chaincodeId, chaincodeVersion, fcn,
+			args
+		}).then((_) => {
+			const sendContent = JSON.stringify(
+				{data: `instantiate request has been processed successfully with ${message}`, status: 200});
+			ws.send(sendContent, (err) => {
+				if (err) {
+					logger.error(err);
 				}
 			});
+		}).catch(err => {
+			const {proposalResponses} = err;
+			if (proposalResponses) {
+				errorHandle(proposalResponses, ws);
+			} else {
+				errorHandle(err, ws);
+			}
 		});
 	};
 };
 exports.upgrade = ({chaincodeId}, ws) => {
-	const invalid = require('./formValid').invalid();
 	return (message) => {
 		logger.debug('==================== upgrade CHAINCODE ==================');
 

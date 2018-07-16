@@ -1,16 +1,16 @@
 const logger = require('./common/nodejs/logger').new('express API');
 const golangUtil = require('./common/nodejs/golang');
-const {homeResolve,fsExtra} = require('./common/nodejs/path');
+const {homeResolve, fsExtra} = require('./common/nodejs/path');
 const path = require('path');
 const {host, port} = require('./app/config.json');
 const globalConfig = require('./config/orgs.json');
 const channelsConfig = globalConfig.channels;
 const chaincodesConfig = require('./config/chaincode.json');
 const CONFIGTXDir = homeResolve(globalConfig.docker.volumes.CONFIGTX.dir);
-const wsCommon = require('./express/webSocketCommon');
+
 const helper = require('./app/helper.js');
-const {create:createChannel} = require('./app/channelHelper');
-const {join:joinChannel} = require('./common/nodejs/channel');
+const {create: createChannel} = require('./app/channelHelper');
+const {join: joinChannel} = require('./common/nodejs/channel');
 
 const Query = require('./common/nodejs/query');
 const {app, server} = require('./common/nodejs/express/baseApp').run(port, host);
@@ -23,53 +23,13 @@ app.get('/', (req, res, next) => {
 	res.send('pong from davids server');
 });
 
+const {wsServerBuilder} = require('./express/webSocketCommon');
+const onMessage = async (data, ws) => {
+	ws.send(`echo ${data}`);
+};
+const wss = wsServerBuilder(server, onMessage);
 
-const WebSocket = require('ws');
-const ws = new WebSocket.Server({server});
 
-ws.on('connection', (ws, req) => {
-	const url = require('url');
-
-
-	const location = url.parse(req.url, true);
-
-	const pathSplit = location.path.split('/');
-	logger.debug('onConnect', pathSplit);
-	let messageCB = (message) => {
-		logger.debug('received: %s', message);
-		wsCommon.pong(ws, (err) => {
-			logger.error(err);
-		});
-	};
-	const {errorHandle} = wsCommon;
-
-	if (pathSplit.length === 4) {
-		switch (pathSplit[1]) {
-			case 'chaincode':
-				const chaincodeId = pathSplit[3];
-				const invalidChaincodeId = invalid.chaincodeId({chaincodeId});
-				if (invalidChaincodeId) return errorHandle(invalidChaincodeId, ws);
-				switch (pathSplit[2]) {
-					case 'invoke':
-						messageCB = require('./express/ws-chaincode').invoke({chaincodeId}, ws);
-						break;
-					case 'instantiate':
-						messageCB = require('./express/ws-chaincode').instantiate({chaincodeId}, ws);
-						break;
-					case 'upgrade':
-						messageCB = require('./express/ws-chaincode').upgrade({chaincodeId}, ws);
-						break;
-					default:
-
-				}
-				break;
-			default:
-		}
-	}
-
-	ws.on('message', messageCB);
-
-});
 app.use('/chaincode', require('./express/http-chaincode'));
 
 
@@ -143,7 +103,7 @@ app.post('/channel/join/:channelName', async (req, res) => {
 
 	try {
 		const peer = helper.newPeers([peerIndex], orgName)[0];
-		const client = await helper.getOrgAdmin(orgName,'peer');
+		const client = await helper.getOrgAdmin(orgName, 'peer');
 		const channel = helper.prepareChannel(channelName, client);
 		const eventHub = await peer.eventHubPromise;
 		await joinChannel(channel, peer, eventHub);
