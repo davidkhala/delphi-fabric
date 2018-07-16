@@ -6,9 +6,8 @@ const {port, cache} = require('./swarm.json').swarmServer;
 const {db = 'Redis'} = process.env;
 const path = require('path');
 const fs = require('fs');
-const fsExtra = require('fs-extra');
 
-const {homeResolve} = require('../common/nodejs/path');
+const {homeResolve, fsExtra} = require('../common/nodejs/path');
 const {sha2_256} = require('../common/nodejs/helper');
 const dockerUtil = require('../common/docker/nodejs/dockerode-util');
 

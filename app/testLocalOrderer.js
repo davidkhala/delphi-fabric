@@ -1,12 +1,11 @@
 const globalConfig = require('../config/orgs');
 const {TLS, docker: {fabricTag, network, volumes: {MSPROOT: {dir: mspDir}}}, orderer: {genesis_block: {file: BLOCK_FILE}}} = globalConfig;
 const protocol = TLS ? 'https' : 'http';
-const fsExtra = require('fs-extra');
 const logger = require('../common/nodejs/logger').new('local orderer');
-const {CryptoPath, homeResolve} = require('../common/nodejs/path');
+const {CryptoPath, homeResolve, fsExtra} = require('../common/nodejs/path');
 const {genOrderer, init} = require('../common/nodejs/ca-crypto-gen');
 const caUtil = require('../common/nodejs/ca');
-const {swarmServiceName, inflateContainerName, containerDelete,containerStart} = require('../common/docker/nodejs/dockerode-util');
+const {swarmServiceName, inflateContainerName, containerDelete, containerStart} = require('../common/docker/nodejs/dockerode-util');
 const {runOrderer, runCA} = require('../common/nodejs/fabric-dockerode');
 const dockerCmd = require('../common/docker/nodejs/dockerCmd');
 const {RequestPromise} = require('../common/nodejs/express/serverClient');
@@ -121,8 +120,8 @@ const runWithNewOrg = async (action) => {
 		const Cmd = ['orderer'];
 		const Env = ordererUtil.envBuilder({
 			BLOCK_FILE, msp: {
-				configPath, id:mspid
-			}, kafkas:true, tls
+				configPath, id: mspid
+			}, kafkas: true, tls
 		});
 
 		const createOptions = {
@@ -131,7 +130,7 @@ const runWithNewOrg = async (action) => {
 			Volumes: {
 				[peerUtil.container.MSPROOT]: {},
 				[ordererUtil.container.CONFIGTX]: {},
-				[ordererUtil.container.state]:{}
+				[ordererUtil.container.state]: {}
 			},
 			Cmd,
 			Image,

@@ -4,8 +4,7 @@ const {join: joinChannel} = require('../common/nodejs/channel');
 const helper = require('./helper');
 const logger = require('../common/nodejs/logger').new('testChannel');
 const configtxlator = require('../common/nodejs/configtxlator');
-const {homeResolve} = require('../common/nodejs/path');
-const fs = require('fs');
+const {homeResolve,fsExtra} = require('../common/nodejs/path');
 const channelName = 'allchannel';
 
 const globalConfig = require('../config/orgs.json');
@@ -69,7 +68,7 @@ const task = async () => {
 		const channel = helper.prepareChannel(channelName, peerClient);
 		const {original_config} = await configtxlator.getChannelConfigReadable(channel);
 
-		fs.writeFileSync(`${channelName}.json`, original_config);
+		fsExtra.outputFileSync(`${channelName}.json`, original_config);
 	} catch (e) {
 		logger.error(e);
 	}
@@ -77,7 +76,7 @@ const task = async () => {
 		const channel = helper.prepareChannel(undefined, client);
 		const {original_config} = await configtxlator.getChannelConfigReadable(channel, 'orderer');
 
-		fs.writeFileSync('testchainid.json', original_config);
+		fsExtra.outputFileSync('testchainid.json', original_config);
 	} catch (e) {
 		logger.error(e);
 	}

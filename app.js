@@ -1,14 +1,12 @@
 const logger = require('./common/nodejs/logger').new('express API');
 const golangUtil = require('./common/nodejs/golang');
-const {homeResolve} = require('./common/nodejs/path');
+const {homeResolve,fsExtra} = require('./common/nodejs/path');
 const path = require('path');
-const fs = require('fs');
 const {host, port} = require('./app/config.json');
 const globalConfig = require('./config/orgs.json');
 const channelsConfig = globalConfig.channels;
 const chaincodesConfig = require('./config/chaincode.json');
 const CONFIGTXDir = homeResolve(globalConfig.docker.volumes.CONFIGTX.dir);
-const EventHubUtil = require('./common/nodejs/eventHub');
 const wsCommon = require('./express/webSocketCommon');
 const helper = require('./app/helper.js');
 const {create:createChannel} = require('./app/channelHelper');
@@ -109,8 +107,7 @@ app.post('/channel/create/:channelName', async (req, res) => {
 	const channelFileName = channelsConfig[channelName].file;
 	const channelConfigFile = path.resolve(CONFIGTXDir, channelFileName);
 	logger.debug({orgName, channelName, channelConfigFile});
-
-	if (!fs.existsSync(channelConfigFile)) {
+	if (!fsExtra.pathExistsSync(channelConfigFile)) {
 		errorSyntaxHandle(`channelConfigFile ${channelConfigFile} not exist`, res);
 		return;
 	}

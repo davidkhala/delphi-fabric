@@ -4,10 +4,9 @@ const logger = require('../common/nodejs/logger').new('sign server');
 const signUtil = require('../common/nodejs/multiSign');
 const globalConfig = require('../config/orgs');
 const fs = require('fs');
-const fsExtra = require('fs-extra');
 const {sha2_256} = require('../common/nodejs/helper');
 const helper = require('../app/helper');
-const {homeResolve} = require('../common/nodejs/path');
+const {homeResolve, fsExtra} = require('../common/nodejs/path');
 exports.run = () => {
 	const {app} = require('../common/nodejs/express/baseApp').run(port);
 	const Multer = require('multer');
@@ -33,7 +32,7 @@ exports.run = () => {
 		const peerClientPromises = [];
 
 		for (const domain in globalConfig.orgs) {
-			peerClientPromises.push(helper.getOrgAdmin(domain,'peer'));
+			peerClientPromises.push(helper.getOrgAdmin(domain, 'peer'));
 		}
 
 

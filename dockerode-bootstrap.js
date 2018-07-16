@@ -1,5 +1,4 @@
 const globalConfig = require('./config/orgs.json');
-const fsExtra = require('fs-extra');
 const path = require('path');
 const util = require('util');
 const logger = require('./common/nodejs/logger').new('dockerode-bootstrap');
@@ -13,7 +12,7 @@ const {
 	, swarmRenew, ImageTag
 } = require('./common/nodejs/fabric-dockerode');
 const channelUtil = require('./common/nodejs/channel');
-const {CryptoPath, homeResolve} = require('./common/nodejs/path');
+const {CryptoPath, homeResolve,fsExtra} = require('./common/nodejs/path');
 const {PM2} = require('./common/nodejs/express/pm2Manager');
 const MSPROOT = homeResolve(globalConfig.docker.volumes.MSPROOT.dir);
 const CONFIGTX = homeResolve(globalConfig.docker.volumes.CONFIGTX.dir);
