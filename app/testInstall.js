@@ -38,4 +38,3 @@ const task = async () => {
 };
 task();
 
-//todo query installed

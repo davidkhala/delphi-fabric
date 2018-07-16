@@ -131,7 +131,7 @@ exports.newPeers = (peerIndexes, orgName) => {
 exports.findOrgConfig = (orgName, ordererName) => {
 	let target;
 	let nodeType;
-	let portHost;//TODO random getter
+	let portHost;
 	if (orgsConfig[orgName]) {
 		target = orgsConfig[orgName];
 		nodeType = 'peer';
