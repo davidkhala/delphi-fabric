@@ -16,4 +16,6 @@ elif [ "$1" == "down" ]; then
 else
 	down
 	up
+	node app/testChannel
+	node app/testInstall
 fi

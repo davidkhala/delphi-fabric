@@ -2,7 +2,7 @@ const logger = require('./common/nodejs/logger').new('express API');
 const golangUtil = require('./common/nodejs/golang');
 const {homeResolve, fsExtra} = require('./common/nodejs/path');
 const path = require('path');
-const {host, port} = require('./app/config.json');
+const {port} = require('./app/config.json');
 const globalConfig = require('./config/orgs.json');
 const channelsConfig = globalConfig.channels;
 const chaincodesConfig = require('./config/chaincode.json');
@@ -13,7 +13,7 @@ const {create: createChannel} = require('./app/channelHelper');
 const {join: joinChannel} = require('./common/nodejs/channel');
 
 const Query = require('./common/nodejs/query');
-const {app, server} = require('./common/nodejs/express/baseApp').run(port, host);
+const {app, server} = require('./common/nodejs/express/baseApp').run(port);
 const {install} = require('./common/nodejs/chaincode');
 
 
@@ -23,26 +23,10 @@ app.get('/', (req, res, next) => {
 	res.send('pong from davids server');
 });
 
-const {wsServerBuilder} = require('./express/webSocketCommon');
-const onMessage = async (data, ws) => {
-	ws.send(`echo ${data}`);
-};
-const wss = wsServerBuilder(server, onMessage);
-
-
-app.use('/chaincode', require('./express/http-chaincode'));
-
-
 const invalid = require('./express/formValid').invalid();
-const errorCodeMap = require('./express/errorCodeMap.json');
+const errorCodeMap = require('./express/errorCodeMap.js');
 const errorSyntaxHandle = (err, res) => {
-	let status = 500;
-	for (const errorMessage in errorCodeMap) {
-		if (err.toString().includes(errorMessage)) {
-			status = errorCodeMap[errorMessage];
-			break;
-		}
-	}
+	const status = errorCodeMap.get(err);
 	res.status(status);
 	res.send(err.toString());
 };
@@ -54,25 +38,18 @@ app.post('/channel/create/:channelName', async (req, res) => {
 	const {channelName} = req.params;
 	const {orgName} = req.body;
 
-	const invalidChannelName = invalid.channelName({channelName});
-	if (invalidChannelName) {
-		errorSyntaxHandle(invalidChannelName, res);
-		return;
-	}
-	const invalidOrgName = invalid.orgName({orgName});
-	if (invalidOrgName) {
-		errorSyntaxHandle(invalidOrgName, res);
-		return;
-	}
-	const channelFileName = channelsConfig[channelName].file;
-	const channelConfigFile = path.resolve(CONFIGTXDir, channelFileName);
-	logger.debug({orgName, channelName, channelConfigFile});
-	if (!fsExtra.pathExistsSync(channelConfigFile)) {
-		errorSyntaxHandle(`channelConfigFile ${channelConfigFile} not exist`, res);
-		return;
-	}
-
 	try {
+		invalid.channelName({channelName});
+		invalid.orgName({orgName});
+
+		const channelFileName = channelsConfig[channelName].file;
+		const channelConfigFile = path.resolve(CONFIGTXDir, channelFileName);
+		logger.debug({orgName, channelName, channelConfigFile});
+		if (!fsExtra.pathExistsSync(channelConfigFile)) {
+			throw Error(`channelConfigFile ${channelConfigFile} not exist`);
+		}
+
+
 		const client = await helper.getOrgAdmin(orgName);
 		await createChannel(client, channelName, channelConfigFile, [orgName]);
 		res.send(`channel ${channelName} created successfully by ${orgName} with configuration in ${channelConfigFile}`);
@@ -85,23 +62,13 @@ app.post('/channel/create/:channelName', async (req, res) => {
 app.post('/channel/join/:channelName', async (req, res) => {
 	logger.info('<<<<<<<<<<<<<<<<< J O I N  C H A N N E L >>>>>>>>>>>>>>>>>');
 	const {channelName} = req.params;
-
-	const invalidChannelName = invalid.channelName({channelName});
-	if (invalidChannelName) {
-		errorSyntaxHandle(invalidChannelName, res);
-		return;
-	}
-
-	const {orgName, peerIndex} = req.body;
-	logger.debug({channelName, orgName, peerIndex});
-
-	const invalidPeer = invalid.peer({orgName, peerIndex});
-	if (invalidPeer) {
-		errorSyntaxHandle(invalidPeer, res);
-		return;
-	}
-
 	try {
+		invalid.channelName({channelName});
+		const {orgName, peerIndex} = req.body;
+		logger.debug({channelName, orgName, peerIndex});
+
+		invalid.peer({orgName, peerIndex});
+
 		const peer = helper.newPeers([peerIndex], orgName)[0];
 		const client = await helper.getOrgAdmin(orgName, 'peer');
 		const channel = helper.prepareChannel(channelName, client);
@@ -118,24 +85,15 @@ app.post('/chaincode/install/:chaincodeId', async (req, res) => {
 	logger.debug('==================== INSTALL CHAINCODE ==================');
 	const {chaincodeId} = req.params;
 	const {peerIndex, chaincodeVersion, orgName} = req.body;
-
-	const invalidChaincodeId = invalid.chaincodeId({chaincodeId});
-	if (invalidChaincodeId) {
-		res.send(invalidChaincodeId);
-		return;
-	}
-	const invalidPeer = invalid.peer({orgName, peerIndex});
-	if (invalidPeer) {
-		res.send(invalidPeer);
-		return;
-	}
-	const chaincodeConfig = chaincodesConfig.chaincodes[chaincodeId];
-	const chaincodePath = chaincodeConfig.path;
-
-	const peers = helper.newPeers([peerIndex], orgName);
-	//TODO to test ChaincodeVersion
-
 	try {
+		invalid.chaincodeId({chaincodeId});
+		invalid.peer({orgName, peerIndex});
+
+		const chaincodeConfig = chaincodesConfig.chaincodes[chaincodeId];
+		const chaincodePath = chaincodeConfig.path;
+
+		const peers = helper.newPeers([peerIndex], orgName);
+
 		await golangUtil.setGOPATH();
 		const client = await helper.getOrgAdmin(orgName);
 		await install(peers, {chaincodeId, chaincodePath, chaincodeVersion}, client);
@@ -145,71 +103,59 @@ app.post('/chaincode/install/:chaincodeId', async (req, res) => {
 	}
 
 });
-//  Query Get Block by BlockNumber
-app.post('/query/block/height/:blockNumber', (req, res) => {
+//  Query Get Block by BlockNumber TODO
+app.post('/query/block/height/:blockNumber', async (req, res) => {
 	logger.debug('==================== GET BLOCK BY NUMBER ==================');
 	const {blockNumber} = req.params;
 	const {peerIndex, orgName, channelName} = req.body;
 
-	const invalidPeer = invalid.peer({orgName, peerIndex});
-	if (invalidPeer) {
-		res.send(invalidPeer);
-		return;
-	}
-	logger.debug({blockNumber, peerIndex, orgName, channelName});
+	try {
+		invalid.peer({orgName, peerIndex});
+		logger.debug({blockNumber, peerIndex, orgName, channelName});
 
-	helper.getOrgAdmin(orgName).then((client) => {
+		const client = await helper.getOrgAdmin(orgName);
 		const channel = helper.prepareChannel(channelName, client);
 		const peer = helper.newPeers([peerIndex], orgName)[0];
-		return Query.block.height(peer, channel, blockNumber).then((message) => {
-			res.send(message);
-		}).catch(err => {
-			errorSyntaxHandle(err, res);
-		});
-	});
+
+		const message = await Query.block.height(peer, channel, blockNumber);
+		res.send(message);
+	} catch (err) {
+		errorSyntaxHandle(err, res);
+	}
 
 });
 // Query Get Block by Hash
-app.post('/query/block/hash', (req, res) => {
+app.post('/query/block/hash', async (req, res) => {
 	logger.debug('================ GET BLOCK BY HASH ======================');
 	const {hashHex, peerIndex, orgName, channelName} = req.body;
 	logger.debug({hashHex, peerIndex, orgName, channelName});
-	const invalidPeer = invalid.peer({orgName, peerIndex});
-	if (invalidPeer) {
-		res.send(invalidPeer);
-		return;
-	}
-	const peer = helper.newPeers([peerIndex], orgName)[0];
-	helper.getOrgAdmin(orgName).then((client) => {
+	try {
+		invalid.peer({orgName, peerIndex});
+		const peer = helper.newPeers([peerIndex], orgName)[0];
+		const client = await helper.getOrgAdmin(orgName);
 		const channel = helper.prepareChannel(channelName, client);
-		return Query.block.hash(peer, channel, Buffer.from(hashHex, 'hex')).then((message) => {
-			res.send(message);
-		}).catch(err => {
-			errorSyntaxHandle(err, res);
-		});
-	});
+		const message = await Query.block.hash(peer, channel, Buffer.from(hashHex, 'hex'));
+		res.send(message);
+	} catch (err) {
+		errorSyntaxHandle(err, res);
+	}
 
 });
 // Query Get Transaction by Transaction ID
-app.post('/query/tx', (req, res) => {
+app.post('/query/tx', async (req, res) => {
 	logger.debug('================ GET TRANSACTION BY TRANSACTION_ID ======================');
 	const {txId, orgName, peerIndex, channelName} = req.body;
 	logger.debug({txId, orgName, peerIndex, channelName});
-	const invalidPeer = invalid.peer({orgName, peerIndex});
-	if (invalidPeer) {
-		res.send(invalidPeer);
-		return;
-	}
-	helper.getOrgAdmin(orgName).then((client) => {
+	try {
+		invalid.peer({orgName, peerIndex});
+		const client = await helper.getOrgAdmin(orgName);
 		const channel = helper.prepareChannel(channelName, client);
 		const peer = helper.newPeers([peerIndex], orgName)[0];
-		return Query.tx(peer, channel, txId).then((message) => {
-			res.send(message);
-		}).catch(err => {
-			errorSyntaxHandle(err, res);
-		});
-	});
-
+		const message = await Query.tx(peer, channel, txId);
+		res.send(message);
+	} catch (err) {
+		errorSyntaxHandle(err, res);
+	}
 });
 
 //Query for Channel Information
@@ -219,12 +165,8 @@ app.post('/query/chain', async (req, res) => {
 	const {orgName, peerIndex, channelName, pretty} = req.body;
 	logger.debug({orgName, peerIndex, channelName});
 
-	const invalidPeer = invalid.peer({orgName, peerIndex});
-	if (invalidPeer) {
-		res.send(invalidPeer);
-		return;
-	}
 	try {
+		invalid.peer({orgName, peerIndex});
 		const client = await helper.getOrgAdmin(orgName);
 		const channel = helper.prepareChannel(channelName, client);
 		const peer = helper.newPeers([peerIndex], orgName)[0];
@@ -234,65 +176,50 @@ app.post('/query/chain', async (req, res) => {
 		errorSyntaxHandle(err, res);
 	}
 
-
 });
 // Query to fetch all Installed/instantiated chaincodes
-app.post('/query/chaincodes/installed', (req, res) => {
+app.post('/query/chaincodes/installed', async (req, res) => {
 	logger.debug('==================== query installed CHAINCODE ==================');
 	const {orgName, peerIndex} = req.body;
 	logger.debug({orgName, peerIndex});
-	const invalidPeer = invalid.peer({orgName, peerIndex});
-	if (invalidPeer) {
-		res.send(invalidPeer);
-		return;
-	}
-
-	const peer = helper.newPeers([peerIndex], orgName)[0];
-	helper.getOrgAdmin(orgName).then((client) => {
-		return Query.chaincodes.installed(peer, client).then((message) => {
-			res.send(message);
-		});
-	}).catch(err => {
+	try {
+		invalid.peer({orgName, peerIndex});
+		const peer = helper.newPeers([peerIndex], orgName)[0];
+		const client = await helper.getOrgAdmin(orgName);
+		const message = await Query.chaincodes.installed(peer, client);
+		res.send(message);
+	} catch (err) {
 		errorSyntaxHandle(err, res);
-	});
+	}
 });
-app.post('/query/chaincodes/instantiated', (req, res) => {
+app.post('/query/chaincodes/instantiated', async (req, res) => {
 	logger.debug('==================== query instantiated CHAINCODE ==================');
 	const {orgName, peerIndex, channelName} = req.body;
 	logger.debug({orgName, peerIndex, channelName});
-	const invalidPeer = invalid.peer({orgName, peerIndex});
-	if (invalidPeer) {
-		res.send(invalidPeer);
-		return;
-	}
-	const peer = helper.newPeers([peerIndex], orgName)[0];
-	helper.getOrgAdmin(orgName).then((client) => {
+	try {
+		invalid.peer({orgName, peerIndex});
+		const peer = helper.newPeers([peerIndex], orgName)[0];
+		const client = await helper.getOrgAdmin(orgName);
 		const channel = helper.prepareChannel(channelName, client);
-		return Query.chaincodes.instantiated(peer, channel).then((message) => {
-			res.send(message);
-		});
-	}).catch(err => {
+		const message = await Query.chaincodes.instantiated(peer, channel);
+		res.send(message);
+	} catch (err) {
 		errorSyntaxHandle(err, res);
-	});
+	}
 });
 // Query to fetch channels
-app.post('/query/channelJoined', (req, res) => {
+app.post('/query/channelJoined', async (req, res) => {
 	logger.debug('================ query joined CHANNELS ======================');
 	const {orgName, peerIndex} = req.body;
 	logger.debug({orgName, peerIndex});
-	const invalidPeer = invalid.peer({orgName, peerIndex});
-	if (invalidPeer) {
-		res.send(invalidPeer);
-		return;
-	}
-	const peer = helper.newPeers([peerIndex], orgName)[0];
-	helper.getOrgAdmin(orgName).then((client) => {
-		return Query.channel.joined(peer, client).then((
-			message) => {
-			res.send(message);
-		});
-	}).catch(err => {
+	try {
+		invalid.peer({orgName, peerIndex});
+		const peer = helper.newPeers([peerIndex], orgName)[0];
+		const client = await helper.getOrgAdmin(orgName);
+		const message = await Query.channel.joined(peer, client);
+		res.send(message);
+	} catch (err) {
 		errorSyntaxHandle(err, res);
-	});
+	}
+
 });
-//TODO ping docker container

@@ -1,5 +1,4 @@
 {
-  "host": "localhost",
   "port": "4000",
   "stateDBCacheDir": "/tmp/fabric-client-stateStore/"
 }

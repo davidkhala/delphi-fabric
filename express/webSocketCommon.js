@@ -24,7 +24,7 @@ exports.clearEventListener = (ws, method, listener) => {
 	}
 };
 
-exports.wsServerBuilder = (server, onMessage) => {
+exports.wsServerBuilder = (server, onMessage, onMessageError) => {
 	const wss = new WebSocket.Server({server});
 
 	const heartBeat = () => {
@@ -62,8 +62,7 @@ exports.wsServerBuilder = (server, onMessage) => {
 				}
 			} catch (err) {
 				logger.error(ws.id, 'ws message handle error', err);
-				ws.send(JSON.stringify({error: err.toString()}));
-				ws.close();
+				await onMessageError(err, ws);
 			}
 
 		});

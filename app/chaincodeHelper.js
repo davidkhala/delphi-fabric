@@ -41,8 +41,15 @@ exports.invoke = async (channel, richPeers, {chaincodeId, fcn, args}, nonAdminUs
 	if (nonAdminUser) {
 		const client = ClientUtil.new();
 		await client.setUserContext(nonAdminUser, true);
-		ChannelUtil.setClientContext(channel,client);
+		ChannelUtil.setClientContext(channel, client);
 	}
 
-	return invoke(channel, richPeers, eventHubs, {chaincodeId, args, fcn}, orderer, eventWaitTime);
+	try {
+		return await invoke(channel, richPeers, eventHubs, {chaincodeId, args, fcn}, orderer, eventWaitTime);
+	} catch (e) {
+		if (e.proposalResponses) {
+			throw e.proposalResponses;
+		} else throw e;
+	}
+
 };
