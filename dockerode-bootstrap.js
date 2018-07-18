@@ -11,6 +11,7 @@ const {
 	chaincodeClean, tasksWaitUntilLive, fabricImagePull, tasksWaitUntilDead
 	, swarmRenew, ImageTag
 } = require('./common/nodejs/fabric-dockerode');
+const nodeAppConfigJson = require('./app/config');
 const channelUtil = require('./common/nodejs/channel');
 const {CryptoPath, homeResolve,fsExtra} = require('./common/nodejs/path');
 const {PM2} = require('./common/nodejs/express/pm2Manager');
@@ -367,7 +368,7 @@ exports.down = async (swarm) => {
 		await chaincodeClean(true);
 		await exports.volumesAction(toStop);
 
-		const nodeAppConfigJson = require('./app/config');
+
 		fsExtra.removeSync(nodeAppConfigJson.stateDBCacheDir);
 		logger.info(`[done] clear stateDBCacheDir ${nodeAppConfigJson.stateDBCacheDir}`);
 
