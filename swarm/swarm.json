@@ -2,10 +2,14 @@
   "swarmServer": {
     "port": 4001,
     "cache":"Documents/delphi-fabric/swarm/cache/",
-    "couchDB": {
-
+    "Couchdb": {
+      "container_name": "couchDBSwarm",
+      "port": 6984
     },
-    "redis":{}
+    "Redis":{
+      "container_name": "redis",
+      "port": 6379
+    }
   },
   "signServer":{
     "port":4002,

@@ -69,7 +69,7 @@ Current machine is noted as `master`
 3. [master] `$ node app/testInstall.js` to install chaincode and instantiate chaincode
 4. [master] `$ node app/testInvoke.js` to invoke chaincode
 
-dep: to import third-party package in vendor folder
+TODO dep: to import third-party package in vendor folder
 --------
   - dep could only be run under system $GOPATH, 
   - my sample chaincodes have been migrated to ``github.com/davidkhala/chaincode``
@@ -87,13 +87,13 @@ dep: to import third-party package in vendor folder
 - new orderer with same org
 - make pm2 signServer, swarmServer also run in single mode
 - fabric-ca CRUD user and identityService
+- chaincode version,ID string format
 ## TODO
 - TLS
 - java sdk and docker-swarm: keep update
 - endorsement policy config
 - test backup and recover
 - cooperate with official network_config.json
-- chaincode version,ID string format
 - javascript chaincode
 - chaincode uninstall
 - multiple priv-file creation is witnessed in app/cryptoKeyStore, investigate problem of state store, crypto-store
@@ -109,6 +109,7 @@ dep: to import third-party package in vendor folder
 - will block file name be a problem in signature cache? take care docker cp from container for multiple request
 - cross chaincode invoke on same channel and differed channel
 - chaincode setEvent
+- use dep to import fabric source into vendor
 ## New feature, patch required for node-sdk
  
 - feature: implement configtx in node-sdk??

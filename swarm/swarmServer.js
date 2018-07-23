@@ -1,9 +1,11 @@
 //work as network map server in Corda : see in readme
 
 const logger = require('../common/nodejs/logger').new('swarm-server');
-const {port, cache} = require('./swarm.json').swarmServer;
+const swarmConfig = require('./swarm.json').swarmServer;
+const {port, cache} = swarmConfig;
 
 const {db = 'Redis'} = process.env;
+const {container_name, port: dbPort} = swarmConfig[db];
 const path = require('path');
 const fs = require('fs');
 
@@ -49,13 +51,14 @@ class dbInterface {
 
 const dbMap = {
 	Couchdb: class extends dbInterface {
-		constructor({url, name, port = '6984'}) {
+		constructor({url = `http://localhost:${port}`, name, port = '5984', table = name}) {
 			super({url, name, port});
+			this.table = table;
 		}
 
 		async _connectBuilder() {
 			const FabricCouchDB = require('fabric-client/lib/impl/CouchDBKeyValueStore');
-			return await new FabricCouchDB({url: `http://localhost:${this.port}`, name: this.name});
+			return await new FabricCouchDB({url: this.url, name: this.table});
 		}
 
 		async get(key) {
@@ -151,7 +154,7 @@ exports.run = () => {
 	app.use('/config', require('../express/configExpose'));
 
 	app.get('/leader', async (req, res) => {
-		const connection = new dbMap[db]({name: swarmDoc});
+		const connection = new dbMap[db]({name:container_name,table: swarmDoc});
 		const value = await connection.get(leaderKey);
 		logger.debug('leader info', value);
 		res.json(value);
@@ -159,7 +162,7 @@ exports.run = () => {
 	app.post('/leader/update', async (req, res) => {
 		const {ip, hostname, managerToken, workerToken} = req.body;
 		logger.debug('leader update', {ip, hostname, managerToken, workerToken});
-		const connection = new dbMap[db]({name: swarmDoc});
+		const connection = new dbMap[db]({name:container_name,table:swarmDoc});
 		const value = await connection.set(leaderKey, {ip, hostname, managerToken, workerToken});
 		res.json(value);
 	});
@@ -176,7 +179,7 @@ exports.run = () => {
 	app.get('/', async (req, res) => {
 		try {
 			//touch
-			new dbMap[db]({name: swarmDoc});
+			new dbMap[db]({name:container_name,table: swarmDoc});
 			res.json({
 				errCode: 'success',
 				message: 'pong'
@@ -194,6 +197,6 @@ exports.run = () => {
 exports.clean = async () => {
 	logger.info('clean');
 	fsExtra.emptyDirSync(homeResolve(cache));
-	const connection = new dbMap[db]({name: swarmDoc});
+	const connection = new dbMap[db]({name: container_name});
 	await connection.clear();
 };
