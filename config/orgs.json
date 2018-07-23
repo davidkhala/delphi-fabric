@@ -1,8 +1,8 @@
 {
   "TLS": false,
   "docker": {
-    "fabricTag": "1.1.0",
-    "thirdPartyTag": "0.4.6",
+    "fabricTag": "1.2.0",
+    "thirdPartyTag": "0.4.10",
     "network": "delphiNetwork",
     "volumes": {
       "CONFIGTX": {
@@ -14,7 +14,7 @@
     }
   },
   "ledger": {
-    "storage":"couchDB",
+    "storage": "couchDB",
     "couchDB": {
       "container_name": "couchDB",
       "port": 5984
@@ -67,20 +67,6 @@
         }
       },
       "orgs": {
-        "DelphiConsensus.Delphi.com": {
-          "MSP": {
-            "name": "DelphiMSPName",
-            "id": "DelphiConsensusMSP"
-          },
-          "ca": {
-            "portHost": 7454
-          },
-          "orderers": {
-            "orderer0": {
-              "portHost": 7050
-            }
-          }
-        },
         "ICDD.ASTRI.org": {
           "MSP": {
             "name": "ICDDMSPName",
@@ -116,10 +102,7 @@
       "peers": [
         {
           "container_name": "astri",
-          "portMap": {
-            "port": 7051,
-            "eventHubPort": 7053
-          }
+          "port": 7051
         }
       ],
       "ca": {

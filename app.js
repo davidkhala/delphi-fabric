@@ -13,7 +13,7 @@ const {create: createChannel} = require('./app/channelHelper');
 const {join: joinChannel} = require('./common/nodejs/channel');
 
 const Query = require('./common/nodejs/query');
-const {app, server} = require('./common/nodejs/express/baseApp').run(port);
+const {app} = require('./common/nodejs/express/baseApp').run(port);
 const {install} = require('./common/nodejs/chaincode');
 
 
