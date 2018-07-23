@@ -17,5 +17,5 @@ else
 	down
 	up
 	node app/testChannel
-	node app/testInstall
+#	node app/testInstall
 fi

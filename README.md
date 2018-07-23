@@ -20,7 +20,7 @@ Installation
 ----
  
 **Requirements & dependencies**
-  * fabric: 1.1.0 (for docker image, binary tool and fabric-sdk)
+  * fabric: 1.2.0 (for docker image, binary tool and fabric-sdk)
   * docker-ce 17.12.x-ce (API version 1.35)
   * golang 1.10 : align with docker version
   * node 8.10, npm 5.6 : npm install卡死的话，可以考虑添加淘宝的源
@@ -104,14 +104,11 @@ dep: to import third-party package in vendor folder
 - can Organization name replaced by MSP name?
 - pm2 to runConfigtxlator? without shell?
 - use nodejs scripts to replace runConfigtxgen.sh
-- move couchdb server to container based
+- move couchdb server to container based, and support couchdb ledger
 - take care of docker swarm init --force-new-cluster
-- using Atom for Mac default keymap, align with bret Harrison
 - will block file name be a problem in signature cache? take care docker cp from container for multiple request
-- to support couchdb ledger
 - cross chaincode invoke on same channel and differed channel
 - chaincode setEvent
-- 1.2 not ready: eventHub failed to catch block
 ## New feature, patch required for node-sdk
  
 - feature: implement configtx in node-sdk??
@@ -120,4 +117,4 @@ dep: to import third-party package in vendor folder
  
 ## Abandoned tasks
 - docker volume plugin
-
+- using Atom for Mac default keymap, align with bret Harrison
