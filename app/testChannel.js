@@ -4,7 +4,7 @@ const {join: joinChannel} = require('../common/nodejs/channel');
 const helper = require('./helper');
 const logger = require('../common/nodejs/logger').new('testChannel');
 const configtxlator = require('../common/nodejs/configtxlator');
-const {homeResolve,fsExtra} = require('../common/nodejs/path');
+const {homeResolve, fsExtra} = require('../common/nodejs/path');
 const channelName = 'allchannel';
 
 const globalConfig = require('../config/orgs.json');
@@ -15,7 +15,7 @@ const channelConfigFile = homeResolve(globalConfig.docker.volumes.CONFIGTX.dir, 
 const joinAllfcn = async (channelName) => {
 
 
-	for (const orgName in  channelConfig.orgs) {
+	for (const orgName in channelConfig.orgs) {
 		const {peerIndexes} = channelConfig.orgs[orgName];
 		const peers = helper.newPeers(peerIndexes, orgName);
 
@@ -23,11 +23,10 @@ const joinAllfcn = async (channelName) => {
 
 		const channel = helper.prepareChannel(channelName, client);
 		for (const peer of peers) {
-			const eventHub = await peer.eventHubPromise;
 
 			const loopJoinChannel = async () => {
 				try {
-					return await joinChannel(channel, peer, eventHub);
+					return await joinChannel(channel, peer);
 				} catch (err) {
 					if (err.toString().includes('Invalid results returned ::NOT_FOUND')
 						|| err.toString().includes('UNAVAILABLE')) {

@@ -72,8 +72,7 @@ app.post('/channel/join/:channelName', async (req, res) => {
 		const peer = helper.newPeers([peerIndex], orgName)[0];
 		const client = await helper.getOrgAdmin(orgName, 'peer');
 		const channel = helper.prepareChannel(channelName, client);
-		const eventHub = await peer.eventHubPromise;
-		await joinChannel(channel, peer, eventHub);
+		await joinChannel(channel, peer);
 		res.send(`peer${peerIndex}.${orgName} has joined channel ${channelName} successfully`);
 	} catch (err) {
 		errorSyntaxHandle(err, res);

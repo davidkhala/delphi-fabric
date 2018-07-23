@@ -5,7 +5,6 @@ const orgsConfig = globalConfig.orgs;
 const channelsConfig = globalConfig.channels;
 const ordererConfig = globalConfig.orderer;
 const ClientUtil = require('../common/nodejs/client');
-const EventHubUtil = require('../common/nodejs/eventHub');
 const peerUtil = require('../common/nodejs/peer');
 const {CryptoPath, homeResolve} = require('../common/nodejs/path');
 const CRYPTO_CONFIG_DIR = homeResolve(globalConfig.docker.volumes.MSPROOT.dir);
@@ -15,7 +14,7 @@ const channelUtil = require('../common/nodejs/channel');
 const {randomKeyOf} = require('../common/nodejs/helper');
 
 exports.preparePeer = (orgName, peerIndex, peerConfig) => {
-	const {port: peerPort, eventHubPort} = peerConfig.portMap;
+	const {port: peerPort} = peerConfig;
 
 	let peer;
 	const cryptoPath = new CryptoPath(CRYPTO_CONFIG_DIR,
@@ -30,11 +29,6 @@ exports.preparePeer = (orgName, peerIndex, peerConfig) => {
 	//NOTE append more info
 	peer.peerConfig = peerConfig;
 
-	const eventHubPromise = async (pem, peerHostName) => {
-		const eventHubClient = await exports.getOrgAdmin(orgName, 'peer');
-		return EventHubUtil.new(eventHubClient, {eventHubPort, pem, peerHostName});
-	};
-	peer.eventHubPromise = eventHubPromise(peer.pem, peerHostName);
 	peer.peerConfig.orgName = orgName;
 	peer.peerConfig.peerIndex = peerIndex;
 	return peer;

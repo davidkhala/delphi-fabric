@@ -3,7 +3,7 @@ const globalConfig = require('../config/orgs.json');
 const logger = require('../common/nodejs/logger').new('testUpgrade');
 const Query = require('../common/nodejs/query');
 const {updateInstall, nextVersion, upgrade} = require('../common/nodejs/chaincode');
-
+const EventHubUtil = require('../common/nodejs/eventHub');
 const chaincodeId = process.env.name ? process.env.name : 'adminChaincode';
 
 const args = [];
@@ -45,12 +45,12 @@ const task = async () => {
 		const channel = helper.prepareChannel(channelName, client, true);
 		const peers = helper.newPeers([0], orgName);
 		const eventHubs = [];
-		for(const peer of peers){
-			const eventHub = await peer.eventHubPromise;
-			eventHubs.push(eventHub)
+		for (const peer of peers) {
+			const eventHub = EventHubUtil.newEventHub(channel, peer);
+			eventHubs.push(eventHub);
 		}
-		await upgrade(channel, peers,eventHubs, {chaincodeId, chaincodeVersion, args});
-		//	NOTE: found all peers in channel will create chaincode container with new version for each, but the old version chaincode container remains
+		await upgrade(channel, peers, eventHubs, {chaincodeId, chaincodeVersion, args});
+		//	NOTE: the old version chaincode container remains
 	} catch (e) {
 		logger.error(e);
 	}

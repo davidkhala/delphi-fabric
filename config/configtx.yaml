@@ -6,26 +6,19 @@ Profiles:
         MaxMessageCount: 1
         AbsoluteMaxBytes: 99 MB
         PreferredMaxBytes: 512 KB
-      OrdererType: kafka
+      OrdererType: solo
       Addresses:
-        - 'orderer0.DelphiConsensus.Delphi.com:7050'
-        - 'orderer1.DelphiConsensus.Delphi.com:7050'
-      Kafka:
-        Brokers:
-          - 'kafka0:9092'
-          - 'kafka1:9092'
-          - 'kafka2:9092'
-          - 'kafka3:9092'
+        - 'orderContainerName.Delphi.com:7050'
       Organizations:
-        - Name: DelphiMSPName
-          ID: DelphiConsensusMSP
-          MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/DelphiConsensus.Delphi.com/msp
+        - Name: OrdererMSPName
+          ID: OrdererMSP
+          MSPDir: /home/blockchain/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/Delphi.com/msp
     Consortiums:
       SampleConsortium:
         Organizations:
           - Name: ASTRIMSPName
             ID: ASTRIMSP
-            MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/ASTRI.Delphi.com/msp
+            MSPDir: /home/blockchain/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/ASTRI.Delphi.com/msp
             AnchorPeers:
               - Host: peer0.ASTRI.Delphi.com
                 Port: 7051
@@ -35,7 +28,7 @@ Profiles:
       Organizations:
         - Name: ASTRIMSPName
           ID: ASTRIMSP
-          MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/ASTRI.Delphi.com/msp
+          MSPDir: /home/blockchain/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/ASTRI.Delphi.com/msp
           AnchorPeers:
             - Host: peer0.ASTRI.Delphi.com
               Port: 7051

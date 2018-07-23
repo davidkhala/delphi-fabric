@@ -1,5 +1,5 @@
-const express = require('express');
-const router = express.Router();
+const BaseApp = require('../common/nodejs/express/baseApp');
+const router = BaseApp.getRouter();
 
 router.get('/orgs', (req, res) => {
 	const orgsJson = require('../config/orgs.json');

@@ -7,9 +7,10 @@ const fs = require('fs');
 const {sha2_256} = require('../common/nodejs/helper');
 const helper = require('../app/helper');
 const {homeResolve, fsExtra} = require('../common/nodejs/path');
+const Multer = require('multer');
+const baseApp = require('../common/nodejs/express/baseApp');
 exports.run = () => {
-	const {app} = require('../common/nodejs/express/baseApp').run(port);
-	const Multer = require('multer');
+	const {app} =baseApp.run(port);
 	const multerCache = Multer({dest: homeResolve(cache)});
 	app.post('/', multerCache.single('proto'), async (req, res) => {
 		const proto = fs.readFileSync(req.file.path);

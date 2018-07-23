@@ -13,7 +13,7 @@ const {
 } = require('./common/nodejs/fabric-dockerode');
 const nodeAppConfigJson = require('./app/config');
 const channelUtil = require('./common/nodejs/channel');
-const {CryptoPath, homeResolve,fsExtra} = require('./common/nodejs/path');
+const {CryptoPath, homeResolve, fsExtra} = require('./common/nodejs/path');
 const {PM2} = require('./common/nodejs/express/pm2Manager');
 const MSPROOT = homeResolve(globalConfig.docker.volumes.MSPROOT.dir);
 const CONFIGTX = homeResolve(globalConfig.docker.volumes.CONFIGTX.dir);
@@ -136,7 +136,7 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 	const imageTag = ImageTag({arch, tag: fabricTag});
 	const orgsConfig = globalConfig.orgs;
 	const peers = [];
-	const couchDB = globalConfig.ledger.storage==='couchDB' ? globalConfig.ledger.couchDB : undefined;
+	const couchDB = globalConfig.ledger.storage === 'couchDB' ? globalConfig.ledger.couchDB : undefined;
 
 	if (couchDB) {
 		//	TODO run couchDB on swarm??
@@ -156,7 +156,7 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 		const {MSP: {id}} = orgConfig;
 		for (const peerIndex in peersConfig) {
 			const peerConfig = peersConfig[peerIndex];
-			const {container_name, portMap} = peerConfig;
+			const {container_name, port} = peerConfig;
 
 			if (tostop) {
 				if (swarm) {
@@ -177,14 +177,13 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 			const cryptoType = 'peer';
 			const tls = TLS ? cryptoPath.TLSFile(cryptoType) : undefined;
 
-			const {port, eventHubPort} = portMap;
 			const type = 'peer';
 			const configPath = cryptoPath.MSP(type);
 			if (swarm) {
 				const Constraints = await constraintSelf();
 
 				const peer = await deployPeer({
-					Name: container_name, port, eventHubPort, imageTag, network,
+					Name: container_name, port, imageTag, network,
 					peerHostName,
 					msp: {
 						id,
@@ -198,7 +197,7 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 				peers.push(peer);
 			} else {
 				await runPeer({
-					container_name, port, eventHubPort, imageTag, network,
+					container_name, port, imageTag, network,
 					peerHostName, tls,
 					msp: {
 						id,

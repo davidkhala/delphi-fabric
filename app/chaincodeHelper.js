@@ -1,8 +1,42 @@
 const {randomKeyOf} = require('../common/nodejs/helper');
-const {instantiate, upgrade, invoke} = require('../common/nodejs/chaincode');
+const {instantiate, upgrade, invoke, Policy} = require('../common/nodejs/chaincode');
 const logUtil = require('../common/nodejs/logger');
 const ClientUtil = require('../common/nodejs/client');
 const ChannelUtil = require('../common/nodejs/channel');
+const EventHubUtil = require('../common/nodejs/eventHub');
+exports.endorsementPolicySamples = () => {
+
+	const {Role, OrganizationUnit, Identity} = Policy.IDENTITY_TYPE; // TODO only option 'Role' has been implemented
+	const roleType = 'member'; //member|admin
+
+	/*
+	{
+	    identities: [
+	      { role: { name: "member", mspId: "org1" }},
+	      { role: { name: "member", mspId: "org2" }}
+	    ],
+	    policy: {
+	      "1-of": [{ "signed-by": 0 }, { "signed-by": 1 }]
+	    }
+	  }
+	 */
+
+	/*
+	{
+	    identities: [
+	      { role: { name: "member", mspId: "peerOrg1" }},
+	      { role: { name: "member", mspId: "peerOrg2" }},
+	      { role: { name: "admin", mspId: "ordererOrg" }}
+	    ],
+	    policy: {
+	      "2-of": [
+	        { "signed-by": 2},
+	        { "1-of": [{ "signed-by": 0 }, { "signed-by": 1 }]}
+	      ]
+	    }
+	  }
+	 */
+};
 exports.instantiate = async (channel, richPeers, {chaincodeId, chaincodeVersion, args, fcn}) => {
 	const logger = logUtil.new('instantiate-Helper');
 
@@ -11,9 +45,11 @@ exports.instantiate = async (channel, richPeers, {chaincodeId, chaincodeVersion,
 	const eventHubs = [];
 
 	for (const peer of richPeers) {
-		const eventHub = await peer.eventHubPromise;
+		const eventHub = EventHubUtil.newEventHub(channel, peer);
 		eventHubs.push(eventHub);
 	}
+
+
 	return instantiate(channel, richPeers, eventHubs, {chaincodeId, chaincodeVersion, args, fcn}, eventWaitTime);
 };
 
@@ -23,7 +59,7 @@ exports.upgrade = async (channel, richPeers, {chaincodeId, chaincodeVersion, arg
 	const eventHubs = [];
 
 	for (const peer of richPeers) {
-		const eventHub = await peer.eventHubPromise;
+		const eventHub = EventHubUtil.newEventHub(channel, peer);
 		eventHubs.push(eventHub);
 	}
 	return upgrade(channel, richPeers, eventHubs, {chaincodeId, chaincodeVersion, args, fcn}, eventWaitTime);
@@ -33,7 +69,7 @@ exports.invoke = async (channel, richPeers, {chaincodeId, fcn, args}, nonAdminUs
 	const {eventWaitTime} = channel;
 	const eventHubs = [];
 	for (const peer of richPeers) {
-		const eventHub = await peer.eventHubPromise;
+		const eventHub = EventHubUtil.newEventHub(channel, peer);
 		eventHubs.push(eventHub);
 	}
 	const orderers = channel.getOrderers();

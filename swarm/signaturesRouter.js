@@ -1,8 +1,8 @@
-const express = require('express');
-const router = express.Router();
+const BaseApp = require('../common/nodejs/express/baseApp');
+const router = BaseApp.getRouter();
 const logger = require('../common/nodejs/logger').new('router signature');
 const signUtil = require('../common/nodejs/multiSign');
-const serverClient = require('../common/nodejs/express/serverClient');
+const EventHubUtil = require('../common/nodejs/eventHub');
 const {channelUpdate, ConfigFactory, getChannelConfigReadable} = require('../common/nodejs/configtxlator');
 const {nodeList, prune: {nodes: pruneNodes}} = require('../common/docker/nodejs/dockerode-util');
 const helper = require('../app/helper');
@@ -12,7 +12,7 @@ const {port: signServerPort} = require('./swarm.json').signServer;
 const {cache, port: swarmServerPort} = require('./swarm.json').swarmServer;
 const {homeResolve} = require('../common/nodejs/path');
 const multerCache = Multer({dest: homeResolve(cache)});
-const {RequestPromise} = require('../common/nodejs/express/serverClient');
+const {RequestPromise, getSignatures} = require('../common/nodejs/express/serverClient');
 
 const channelUtil = require('../common/nodejs/channel');
 const {sha2_256} = require('../common/nodejs/helper');
@@ -33,7 +33,7 @@ router.post('/getSwarmSignatures', multerCache.single('proto'), async (req, res)
 		const promises = ips.map(async (ip) => {
 			const url = `http://${ip}:${signServerPort}`;
 			try {
-				const resp = await serverClient.getSignatures(url, protoPath);
+				const resp = await getSignatures(url, protoPath);
 				logger.info('success to getSignatures from', url);
 				return resp.signatures;
 			} catch (e) {
@@ -121,7 +121,6 @@ router.post('/createOrUpdateOrg', multerCache.fields([{name: 'admins'}, {name: '
 			let channelName;
 			const randomPeerOrg = helper.randomOrg('peer');
 			const peer = helper.newPeers([0], randomPeerOrg)[0];
-			const peerEventHub = await peer.eventHubPromise;
 			if (nodeType === 'orderer') {
 				channelName = channelUtil.genesis;
 			} else {
@@ -131,14 +130,22 @@ router.post('/createOrUpdateOrg', multerCache.fields([{name: 'admins'}, {name: '
 			const client = await helper.getOrgAdmin(ramdomOrg, nodeType);
 			const channel = helper.prepareChannel(channelName, client, true);
 
-
-			logger.debug('/createOrUpdateOrg', {channelName, MSPID, MSPName, nodeType}, {admins, root_certs, tls_root_certs});
+			const peerEventHub = EventHubUtil.newEventHub(channel, peer);
+			logger.debug('/createOrUpdateOrg', {channelName, MSPID, MSPName, nodeType}, {
+				admins,
+				root_certs,
+				tls_root_certs
+			});
 
 
 			const onUpdate = (original_config) => {
 				//No update checking should be implemented in channel update
 				const config = new ConfigFactory(original_config);
-				return config.createOrUpdateOrg(MSPName, MSPID, nodeType, {admins, root_certs, tls_root_certs}, skip).build();
+				return config.createOrUpdateOrg(MSPName, MSPID, nodeType, {
+					admins,
+					root_certs,
+					tls_root_certs
+				}, skip).build();
 			};
 
 
