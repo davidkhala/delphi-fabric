@@ -89,15 +89,13 @@ TODO dep: to import third-party package in vendor folder
 - fabric-ca CRUD user and identityService
 - chaincode version,ID string format
 - nodeJS chaincode
+- Duplicated priv-file creation, crypto-store problem in .hfc-key-store
 ## TODO
 - TLS, java sdk and docker-swarm: keep update
 - test backup and recover
 - cooperate with official network_config.json
 - chaincode uninstall
-- multiple priv-file creation is witnessed in app/cryptoKeyStore, investigate problem of state store, crypto-store
-- change default keystore path: /home/david/.hfc-key-store/ still having files even when bootstrap
 - adding kafka/zookeeper online
-- stateStore problem
 - docker version problem in ver. 18.x 
 - can Organization name replaced by MSP name?
 - pm2 to runConfigtxlator? without shell?
