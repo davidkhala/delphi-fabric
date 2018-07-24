@@ -1,11 +1,9 @@
 const logger = require('./common/nodejs/logger').new('express API');
-const golangUtil = require('./common/nodejs/golang');
 const {homeResolve, fsExtra} = require('./common/nodejs/path');
 const path = require('path');
 const port = 4000;
 const globalConfig = require('./config/orgs.json');
 const channelsConfig = globalConfig.channels;
-const chaincodesConfig = require('./config/chaincode.json');
 const CONFIGTXDir = homeResolve(globalConfig.docker.volumes.CONFIGTX.dir);
 
 const helper = require('./app/helper.js');
@@ -14,7 +12,6 @@ const {join: joinChannel} = require('./common/nodejs/channel');
 
 const Query = require('./common/nodejs/query');
 const {app} = require('./common/nodejs/express/baseApp').run(port);
-const {install} = require('./app/chaincodeHelper');
 
 
 app.use('/config', require('./express/configExpose'));
@@ -79,30 +76,8 @@ app.post('/channel/join/:channelName', async (req, res) => {
 	}
 
 });
-// Install chaincode on target peers
-app.post('/chaincode/install/:chaincodeId', async (req, res) => {
-	logger.debug('==================== INSTALL CHAINCODE ==================');
-	const {chaincodeId} = req.params;
-	const {peerIndex, chaincodeVersion, orgName} = req.body;
-	try {
-		invalid.chaincodeId({chaincodeId});
-		invalid.peer({orgName, peerIndex});
 
-		const chaincodeConfig = chaincodesConfig.chaincodes[chaincodeId];
-		const chaincodePath = chaincodeConfig.path;
-
-		const peers = helper.newPeers([peerIndex], orgName);
-
-		await golangUtil.setGOPATH();
-		const client = await helper.getOrgAdmin(orgName);
-		await install(peers, {chaincodeId, chaincodePath, chaincodeVersion}, client);
-		res.send(`install chaincode ${chaincodeId} of version ${chaincodeVersion} to peer${peerIndex}.${orgName} successfully`);
-	} catch (err) {
-		errorSyntaxHandle(err, res);
-	}
-
-});
-//  Query Get Block by BlockNumber TODO
+//  Query Get Block by BlockNumber
 app.post('/query/block/height/:blockNumber', async (req, res) => {
 	logger.debug('==================== GET BLOCK BY NUMBER ==================');
 	const {blockNumber} = req.params;
