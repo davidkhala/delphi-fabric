@@ -1,9 +1,11 @@
 const {randomKeyOf} = require('../common/nodejs/helper');
-const {instantiate, upgrade, invoke, Policy} = require('../common/nodejs/chaincode');
+const {install, instantiate, upgrade, invoke, Policy} = require('../common/nodejs/chaincode');
 const logUtil = require('../common/nodejs/logger');
 const ClientUtil = require('../common/nodejs/client');
 const ChannelUtil = require('../common/nodejs/channel');
 const EventHubUtil = require('../common/nodejs/eventHub');
+const golangUtil = require('../common/nodejs/golang');
+const path = require('path');
 exports.endorsementPolicySamples = () => {
 
 	const {Role, OrganizationUnit, Identity} = Policy.IDENTITY_TYPE; // TODO only option 'Role' has been implemented
@@ -37,7 +39,17 @@ exports.endorsementPolicySamples = () => {
 	  }
 	 */
 };
-exports.instantiate = async (channel, richPeers, {chaincodeId, chaincodeVersion, args, fcn}) => {
+exports.install = async (peers, {chaincodeId, chaincodePath, chaincodeVersion, chaincodeType}, client) => {
+	if (chaincodeType === 'node') {
+		const gopath = await golangUtil.getGOPATH();
+		chaincodePath = path.resolve(gopath, 'src', chaincodePath);
+	}
+	if (chaincodeType === 'golang') {
+		await golangUtil.setGOPATH();
+	}
+	return install(peers, {chaincodeId, chaincodePath, chaincodeVersion, chaincodeType}, client);
+};
+exports.instantiate = async (channel, richPeers, {chaincodeId, chaincodeVersion, args, fcn, chaincodeType}) => {
 	const logger = logUtil.new('instantiate-Helper');
 
 	const {eventWaitTime} = channel;
@@ -50,7 +62,13 @@ exports.instantiate = async (channel, richPeers, {chaincodeId, chaincodeVersion,
 	}
 
 
-	return instantiate(channel, richPeers, eventHubs, {chaincodeId, chaincodeVersion, args, fcn}, eventWaitTime);
+	return instantiate(channel, richPeers, eventHubs, {
+		chaincodeId,
+		chaincodeVersion,
+		args,
+		fcn,
+		chaincodeType
+	}, eventWaitTime);
 };
 
 exports.upgrade = async (channel, richPeers, {chaincodeId, chaincodeVersion, args, fcn}) => {

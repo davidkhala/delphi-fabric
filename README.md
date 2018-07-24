@@ -22,7 +22,7 @@ Installation
 **Requirements & dependencies**
   * fabric: 1.2.0 (for docker image, binary tool and fabric-sdk)
   * docker-ce 17.12.x-ce (API version 1.35)
-  * golang 1.10 : align with docker version
+  * golang 1.10 
   * node 8.10, npm 5.6 : npm install卡死的话，可以考虑添加淘宝的源
         - ``$ npm config set registry  https://registry.npm.taobao.org/``
   * java 1.8.0_151 (optional for java-sdk)
@@ -88,13 +88,11 @@ TODO dep: to import third-party package in vendor folder
 - make pm2 signServer, swarmServer also run in single mode
 - fabric-ca CRUD user and identityService
 - chaincode version,ID string format
+- nodeJS chaincode
 ## TODO
-- TLS
-- java sdk and docker-swarm: keep update
-- endorsement policy config
+- TLS, java sdk and docker-swarm: keep update
 - test backup and recover
 - cooperate with official network_config.json
-- javascript chaincode
 - chaincode uninstall
 - multiple priv-file creation is witnessed in app/cryptoKeyStore, investigate problem of state store, crypto-store
 - change default keystore path: /home/david/.hfc-key-store/ still having files even when bootstrap
@@ -119,3 +117,4 @@ TODO dep: to import third-party package in vendor folder
 ## Abandoned tasks
 - docker volume plugin
 - using Atom for Mac default keymap, align with bret Harrison
+- endorsement policy config: too flexible to build template

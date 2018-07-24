@@ -3,7 +3,7 @@ const {reducer} = require('../common/nodejs/chaincode');
 const helper = require('./helper');
 
 const logger = require('../common/nodejs/logger').new('testInvoke');
-const chaincodeId = process.env.name?process.env.name:'adminChaincode';
+const chaincodeId = process.env.name?process.env.name:'node';
 const fcn = '';
 const args = [];
 const peerIndexes = [0];

@@ -9,8 +9,11 @@
     "hashChaincode": {
       "path": "github.com/davidkhala/chaincode/golang/hashChaincode"
     },
-    "stress":{
+    "stress": {
       "path": "github.com/davidkhala/chaincode/golang/stress"
+    },
+    "node": {
+      "path": "github.com/davidkhala/chaincode/nodejs/sample"
     }
   }
 }
