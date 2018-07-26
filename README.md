@@ -75,6 +75,10 @@ TODO dep: to import third-party package in vendor folder
   - my sample chaincodes have been migrated to ``github.com/davidkhala/chaincode``
 
 
+## Attention
+- nodejs chaincode take longer time in install chaincode only.
+
+
 ## Finished
 
 - kafka on local & swarm
@@ -90,6 +94,7 @@ TODO dep: to import third-party package in vendor folder
 - chaincode version,ID string format
 - nodeJS chaincode
 - Duplicated priv-file creation, crypto-store problem in .hfc-key-store
+- chaincode setEvent: for both golang,nodejs chaincodeType
 ## TODO
 - TLS, java sdk and docker-swarm: keep update
 - test backup and recover
@@ -104,7 +109,7 @@ TODO dep: to import third-party package in vendor folder
 - take care of docker swarm init --force-new-cluster
 - will block file name be a problem in signature cache? take care docker cp from container for multiple request
 - cross chaincode invoke on same channel and differed channel
-- chaincode setEvent
+- 1.2 private channel data
 - use dep to import fabric source into vendor
 ## New feature, patch required for node-sdk
  

@@ -57,7 +57,7 @@ exports.instantiate = async (channel, richPeers, {chaincodeId, chaincodeVersion,
 	const eventHubs = [];
 
 	for (const peer of richPeers) {
-		const eventHub = EventHubUtil.newEventHub(channel, peer);
+		const eventHub = EventHubUtil.newEventHub(channel, peer,true);
 		eventHubs.push(eventHub);
 	}
 
@@ -77,7 +77,7 @@ exports.upgrade = async (channel, richPeers, {chaincodeId, chaincodeVersion, arg
 	const eventHubs = [];
 
 	for (const peer of richPeers) {
-		const eventHub = EventHubUtil.newEventHub(channel, peer);
+		const eventHub = EventHubUtil.newEventHub(channel, peer,true);
 		eventHubs.push(eventHub);
 	}
 	return upgrade(channel, richPeers, eventHubs, {chaincodeId, chaincodeVersion, args, fcn}, eventWaitTime);
@@ -87,7 +87,7 @@ exports.invoke = async (channel, richPeers, {chaincodeId, fcn, args}, nonAdminUs
 	const {eventWaitTime} = channel;
 	const eventHubs = [];
 	for (const peer of richPeers) {
-		const eventHub = EventHubUtil.newEventHub(channel, peer);
+		const eventHub = EventHubUtil.newEventHub(channel, peer,true);
 		eventHubs.push(eventHub);
 	}
 	const orderers = channel.getOrderers();
