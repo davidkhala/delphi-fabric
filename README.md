@@ -1,23 +1,15 @@
 
-
-Clone
-------------------
-_after first time clone this repository, submodule should be initialize_
-```
-$ cd <delphi-fabric>
-$ git submodule update --init --recursive
-```
-
-
 Installation
 -----------------------
 
  **Recommended OS** ubuntu 16.04
 
 **Installation Script**
-1. `$ ./install.sh gitSync`
-2. `$ ./common/docker/dockerSUDO.sh`
-3. `$ ./install.sh`
+1. `$ ./install.sh gitSync`   
+_after first time clone this repository, submodule should be initialize_
+2. `$ ./install.sh`
+3. `$ ./common/docker/dockerSUDO.sh`
+
 
 
 ----
