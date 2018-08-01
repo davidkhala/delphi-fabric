@@ -173,6 +173,7 @@ exports.getOrgAdmin = (orgName, nodeType) => {
 	if (!orgName) {
 		orgName = exports.randomOrg(nodeType);
 	}
+	logger.debug(`get ${orgName} Admin`);
 	return getUserClient(userUtil.adminName, orgName, client);
 };
 exports.randomOrg = (nodeType) => {

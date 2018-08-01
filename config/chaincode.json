@@ -28,8 +28,8 @@
               "ASTRIMSP": false
             }
           },
-          "requiredPeerCount": 0,
-          "maxPeerCount": 1,
+          "requiredPeerCount": 2,
+          "maxPeerCount": 2,
           "blockToLive": 100
         }
       }

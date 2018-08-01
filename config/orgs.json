@@ -89,10 +89,9 @@
       "file": "all.tx",
       "eventWaitTime": 30000,
       "orgs": {
-
         "ASTRI.org": {
           "peerIndexes": [
-            0
+            0,1
           ]
         }
       }
@@ -104,6 +103,10 @@
         {
           "container_name": "astri",
           "port": 7051
+        },
+        {
+          "container_name": "astri1",
+          "port": 7151
         }
       ],
       "ca": {
