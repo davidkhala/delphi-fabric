@@ -13,7 +13,26 @@
       "path": "github.com/davidkhala/chaincode/golang/stress"
     },
     "node": {
-      "path": "github.com/davidkhala/chaincode/nodejs/sample"
+      "path": "github.com/davidkhala/chaincode/nodejs/sample",
+      "endorsingConfigs": {
+        "n": 1,
+        "mspId": {
+          "ASTRIMSP": false
+        }
+      },
+      "collectionConfigs": {
+        "private1": {
+          "policy": {
+            "n": 1,
+            "mspId": {
+              "ASTRIMSP": false
+            }
+          },
+          "requiredPeerCount": 0,
+          "maxPeerCount": 1,
+          "blockToLive": 100
+        }
+      }
     }
   }
 }

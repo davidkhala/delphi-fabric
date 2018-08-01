@@ -14,7 +14,7 @@
     }
   },
   "ledger": {
-    "storage": "couchDB",
+    "storage": "leveldb",
     "couchDB": {
       "container_name": "couchDB",
       "port": 5984
@@ -28,7 +28,7 @@
     },
     "solo": {
       "orgName": "Delphi.com",
-      "container_name": "orderContainerName",
+      "container_name": "orderer",
       "portHost": 7050,
       "ca": {
         "portHost": 7454
@@ -89,7 +89,8 @@
       "file": "all.tx",
       "eventWaitTime": 30000,
       "orgs": {
-        "ASTRI.Delphi.com": {
+
+        "ASTRI.org": {
           "peerIndexes": [
             0
           ]
@@ -98,7 +99,7 @@
     }
   },
   "orgs": {
-    "ASTRI.Delphi.com": {
+    "ASTRI.org": {
       "peers": [
         {
           "container_name": "astri",

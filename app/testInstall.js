@@ -1,11 +1,10 @@
 const {instantiate, install} = require('./chaincodeHelper');
 const helper = require('./helper');
 const logger = require('../common/nodejs/logger').new('testInstall');
-const chaincodeConfig = require('../config/chaincode.json');
-const globalConfig = require('../config/orgs');
-const chaincodeId = process.env.name ? process.env.name : 'node';
 
-const chaincodePath = chaincodeConfig.chaincodes[chaincodeId].path;
+const chaincodeId = process.env.name ? process.env.name : 'node';
+const globalConfig = require('../config/orgs');
+
 
 const instantiate_args = [];
 
@@ -16,7 +15,7 @@ const chaincodeType = 'node';
 const deploy = async (orgName, peerIndexes) => {
 	const peers = helper.newPeers(peerIndexes, orgName);
 	const client = await helper.getOrgAdmin(orgName);
-	return install(peers, {chaincodeId, chaincodePath, chaincodeVersion, chaincodeType}, client);
+	return install(peers, {chaincodeId, chaincodeVersion, chaincodeType}, client);
 };
 
 const task = async () => {

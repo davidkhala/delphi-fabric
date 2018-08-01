@@ -1,14 +1,18 @@
 Profiles:
   delphiGenesis:
+    Capabilities:
+      V1_1: true
     Orderer:
       BatchTimeout: 1s
       BatchSize:
         MaxMessageCount: 1
         AbsoluteMaxBytes: 99 MB
         PreferredMaxBytes: 512 KB
+      Capabilities:
+        V1_1: true
       OrdererType: solo
       Addresses:
-        - 'orderContainerName.Delphi.com:7050'
+        - 'orderer.Delphi.com:7050'
       Organizations:
         - Name: OrdererMSPName
           ID: OrdererMSP
@@ -18,9 +22,9 @@ Profiles:
         Organizations:
           - Name: ASTRIMSPName
             ID: ASTRIMSP
-            MSPDir: /home/blockchain/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/ASTRI.Delphi.com/msp
+            MSPDir: /home/blockchain/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/ASTRI.org/msp
             AnchorPeers:
-              - Host: peer0.ASTRI.Delphi.com
+              - Host: peer0.ASTRI.org
                 Port: 7051
   allchannel:
     Consortium: SampleConsortium
@@ -28,7 +32,9 @@ Profiles:
       Organizations:
         - Name: ASTRIMSPName
           ID: ASTRIMSP
-          MSPDir: /home/blockchain/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/ASTRI.Delphi.com/msp
+          MSPDir: /home/blockchain/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/ASTRI.org/msp
           AnchorPeers:
-            - Host: peer0.ASTRI.Delphi.com
+            - Host: peer0.ASTRI.org
               Port: 7051
+      Capabilities:
+        V1_2: true
