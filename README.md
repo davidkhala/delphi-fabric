@@ -15,7 +15,10 @@ Installation
  **Recommended OS** ubuntu 16.04
 
 **Installation Script**
-`$ ./install.sh`
+1. `$ ./install.sh gitSync`
+2. `$ ./common/docker/dockerSUDO.sh`
+3. `$ ./install.sh`
+
 
 ----
  

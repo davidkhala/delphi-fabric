@@ -49,7 +49,7 @@ else
 	./common/bin-manage/pull1_2.sh
 	npm install
 	if ! go version; then
-		$CURRENT/common/install.sh golang
+		$CURRENT/common/install.sh golang1_10
 	fi
 	updateChaincode
 	# finally
