@@ -8,7 +8,8 @@ Installation
 1. `$ ./install.sh gitSync`   
 _after first time clone this repository, submodule should be initialize_
 2. `$ ./install.sh`
-3. `$ ./common/docker/dockerSUDO.sh`
+3. `$ ./common/docker/dockerSUDO.sh` 
+this script help to make docker command runnable without `sudo` prefix
 
 
 
