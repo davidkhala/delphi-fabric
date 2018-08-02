@@ -6,16 +6,22 @@ function down() {
 	node -e "require('./dockerode-bootstrap').down()"
 }
 function up() {
+	prepareNetwork
+	node app/testChannel
+	node app/testInstall
+}
+
+function prepareNetwork() {
 	node -e "require('./dockerode-bootstrap').up()"
 }
 
-if [ "$1" == "up" ]; then
-	up
-elif [ "$1" == "down" ]; then
+function restart() {
 	down
+	up
+}
+
+if [ -z "$1" ]; then
+	restart
 else
-	down
-	up
-	node app/testChannel
-	node app/testInstall
+	$1
 fi

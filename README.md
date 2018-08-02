@@ -47,10 +47,8 @@ Major configuration
 Test on single host
 -----------------------
 **steps**
-1. run `$ ./docker.sh` to restart network
-2. run `$ node app/testChannel.js` to create-channel and join-channel
-3. `$ node app/testInstall.js` to install chaincode and instantiate chaincode
-4. `$ node app/testInvoke.js` to invoke chaincode
+ * run `$ ./docker.sh` to restart network
+ * `$ node app/testInvoke.js` to invoke chaincode (default to loop infinitely)
 
 Test on docker swarm
 -----------------------
