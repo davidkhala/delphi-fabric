@@ -41,7 +41,6 @@ Major configuration
  we cluster most of the config in ``config/orgs.json``, enjoy!
  others:
   - swarm server: ``swarm/swarm.json``
-  - Restfull app: ``app/config.json``
   - chaincodes path: ``config/chaincode.json``  
 
 Test on single host
