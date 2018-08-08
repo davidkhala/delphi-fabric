@@ -17,7 +17,7 @@ exports.install = async (peers, {chaincodeId, chaincodeVersion, chaincodeType}, 
 		const gopath = await golangUtil.getGOPATH();
 		chaincodePath = path.resolve(gopath, 'src', chaincodePath);
 	}
-	if (chaincodeType === 'golang') {
+	if (!chaincodeType || chaincodeType === 'golang') {
 		await golangUtil.setGOPATH();
 	}
 	return install(peers, {chaincodeId, chaincodePath, chaincodeVersion, chaincodeType}, client);
