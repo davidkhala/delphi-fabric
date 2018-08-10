@@ -17,16 +17,16 @@ function gitSync() {
 function pull() {
 	local fabricTag=$1
 	local IMAGE_TAG="x86_64-$fabricTag"
-	$utilsDir/docker.sh pullIfNotExist hyperledger/fabric-ccenv:$IMAGE_TAG
-	$utilsDir/docker.sh pullIfNotExist hyperledger/fabric-orderer:$IMAGE_TAG
-	$utilsDir/docker.sh pullIfNotExist hyperledger/fabric-peer:$IMAGE_TAG
-	$utilsDir/docker.sh pullIfNotExist hyperledger/fabric-ca:$IMAGE_TAG
+	docker pull hyperledger/fabric-ccenv:$IMAGE_TAG
+	docker pull hyperledger/fabric-orderer:$IMAGE_TAG
+	docker pull hyperledger/fabric-peer:$IMAGE_TAG
+	docker pull hyperledger/fabric-ca:$IMAGE_TAG
 }
 function pullKafka() {
 	local thirdPartyTag=$1
 	local IMAGE_TAG="x86_64-$thirdPartyTag"
-	$utilsDir/docker.sh pullIfNotExist hyperledger/fabric-kafka:$IMAGE_TAG
-	$utilsDir/docker.sh pullIfNotExist hyperledger/fabric-zookeeper:$IMAGE_TAG
+	docker pull hyperledger/fabric-kafka:$IMAGE_TAG
+	docker pull hyperledger/fabric-zookeeper:$IMAGE_TAG
 }
 function updateChaincode() {
     set +e
@@ -40,24 +40,10 @@ else
 	if [ ! -f "$CURRENT/common/install.sh" ]; then
 		gitSync
 	fi
+	$CURRENT/common/install.sh golang1_10
 	$CURRENT/common/install.sh
 
-	CONFIG_JSON=$CURRENT/config/orgs.json
-
-	fabricTag=$(jq -r ".docker.fabricTag" $CONFIG_JSON)
-
-	./common/bin-manage/pull1_2.sh
+	./common/bin-manage/pullBIN.sh
 	npm install
-	if ! go version; then
-		$CURRENT/common/install.sh golang1_10
-	fi
 	updateChaincode
-	# finally
-	if [ $(uname)=="Darwin" ] ;then
-        :
-	else
-	    sudo apt autoremove -y
-	fi
-
-
 fi
