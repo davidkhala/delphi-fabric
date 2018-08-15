@@ -10,12 +10,11 @@ const instantiate_args = [];
 
 const chaincodeVersion = 'v0';
 const channelName = 'allchannel';
-const chaincodeType = 'node';
 //only one time, one org could deploy
 const deploy = async (orgName, peerIndexes) => {
 	const peers = helper.newPeers(peerIndexes, orgName);
 	const client = await helper.getOrgAdmin(orgName);
-	return install(peers, { chaincodeId, chaincodeVersion, chaincodeType }, client);
+	return install(peers, {chaincodeId, chaincodeVersion,}, client);
 };
 
 const task = async () => {
@@ -31,7 +30,7 @@ const task = async () => {
 		const peers = helper.newPeers(peerIndexes, peerOrg);
 		const client = await helper.getOrgAdmin(peerOrg);
 		const channel = helper.prepareChannel(channelName, client, true);
-		return instantiate(channel, peers, { chaincodeId, chaincodeVersion, args: instantiate_args, chaincodeType });
+		return instantiate(channel, peers, {chaincodeId, chaincodeVersion, args: instantiate_args});
 	} catch (e) {
 		logger.error(e);
 		process.exit(1);

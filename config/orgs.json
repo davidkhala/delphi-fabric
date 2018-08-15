@@ -101,11 +101,11 @@
     "ASTRI.org": {
       "peers": [
         {
-          "container_name": "astri",
+          "container_name": "peer0.ASTRI.org",
           "port": 7051
         },
         {
-          "container_name": "astri1",
+          "container_name": "peer1.ASTRI.org",
           "port": 7151
         }
       ],

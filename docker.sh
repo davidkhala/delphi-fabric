@@ -8,7 +8,7 @@ function down() {
 function up() {
 	prepareNetwork
 	node app/testChannel
-	node app/testInstall
+	name=v1_2 node app/testInstall
 }
 
 function prepareNetwork() {

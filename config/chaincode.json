@@ -1,7 +1,20 @@
 {
   "chaincodes": {
-    "delphi": {
-      "path": "github.com/davidkhala/chaincode/golang/delphi"
+    "v1_2": {
+      "path": "github.com/davidkhala/chaincode/golang/v1_2",
+      "collectionConfigs": {
+        "private1": {
+          "policy": {
+            "n": 1,
+            "mspId": {
+              "ASTRIMSP": false
+            }
+          },
+          "requiredPeerCount": 0,
+          "maxPeerCount": 2,
+          "blockToLive": 100
+        }
+      }
     },
     "adminChaincode": {
       "path": "github.com/davidkhala/chaincode/golang/admin"
@@ -13,6 +26,7 @@
       "path": "github.com/davidkhala/chaincode/golang/stress"
     },
     "node": {
+      "type":"node",
       "path": "github.com/davidkhala/chaincode/nodejs/sample",
       "endorsingConfigs": {
         "n": 1,

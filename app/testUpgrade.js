@@ -2,8 +2,7 @@ const helper = require('./helper');
 const globalConfig = require('../config/orgs.json');
 const logger = require('../common/nodejs/logger').new('testUpgrade');
 const Query = require('../common/nodejs/query');
-const {updateInstall, nextVersion, instantiateOrUpgrade} = require('../common/nodejs/chaincode');
-const EventHubUtil = require('../common/nodejs/eventHub');
+const {updateInstall, nextVersion, upgrade} = require('./chaincodeHelper');
 const chaincodeId = process.env.name ? process.env.name : 'adminChaincode';
 
 const args = [];
@@ -44,12 +43,7 @@ const task = async () => {
 		const client = await helper.getOrgAdmin(orgName);
 		const channel = helper.prepareChannel(channelName, client, true);
 		const peers = helper.newPeers([0], orgName);
-		const eventHubs = [];
-		for (const peer of peers) {
-			const eventHub = EventHubUtil.newEventHub(channel, peer);
-			eventHubs.push(eventHub);
-		}
-		await instantiateOrUpgrade('upgrade',channel, peers, eventHubs, {chaincodeId, chaincodeVersion, args});
+		await upgrade(channel, peers, {chaincodeId, chaincodeVersion, args});
 		//	NOTE: the old version chaincode container remains
 	} catch (e) {
 		logger.error(e);
