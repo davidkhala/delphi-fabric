@@ -1,6 +1,5 @@
 const globalConfig = require('./config/orgs.json');
 const path = require('path');
-const util = require('util');
 const logger = require('./common/nodejs/logger').new('dockerode-bootstrap');
 const peerUtil = require('./common/nodejs/peer');
 const {
@@ -24,11 +23,10 @@ const {
 	volumeRemove, prune: {system: pruneSystem},
 } = require('./common/docker/nodejs/dockerode-util');
 const {advertiseAddr, joinToken} = require('./common/docker/nodejs/dockerCmd');
-const {hostname} = require('./common/nodejs/helper');
+const {hostname, exec} = require('./common/nodejs/helper');
 const {docker: {fabricTag, network, thirdPartyTag}, TLS} = globalConfig;
 
 const serverClient = require('./common/nodejs/express/serverClient');
-const exec = util.promisify(require('child_process').exec);
 const runConfigtxGenShell = path.resolve(__dirname, 'common', 'bin-manage', 'runConfigtxgen.sh');
 const nodeServers = {
 	swarmServer: path.resolve(__dirname, 'swarm', 'swarmServerPM2.js'),
@@ -430,14 +428,14 @@ exports.up = async (swarm) => {
 		const BLOCK_FILE = globalConfig.orderer.genesis_block.file;
 		const config_dir = path.dirname(configtxFile);
 		fsExtra.ensureDirSync(CONFIGTX);
-		await exec(`${runConfigtxGenShell} block create ${path.resolve(CONFIGTX, BLOCK_FILE)} -p ${PROFILE_BLOCK} -i ${config_dir}`);
+		await exec(`export FABRIC_CFG_PATH=${config_dir} && ${runConfigtxGenShell} genBlock ${path.resolve(CONFIGTX, BLOCK_FILE)} ${PROFILE_BLOCK}`);
 
 		const channelsConfig = globalConfig.channels;
 		for (const channelName in channelsConfig) {
 			channelUtil.nameMatcher(channelName, true);
 			const channelConfig = channelsConfig[channelName];
 			const channelFile = path.resolve(CONFIGTX, channelConfig.file);
-			await exec(`${runConfigtxGenShell} channel create ${channelFile} -p ${channelName} -i ${config_dir} -c ${channelName}`);
+			await exec(`export FABRIC_CFG_PATH=${config_dir} && ${runConfigtxGenShell} genChannel ${channelFile} ${channelName} ${channelName}`);
 		}
 
 

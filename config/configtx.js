@@ -2,7 +2,7 @@ const globalConfig = require('./orgs.json');
 const path = require('path');
 const yaml = require('js-yaml');
 const {CryptoPath, fsExtra} = require('../common/nodejs/path');
-exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, configtxFile}) => {
+exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, configtxFile, PROFILE_ANCHORPEERS = 'anchorPeers'}) => {
 	const channelsConfig = globalConfig.channels;
 	const ordererConfig = globalConfig.orderer;
 	if (!configtxFile) configtxFile = path.resolve(__dirname, 'configtx.yaml');
@@ -44,7 +44,7 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 				}
 			});
 			Organizations.push({
-				Name: ordererOrgConfig.MSP.name,
+				Name: ordererOrgName,
 				ID: ordererOrgConfig.MSP.id,
 				MSPDir: cryptoPath.ordererOrgMSP()
 			});
@@ -64,7 +64,7 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 		});
 		OrdererConfig.Organizations = [
 			{
-				Name: ordererConfig.solo.MSP.name,
+				Name: orgName,
 				ID: ordererConfig.solo.MSP.id,
 				MSPDir: cryptoPath.ordererOrgMSP()
 			}
@@ -75,23 +75,31 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 	const Organizations = [];
 
 
-	const OrganizationBuilder = (orgName) => {
+	const OrganizationBuilder = (orgName, forAnchor, forChannel) => {
 		const orgConfig = orgsConfig[orgName];
-		const peerIndex = 0;
+
 		const cryptoPath = new CryptoPath(MSPROOT, {
 			peer: {
-				org: orgName, name: `peer${peerIndex}`
+				org: orgName, name: `peer0`
 			}
 		});
-		return {
-			Name: orgConfig.MSP.name,
+		const result = {
+			Name: orgName,
 			ID: orgConfig.MSP.id,
 			MSPDir: cryptoPath.peerOrgMSP(),
-			AnchorPeers: [{
+		};
+		if (forAnchor) {
+			result.AnchorPeers = [{
 				Host: cryptoPath.peerHostName,
 				Port: 7051
-			}]
-		};
+			}];
+			delete result.ID;
+			delete result.MSPDir;
+		}
+		if (forChannel) {
+			result.AnchorPeers = [{}];
+		}
+		return result;
 	};
 	for (const orgName in orgsConfig) {
 		Organizations.push(OrganizationBuilder(orgName));
@@ -111,7 +119,7 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 		const PROFILE_CHANNEL = channelName;
 		const Organizations = [];
 		for (const orgName in channelConfig.orgs) {
-			Organizations.push(OrganizationBuilder(orgName));
+			Organizations.push(OrganizationBuilder(orgName, false, true));
 		}
 		Profiles[PROFILE_CHANNEL] = {
 			Consortium: consortiumName,
@@ -124,6 +132,18 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 		};
 
 	}
+	//setAnchorPeers profile
+	//TODO follow this structure https://github.com/hyperledger/fabric/blob/9e9ebe651225104823d228a09e94432592252ca3/common/tools/configtxgen/main.go#L66
+	const OrganizationsForAnchorProfile = [];
+	for (const orgName in orgsConfig) {
+		OrganizationsForAnchorProfile.push(OrganizationBuilder(orgName, true));
+	}
+	const setAnchorPeersProfile = {
+		Application: {
+			Organizations: OrganizationsForAnchorProfile
+		}
+	};
+	Profiles[PROFILE_ANCHORPEERS] = setAnchorPeersProfile;
 
 	fsExtra.outputFileSync(configtxFile, yaml.safeDump({Profiles}, {lineWidth: 180}));
 

@@ -14,27 +14,30 @@ Profiles:
       Addresses:
         - 'orderer.Delphi.com:7050'
       Organizations:
-        - Name: OrdererMSPName
+        - Name: Delphi.com
           ID: OrdererMSP
           MSPDir: /home/blockchain/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/Delphi.com/msp
     Consortiums:
       SampleConsortium:
         Organizations:
-          - Name: ASTRIMSPName
+          - Name: ASTRI.org
             ID: ASTRIMSP
             MSPDir: /home/blockchain/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/ASTRI.org/msp
-            AnchorPeers:
-              - Host: peer0.ASTRI.org
-                Port: 7051
   allchannel:
     Consortium: SampleConsortium
     Application:
       Organizations:
-        - Name: ASTRIMSPName
+        - Name: ASTRI.org
           ID: ASTRIMSP
           MSPDir: /home/blockchain/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/ASTRI.org/msp
           AnchorPeers:
-            - Host: peer0.ASTRI.org
-              Port: 7051
+            - {}
       Capabilities:
         V1_2: true
+  anchorPeers:
+    Application:
+      Organizations:
+        - Name: ASTRI.org
+          AnchorPeers:
+            - Host: peer0.ASTRI.org
+              Port: 7051

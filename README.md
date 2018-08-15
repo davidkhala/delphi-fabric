@@ -88,6 +88,7 @@ TODO dep: to import third-party package in vendor folder
 - nodeJS chaincode
 - Duplicated priv-file creation, crypto-store problem in .hfc-key-store
 - chaincode setEvent: for both golang,nodejs chaincodeType
+- replace Organization name by MSP name
 ## TODO
 - TLS, java sdk and docker-swarm: keep update
 - test backup and recover
@@ -95,7 +96,6 @@ TODO dep: to import third-party package in vendor folder
 - chaincode uninstall
 - adding kafka/zookeeper online
 - docker version problem in ver. 18.x 
-- can Organization name replaced by MSP name?
 - pm2 to runConfigtxlator? without shell?
 - use nodejs scripts to replace runConfigtxgen.sh
 - move couchdb server to container based, and support couchdb ledger

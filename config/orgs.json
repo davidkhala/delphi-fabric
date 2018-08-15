@@ -34,7 +34,6 @@
         "portHost": 7454
       },
       "MSP": {
-        "name": "OrdererMSPName",
         "id": "OrdererMSP"
       }
     },
@@ -69,7 +68,6 @@
       "orgs": {
         "ICDD.ASTRI.org": {
           "MSP": {
-            "name": "ICDDMSPName",
             "id": "ICDDMSP"
           },
           "ca": {
@@ -113,7 +111,6 @@
         "portHost": 7054
       },
       "MSP": {
-        "name": "ASTRIMSPName",
         "id": "ASTRIMSP"
       }
     }

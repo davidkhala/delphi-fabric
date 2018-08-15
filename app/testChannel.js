@@ -5,6 +5,8 @@ const helper = require('./helper');
 const logger = require('../common/nodejs/logger').new('testChannel');
 const configtxlator = require('../common/nodejs/configtxlator');
 const {homeResolve, fsExtra} = require('../common/nodejs/path');
+const {exec} = require('../common/nodejs/helper');
+const path = require('path');
 const channelName = 'allchannel';
 
 const globalConfig = require('../config/orgs.json');
@@ -48,12 +50,12 @@ const joinAllfcn = async (channelName) => {
 const task = async () => {
 	const ordererOrg = helper.randomOrg('orderer');
 	const {portHost: ordererHostPort} = helper.findOrgConfig(ordererOrg);
-	const client = await helper.getOrgAdmin(ordererOrg, 'orderer');
+	const ordererClient = await helper.getOrgAdmin(ordererOrg, 'orderer');
 	const ordererUrl = `${TLS ? 'grpcs' : 'grpc'}://localhost:${ordererHostPort}`;
 	const peerOrg = helper.randomOrg('peer');
 	logger.info({ordererUrl, peerOrg});
 	try {
-		await createChannel(client, channelName, channelConfigFile, [peerOrg], ordererUrl);
+		await createChannel(ordererClient, channelName, channelConfigFile, [peerOrg], ordererUrl);
 		await joinAllfcn(channelName);
 	} catch (err) {
 		if (err.toString().includes('Error: BAD_REQUEST') ||
@@ -62,8 +64,9 @@ const task = async () => {
 			await joinAllfcn(channelName);
 		} else throw err;
 	}
-	const peerClient = await helper.getOrgAdmin(undefined, 'peer'); //only peer user can read channel
+
 	try {
+		const peerClient = await helper.getOrgAdmin(undefined, 'peer'); //only peer user can read channel
 		const channel = helper.prepareChannel(channelName, peerClient);
 		const {original_config} = await configtxlator.getChannelConfigReadable(channel);
 
@@ -72,7 +75,7 @@ const task = async () => {
 		logger.error(e);
 	}
 	try {
-		const channel = helper.prepareChannel(undefined, client);
+		const channel = helper.prepareChannel(undefined, ordererClient);
 		const {original_config} = await configtxlator.getChannelConfigReadable(channel, 'orderer');
 
 		fsExtra.outputFileSync('testchainid.json', original_config);
@@ -81,6 +84,16 @@ const task = async () => {
 	}
 
 };
+const anchorPeersUpdate = async (configtxYaml, channelName, mspName) => {
+	const anchorTx = `${mspName}Anchors.tx`;
+	const config_dir = path.dirname(configtxYaml);
+	const runConfigtxGenShell = path.resolve(__dirname, '../common/bin-manage/runConfigtxgen.sh');
+	const PROFILE = 'anchorPeers';
+	await exec(`export FABRIC_CFG_PATH=${config_dir} && ${runConfigtxGenShell} genAnchorPeers ${path.resolve(anchorTx)} ${PROFILE} ${channelName} ${mspName}`);
+
+};
+
+anchorPeersUpdate(path.resolve(__dirname,'../config/configtx.yaml'),channelName,'ASTRI.org');
 task();
 
 
