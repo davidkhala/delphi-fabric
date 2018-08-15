@@ -133,7 +133,6 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 
 	}
 	//setAnchorPeers profile
-	//TODO follow this structure https://github.com/hyperledger/fabric/blob/9e9ebe651225104823d228a09e94432592252ca3/common/tools/configtxgen/main.go#L66
 	const OrganizationsForAnchorProfile = [];
 	for (const orgName in orgsConfig) {
 		OrganizationsForAnchorProfile.push(OrganizationBuilder(orgName, true));

@@ -11,7 +11,8 @@ _after first time clone this repository, submodule should be initialize_
 3. `$ ./common/docker/dockerSUDO.sh` 
 this script help to make docker command runnable without `sudo` prefix
 
-
+- PM2 command line manager can be installed by  
+    `$ ./install.sh PM2CLI`
 
 ----
  

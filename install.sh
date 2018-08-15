@@ -34,6 +34,9 @@ function updateChaincode() {
 	set -e
 }
 
+function PM2CLI(){
+    sudo npm install pm2@latest -g
+}
 if [ -n "$fcn" ]; then
 	$fcn $remain_params
 else

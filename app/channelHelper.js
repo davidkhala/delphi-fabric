@@ -15,12 +15,10 @@ const channelUtil = require('../common/nodejs/channel');
 exports.create = async (client, channelName, channelConfigFile, orgNames, ordererUrl) => {
 	logger.debug('Create Channel',{channelName, channelConfigFile, orgNames});
 
-	channelUtil.nameMatcher(channelName, true);
-
-	const clientSwitchPromises = [];
+	const clients = [];
 	for (const orgName of orgNames) {
-		const switchPromise = helper.getOrgAdmin(orgName);
-		clientSwitchPromises.push(switchPromise);
+		const client = await helper.getOrgAdmin(orgName);
+		clients.push(client);
 	}
 
 	// extract the channel config bytes from the envelope to be signed
@@ -29,5 +27,5 @@ exports.create = async (client, channelName, channelConfigFile, orgNames, ordere
 	logger.debug(orderers.length, 'orderers in channel', channelName);
 	const orderer = OrdererUtil.find({orderers, ordererUrl});
 
-	return channelUtil.create(clientSwitchPromises, channel, channelConfigFile, orderer);
+	return channelUtil.create(clients, channel, channelConfigFile, orderer);
 };

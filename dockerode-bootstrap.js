@@ -432,7 +432,6 @@ exports.up = async (swarm) => {
 
 		const channelsConfig = globalConfig.channels;
 		for (const channelName in channelsConfig) {
-			channelUtil.nameMatcher(channelName, true);
 			const channelConfig = channelsConfig[channelName];
 			const channelFile = path.resolve(CONFIGTX, channelConfig.file);
 			await exec(`export FABRIC_CFG_PATH=${config_dir} && ${runConfigtxGenShell} genChannel ${channelFile} ${channelName} ${channelName}`);

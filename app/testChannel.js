@@ -1,9 +1,10 @@
 const {create: createChannel} = require('./channelHelper');
-const {join: joinChannel} = require('../common/nodejs/channel');
+const {join: joinChannel, setupAnchorPeers} = require('../common/nodejs/channel');
 
 const helper = require('./helper');
 const logger = require('../common/nodejs/logger').new('testChannel');
 const configtxlator = require('../common/nodejs/configtxlator');
+const EventHubUtil = require('../common/nodejs/eventHub');
 const {homeResolve, fsExtra} = require('../common/nodejs/path');
 const {exec} = require('../common/nodejs/helper');
 const path = require('path');
@@ -57,6 +58,7 @@ const task = async () => {
 	try {
 		await createChannel(ordererClient, channelName, channelConfigFile, [peerOrg], ordererUrl);
 		await joinAllfcn(channelName);
+		await anchorPeersUpdate(path.resolve(__dirname, '../config/configtx.yaml'), channelName, 'ASTRI.org');
 	} catch (err) {
 		if (err.toString().includes('Error: BAD_REQUEST') ||
 			(err.status && err.status.includes('BAD_REQUEST'))) {
@@ -84,17 +86,27 @@ const task = async () => {
 	}
 
 };
-const anchorPeersUpdate = async (configtxYaml, channelName, mspName) => {
-	const anchorTx = `${mspName}Anchors.tx`;
+const anchorPeersUpdate = async (configtxYaml, channelName, orgName) => {
+	const anchorTx = path.resolve(`${orgName}Anchors.tx`);
 	const config_dir = path.dirname(configtxYaml);
 	const runConfigtxGenShell = path.resolve(__dirname, '../common/bin-manage/runConfigtxgen.sh');
 	const PROFILE = 'anchorPeers';
-	await exec(`export FABRIC_CFG_PATH=${config_dir} && ${runConfigtxGenShell} genAnchorPeers ${path.resolve(anchorTx)} ${PROFILE} ${channelName} ${mspName}`);
+	await exec(`export FABRIC_CFG_PATH=${config_dir} && ${runConfigtxGenShell} genAnchorPeers ${anchorTx} ${PROFILE} ${channelName} ${orgName}`);
 
+	const client = await helper.getOrgAdmin(orgName);
+
+	const channel = helper.prepareChannel(channelName, client);
+	const orderer = channel.getOrderers()[0];
+
+	await setupAnchorPeers(channel, anchorTx, orderer);
+
+	const peer = helper.newPeers([0], orgName)[0];
+	const eventHub = EventHubUtil.newEventHub(channel, peer, true);
+	const block = await EventHubUtil.BlockWaiter(eventHub,1);
 };
 
-anchorPeersUpdate(path.resolve(__dirname,'../config/configtx.yaml'),channelName,'ASTRI.org');
 task();
+
 
 
 
