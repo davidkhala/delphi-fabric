@@ -8,9 +8,9 @@ const channelUtil = require('../common/nodejs/channel');
  * @param client client of committer
  * @param channelName
  * @param channelConfigFile
- * @param {string[]} orgNames orgName array of endorsers
+ * @param {string[]} orgNames orgName array of signer
  * @param {string} ordererUrl such like 'grpc://localhost:7050'; if not specified, we will use channel.getOrderers()[0]
- * @returns {PromiseLike<T> | Promise<T>}
+ * @returns {Promise<T>}
  */
 exports.create = async (client, channelName, channelConfigFile, orgNames, ordererUrl) => {
 	logger.debug('Create Channel',{channelName, channelConfigFile, orgNames});

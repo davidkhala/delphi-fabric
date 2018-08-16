@@ -10,7 +10,7 @@
               "ASTRIMSP": false
             }
           },
-          "requiredPeerCount": 0,
+          "requiredPeerCount": 1,
           "maxPeerCount": 2,
           "blockToLive": 100
         }
