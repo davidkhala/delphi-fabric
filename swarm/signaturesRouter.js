@@ -82,11 +82,8 @@ router.post('/newOrderer', async (req, res) => {
 			config.addOrdererAddress(address);
 			return config.build();
 		};
-
-
-		const peerEventHub = undefined;
-
-		await channelUpdate(ordererChannel, onUpdate, signatureCollector, peerEventHub, {nodeType: 'orderer'});
+		const orderer = ordererChannel.getOrderers()[0];
+		await channelUpdate(ordererChannel, orderer, undefined, onUpdate, signatureCollector);
 		res.json({newOrderer: address});
 	} catch (err) {
 		logger.error(err);
@@ -96,17 +93,18 @@ router.post('/newOrderer', async (req, res) => {
 router.post('/getChannelConfig', async (req, res) => {
 
 	const {nodeType} = req.body;
-	let channelName;
-	if (nodeType === 'orderer') {
-		channelName = channelUtil.genesis;
-	} else {
-		channelName = req.body.channelName;
-	}
-	logger.debug('/getChannelConfig', {nodeType, channelName});
 	const ramdomOrg = helper.randomOrg(nodeType);
 	const client = await helper.getOrgAdmin(ramdomOrg, nodeType);
-	const channel = helper.prepareChannel(channelName, client, true);
-	const {original_config} = await getChannelConfigReadable(channel, nodeType);
+	let channel;
+	let peer;
+	if (nodeType === 'orderer') {
+		channel = helper.prepareChannel(channelUtil.genesis, client, true);
+	} else {
+		channel = helper.prepareChannel(req.body.channelName, client, true);
+		peer = channel.getPeers()[0];
+	}
+	logger.debug('/getChannelConfig', {nodeType, channelName: channel.getName()});
+	const {original_config} = await getChannelConfigReadable(channel, peer);
 	res.send(original_config);
 });
 router.post('/createOrUpdateOrg', multerCache.fields([{name: 'admins'}, {name: 'root_certs'}, {name: 'tls_root_certs'}])
@@ -118,20 +116,26 @@ router.post('/createOrUpdateOrg', multerCache.fields([{name: 'admins'}, {name: '
 			const tls_root_certs = req.files['tls_root_certs'] ? req.files['tls_root_certs'].map(({path}) => path) : [];
 			const {MSPID, MSPName, nodeType, skip} = req.body;
 
-			let channelName;
-			const randomPeerOrg = helper.randomOrg('peer');
-			const peer = helper.newPeers([0], randomPeerOrg)[0];
+			let channel;
+			let peer;
+			let ordererOrg;
 			if (nodeType === 'orderer') {
-				channelName = channelUtil.genesis;
-			} else {
-				channelName = req.body.channelName;
-			}
-			const ramdomOrg = helper.randomOrg(nodeType);
-			const client = await helper.getOrgAdmin(ramdomOrg, nodeType);
-			const channel = helper.prepareChannel(channelName, client, true);
+				ordererOrg = helper.randomOrg('orderer');
+				const client = await helper.getOrgAdmin(ordererOrg, 'orderer');
+				channel = helper.prepareChannel(channelUtil.genesis, client, true);
 
-			const peerEventHub = EventHubUtil.newEventHub(channel, peer);
-			logger.debug('/createOrUpdateOrg', {channelName, MSPID, MSPName, nodeType}, {
+			} else {
+				const channelName = req.body.channelName;
+				const ramdomOrg = helper.randomChannelOrg(channelName);
+				const client = await helper.getOrgAdmin(ramdomOrg, 'peer');
+				channel = helper.prepareChannel(channelName, client, true);
+				peer = channel.getPeers()[0];
+			}
+			const orderer = channel.getOrderers().filter(orderer => !ordererOrg || orderer.org === ordererOrg)[0]; //use same orderer
+
+
+			// const peerEventHub = EventHubUtil.newEventHub(channel, peer);
+			logger.debug('/createOrUpdateOrg', {channelName: channel.getName(), MSPID, MSPName, nodeType}, {
 				admins,
 				root_certs,
 				tls_root_certs
@@ -149,8 +153,15 @@ router.post('/createOrUpdateOrg', multerCache.fields([{name: 'admins'}, {name: '
 			};
 
 
-			await channelUpdate(channel, onUpdate, signatureCollector, peerEventHub, {nodeType, peer});
-			const {original_config} = await getChannelConfigReadable(channel, nodeType);
+			await channelUpdate(channel, orderer, peer, onUpdate, signatureCollector);
+			if (peer) {
+				const eventHub = EventHubUtil.newEventHub(channel, peer, true);
+				const block = await EventHubUtil.BlockWaiter(eventHub);
+				logger.info('new Block', block);
+			} else {
+				logger.info('orderer update will not trigger block event');
+			}
+			const {original_config} = await getChannelConfigReadable(channel, peer);
 			res.send(original_config);
 		} catch (err) {
 			logger.error(err);

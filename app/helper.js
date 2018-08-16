@@ -49,26 +49,29 @@ exports.prepareChannel = (channelName, client, isRenew) => {
 	}
 
 	const channel = channelUtil.new(client, channelName);
-	const newOrderer = (ordererName, domain, ordererSingleConfig) => {
+	const newOrderer = (name, org, ordererSingleConfig) => {
 		const nodeType = 'orderer';
 		const ordererPort = ordererSingleConfig.portHost;
 		const cryptoPath = new CryptoPath(CRYPTO_CONFIG_DIR, {
 			orderer: {
-				org: domain, name: ordererName
+				org, name
 			}
 		});
+		let orderer;
 		if (globalConfig.TLS) {
 			const {ordererHostName} = cryptoPath;
 			const {caCert} = cryptoPath.TLSFile(nodeType);
-			return OrdererUtil.new({
+			orderer = OrdererUtil.new({
 				ordererPort,
 				cert: caCert,
 				ordererHostName
 			});
 		} else {
-			return OrdererUtil.new({ordererPort});
+			orderer = OrdererUtil.new({ordererPort});
 		}
-
+		orderer.org = org;
+		orderer.name = name;
+		return orderer;
 	};
 	if (ordererConfig.type === 'kafka') {
 		for (const ordererOrgName in ordererConfig.kafka.orgs) {
@@ -191,4 +194,7 @@ exports.randomOrg = (nodeType) => {
 	}
 	logger.info(`random ${nodeType} org`, orgName);
 	return orgName;
+};
+exports.randomChannelOrg = (channelName) => {
+	return randomKeyOf(channelsConfig[channelName].orgs);
 };

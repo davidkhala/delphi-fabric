@@ -70,7 +70,8 @@ const task = async () => {
 	try {
 		const peerClient = await helper.getOrgAdmin(undefined, 'peer'); //only peer user can read channel
 		const channel = helper.prepareChannel(channelName, peerClient);
-		const {original_config} = await configtxlator.getChannelConfigReadable(channel);
+		const peer = channel.getPeer();
+		const {original_config} = await configtxlator.getChannelConfigReadable(channel, peer);
 
 		fsExtra.outputFileSync(`${channelName}.json`, original_config);
 	} catch (e) {
@@ -78,7 +79,7 @@ const task = async () => {
 	}
 	try {
 		const channel = helper.prepareChannel(undefined, ordererClient);
-		const {original_config} = await configtxlator.getChannelConfigReadable(channel, 'orderer');
+		const {original_config} = await configtxlator.getChannelConfigReadable(channel);
 
 		fsExtra.outputFileSync('testchainid.json', original_config);
 	} catch (e) {
@@ -102,7 +103,7 @@ const anchorPeersUpdate = async (configtxYaml, channelName, orgName) => {
 
 	const peer = helper.newPeers([0], orgName)[0];
 	const eventHub = EventHubUtil.newEventHub(channel, peer, true);
-	const block = await EventHubUtil.BlockWaiter(eventHub,1);
+	const block = await EventHubUtil.BlockWaiter(eventHub, 1);
 };
 
 task();
