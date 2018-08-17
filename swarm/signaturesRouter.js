@@ -43,7 +43,14 @@ router.post('/getSwarmSignatures', multerCache.single('proto'), async (req, res)
 			}
 		});
 		const resp = await Promise.all(promises);
-		const joinedArray = resp.reduce((accumulator, currentValue) => accumulator.concat(currentValue));
+
+		//resp is array of array
+		let joinedArray = [];
+		for (const eachResp of resp) {
+			if (Array.isArray(eachResp)) {
+				joinedArray = joinedArray.concat(eachResp);
+			}
+		}
 		res.send({signatures: joinedArray});
 
 	} catch (err) {
