@@ -8,7 +8,7 @@ const {
 	deployKafka, runKafka, runZookeeper, deployZookeeper,
 	deployPeer, runPeer, runOrderer, deployOrderer,
 	chaincodeClean, tasksWaitUntilLive, fabricImagePull, tasksWaitUntilDead
-	, swarmRenew, ImageTag
+	, swarmRenew,
 } = require('./common/nodejs/fabric-dockerode');
 const channelUtil = require('./common/nodejs/channel');
 const ClientUtil = require('./common/nodejs/client');
@@ -38,7 +38,7 @@ exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPRO
 	const {orderer: {type, genesis_block: {file: BLOCK_FILE}}} = globalConfig;
 	const CONFIGTXVolume = volumeName.CONFIGTX;
 	const MSPROOTVolume = volumeName.MSPROOT;
-	const imageTag = ImageTag({arch, tag: fabricTag});
+	const imageTag = fabricTag;
 	const {MSPROOT} = peerUtil.container;
 	const cryptoType = 'orderer';
 	const orderers = [];
@@ -131,7 +131,7 @@ exports.volumesAction = async (toStop) => {
 	}
 };
 exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'}, tostop, swarm) => {
-	const imageTag = ImageTag({arch, tag: fabricTag});
+	const imageTag = fabricTag;
 	const orgsConfig = globalConfig.orgs;
 	const peers = [];
 	const couchDB = globalConfig.ledger.storage === 'couchDB' ? globalConfig.ledger.couchDB : undefined;
@@ -142,7 +142,7 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 		if (tostop) {
 			await containerDelete(container_name);
 		} else {
-			const imageTag = ImageTag({arch, tag: thirdPartyTag});
+			const imageTag = thirdPartyTag;
 			await runCouchDB({imageTag, container_name, port, network});
 		}
 	}
@@ -220,7 +220,7 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 exports.runCAs = async (toStop, swarm) => {
 	const {orderer: {type}, orgs: peerOrgsConfig} = globalConfig;
 
-	const imageTag = ImageTag({arch, tag: fabricTag});
+	const imageTag = fabricTag;
 
 	const CAs = [];
 	const toggle = async ({container_name, port}, toStop, swarm) => {
@@ -272,7 +272,7 @@ exports.runCAs = async (toStop, swarm) => {
 
 exports.runZookeepers = async (toStop, swarm) => {
 	const zkConfigs = globalConfig.orderer.kafka.zookeepers;
-	const imageTag = ImageTag({arch, tag: thirdPartyTag});
+	const imageTag = thirdPartyTag;
 	const zookeepers = [];
 	for (const zookeeper in zkConfigs) {
 		const zkConfig = zkConfigs[zookeeper];
@@ -310,7 +310,7 @@ exports.runKafkas = async (toStop, swarm) => {
 	const zkConfigs = globalConfig.orderer.kafka.zookeepers;
 	const zookeepers = Object.keys(zkConfigs);
 	const {N, M} = globalConfig.orderer.kafka;
-	const imageTag = ImageTag({arch, tag: thirdPartyTag});
+	const imageTag = thirdPartyTag;
 
 	const kafkas = [];
 	for (const kafka in kafkaConfigs) {
