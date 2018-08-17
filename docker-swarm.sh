@@ -5,9 +5,12 @@ CURRENT=$(cd $(dirname ${BASH_SOURCE}) && pwd)
 function down() {
 	node -e "require('./dockerode-bootstrap').down(true)"
 }
-function up() {
+function prepareNetwork() {
 	node -e "require('./dockerode-bootstrap').up(true)"
-#	node app/testChannel.js
+}
+function up() {
+	prepareNetwork
+	node app/testChannel.js
 }
 if [ "$1" == "up" ]; then
 	up

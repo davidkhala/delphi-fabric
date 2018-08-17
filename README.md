@@ -53,13 +53,14 @@ Test on single host
 Test on docker swarm
 -----------------------
 I have migrated codes in `cluster/managerNode` to new repository [Fabric-swarm-manager](https://github.com/davidkhala/fabric-swarm-manager)
+
 `fabric-swarm-manager` is used on new managerNode machine `slave` to play with existing cluster
+
 Current machine is noted as `master` 
 
 **steps**
-1. [master] run `$ ./docker-swarm.sh` to restart network
-2. [master] run `$ node app/testChannel.js` to create-channel and join-channel
-3. [slave] run `$./manager.sh` to prepare for it self
+1. [master] run `$ ./docker-swarm.sh` to restart network and prepare channel 
+2. [slave] run `$./manager.sh` to prepare for it self
 3. [master] `$ node app/testInstall.js` to install chaincode and instantiate chaincode
 4. [master] `$ node app/testInvoke.js` to invoke chaincode
 
@@ -90,6 +91,7 @@ TODO dep: to import third-party package in vendor folder
 - Duplicated priv-file creation, crypto-store problem in .hfc-key-store
 - chaincode setEvent: for both golang,nodejs chaincodeType
 - replace Organization name by MSP name
+- 1.2 private channel data, solved by manually set anchor peers
 ## TODO
 - TLS, java sdk and docker-swarm: keep update
 - test backup and recover
@@ -103,14 +105,15 @@ TODO dep: to import third-party package in vendor folder
 - take care of docker swarm init --force-new-cluster
 - will block file name be a problem in signature cache? take care docker cp from container for multiple request
 - cross chaincode invoke on same channel and differed channel
-- 1.2 private channel data
+- migrate to use make file instead of ./install.sh
 - use dep to import fabric source into vendor
 ## New feature, patch required for node-sdk
  
 - feature: implement configtx in node-sdk??
 - patch: configtxgen binary allow upper case channelName
 - fabric-ca: cannot change csr.cn via '--csr.cn=${container_name}' TLS CSR: {CN:example.com Names:[{C:US ST:North Carolina L: O:Hyperledger OU:Fabric SerialNumber:}] Hosts:[02cf209b65fb localhost] KeyRequest:<nil> CA:<nil> SerialNumber:}
- 
+- fabric-ca: `fabric-ca` line in git ignore make source copy failed
+- fabric-sdk-node: add timeStamp for default winston logger 
 ## Abandoned tasks
 - docker volume plugin
 - using Atom for Mac default keymap, align with bret Harrison

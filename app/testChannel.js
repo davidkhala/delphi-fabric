@@ -70,7 +70,7 @@ const task = async () => {
 	try {
 		const peerClient = await helper.getOrgAdmin(undefined, 'peer'); //only peer user can read channel
 		const channel = helper.prepareChannel(channelName, peerClient);
-		const peer = channel.getPeer();
+		const peer = channel.getPeers()[0];
 		const {original_config} = await configtxlator.getChannelConfigReadable(channel, peer);
 
 		fsExtra.outputFileSync(`${channelName}.json`, original_config);
