@@ -11,6 +11,7 @@ function prepareNetwork() {
 function up() {
 	prepareNetwork
 	node app/testChannel.js
+	name=stress node app/testInstall.js
 }
 if [ "$1" == "up" ]; then
 	up

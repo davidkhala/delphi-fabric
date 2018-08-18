@@ -19,7 +19,7 @@ const {sha2_256} = require('../common/nodejs/helper');
 
 router.post('/getSwarmSignatures', multerCache.single('proto'), async (req, res) => {
 	try {
-		if (!req.file) throw 'no attachment found';
+		if (!req.file) throw Error('no attachment found');
 		const protoPath = req.file.path;
 
 		const proto = fs.readFileSync(protoPath);
