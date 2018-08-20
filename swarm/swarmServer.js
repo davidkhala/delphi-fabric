@@ -196,7 +196,7 @@ exports.run = () => {
 };
 exports.clean = async () => {
 	logger.info('clean');
-	fsExtra.emptyDirSync(homeResolve(cache));
+	fsExtra.emptyDirSync(path.resolve(cache));
 	const connection = new dbMap[db]({name: container_name});
 	await connection.clear();
 };

@@ -11,7 +11,7 @@ const fs = require('fs');
 const {port: signServerPort} = require('./swarm.json').signServer;
 const {cache, port: swarmServerPort} = require('./swarm.json').swarmServer;
 const {homeResolve} = require('../common/nodejs/path');
-const multerCache = Multer({dest: homeResolve(cache)});
+const multerCache = Multer({dest: path.resolve(cache)});
 const {RequestPromise, getSignatures} = require('../common/nodejs/express/serverClient');
 
 const channelUtil = require('../common/nodejs/channel');
