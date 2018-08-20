@@ -30,10 +30,14 @@ this script help to make docker command runnable without `sudo` prefix
 **Design idea**
  * use fabric-ca to generate all crypto material, instead of cryptogen
  * cluster: 
-    - leader node provide 1. swarm config sharing server 'swarmServer' 2. signature server 'signServer'
-    - master node provide signature server 'signServer', holding 1 CA, 1 orderer, 1 peer 
- * swarmServer:
-    - Redis/Couchdb as DB
+    - [master] node provide 
+        1. [pm2] swarm config sharing server `swarmServer`
+            - state storage db: Redis/Couchdb
+        2. [pm2] signature server `signServer`
+        3. [container] 1 CA for each orderer org, 1 CA for each peer org 
+    - [slave] node provide 
+        1. [pm2] signature server `signServer`
+        2. [container] 1 CA for peer org, 1 peer, 1 CA for orderer org(experimental) 
  * prefer to use config-less fabric-ca
  * use `npm dockerode` to run docker container & services, instead of `docker-compose` or `docker stack deploy` 
 
