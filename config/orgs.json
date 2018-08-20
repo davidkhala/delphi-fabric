@@ -71,11 +71,11 @@
             "id": "ICDDMSP"
           },
           "ca": {
-            "portHost": 8454
+            "portHost": 7454
           },
           "orderers": {
             "orderer0": {
-              "portHost": 8050
+              "portHost": 7050
             }
           }
         }
