@@ -63,9 +63,10 @@ I have migrated codes in `cluster/managerNode` to new repository [Fabric-swarm-m
 Current machine is noted as `master` 
 
 **steps**
-1. [master] run `$ ./docker-swarm.sh` to restart network and prepare channel, install and instantiate chaincode
-2. [slave] run `$./manager.sh` to prepare for it self
-4. [master] `$ node app/testInvoke.js` to invoke chaincode
+1. [master] run `$ ./docker-swarm.sh` to restart network and prepare channel
+2. [slave] run `$ ./manager.sh` to prepare own ca and peer, join exist channel and install chaincode
+3. [master] run `$ ./docker-swarm.sh` to install and instantiate chaincode
+4. [slave] run `$ node invokeChaincode.js` to invoke chaincode
 
 TODO dep: to import third-party package in vendor folder
 --------

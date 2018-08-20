@@ -2,6 +2,7 @@
 set -e
 CURRENT=$(cd $(dirname ${BASH_SOURCE}) && pwd)
 
+fcn=$1
 function down() {
 	node -e "require('./dockerode-bootstrap').down(true)"
 }
@@ -11,13 +12,13 @@ function prepareNetwork() {
 function up() {
 	prepareNetwork
 	node app/testChannel.js
-	name=stress node app/testInstall.js
 }
-if [ "$1" == "up" ]; then
-	up
-elif [ "$1" == "down" ]; then
+function chaincode(){
+    name=stress node app/testInstall.js
+}
+if [ -z "$fcn" ]; then
 	down
+	up
 else
-	down
-	up
+	$fcn
 fi
