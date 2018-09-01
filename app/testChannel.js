@@ -2,10 +2,11 @@ const {create: createChannel} = require('./channelHelper');
 const {join: joinChannel, setupAnchorPeers} = require('../common/nodejs/channel');
 
 const helper = require('./helper');
+const {projectResolve} = helper;
 const logger = require('../common/nodejs/logger').new('testChannel');
 const configtxlator = require('../common/nodejs/configtxlator');
 const EventHubUtil = require('../common/nodejs/eventHub');
-const {homeResolve, fsExtra} = require('../common/nodejs/path');
+const {fsExtra} = require('../common/nodejs/path');
 const {exec} = require('../common/nodejs/helper');
 const path = require('path');
 const channelName = 'allchannel';
@@ -14,7 +15,7 @@ const globalConfig = require('../config/orgs.json');
 const {TLS} = globalConfig;
 const channelConfig = globalConfig.channels[channelName];
 
-const channelConfigFile = homeResolve(globalConfig.docker.volumes.CONFIGTX.dir, channelConfig.file);
+const channelConfigFile = projectResolve(globalConfig.docker.volumes.CONFIGTX.dir, channelConfig.file);
 const joinAllfcn = async (channelName) => {
 
 

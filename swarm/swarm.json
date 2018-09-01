@@ -1,7 +1,7 @@
 {
   "swarmServer": {
     "port": 4001,
-    "cache":"cache/",
+    "cache":"swarm/cache/",
     "Couchdb": {
       "container_name": "couchDBSwarm",
       "port": 6984
@@ -13,6 +13,6 @@
   },
   "signServer":{
     "port":4002,
-    "cache":"cache/"
+    "cache":"swarm/cache/"
   }
 }

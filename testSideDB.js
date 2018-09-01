@@ -5,13 +5,9 @@ const helper = require('./app/helper');
 const logger = require('./common/nodejs/logger').new('testInvoke',true);
 const chaincodeId = process.env.name ? process.env.name : 'v1_2';
 
-const globalConfig = require('./config/orgs.json');
-const {channels} = globalConfig;
-
 const channelName = 'allchannel';
 
 
-const {sleep} = require('./common/nodejs/helper');
 const task = async (orgName, peerIndex, action) => {
 	const peers = helper.newPeers([peerIndex], orgName);
 	const client = await helper.getOrgAdmin(orgName);

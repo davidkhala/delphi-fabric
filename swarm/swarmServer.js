@@ -7,10 +7,11 @@ const {port, cache} = swarmConfig;
 const {db = 'Redis'} = process.env;
 const {container_name, port: dbPort} = swarmConfig[db];
 const path = require('path');
-const fs = require('fs');
 
-const {homeResolve, fsExtra} = require('../common/nodejs/path');
+const {fsExtra} = require('../common/nodejs/path');
 const {sha2_256} = require('../common/nodejs/helper');
+const {projectResolve} = require('../app/helper');
+
 const dockerUtil = require('../common/docker/nodejs/dockerode-util');
 
 class dbInterface {
@@ -154,7 +155,7 @@ exports.run = () => {
 	app.use('/config', require('../express/configExpose'));
 
 	app.get('/leader', async (req, res) => {
-		const connection = new dbMap[db]({name:container_name,table: swarmDoc});
+		const connection = new dbMap[db]({name: container_name, table: swarmDoc});
 		const value = await connection.get(leaderKey);
 		logger.debug('leader info', value);
 		res.json(value);
@@ -162,7 +163,7 @@ exports.run = () => {
 	app.post('/leader/update', async (req, res) => {
 		const {ip, hostname, managerToken, workerToken} = req.body;
 		logger.debug('leader update', {ip, hostname, managerToken, workerToken});
-		const connection = new dbMap[db]({name:container_name,table:swarmDoc});
+		const connection = new dbMap[db]({name: container_name, table: swarmDoc});
 		const value = await connection.set(leaderKey, {ip, hostname, managerToken, workerToken});
 		res.json(value);
 	});
@@ -170,16 +171,16 @@ exports.run = () => {
 	app.use('/channel', require('./signaturesRouter'));
 	app.get('/block', async (req, res) => {
 		const globalConfig = require('../config/orgs');
-		const dir = homeResolve(globalConfig.docker.volumes.CONFIGTX.dir);
+		const dir = projectResolve(globalConfig.docker.volumes.CONFIGTX.dir);
 		const blockFile = path.resolve(dir, globalConfig.orderer.genesis_block.file);
-		const buffer = fs.readFileSync(blockFile, 'binary');
+		const buffer = fsExtra.readFileSync(blockFile, 'binary');
 		logger.info('GET block', 'check buffer hash', sha2_256(buffer));
 		res.send(buffer);
 	});
 	app.get('/', async (req, res) => {
 		try {
 			//touch
-			new dbMap[db]({name:container_name,table: swarmDoc});
+			new dbMap[db]({name: container_name, table: swarmDoc});
 			res.json({
 				errCode: 'success',
 				message: 'pong'
