@@ -6,12 +6,12 @@ const EventHubUtil = require('../common/nodejs/eventHub');
 const {channelUpdate, ConfigFactory, getChannelConfigReadable} = require('../common/nodejs/configtxlator');
 const {nodeList, prune: {nodes: pruneNodes}} = require('../common/docker/nodejs/dockerode-util');
 const helper = require('../app/helper');
+const {projectResolve} = helper;
 const Multer = require('multer');
 const fs = require('fs');
 const {port: signServerPort} = require('./swarm.json').signServer;
 const {cache, port: swarmServerPort} = require('./swarm.json').swarmServer;
-const {homeResolve} = require('../common/nodejs/path');
-const multerCache = Multer({dest: path.resolve(cache)});
+const multerCache = Multer({dest: projectResolve(cache)});
 const {RequestPromise, getSignatures} = require('../common/nodejs/express/serverClient');
 
 const channelUtil = require('../common/nodejs/channel');
@@ -60,7 +60,7 @@ router.post('/getSwarmSignatures', multerCache.single('proto'), async (req, res)
 
 });
 const signatureCollector = async (proto) => {
-	const tempFile = homeResolve(cache, 'proto');
+	const tempFile = projectResolve(cache, 'proto');
 	fs.writeFileSync(tempFile, proto);
 	const formData = {
 		proto: fs.createReadStream(tempFile)

@@ -27,6 +27,7 @@ module.exports = {
 		],
 		'prefer-const':'error',
 		'no-var':'error',
+		'no-unused-vars':'warn',
 		'prefer-arrow-callback': 'error'
 	}
 };

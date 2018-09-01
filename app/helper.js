@@ -6,8 +6,11 @@ const channelsConfig = globalConfig.channels;
 const ordererConfig = globalConfig.orderer;
 const ClientUtil = require('../common/nodejs/client');
 const peerUtil = require('../common/nodejs/peer');
-const {CryptoPath, homeResolve} = require('../common/nodejs/path');
-const CRYPTO_CONFIG_DIR = homeResolve(globalConfig.docker.volumes.MSPROOT.dir);
+const {CryptoPath} = require('../common/nodejs/path');
+const path = require('path');
+const projectRoot = path.dirname(__dirname);
+const projectResolve = (...args) => path.resolve(projectRoot, ...args);
+const CRYPTO_CONFIG_DIR = projectResolve(globalConfig.docker.volumes.MSPROOT.dir);
 const userUtil = require('../common/nodejs/user');
 const OrdererUtil = require('../common/nodejs/orderer');
 const channelUtil = require('../common/nodejs/channel');
@@ -198,3 +201,4 @@ exports.randomOrg = (nodeType) => {
 exports.randomChannelOrg = (channelName) => {
 	return randomKeyOf(channelsConfig[channelName].orgs);
 };
+exports.projectResolve = projectResolve;

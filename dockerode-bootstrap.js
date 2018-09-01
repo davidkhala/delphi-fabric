@@ -10,12 +10,13 @@ const {
 	chaincodeClean, tasksWaitUntilLive, fabricImagePull, tasksWaitUntilDead
 	, swarmRenew,
 } = require('./common/nodejs/fabric-dockerode');
-const channelUtil = require('./common/nodejs/channel');
 const ClientUtil = require('./common/nodejs/client');
-const {CryptoPath, homeResolve, fsExtra} = require('./common/nodejs/path');
+const {CryptoPath, fsExtra} = require('./common/nodejs/path');
 const {PM2} = require('./common/nodejs/express/pm2Manager');
-const MSPROOT = homeResolve(globalConfig.docker.volumes.MSPROOT.dir);
-const CONFIGTX = homeResolve(globalConfig.docker.volumes.CONFIGTX.dir);
+
+const {projectResolve} = require('./app/helper');
+const MSPROOT = projectResolve(globalConfig.docker.volumes.MSPROOT.dir);
+const CONFIGTX = projectResolve(globalConfig.docker.volumes.CONFIGTX.dir);
 const arch = 'x86_64';
 const {
 	containerDelete, volumeCreateIfNotExist, networkCreateIfNotExist,
@@ -126,7 +127,7 @@ exports.volumesAction = async (toStop) => {
 			await volumeRemove(Name);
 			continue;
 		}
-		const path = homeResolve(globalConfig.docker.volumes[Name].dir);
+		const path = projectResolve(globalConfig.docker.volumes[Name].dir);
 		await volumeCreateIfNotExist({Name, path});
 	}
 };

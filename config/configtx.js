@@ -80,7 +80,7 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 
 		const cryptoPath = new CryptoPath(MSPROOT, {
 			peer: {
-				org: orgName, name: `peer0`
+				org: orgName, name: 'peer0'
 			}
 		});
 		const result = {

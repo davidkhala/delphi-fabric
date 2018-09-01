@@ -6,10 +6,10 @@
     "network": "delphiNetwork",
     "volumes": {
       "CONFIGTX": {
-        "dir": "Documents/delphi-fabric/config/configtx"
+        "dir": "config/configtx"
       },
       "MSPROOT": {
-        "dir": "Documents/delphi-fabric/config/ca-crypto-config/"
+        "dir": "config/ca-crypto-config/"
       }
     }
   },

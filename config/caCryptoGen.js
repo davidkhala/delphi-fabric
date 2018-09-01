@@ -5,11 +5,13 @@ const {initAdmin, genPeer, init, genOrderer, genUser} = require('../common/nodej
 const pathUtil = require('../common/nodejs/path');
 const dockerCmd = require('../common/docker/nodejs/dockerCmd');
 const {swarmServiceName, inflateContainerName} = require('../common/docker/nodejs/dockerode-util');
-const {CryptoPath, homeResolve} = pathUtil;
+const {CryptoPath} = pathUtil;
 const logger = require('../common/nodejs/logger').new('caCryptoGen');
 const globalConfig = require('../config/orgs');
 const userUtil = require('../common/nodejs/user');
 const helper = require('../app/helper');
+const {projectResolve} = helper;
+const caCryptoConfig = projectResolve(globalConfig.docker.volumes.MSPROOT.dir);
 const {TLS} = globalConfig;
 const protocol = TLS ? 'https' : 'http';
 const getCaService = async (url, domain, swarm) => {
@@ -37,7 +39,6 @@ exports.genUser = async ({userName, password}, orgName, swarm) => {
 	const {config, nodeType} = helper.findOrgConfig(orgName);
 	const mspId = config.MSP.id;
 	const caUrl = `${protocol}://localhost:${config.ca.portHost}`;
-	const caCryptoConfig = homeResolve(globalConfig.docker.volumes.MSPROOT.dir);
 	const caService = await getCaService(caUrl, orgName, swarm);
 
 	const cryptoPath = new CryptoPath(caCryptoConfig, {
@@ -66,7 +67,6 @@ exports.genUser = async ({userName, password}, orgName, swarm) => {
 
 exports.genAll = async (swarm) => {
 
-	const caCryptoConfig = homeResolve(globalConfig.docker.volumes.MSPROOT.dir);
 	const {type} = globalConfig.orderer;
 
 	//gen orderers

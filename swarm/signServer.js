@@ -3,17 +3,18 @@ const logger = require('../common/nodejs/logger').new('sign server');
 
 const signUtil = require('../common/nodejs/multiSign');
 const globalConfig = require('../config/orgs');
-const fs = require('fs');
 const {sha2_256} = require('../common/nodejs/helper');
 const helper = require('../app/helper');
-const {homeResolve, fsExtra} = require('../common/nodejs/path');
+const {projectResolve} = helper;
+const {fsExtra} = require('../common/nodejs/path');
 const Multer = require('multer');
 const baseApp = require('../common/nodejs/express/baseApp');
+const cacheDir = projectResolve(cache);
 exports.run = () => {
 	const {app} = baseApp.run(port);
-	const multerCache = Multer({dest: homeResolve(cache)});
+	const multerCache = Multer({dest: cacheDir});
 	app.post('/', multerCache.single('proto'), async (req, res) => {
-		const proto = fs.readFileSync(req.file.path);
+		const proto = fsExtra.readFileSync(req.file.path);
 		logger.info('sign request', 'hash', sha2_256(proto));
 
 
@@ -51,5 +52,5 @@ exports.run = () => {
 };
 exports.clean = () => {
 	logger.info('clean');
-	fsExtra.emptyDirSync(homeResolve(cache));
+	fsExtra.emptyDirSync(cacheDir);
 };

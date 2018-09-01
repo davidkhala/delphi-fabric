@@ -1,12 +1,14 @@
 const logger = require('./common/nodejs/logger').new('express API');
-const {homeResolve, fsExtra} = require('./common/nodejs/path');
+const {fsExtra} = require('./common/nodejs/path');
 const path = require('path');
+const helper = require('./app/helper.js');
+const {projectResolve} = helper;
 const port = 4000;
 const globalConfig = require('./config/orgs.json');
 const channelsConfig = globalConfig.channels;
-const CONFIGTXDir = homeResolve(globalConfig.docker.volumes.CONFIGTX.dir);
+const CONFIGTXDir = projectResolve(globalConfig.docker.volumes.CONFIGTX.dir);
 
-const helper = require('./app/helper.js');
+
 const {create: createChannel} = require('./app/channelHelper');
 const {join: joinChannel} = require('./common/nodejs/channel');
 
@@ -16,7 +18,7 @@ const {app} = require('./common/nodejs/express/baseApp').run(port);
 
 app.use('/config', require('./express/configExpose'));
 
-app.get('/', (req, res, next) => {
+app.get('/', (req, res) => {
 	res.send('pong from davids server');
 });
 
