@@ -91,6 +91,11 @@
           "peerIndexes": [
             0,1
           ]
+        },
+        "icdd":{
+          "peerIndexes": [
+            0
+          ]
         }
       }
     }
@@ -112,6 +117,20 @@
       },
       "MSP": {
         "id": "ASTRIMSP"
+      }
+    },
+    "icdd":{
+      "peers": [
+        {
+          "container_name": "peer0.icdd.org",
+          "port": 8051
+        }
+      ],
+      "ca": {
+        "portHost": 8054
+      },
+      "MSP": {
+        "id": "icdd"
       }
     }
   }

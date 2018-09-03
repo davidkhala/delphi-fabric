@@ -96,6 +96,7 @@ TODO dep: to import third-party package in vendor folder
 - chaincode setEvent: for both golang,nodejs chaincodeType
 - replace Organization name by MSP name
 - 1.2 private channel data, solved by manually set anchor peers
+- it is allowed that chaincode invoker, target peers belongs to differed organization.
 ## TODO
 - TLS, java sdk and docker-swarm: keep update
 - test backup and recover
