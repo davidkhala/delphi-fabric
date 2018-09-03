@@ -130,6 +130,9 @@ exports.genAll = async (swarm) => {
 				orderer: {
 					org: domain, name: ordererConfig.container_name
 				},
+				user: {
+					name: userUtil.adminName
+				}
 			});
 			await genOrderer(caService, cryptoPath, admin, {TLS});
 		}
