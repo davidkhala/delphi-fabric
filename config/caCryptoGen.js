@@ -162,6 +162,9 @@ exports.genAll = async (swarm) => {
 				const cryptoPath = new CryptoPath(caCryptoConfig, {
 					peer: {
 						org: domain, name: peerName
+					},
+					user: {
+						name: userUtil.adminName
 					}
 				});
 				promises.push(genPeer(caService, cryptoPath, admin, {TLS}));
