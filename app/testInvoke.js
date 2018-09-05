@@ -17,13 +17,12 @@ const {chaincodeEvent, newEventHub} = require('../common/nodejs/eventHub');
 
 const {sleep} = require('../common/nodejs/helper');
 const task = async () => {
-	let orgName = helper.randomOrg('peer');
-	const {peerIndexes} = channels[channelName].orgs[orgName];
-	const peers = helper.newPeers(peerIndexes, orgName);
-	logger.info('peerOrg', orgName);
+	const org1 = 'icdd';
+	const org2 = 'ASTRI.org';
+	const peers = [helper.newPeers([0], org1)[0], helper.newPeers([0], org2)[0]];
 	//try to use another user
-	orgName = helper.randomOrg('peer');
-	logger.info('channel org',orgName);
+	let orgName = helper.randomOrg('peer');
+	logger.info('channel org', orgName);
 	const client = await helper.getOrgAdmin(orgName);
 	const channel = helper.prepareChannel(channelName, client, true);
 	const {txEventResponses, proposalResponses} = await invoke(channel, peers, {chaincodeId, fcn, args});

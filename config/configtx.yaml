@@ -16,20 +16,28 @@ Profiles:
       Organizations:
         - Name: Delphi.com
           ID: OrdererMSP
-          MSPDir: /home/blockchain/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/Delphi.com/msp
+          MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/Delphi.com/msp
     Consortiums:
       SampleConsortium:
         Organizations:
           - Name: ASTRI.org
             ID: ASTRIMSP
-            MSPDir: /home/blockchain/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/ASTRI.org/msp
+            MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/ASTRI.org/msp
+          - Name: icdd
+            ID: icdd
+            MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp
   allchannel:
     Consortium: SampleConsortium
     Application:
       Organizations:
         - Name: ASTRI.org
           ID: ASTRIMSP
-          MSPDir: /home/blockchain/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/ASTRI.org/msp
+          MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/ASTRI.org/msp
+          AnchorPeers:
+            - {}
+        - Name: icdd
+          ID: icdd
+          MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp
           AnchorPeers:
             - {}
       Capabilities:
@@ -40,4 +48,8 @@ Profiles:
         - Name: ASTRI.org
           AnchorPeers:
             - Host: peer0.ASTRI.org
+              Port: 7051
+        - Name: icdd
+          AnchorPeers:
+            - Host: peer0.icdd
               Port: 7051

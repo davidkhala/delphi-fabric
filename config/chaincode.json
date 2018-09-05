@@ -20,10 +20,17 @@
       "path": "github.com/davidkhala/chaincode/golang/admin"
     },
     "stress": {
-      "path": "github.com/davidkhala/chaincode/golang/stress"
+      "path": "github.com/davidkhala/chaincode/golang/stress",
+      "endorsingConfigs": {
+        "n": 2,
+        "mspId": {
+          "ASTRIMSP": false,
+          "icdd": false
+        }
+      }
     },
     "node": {
-      "type":"node",
+      "type": "node",
       "path": "github.com/davidkhala/chaincode/nodejs/sample",
       "endorsingConfigs": {
         "n": 1,

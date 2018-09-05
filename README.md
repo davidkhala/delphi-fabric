@@ -79,7 +79,7 @@ TODO dep: to import third-party package in vendor folder
 
 
 ## Finished
-
+- sample for endorsement-policy `2-of`: send proposal with single signature to peers from 2 org
 - kafka on local & swarm
 - use npm:js-yaml to write YAML files instead of jq
 - thirdPartyTag for kafka, zookeeper, couchdb...
@@ -112,6 +112,7 @@ TODO dep: to import third-party package in vendor folder
 - cross chaincode invoke on same channel and differed channel
 - migrate to use make file instead of ./install.sh
 - use dep to import fabric source into vendor
+  
 ## New feature, patch required for node-sdk
  
 - feature: implement configtx in node-sdk??

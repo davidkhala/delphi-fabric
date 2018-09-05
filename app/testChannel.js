@@ -1,5 +1,5 @@
 const {create: createChannel} = require('./channelHelper');
-const {join: joinChannel, setupAnchorPeers} = require('../common/nodejs/channel');
+const {join: joinChannel, updateAnchorPeers} = require('../common/nodejs/channel');
 
 const helper = require('./helper');
 const {projectResolve} = helper;
@@ -100,7 +100,7 @@ const anchorPeersUpdate = async (configtxYaml, channelName, orgName) => {
 	const channel = helper.prepareChannel(channelName, client);
 	const orderer = channel.getOrderers()[0];
 
-	await setupAnchorPeers(channel, anchorTx, orderer);
+	await updateAnchorPeers(channel, anchorTx, orderer);
 
 	const peer = helper.newPeers([0], orgName)[0];
 	const eventHub = EventHubUtil.newEventHub(channel, peer, true);
