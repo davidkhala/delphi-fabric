@@ -29,6 +29,12 @@
         }
       }
     },
+    "mainChain":{
+      "path": "github.com/davidkhala/chaincode/golang/mainChain"
+    },
+    "sideChain":{
+      "path": "github.com/davidkhala/chaincode/golang/sideChain"
+    },
     "node": {
       "type": "node",
       "path": "github.com/davidkhala/chaincode/nodejs/sample",
