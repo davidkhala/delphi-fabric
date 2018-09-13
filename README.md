@@ -112,6 +112,7 @@ TODO dep: to import third-party package in vendor folder
 - cross chaincode invoke on same channel and differed channel
 - migrate to use make file instead of ./install.sh
 - use dep to import fabric source into vendor
+- not all peers upgrade to latest chaincode, is this possible that old chaincode still work 
   
 ## New feature, patch required for node-sdk
  
