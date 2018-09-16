@@ -11,7 +11,7 @@
             }
           },
           "requiredPeerCount": 1,
-          "maxPeerCount": 2,
+          "maxPeerCount": 2
         }
       }
     },
@@ -52,7 +52,7 @@
             }
           },
           "requiredPeerCount": 2,
-          "maxPeerCount": 2,
+          "maxPeerCount": 2
         }
       }
     }

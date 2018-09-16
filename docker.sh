@@ -8,7 +8,7 @@ function down() {
 function up() {
 	prepareNetwork
 	node app/testChannel
-	name=stress node app/testInstall
+	name=adminChaincode node app/testInstall
 }
 
 function prepareNetwork() {
