@@ -49,6 +49,5 @@ else
 	./common/bin-manage/pullBIN.sh
 	npm install
 	updateChaincode
-	pull
-	pullKafka
+	./common/docker/dockerSUDO.sh
 fi
