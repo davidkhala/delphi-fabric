@@ -36,14 +36,14 @@ exports.newerVersion = (versionN, versionO) => {
 	const versionNumO = parseInt(versionO.substr(1));
 	return versionNumN > versionNumO;
 };
-exports.upgradeToCurrent = async (channel, richPeer, { chaincodeId, args, fcn }) => {
+exports.upgradeToCurrent = async (channel, richPeer, {chaincodeId, args, fcn}) => {
 	const client = channel._clientContext;
-	const { chaincodes } = await Query.chaincodes.installed(richPeer, client);
+	const {chaincodes} = await Query.chaincodes.installed(richPeer, client);
 	const foundChaincode = chaincodes.find((element) => element.name === chaincodeId);
 	if (!foundChaincode) {
 		throw `No chaincode found with name ${chaincodeId}`;
 	}
-	const { version } = foundChaincode;
+	const {version} = foundChaincode;
 
 	// [ { name: 'adminChaincode',
 	// 	version: 'v0',
@@ -53,21 +53,21 @@ exports.upgradeToCurrent = async (channel, richPeer, { chaincodeId, args, fcn })
 	// 	vscc: '' } ]
 
 	const chaincodeVersion = exports.nextVersion(version);
-	return exports.upgrade(channel, [richPeer], { chaincodeId, args, chaincodeVersion, fcn }, client);
+	return exports.upgrade(channel, [richPeer], {chaincodeId, args, chaincodeVersion, fcn}, client);
 };
 
-exports.updateInstall = async (peer, { chaincodeId, chaincodePath }, client) => {
+exports.updateInstall = async (peer, {chaincodeId, chaincodePath}, client) => {
 	const logger = logUtil.new('update install');
-	const { chaincodes } = await Query.chaincodes.installed(peer, client);
+	const {chaincodes} = await Query.chaincodes.installed(peer, client);
 	const foundChaincodes = chaincodes.filter((element) => element.name === chaincodeId);
 	let chaincodeVersion = 'v0';
 	if (foundChaincodes.length === 0) {
-		logger.warn(`No chaincode found with name ${chaincodeId}, to use version ${chaincodeVersion}, `, { chaincodePath });
+		logger.warn(`No chaincode found with name ${chaincodeId}, to use version ${chaincodeVersion}, `, {chaincodePath});
 	} else {
 		let latestChaincode = foundChaincodes[0];
 		let latestVersion = latestChaincode.version;
 		for (const chaincode of foundChaincodes) {
-			const { version } = chaincode;
+			const {version} = chaincode;
 			if (exports.newerVersion(version, latestVersion)) {
 				latestVersion = version;
 				latestChaincode = chaincode;
@@ -84,7 +84,7 @@ exports.updateInstall = async (peer, { chaincodeId, chaincodePath }, client) => 
 	// 	escc: '',
 	// 	vscc: '' } ]
 
-	return exports.install([peer], { chaincodeId, chaincodePath, chaincodeVersion }, client);
+	return exports.install([peer], {chaincodeId, chaincodePath, chaincodeVersion}, client);
 
 };
 const buildPolicy = (config) => {
@@ -119,7 +119,7 @@ const configParser = (config) => {
 };
 const defaultProposalTime = 45000;
 exports.instantiate = async (channel, richPeers, opts) => {
-	const logger = logUtil.new('instantiate-Helper',true);
+	const logger = logUtil.new('instantiate-Helper', true);
 	const {chaincodeId} = opts;
 	const policyConfig = configParser(chaincodeConfig.chaincodes[chaincodeId]);
 
@@ -134,8 +134,8 @@ exports.instantiate = async (channel, richPeers, opts) => {
 
 	const allConfig = Object.assign(policyConfig, opts);
 	logger.debug(JSON.stringify(allConfig));
-	const proposalTimeout = richPeers.length*defaultProposalTime;
-	return instantiateOrUpgrade('deploy', channel, richPeers, eventHubs, allConfig, eventWaitTime,proposalTimeout);
+	const proposalTimeout = richPeers.length * defaultProposalTime;
+	return instantiateOrUpgrade('deploy', channel, richPeers, eventHubs, allConfig, eventWaitTime, proposalTimeout);
 };
 
 exports.upgrade = async (channel, richPeers, opts) => {
@@ -150,11 +150,11 @@ exports.upgrade = async (channel, richPeers, opts) => {
 		eventHubs.push(eventHub);
 	}
 	const allConfig = Object.assign(policyConfig, opts);
-	const proposalTimeout = richPeers.length*defaultProposalTime;
-	return instantiateOrUpgrade('upgrade', channel, richPeers, eventHubs, allConfig, eventWaitTime,proposalTimeout);
+	const proposalTimeout = richPeers.length * defaultProposalTime;
+	return instantiateOrUpgrade('upgrade', channel, richPeers, eventHubs, allConfig, eventWaitTime, proposalTimeout);
 };
-exports.invoke = async (channel, richPeers, {chaincodeId, fcn, args}, nonAdminUser) => {
-	const logger = logUtil.new('invoke-Helper',true);
+exports.invoke = async (channel, richPeers, {chaincodeId, fcn, args, transientMap}, nonAdminUser) => {
+	const logger = logUtil.new('invoke-Helper', true);
 	const {eventWaitTime} = channel;
 	const eventHubs = [];
 	for (const peer of richPeers) {
@@ -174,7 +174,8 @@ exports.invoke = async (channel, richPeers, {chaincodeId, fcn, args}, nonAdminUs
 			chaincodeId,
 			args,
 			fcn,
-			eventWaitTime
+			eventWaitTime,
+			transientMap,
 		}, orderer);
 	} catch (e) {
 		if (e.proposalResponses) {

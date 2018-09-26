@@ -25,7 +25,8 @@ const task = async () => {
 	logger.info('channel org', orgName);
 	const client = await helper.getOrgAdmin(orgName);
 	const channel = helper.prepareChannel(channelName, client, true);
-	const {txEventResponses, proposalResponses} = await invoke(channel, peers, {chaincodeId, fcn, args});
+	const transientMap = {testk: Buffer.from('testValue')};
+	const {txEventResponses, proposalResponses} = await invoke(channel, peers, {chaincodeId, fcn, args, transientMap});
 	const result = reducer({txEventResponses, proposalResponses});
 	logger.info(result);
 };
