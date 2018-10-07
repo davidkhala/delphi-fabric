@@ -33,7 +33,6 @@ const errorSyntaxHandle = (err, res) => {
 // Create Channel
 app.post('/channel/create/:channelName', async (req, res) => {
 
-	logger.info('<<<<<<<<<<<<<<<<< C R E A T E  C H A N N E L >>>>>>>>>>>>>>>>>');
 	const {channelName} = req.params;
 	const {orgName} = req.body;
 
@@ -43,7 +42,7 @@ app.post('/channel/create/:channelName', async (req, res) => {
 
 		const channelFileName = channelsConfig[channelName].file;
 		const channelConfigFile = path.resolve(CONFIGTXDir, channelFileName);
-		logger.debug({orgName, channelName, channelConfigFile});
+		logger.debug('create Channel', {orgName, channelName, channelConfigFile});
 		if (!fsExtra.pathExistsSync(channelConfigFile)) {
 			throw Error(`channelConfigFile ${channelConfigFile} not exist`);
 		}
@@ -59,12 +58,11 @@ app.post('/channel/create/:channelName', async (req, res) => {
 });
 // Join Channel
 app.post('/channel/join/:channelName', async (req, res) => {
-	logger.info('<<<<<<<<<<<<<<<<< J O I N  C H A N N E L >>>>>>>>>>>>>>>>>');
 	const {channelName} = req.params;
 	try {
 		invalid.channelName({channelName});
 		const {orgName, peerIndex} = req.body;
-		logger.debug({channelName, orgName, peerIndex});
+		logger.debug('joinChannel', {channelName, orgName, peerIndex});
 
 		invalid.peer({orgName, peerIndex});
 
@@ -81,13 +79,12 @@ app.post('/channel/join/:channelName', async (req, res) => {
 
 //  Query Get Block by BlockNumber
 app.post('/query/block/height/:blockNumber', async (req, res) => {
-	logger.debug('==================== GET BLOCK BY NUMBER ==================');
 	const {blockNumber} = req.params;
 	const {peerIndex, orgName, channelName} = req.body;
 
 	try {
 		invalid.peer({orgName, peerIndex});
-		logger.debug({blockNumber, peerIndex, orgName, channelName});
+		logger.debug('GET BLOCK BY NUMBER ', {blockNumber, peerIndex, orgName, channelName});
 
 		const client = await helper.getOrgAdmin(orgName);
 		const channel = helper.prepareChannel(channelName, client);
@@ -102,9 +99,8 @@ app.post('/query/block/height/:blockNumber', async (req, res) => {
 });
 // Query Get Block by Hash
 app.post('/query/block/hash', async (req, res) => {
-	logger.debug('================ GET BLOCK BY HASH ======================');
 	const {hashHex, peerIndex, orgName, channelName} = req.body;
-	logger.debug({hashHex, peerIndex, orgName, channelName});
+	logger.debug('GET BLOCK BY HASH', {hashHex, peerIndex, orgName, channelName});
 	try {
 		invalid.peer({orgName, peerIndex});
 		const peer = helper.newPeers([peerIndex], orgName)[0];
@@ -119,9 +115,8 @@ app.post('/query/block/hash', async (req, res) => {
 });
 // Query Get Transaction by Transaction ID
 app.post('/query/tx', async (req, res) => {
-	logger.debug('================ GET TRANSACTION BY TRANSACTION_ID ======================');
 	const {txId, orgName, peerIndex, channelName} = req.body;
-	logger.debug({txId, orgName, peerIndex, channelName});
+	logger.debug('GET TRANSACTION BY TRANSACTION_ID', {txId, orgName, peerIndex, channelName});
 	try {
 		invalid.peer({orgName, peerIndex});
 		const client = await helper.getOrgAdmin(orgName);
@@ -137,9 +132,8 @@ app.post('/query/tx', async (req, res) => {
 //Query for Channel Information
 //NOTE: blockchain is summary for all channel and chaincode
 app.post('/query/chain', async (req, res) => {
-	logger.debug('================ GET blockchain INFORMATION ======================');
 	const {orgName, peerIndex, channelName, pretty} = req.body;
-	logger.debug({orgName, peerIndex, channelName});
+	logger.debug('GET blockchain INFORMATION', {orgName, peerIndex, channelName});
 
 	try {
 		invalid.peer({orgName, peerIndex});
@@ -155,9 +149,8 @@ app.post('/query/chain', async (req, res) => {
 });
 // Query to fetch all Installed/instantiated chaincodes
 app.post('/query/chaincodes/installed', async (req, res) => {
-	logger.debug('==================== query installed CHAINCODE ==================');
 	const {orgName, peerIndex} = req.body;
-	logger.debug({orgName, peerIndex});
+	logger.debug('query installed CHAINCODE', {orgName, peerIndex});
 	try {
 		invalid.peer({orgName, peerIndex});
 		const peer = helper.newPeers([peerIndex], orgName)[0];
@@ -169,9 +162,8 @@ app.post('/query/chaincodes/installed', async (req, res) => {
 	}
 });
 app.post('/query/chaincodes/instantiated', async (req, res) => {
-	logger.debug('==================== query instantiated CHAINCODE ==================');
 	const {orgName, peerIndex, channelName} = req.body;
-	logger.debug({orgName, peerIndex, channelName});
+	logger.debug('query instantiated CHAINCODE', {orgName, peerIndex, channelName});
 	try {
 		invalid.peer({orgName, peerIndex});
 		const peer = helper.newPeers([peerIndex], orgName)[0];
@@ -185,9 +177,8 @@ app.post('/query/chaincodes/instantiated', async (req, res) => {
 });
 // Query to fetch channels
 app.post('/query/channelJoined', async (req, res) => {
-	logger.debug('================ query joined CHANNELS ======================');
 	const {orgName, peerIndex} = req.body;
-	logger.debug({orgName, peerIndex});
+	logger.debug('query joined CHANNELS', {orgName, peerIndex});
 	try {
 		invalid.peer({orgName, peerIndex});
 		const peer = helper.newPeers([peerIndex], orgName)[0];

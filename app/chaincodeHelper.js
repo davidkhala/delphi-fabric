@@ -174,9 +174,8 @@ exports.invoke = async (channel, richPeers, {chaincodeId, fcn, args, transientMa
 			chaincodeId,
 			args,
 			fcn,
-			eventWaitTime,
 			transientMap,
-		}, orderer);
+		}, orderer, eventWaitTime,);
 	} catch (e) {
 		if (e.proposalResponses) {
 			throw e.proposalResponses;
