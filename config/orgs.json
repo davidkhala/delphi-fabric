@@ -13,13 +13,6 @@
       }
     }
   },
-  "ledger": {
-    "storage": "leveldb",
-    "couchDB": {
-      "container_name": "couchDB",
-      "port": 5984
-    }
-  },
   "orderer": {
     "type": "solo",
     "genesis_block": {
@@ -89,10 +82,10 @@
       "orgs": {
         "ASTRI.org": {
           "peerIndexes": [
-            0,1
+            0
           ]
         },
-        "icdd":{
+        "icdd": {
           "peerIndexes": [
             0
           ]
@@ -105,11 +98,11 @@
       "peers": [
         {
           "container_name": "peer0.ASTRI.org",
-          "port": 7051
-        },
-        {
-          "container_name": "peer1.ASTRI.org",
-          "port": 7151
+          "port": 7051,
+          "couchDB": {
+            "container_name": "couchdb.peer0.ASTRI.org",
+            "port": 7984
+          }
         }
       ],
       "ca": {
@@ -119,11 +112,15 @@
         "id": "ASTRIMSP"
       }
     },
-    "icdd":{
+    "icdd": {
       "peers": [
         {
           "container_name": "peer0.icdd.org",
-          "port": 8051
+          "port": 8051,
+          "couchDB": {
+            "container_name": "couchdb.peer0.icdd.org",
+            "port": 8984
+          }
         }
       ],
       "ca": {

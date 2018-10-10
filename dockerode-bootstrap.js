@@ -135,18 +135,7 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 	const imageTag = fabricTag;
 	const orgsConfig = globalConfig.orgs;
 	const peers = [];
-	const couchDB = globalConfig.ledger.storage === 'couchDB' ? globalConfig.ledger.couchDB : undefined;
 
-	if (couchDB) {
-		//	TODO run couchDB on swarm??
-		const {container_name, port} = couchDB;
-		if (tostop) {
-			await containerDelete(container_name);
-		} else {
-			const imageTag = thirdPartyTag;
-			await runCouchDB({imageTag, container_name, port, network});
-		}
-	}
 
 	for (const domain in orgsConfig) {
 		const orgConfig = orgsConfig[domain];
@@ -155,17 +144,25 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 		const {MSP: {id}} = orgConfig;
 		for (const peerIndex in peersConfig) {
 			const peerConfig = peersConfig[peerIndex];
-			const {container_name, port} = peerConfig;
+			const {container_name, port, couchDB} = peerConfig;
 
 			if (tostop) {
 				if (swarm) {
 					const service = await serviceDelete(swarmServiceName(container_name));
+					if (couchDB) {
+						const service = await serviceDelete(swarmServiceName(couchDB.container_name));
+						if (service) peers.push(service);
+					}
 					if (service) peers.push(service);
 				} else {
+					if (couchDB) {
+						await containerDelete(couchDB.container_name);
+					}
 					await containerDelete(container_name);
 				}
 				continue;
 			}
+
 			const cryptoPath = new CryptoPath(peerUtil.container.MSPROOT, {
 				peer: {
 					org: domain, name: `peer${peerIndex}`
@@ -180,6 +177,10 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 			const configPath = cryptoPath.MSP(type);
 			if (swarm) {
 				const Constraints = await constraintSelf();
+				// if (couchDB) {
+				// 	const {container_name, port} = couchDB;
+				// 	await runCouchDB({imageTag: thirdPartyTag, container_name, port, network});
+				// }
 
 				const peer = await deployPeer({
 					Name: container_name, port, imageTag, network,
@@ -195,6 +196,10 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 				});
 				peers.push(peer);
 			} else {
+				if (couchDB) {
+					const {container_name, port} = couchDB;
+					await runCouchDB({imageTag: thirdPartyTag, container_name, port, network});
+				}
 				await runPeer({
 					container_name, port, imageTag, network,
 					peerHostName, tls,
