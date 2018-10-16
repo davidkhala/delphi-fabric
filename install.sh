@@ -32,6 +32,10 @@ function updateChaincode() {
     set +e
 	go get -u "github.com/davidkhala/chaincode" # FIXME: please use your own chaincode as in config/chaincode.json
 	set -e
+	GOPATH=$(go env GOPATH)
+	cd $GOPATH/src/github.com/davidkhala/chaincode/golang/admin
+	dep ensure -update -v
+	cd -
 }
 
 function PM2CLI(){

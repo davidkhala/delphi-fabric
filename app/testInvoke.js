@@ -1,13 +1,6 @@
-const {invoke} = require('./chaincodeHelper');
-const {reducer} = require('../common/nodejs/chaincode');
 const helper = require('./helper');
 
 const logger = require('../common/nodejs/logger').new('testInvoke');
-const chaincodeId = process.env.name ? process.env.name : 'stress';
-const fcn = '';
-const args = [];
-const globalConfig = require('../config/orgs.json');
-const {channels} = globalConfig;
 const peerIndexes = [0];
 
 const channelName = 'allchannel';
@@ -21,16 +14,15 @@ const task = async () => {
 	const org2 = 'ASTRI.org';
 	const peers = [helper.newPeers([0], org1)[0], helper.newPeers([0], org2)[0]];
 	//try to use another user
-	let orgName = helper.randomOrg('peer');
-	logger.info('channel org', orgName);
-	const client = await helper.getOrgAdmin(orgName);
-	const channel = helper.prepareChannel(channelName, client, true);
-	const transientMap = {testk: Buffer.from('testValue')};
-	const {txEventResponses, proposalResponses} = await invoke(channel, peers, {chaincodeId, fcn, args, transientMap});
-	const result = reducer({txEventResponses, proposalResponses});
-	logger.info(result);
+	const orgName = helper.randomOrg('peer');
+	const {richQuery, set} = require('./testInvokeAdmin');
+	await set(peers, orgName);
+	await set(peers, orgName);
+	await set(peers, orgName);
+	await set(peers, orgName);
+	await richQuery(peers, orgName);
 };
-const getChaincodeEvent = async () => {
+const getChaincodeEvent = async (chaincodeId) => {
 	const orgName = helper.randomOrg('peer');
 	const chaincodeEventName = /event/i;
 	const peers = helper.newPeers(peerIndexes, orgName);
@@ -62,5 +54,6 @@ const run = async (times, interval = 1000) => {
 		await run(times, interval);
 	}
 };
-run(process.env.times, process.env.interval);
+// run(process.env.times, process.env.interval);
 
+task();

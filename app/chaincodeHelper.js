@@ -13,18 +13,23 @@ const Query = require('../common/nodejs/query');
 const chaincodeConfig = require('../config/chaincode.json');
 
 exports.install = async (peers, {chaincodeId, chaincodeVersion, chaincodeType}, client) => {
-	let chaincodePath = chaincodeConfig.chaincodes[chaincodeId].path;
+	const chaincodeRelPath = chaincodeConfig.chaincodes[chaincodeId].path;
+	let metadataPath;
+	let chaincodePath;
 	if (!chaincodeType) {
 		chaincodeType = chaincodeConfig.chaincodes[chaincodeId].type;
 	}
+	const gopath = await golangUtil.getGOPATH();
 	if (chaincodeType === 'node') {
-		const gopath = await golangUtil.getGOPATH();
-		chaincodePath = path.resolve(gopath, 'src', chaincodePath);
+		chaincodePath = path.resolve(gopath, 'src', chaincodeRelPath);
+		metadataPath = path.resolve(chaincodePath, 'META-INF');//the name is arbitrary
 	}
 	if (!chaincodeType || chaincodeType === 'golang') {
 		await golangUtil.setGOPATH();
+		chaincodePath = chaincodeRelPath;
+		metadataPath = path.resolve(gopath, 'src', chaincodeRelPath, 'META-INF');//the name is arbitrary
 	}
-	return install(peers, {chaincodeId, chaincodePath, chaincodeVersion, chaincodeType}, client);
+	return install(peers, {chaincodeId, chaincodePath, chaincodeVersion, chaincodeType, metadataPath}, client);
 };
 
 exports.nextVersion = (chaincodeVersion) => {
@@ -133,7 +138,6 @@ exports.instantiate = async (channel, richPeers, opts) => {
 	}
 
 	const allConfig = Object.assign(policyConfig, opts);
-	logger.debug(JSON.stringify(allConfig));
 	const proposalTimeout = richPeers.length * defaultProposalTime;
 	return instantiateOrUpgrade('deploy', channel, richPeers, eventHubs, allConfig, eventWaitTime, proposalTimeout);
 };
@@ -177,6 +181,9 @@ exports.invoke = async (channel, richPeers, {chaincodeId, fcn, args, transientMa
 			transientMap,
 		}, orderer, eventWaitTime,);
 	} catch (e) {
+		for (const eventHub of eventHubs) {
+			eventHub.close();
+		}
 		if (e.proposalResponses) {
 			throw e.proposalResponses;
 		} else throw e;

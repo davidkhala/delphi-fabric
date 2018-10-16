@@ -9,6 +9,7 @@ function up() {
 	prepareNetwork
 	node app/testChannel
 	name=adminChaincode node app/testInstall
+	node app/testInvoke
 }
 
 function prepareNetwork() {
