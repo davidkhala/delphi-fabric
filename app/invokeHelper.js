@@ -8,7 +8,7 @@ const channelName = 'allchannel';
 const {chaincodeEvent, newEventHub} = require('../common/nodejs/eventHub');
 
 const {sleep} = require('../common/nodejs/helper');
-exports.invoke = async (peers, clientPeerOrg, chaincodeId, fcn, args, transientMap) => {
+exports.invoke = async (peers, clientPeerOrg, chaincodeId, fcn, args = [], transientMap) => {
 	const logger = LogUtil.new('invokeHelper', true);
 	logger.debug('client org', clientPeerOrg);
 	const client = await helper.getOrgAdmin(clientPeerOrg);
@@ -16,7 +16,7 @@ exports.invoke = async (peers, clientPeerOrg, chaincodeId, fcn, args, transientM
 	const {txEventResponses, proposalResponses} = await invoke(channel, peers, {chaincodeId, fcn, args, transientMap});
 	const result = reducer({txEventResponses, proposalResponses});
 	logger.debug(result);
-	return result;
+	return result.responses;
 };
 exports.listenChaincodeEvent = async (peers, clientPeerOrg, chaincodeId, eventName = /event/i) => {
 	const logger = LogUtil.new('chaincode event', true);

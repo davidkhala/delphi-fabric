@@ -1,35 +1,33 @@
-const {invoke} = require('./chaincodeHelper');
-const {reducer} = require('../common/nodejs/chaincode');
+const {invoke} = require('./invokeHelper');
 const helper = require('./helper');
 
-const logger = require('../common/nodejs/logger').new('invoke admin');
 const chaincodeId = 'adminChaincode';
-const channelName = 'allchannel';
 const {queryBuilder} = require('../common/nodejs/couchdb');
 
-const task = async (peers, clientPeerOrg, fcn, args) => {
-	//try to use another user
-	logger.debug('client org', clientPeerOrg);
-	const client = await helper.getOrgAdmin(clientPeerOrg);
-	const channel = helper.prepareChannel(channelName, client, true);
-	const transientMap = {testk: 'testValue'};
-	const {txEventResponses, proposalResponses} = await invoke(channel, peers, {chaincodeId, fcn, args, transientMap});
-	const result = reducer({txEventResponses, proposalResponses});
-	logger.debug(result);
-	return result;
-};
 exports.richQuery = async (peers, clientPeerOrg) => {
 	const fcn = 'richQuery';
-	const args = [queryBuilder(['Time'],1)];
-	return task(peers, clientPeerOrg, fcn, args);
+	const args = [queryBuilder(['Time'], 1)];
+	return invoke(peers, clientPeerOrg, chaincodeId, fcn, args);
 };
 exports.panic = async (peers, clientPeerOrg) => {
 	const fcn = 'panic';
 	const args = [];
-	return task(peers, clientPeerOrg, fcn, args);
+	return invoke(peers, clientPeerOrg, chaincodeId, fcn, args);
 };
 exports.set = async (peers, clientPeerOrg) => {
 	const fcn = 'set';
 	const args = [];
-	return task(peers, clientPeerOrg, fcn, args);
+	return invoke(peers, clientPeerOrg, chaincodeId, fcn, args);
+};
+exports.flow = async () => {
+	const org1 = 'icdd';
+	const org2 = 'ASTRI.org';
+	const peers = [helper.newPeers([0], org1)[0], helper.newPeers([0], org2)[0]];
+	//try to use another user
+	const orgName = helper.randomOrg('peer');
+	await exports.set(peers, orgName);
+	await exports.set(peers, orgName);
+	await exports.set(peers, orgName);
+	await exports.set(peers, orgName);
+	await exports.richQuery(peers, orgName);
 };

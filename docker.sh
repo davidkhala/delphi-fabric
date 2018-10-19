@@ -8,8 +8,8 @@ function down() {
 function up() {
 	prepareNetwork
 	node app/testChannel
-	name=master node app/testInstall
-	node app/testInvoke
+	node app/crossCCInstall
+	node app/crossCCInvoke
 }
 
 function prepareNetwork() {
