@@ -14,7 +14,7 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 
 	const blockProfileConfig = {
 		Capabilities: {
-			V1_1: true //FIXME: bug design in fabric-core: Channel capability V1_2 is required but not supported:
+			V1_3: true //ChannelCapabilities
 		}
 	};
 	const OrdererConfig = {
@@ -25,7 +25,7 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 			PreferredMaxBytes: '512 KB'
 		},
 		Capabilities: {
-			V1_1: true //FIXME: bug design in fabric-core
+			V1_1: true
 		}
 	};
 	if (globalConfig.orderer.type === 'kafka') {
@@ -122,11 +122,14 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 			Organizations.push(OrganizationBuilder(orgName, false, true));
 		}
 		Profiles[PROFILE_CHANNEL] = {
+			Capabilities: {
+				V1_3: true
+			},
 			Consortium: consortiumName,
 			Application: {
 				Organizations,
 				Capabilities: {
-					V1_2: true
+					V1_3: true
 				}
 			}
 		};
