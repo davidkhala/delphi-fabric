@@ -120,7 +120,7 @@ TODO dep: to import third-party package in vendor folder
 - patch: configtxgen binary allow upper case channelName
 - fabric-ca: cannot change csr.cn via '--csr.cn=${container_name}' TLS CSR: {CN:example.com Names:[{C:US ST:North Carolina L: O:Hyperledger OU:Fabric SerialNumber:}] Hosts:[02cf209b65fb localhost] KeyRequest:<nil> CA:<nil> SerialNumber:}
 - fabric-ca: `fabric-ca` line in git ignore make source copy failed
-- fabric-sdk-node: add timeStamp for default winston logger 
+ 
 ## Abandoned tasks
 - docker volume plugin
 - using Atom for Mac default keymap, align with bret Harrison
