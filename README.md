@@ -17,7 +17,7 @@ this script help to make docker command runnable without `sudo` prefix
 ----
  
 **Requirements & dependencies**
-  * fabric: 1.2.0 (for docker image, binary tool and fabric-sdk)
+  * fabric: 1.3.0 (for docker image, binary tool and fabric-sdk)
   * docker-ce 17.12.x-ce (API version 1.35)
   * golang 1.10 
   * node 8.10, npm 5.6 : npm install卡死的话，可以考虑添加淘宝的源
@@ -97,6 +97,8 @@ TODO dep: to import third-party package in vendor folder
 - replace Organization name by MSP name
 - 1.2 private channel data, solved by manually set anchor peers
 - it is allowed that chaincode invoker, target peers belongs to differed organization.
+- move couchdb server to container based, and support couchdb ledger
+- use dep to import fabric source into vendor
 ## TODO
 - TLS, java sdk and docker-swarm: keep update
 - test backup and recover
@@ -106,12 +108,11 @@ TODO dep: to import third-party package in vendor folder
 - docker version problem in ver. 18.x 
 - pm2 to runConfigtxlator? without shell?
 - use nodejs scripts to replace runConfigtxgen.sh
-- move couchdb server to container based, and support couchdb ledger
+- 1.3: idemixgen
 - take care of docker swarm init --force-new-cluster
 - will block file name be a problem in signature cache? take care docker cp from container for multiple request
 - cross chaincode invoke on same channel and differed channel
 - migrate to use make file instead of ./install.sh
-- use dep to import fabric source into vendor
 - not all peers upgrade to latest chaincode, is this possible that old chaincode still work 
   
 ## New feature, patch required for node-sdk

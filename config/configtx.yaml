@@ -1,7 +1,7 @@
 Profiles:
   delphiGenesis:
     Capabilities:
-      V1_1: true
+      V1_3: true
     Orderer:
       BatchTimeout: 1s
       BatchSize:
@@ -27,6 +27,8 @@ Profiles:
             ID: icdd
             MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp
   allchannel:
+    Capabilities:
+      V1_3: true
     Consortium: SampleConsortium
     Application:
       Organizations:
@@ -41,7 +43,7 @@ Profiles:
           AnchorPeers:
             - {}
       Capabilities:
-        V1_2: true
+        V1_3: true
   anchorPeers:
     Application:
       Organizations:
