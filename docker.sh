@@ -8,7 +8,7 @@ function down() {
 function up() {
 	prepareNetwork
 	node app/testChannel
-	name=adminChaincode node app/testInstall
+	name=master node app/testInstall
 	node app/testInvoke
 }
 

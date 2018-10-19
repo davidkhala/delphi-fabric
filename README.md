@@ -52,7 +52,6 @@ Test on single host
 -----------------------
 **steps**
  * run `$ ./docker.sh` to restart network
- * `$ node app/testInvoke.js` to invoke chaincode (default to loop infinitely)
 
 Test on docker swarm
 -----------------------

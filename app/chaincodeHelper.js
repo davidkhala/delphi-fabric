@@ -29,6 +29,10 @@ exports.install = async (peers, {chaincodeId, chaincodeVersion, chaincodeType}, 
 		chaincodePath = chaincodeRelPath;
 		metadataPath = path.resolve(gopath, 'src', chaincodeRelPath, 'META-INF');//the name is arbitrary
 	}
+	if (!chaincodeConfig.chaincodes[chaincodeId].couchDBIndex) {
+		metadataPath = undefined;
+	}
+
 	return install(peers, {chaincodeId, chaincodePath, chaincodeVersion, chaincodeType, metadataPath}, client);
 };
 

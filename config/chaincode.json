@@ -1,13 +1,13 @@
 {
   "chaincodes": {
-    "v1_2": {
-      "path": "github.com/davidkhala/chaincode/golang/v1_2",
+    "master": {
+      "path": "github.com/davidkhala/chaincode/golang/master",
       "collectionConfigs": {
         "private1": {
           "policy": {
             "n": 1,
             "mspId": {
-              "ASTRIMSP": false
+              "ASTRIMSP": 0
             }
           },
           "requiredPeerCount": 1,
@@ -16,22 +16,23 @@
       }
     },
     "adminChaincode": {
-      "path": "github.com/davidkhala/chaincode/golang/admin"
+      "path": "github.com/davidkhala/chaincode/golang/admin",
+      "couchDBIndex": true
     },
     "stress": {
       "path": "github.com/davidkhala/chaincode/golang/stress",
       "endorsingConfigs": {
         "n": 2,
         "mspId": {
-          "ASTRIMSP": false,
-          "icdd": false
+          "ASTRIMSP": 0,
+          "icdd": 0
         }
       }
     },
-    "mainChain":{
+    "mainChain": {
       "path": "github.com/davidkhala/chaincode/golang/mainChain"
     },
-    "sideChain":{
+    "sideChain": {
       "path": "github.com/davidkhala/chaincode/golang/sideChain"
     },
     "node": {
@@ -40,7 +41,7 @@
       "endorsingConfigs": {
         "n": 1,
         "mspId": {
-          "ASTRIMSP": false
+          "ASTRIMSP": 0
         }
       },
       "collectionConfigs": {
@@ -48,7 +49,7 @@
           "policy": {
             "n": 1,
             "mspId": {
-              "ASTRIMSP": false
+              "ASTRIMSP": 0
             }
           },
           "requiredPeerCount": 2,
