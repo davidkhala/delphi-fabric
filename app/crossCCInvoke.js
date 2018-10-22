@@ -1,6 +1,7 @@
 const {invoke} = require('./invokeHelper');
 const mainCC = 'mainChain';
 const sideCC = 'sideChain';
+const sideCC2 = 'sideChain2';
 const helper = require('./helper');
 const logger = require('../common/nodejs/logger').new('crossCC Invoke');
 const put = async () => {
@@ -15,7 +16,7 @@ const get = async (key) => {
 	const peers = helper.newPeers([0], org2);
 	const fcn = 'get';
 	const args = [key];
-	const response = await invoke(peers, org2, sideCC, fcn, args);
+	const response = await invoke(peers, org2, sideCC2, fcn, args);
 	return response[0];
 };
 const flow = async () => {

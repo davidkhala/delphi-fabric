@@ -35,6 +35,9 @@
     "sideChain": {
       "path": "github.com/davidkhala/chaincode/golang/sideChain"
     },
+    "sideChain2": {
+      "path": "github.com/davidkhala/chaincode/golang/sideChain2"
+    },
     "node": {
       "type": "node",
       "path": "github.com/davidkhala/chaincode/nodejs/sample",

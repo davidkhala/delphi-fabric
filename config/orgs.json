@@ -78,7 +78,7 @@
   "channels": {
     "allchannel": {
       "file": "all.tx",
-      "eventWaitTime": 30000,
+      "eventWaitTime": 45000,
       "orgs": {
         "ASTRI.org": {
           "peerIndexes": [
