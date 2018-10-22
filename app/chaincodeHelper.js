@@ -99,8 +99,8 @@ exports.updateInstall = async (peer, {chaincodeId, chaincodePath}, client) => {
 const buildPolicy = (config) => {
 	const {n} = config;
 	const identities = [];
-	for (const [mspid, isAdmin] of Object.entries(config.mspId)) {
-		identities.push(PolicyUtil.RoleIdentity(mspid, isAdmin));
+	for (const [mspid, type] of Object.entries(config.mspId)) {
+		identities.push(PolicyUtil.RoleIdentity(mspid, type));
 	}
 	return PolicyUtil.simplePolicyBuilder(identities, n);
 };

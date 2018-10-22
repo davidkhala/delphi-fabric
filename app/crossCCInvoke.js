@@ -20,9 +20,8 @@ const get = async (key) => {
 	return response[0];
 };
 const flow = async () => {
-	const keys = await put();
-	const [key1, key2] = keys.split('|');
-	const value2 = await get(key2);
+	const key = await put();
+	const value2 = await get(key);
 	logger.debug({value2});
 };
 flow();
