@@ -39,6 +39,15 @@ function updateChaincode() {
 	cd $GOPATH/src/github.com/davidkhala/chaincode/golang/master
 	dep ensure -update -v
 	cd -
+	cd $GOPATH/src/github.com/davidkhala/chaincode/golang/mainChain
+	dep ensure -update -v
+	cd -
+	cd $GOPATH/src/github.com/davidkhala/chaincode/golang/sideChain2
+	dep ensure -update -v
+	cd -
+	cd $GOPATH/src/github.com/davidkhala/chaincode/golang/sideChain
+	dep ensure -update -v
+	cd -
 }
 
 function PM2CLI(){
