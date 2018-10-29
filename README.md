@@ -8,17 +8,15 @@ Installation
 1. `$ ./install.sh gitSync`   
 _after first time clone this repository, submodule should be initialize_
 2. `$ ./install.sh`
-3. `$ ./common/docker/dockerSUDO.sh` 
-this script help to make docker command runnable without `sudo` prefix
 
-- PM2 command line manager can be installed by  
+- (optional) PM2 command line manager can be installed by  
     `$ ./install.sh PM2CLI`
 
 ----
  
 **Requirements & dependencies**
   * fabric: 1.3.0 (for docker image, binary tool and fabric-sdk)
-  * docker-ce 17.12.x-ce (API version 1.35)
+  * docker-ce 18.x
   * golang 1.10 
   * node 8.10, npm 5.6 : npm install卡死的话，可以考虑添加淘宝的源
         - ``$ npm config set registry  https://registry.npm.taobao.org/``
@@ -50,7 +48,6 @@ Major configuration
 
 Test on single host
 -----------------------
-**steps**
  * run `$ ./docker.sh` to restart network
 
 Test on docker swarm

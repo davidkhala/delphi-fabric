@@ -13,7 +13,7 @@ const task = async () => {
 	const p1 = helper.newPeers([0], org1)[0];
 	const p2 = helper.newPeers([0], org2)[0];
 	await instantiate(org1, [p1, p2], mainCC);
-	await instantiate(org2, [p2], sideCC);
-	await instantiate(org1, [p1], sideCC2);
+	await instantiate(org2, [p1, p2], sideCC);
+	await instantiate(org1, [p1, p2], sideCC2);
 };
 task();

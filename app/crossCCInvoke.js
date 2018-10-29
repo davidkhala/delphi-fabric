@@ -21,7 +21,12 @@ const get = async (key) => {
 };
 const flow = async () => {
 	const key = await put();
-	const value2 = await get(key);
-	logger.debug({value2});
+	try {
+		const value2 = await get(key);
+		logger.debug({value2});
+	} catch (err) {
+		logger.error(err);
+	}
+
 };
 flow();
