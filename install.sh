@@ -29,10 +29,15 @@ function pullKafka() {
 	docker pull hyperledger/fabric-zookeeper:$IMAGE_TAG
 }
 function updateChaincode() {
+    export GOPATH=$(go env GOPATH)
     set +e
 	go get -u "github.com/davidkhala/chaincode" # FIXME: please use your own chaincode as in config/chaincode.json
 	set -e
-	GOPATH=$(go env GOPATH)
+	if ! dep version; then
+		$CURRENT/common/install.sh golang_dep
+		GOBIN=$GOPATH/bin/
+		export PATH=$PATH:$GOBIN # ephemeral
+	fi
 	cd $GOPATH/src/github.com/davidkhala/chaincode/golang/admin
 	dep ensure -update -v
 	cd -
