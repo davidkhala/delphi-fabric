@@ -8,7 +8,7 @@ const helper = require('../app/helper');
 const {projectResolve} = helper;
 const {fsExtra} = require('../common/nodejs/path');
 const Multer = require('multer');
-const baseApp = require('../common/nodejs/express/baseApp');
+const baseApp = require('khala-nodeutils/baseApp');
 const cacheDir = projectResolve(cache);
 exports.run = () => {
 	const {app} = baseApp.run(port);

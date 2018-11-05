@@ -14,41 +14,7 @@ const {projectResolve} = require('../app/helper');
 
 const dockerUtil = require('../common/docker/nodejs/dockerode-util');
 
-class dbInterface {
-	constructor({url, port, name}) {
-		this.url = url;
-		this.name = name;
-		this.port = port;
-	}
-
-	async get(key) {
-		throw Error(`get(${key}) to be implement`);
-	}
-
-	async set(key, value) {
-		return value;
-	}
-
-	async connect() {
-		if (!this.connection) {
-			await this.run();
-			this.connection = await this._connectBuilder();
-		}
-		return this.connection;
-	}
-
-	async run() {
-		throw Error('run() to be implement');
-	}
-
-	async clear() {
-		throw Error('clear() to be implement');
-	}
-
-	async _connectBuilder() {
-		throw Error('_connectBuilder() to be implement');
-	}
-}
+const dbInterface = require('khala-nodeutils/kvDB').DBInterface;
 
 const dbMap = {
 	Couchdb: class extends dbInterface {
@@ -151,7 +117,7 @@ const leaderKey = 'leaderNode';
 
 exports.run = () => {
 	logger.info('server start', {db, port});
-	const {app} = require('../common/nodejs/express/baseApp').run(port);
+	const {app} = require('khala-nodeutils/baseApp').run(port);
 	app.use('/config', require('../express/configExpose'));
 
 	app.get('/leader', async (req, res) => {

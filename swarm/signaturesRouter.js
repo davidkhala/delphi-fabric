@@ -1,4 +1,4 @@
-const BaseApp = require('../common/nodejs/express/baseApp');
+const BaseApp = require('khala-nodeutils/baseApp');
 const router = BaseApp.getRouter();
 const logger = require('../common/nodejs/logger').new('router signature');
 const signUtil = require('../common/nodejs/multiSign');

@@ -12,8 +12,8 @@ const {
 } = require('./common/nodejs/fabric-dockerode');
 const ClientUtil = require('./common/nodejs/client');
 const {CryptoPath, fsExtra} = require('./common/nodejs/path');
-const {PM2} = require('./common/nodejs/express/pm2Manager');
-
+const {PM2} = require('khala-nodeutils/pm2Manager');
+const {ping} = require('khala-nodeutils/request')
 const {projectResolve} = require('./app/helper');
 const MSPROOT = projectResolve(globalConfig.docker.volumes.MSPROOT.dir);
 const CONFIGTX = projectResolve(globalConfig.docker.volumes.CONFIGTX.dir);
@@ -409,7 +409,7 @@ exports.up = async (swarm) => {
 			const workerToken = await joinToken('worker');
 			const {port} = require('./swarm/swarm').swarmServer;
 			const swarmServerUrl = `http://localhost:${port}`;
-			await serverClient.ping(swarmServerUrl);
+			await ping(swarmServerUrl);
 			await serverClient.leader.update(swarmServerUrl, {ip, hostname: hostname(), managerToken, workerToken});
 		}
 		await configtxlatorServer.run('up');
