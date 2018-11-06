@@ -1,4 +1,4 @@
-const {randomKeyOf} = require('../common/nodejs/helper');
+const {randomKeyOf} = require('khala-nodeutils/helper');
 const {install, instantiateOrUpgrade, invoke} = require('../common/nodejs/chaincode');
 const logUtil = require('../common/nodejs/logger');
 const ClientUtil = require('../common/nodejs/client');

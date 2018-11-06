@@ -7,7 +7,7 @@ const channelName = 'allchannel';
 
 const {chaincodeEvent, newEventHub} = require('../common/nodejs/eventHub');
 
-const {sleep} = require('../common/nodejs/helper');
+const {sleep} = require('khala-nodeutils/helper');
 exports.invoke = async (peers, clientPeerOrg, chaincodeId, fcn, args = [], transientMap) => {
 	const logger = LogUtil.new('invokeHelper', true);
 	logger.debug('client org', clientPeerOrg);
@@ -48,4 +48,3 @@ const looper = async (opts = {interval: 1000}, task, ...taskParams) => {
 	}
 };
 exports.looper = looper;
-// run(process.env.times, process.env.interval);

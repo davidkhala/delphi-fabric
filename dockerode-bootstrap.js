@@ -13,7 +13,7 @@ const {
 const ClientUtil = require('./common/nodejs/client');
 const {CryptoPath, fsExtra} = require('./common/nodejs/path');
 const {PM2} = require('khala-nodeutils/pm2Manager');
-const {ping} = require('khala-nodeutils/request')
+const {ping} = require('khala-nodeutils/request');
 const {projectResolve} = require('./app/helper');
 const MSPROOT = projectResolve(globalConfig.docker.volumes.MSPROOT.dir);
 const CONFIGTX = projectResolve(globalConfig.docker.volumes.CONFIGTX.dir);
@@ -24,7 +24,7 @@ const {
 	volumeRemove, prune: {system: pruneSystem},
 } = require('./common/docker/nodejs/dockerode-util');
 const {advertiseAddr, joinToken} = require('./common/docker/nodejs/dockerCmd');
-const {hostname, exec} = require('./common/nodejs/helper');
+const {hostname, exec} = require('khala-nodeutils/helper');
 const {docker: {fabricTag, network, thirdPartyTag}, TLS} = globalConfig;
 
 const serverClient = require('./common/nodejs/express/serverClient');
@@ -144,7 +144,7 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 		const {MSP: {id}} = orgConfig;
 		for (const peerIndex in peersConfig) {
 			const peerConfig = peersConfig[peerIndex];
-			const {container_name, port, couchDB} = peerConfig;
+			const {container_name, port, couchDB, stateVolume} = peerConfig;
 
 			if (tostop) {
 				if (swarm) {
@@ -207,7 +207,7 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 						id,
 						volumeName: volumeName.MSPROOT,
 						configPath
-					}, couchDB
+					}, couchDB, stateVolume
 				});
 			}
 

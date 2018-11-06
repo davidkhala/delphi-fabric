@@ -82,12 +82,12 @@
       "orgs": {
         "ASTRI.org": {
           "peerIndexes": [
-            0
+            0,1
           ]
         },
         "icdd": {
           "peerIndexes": [
-            0
+            0,1
           ]
         }
       }
@@ -103,6 +103,10 @@
             "container_name": "couchdb.peer0.ASTRI.org",
             "port": 7984
           }
+        },
+        {
+          "container_name": "peer1.ASTRI.org",
+          "port": 7151
         }
       ],
       "ca": {
@@ -121,6 +125,11 @@
             "container_name": "couchdb.peer0.icdd.org",
             "port": 8984
           }
+        },
+        {
+          "container_name": "peer1.icdd.org",
+          "port": 8151,
+          "stateVolume": "/home/mediconcen/Documents/backupVolumes/peer1.icdd.org"
         }
       ],
       "ca": {

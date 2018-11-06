@@ -19,7 +19,7 @@ const fs = require('fs');
 const nodeType = 'orderer';
 const arch = 'x86_64';
 const imageTag = `${arch}-${fabricTag}`;
-const commonHelper = require('../common/nodejs/helper');
+const {sleep} = require('khala-nodeutils/helper');
 const getCaService = async (url, domain, swarm) => {
 	if (TLS) {
 		const caHostName = `ca.${domain}`;
@@ -70,7 +70,7 @@ const runWithNewOrg = async (action) => {
 	const caUrl = `${protocol}://localhost:${port}`;
 	const caService = await getCaService(caUrl, orgName, false);
 
-	await commonHelper.sleep(2000);
+	await sleep(2000);
 
 	const admin = await init(caService, hostCryptoPath, nodeType, mspid, {TLS});
 

@@ -109,7 +109,7 @@ TODO dep: to import third-party package in vendor folder
 - will block file name be a problem in signature cache? take care docker cp from container for multiple request
 - cross chaincode invoke on same channel and differed channel
 - migrate to use make file instead of ./install.sh
-- not all peers upgrade to latest chaincode, is this possible that old chaincode still work 
+- chaincode partial update: not all peers upgrade to latest chaincode, is it possible that old chaincode still work
   
 ## New feature, patch required for node-sdk
  

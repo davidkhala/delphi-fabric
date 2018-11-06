@@ -4,12 +4,14 @@ CURRENT=$(cd $(dirname ${BASH_SOURCE}) && pwd)
 
 function down() {
 	node -e "require('./dockerode-bootstrap').down()"
+    sudo rm -rf /home/mediconcen/Documents/backupVolumes/peer1.icdd.org/
+    mkdir -p /home/mediconcen/Documents/backupVolumes/peer1.icdd.org/
 }
 function up() {
 	prepareNetwork
 	node app/testChannel
-	node app/crossCCInstall
-	node app/crossCCInvoke
+	node app/masterInstall
+	node app/testMasterCC.js
 }
 
 function prepareNetwork() {
