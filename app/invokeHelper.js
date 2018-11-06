@@ -32,19 +32,20 @@ exports.listenChaincodeEvent = async (peers, clientPeerOrg, chaincodeId, eventNa
 		logger.error('onError', err);
 	});
 };
-exports.looper = async (times, interval = 1000, task, ...taskParams) => {
+
+const looper = async (opts = {interval: 1000}, task, ...taskParams) => {
+	const {times, interval} = opts;
+
 	if (Number.isInteger(times)) {
 		for (let i = 0; i < times; i++) {
 			await task(...taskParams);
 			await sleep(interval);
 		}
 	} else {
-		// if (!eventHandler) {
-		// 	eventHandler = await getChaincodeEvent();
-		// }
-		await task(taskParams);
+		await task(...taskParams);
 		await sleep(interval);
-		await exports.looper(times, interval);
+		await looper(opts, task, ...taskParams);
 	}
 };
+exports.looper = looper;
 // run(process.env.times, process.env.interval);
