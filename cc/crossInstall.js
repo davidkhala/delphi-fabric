@@ -1,9 +1,9 @@
-const {installAll} = require('./installHelper');
-const {instantiate} = require('./instantiateHelper');
+const {installAll} = require('../app/installHelper');
+const {instantiate} = require('../app/instantiateHelper');
 const mainCC = 'mainChain';
 const sideCC = 'sideChain';
 const sideCC2 = 'sideChain2';
-const helper = require('./helper');
+const helper = require('../app/helper');
 const task = async () => {
 	await installAll(mainCC);
 	await installAll(sideCC);

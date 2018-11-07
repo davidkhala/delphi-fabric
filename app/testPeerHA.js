@@ -57,7 +57,7 @@ const resumePeer = async (org, peerIndex, TLS) => {
 
 
 };
-const resumePeerChannel = async (orgName, peerIndex, channelName, chaincodeId,) => {
+const resumePeerChannel = async (orgName, peerIndex, channelName) => {
 	const client = await helper.getOrgAdmin(orgName);
 	const channel = helper.prepareChannel(channelName, client);
 	const peer = helper.newPeers([peerIndex], orgName)[0];
@@ -65,6 +65,13 @@ const resumePeerChannel = async (orgName, peerIndex, channelName, chaincodeId,) 
 
 };
 
+const touchCC = async (org, peerIndex) => {
+	const {get} = require('../cc/masterInvoke');
+	const peers = helper.newPeers([peerIndex], org);
+	const counterKey = 'iterator';
+	const result = await get(peers, org, counterKey);
+	logger.debug(result);
+};
 const flow = async () => {
 	const org = 'icdd';
 	const peerIndex = 1;
@@ -73,13 +80,9 @@ const flow = async () => {
 	const channelName = 'allchannel';
 	const chaincodeID = 'master';
 	await resumePeerChannel(org, peerIndex, channelName, chaincodeID);
-	// await installs(chaincodeID, org, [peerIndex]);
-	// await sleep(30000);
-	const {get} = require('./masterInvoke');
-	const peers = helper.newPeers([peerIndex], org);
-	const counterKey = 'iterator';
-	const result = await get(peers, org, counterKey);
-	logger.debug(result)
+	await installs(chaincodeID, org, [peerIndex]);
+	await sleep(30000);
+	await touchCC(org, peerIndex);
 };
 
 flow();

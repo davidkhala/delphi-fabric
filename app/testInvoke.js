@@ -1,1 +1,1 @@
-require('./masterInvoke').flow();
+require('../cc/masterInvoke').flow();

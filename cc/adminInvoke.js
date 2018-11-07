@@ -1,5 +1,5 @@
-const {invoke} = require('./invokeHelper');
-const helper = require('./helper');
+const {invoke} = require('../app/invokeHelper');
+const helper = require('../app/helper');
 
 const chaincodeId = 'adminChaincode';
 const {queryBuilder} = require('../common/nodejs/couchdb');
