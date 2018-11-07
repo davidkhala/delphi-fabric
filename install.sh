@@ -31,7 +31,7 @@ function pullKafka() {
 function updateChaincode() {
     export GOPATH=$(go env GOPATH)
     set +e
-	go get -u "github.com/davidkhala/chaincode" # FIXME: please use your own chaincode as in config/chaincode.json
+	go get -u -v "github.com/davidkhala/chaincode" # FIXME: please use your own chaincode as in config/chaincode.json
 	set -e
 	if ! dep version; then
 		$CURRENT/common/install.sh golang_dep
