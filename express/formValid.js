@@ -33,7 +33,7 @@ exports.invalid = () => {
 			}
 		},
 		chaincodeId: ({chaincodeId}) => {
-			const chaincodeConfig = chaincodesConfig.chaincodes[chaincodeId];
+			const chaincodeConfig = chaincodesConfig[chaincodeId];
 			if (!chaincodeConfig) {
 				throw Error(`config of chaincode ${chaincodeId} not found`);
 			}

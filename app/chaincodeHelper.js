@@ -13,11 +13,11 @@ const Query = require('../common/nodejs/query');
 const chaincodeConfig = require('../config/chaincode.json');
 
 exports.install = async (peers, {chaincodeId, chaincodeVersion, chaincodeType}, client) => {
-	const chaincodeRelPath = chaincodeConfig.chaincodes[chaincodeId].path;
+	const chaincodeRelPath = chaincodeConfig[chaincodeId].path;
 	let metadataPath;
 	let chaincodePath;
 	if (!chaincodeType) {
-		chaincodeType = chaincodeConfig.chaincodes[chaincodeId].type;
+		chaincodeType = chaincodeConfig[chaincodeId].type;
 	}
 	const gopath = await golangUtil.getGOPATH();
 	if (chaincodeType === 'node') {
@@ -29,7 +29,7 @@ exports.install = async (peers, {chaincodeId, chaincodeVersion, chaincodeType}, 
 		chaincodePath = chaincodeRelPath;
 		metadataPath = path.resolve(gopath, 'src', chaincodeRelPath, 'META-INF');//the name is arbitrary
 	}
-	if (!chaincodeConfig.chaincodes[chaincodeId].couchDBIndex) {
+	if (!chaincodeConfig[chaincodeId].couchDBIndex) {
 		metadataPath = undefined;
 	}
 
@@ -130,7 +130,7 @@ const defaultProposalTime = 45000;
 exports.instantiate = async (channel, richPeers, opts) => {
 	const logger = logUtil.new('instantiate-Helper', true);
 	const {chaincodeId} = opts;
-	const policyConfig = configParser(chaincodeConfig.chaincodes[chaincodeId]);
+	const policyConfig = configParser(chaincodeConfig[chaincodeId]);
 
 	const {eventWaitTime} = channel;
 
@@ -148,7 +148,7 @@ exports.instantiate = async (channel, richPeers, opts) => {
 
 exports.upgrade = async (channel, richPeers, opts) => {
 	const {chaincodeId} = opts;
-	const policyConfig = configParser(chaincodeConfig.chaincodes[chaincodeId]);
+	const policyConfig = configParser(chaincodeConfig[chaincodeId]);
 
 	const {eventWaitTime} = channel;
 	const eventHubs = [];
