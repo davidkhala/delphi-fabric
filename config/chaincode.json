@@ -9,8 +9,8 @@
             "ASTRIMSP": 0
           }
         },
-        "requiredPeerCount": 1,
-        "maxPeerCount": 2
+        "requiredPeerCount": 4,
+        "maxPeerCount": 4
       }
     }
   },

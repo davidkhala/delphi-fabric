@@ -24,7 +24,7 @@ const {
 	volumeRemove, prune: {system: pruneSystem},
 } = require('./common/docker/nodejs/dockerode-util');
 const {advertiseAddr, joinToken} = require('./common/docker/nodejs/dockerCmd');
-const {hostname, exec} = require('khala-nodeutils/helper');
+const {hostname, exec, homeResolve} = require('khala-nodeutils/helper');
 const {docker: {fabricTag, network, thirdPartyTag}, TLS} = globalConfig;
 
 const serverClient = require('./common/nodejs/express/serverClient');
@@ -33,7 +33,7 @@ const nodeServers = {
 	swarmServer: path.resolve(__dirname, 'swarm', 'swarmServerPM2.js'),
 	signServer: path.resolve(__dirname, 'swarm', 'signServerPM2.js')
 };
-const configtxlatorServer = require('./common/bin-manage/runConfigtxlator');
+const {configtxlator} = require('./common/nodejs/binManager');
 
 exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'}, toStop, swarm) => {
 	const {orderer: {type, genesis_block: {file: BLOCK_FILE}}} = globalConfig;
@@ -144,8 +144,9 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 		const {MSP: {id}} = orgConfig;
 		for (const peerIndex in peersConfig) {
 			const peerConfig = peersConfig[peerIndex];
-			const {container_name, port, couchDB, stateVolume} = peerConfig;
-
+			const {container_name, port, couchDB,} = peerConfig;
+			let {stateVolume} = peerConfig;
+			if (stateVolume) stateVolume = homeResolve(stateVolume);
 			if (tostop) {
 				if (swarm) {
 					const service = await serviceDelete(swarmServiceName(container_name));
@@ -383,7 +384,7 @@ exports.down = async (swarm) => {
 		require('./swarm/swarmServer').clean();
 		require('./swarm/signServer').clean();
 
-		await configtxlatorServer.run('down');
+		await configtxlator('down');
 		ClientUtil.clean();
 	} catch (err) {
 		logger.error(err);
@@ -412,7 +413,7 @@ exports.up = async (swarm) => {
 			await ping(swarmServerUrl);
 			await serverClient.leader.update(swarmServerUrl, {ip, hostname: hostname(), managerToken, workerToken});
 		}
-		await configtxlatorServer.run('up');
+		await configtxlator('up');
 
 		await networkCreateIfNotExist({Name: network}, swarm);
 

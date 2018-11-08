@@ -7,14 +7,14 @@ const logger = require('../common/nodejs/logger').new('testChannel');
 const configtxlator = require('../common/nodejs/configtxlator');
 const EventHubUtil = require('../common/nodejs/eventHub');
 const {fsExtra} = require('../common/nodejs/path');
-const {exec} = require('khala-nodeutils/helper');
+const {exec, sleep} = require('khala-nodeutils/helper');
 const path = require('path');
 const channelName = 'allchannel';
 
 const globalConfig = require('../config/orgs.json');
 const {TLS} = globalConfig;
 const channelConfig = globalConfig.channels[channelName];
-
+const Query = require('../common/nodejs/query');
 const channelConfigFile = projectResolve(globalConfig.docker.volumes.CONFIGTX.dir, channelConfig.file);
 const joinAllfcn = async (channelName) => {
 
@@ -58,8 +58,14 @@ const task = async () => {
 	logger.info({ordererUrl, peerOrg});
 	try {
 		await createChannel(ordererClient, channelName, channelConfigFile, [peerOrg], ordererUrl);
+
 		await joinAllfcn(channelName);
-		await anchorPeersUpdate(path.resolve(__dirname, '../config/configtx.yaml'), channelName, 'ASTRI.org');
+
+		await sleep(1000);
+		for (const org in channelConfig.orgs) {
+			await anchorPeersUpdate(path.resolve(__dirname, '../config/configtx.yaml'), channelName, org);
+			await sleep(1000);//TODO wait block to broadcast
+		}
 	} catch (err) {
 		if (err.toString().includes('Error: BAD_REQUEST') ||
 			(err.status && err.status.includes('BAD_REQUEST'))) {
@@ -100,11 +106,14 @@ const anchorPeersUpdate = async (configtxYaml, channelName, orgName) => {
 	const channel = helper.prepareChannel(channelName, client);
 	const orderer = channel.getOrderers()[0];
 
-	await updateAnchorPeers(channel, anchorTx, orderer);
-
 	const peer = helper.newPeers([0], orgName)[0];
+	const {pretty: {height}} = await Query.chain(peer, channel);
+	logger.info(peer.toString(), `current block height ${height}`);
+
+	await updateAnchorPeers(channel, anchorTx, orderer);
 	const eventHub = EventHubUtil.newEventHub(channel, peer, true);
-	const block = await EventHubUtil.BlockWaiter(eventHub, 1);
+	const block = await EventHubUtil.blockWaiter(eventHub, height);
+
 };
 
 task();
