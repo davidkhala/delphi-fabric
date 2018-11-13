@@ -5,8 +5,8 @@ const ClientUtil = require('../common/nodejs/client');
 const ChannelUtil = require('../common/nodejs/channel');
 const EventHubUtil = require('../common/nodejs/eventHub');
 const golangUtil = require('../common/nodejs/golang');
-const PolicyUtil = require('../common/nodejs/Policy');
-const SideDBUtil = require('../common/nodejs/PrivateData');
+const {RoleIdentity, simplePolicyBuilder} = require('../common/nodejs/policy');
+const {collectionPolicyBuilder, collectionConfig} = require('../common/nodejs/privateData');
 const path = require('path');
 const Query = require('../common/nodejs/query');
 
@@ -96,13 +96,13 @@ exports.updateInstall = async (peer, {chaincodeId, chaincodePath}, client) => {
 	return exports.install([peer], {chaincodeId, chaincodePath, chaincodeVersion}, client);
 
 };
-const buildPolicy = (config) => {
+const buildEndorsePolicy = (config) => {
 	const {n} = config;
 	const identities = [];
 	for (const [mspid, type] of Object.entries(config.mspId)) {
-		identities.push(PolicyUtil.RoleIdentity(mspid, type));
+		identities.push(RoleIdentity(mspid, type));
 	}
-	return PolicyUtil.simplePolicyBuilder(identities, n);
+	return simplePolicyBuilder(identities, n);
 };
 /**
  * this should apply to both instantiate and upgrade
@@ -111,15 +111,15 @@ const configParser = (config) => {
 	const {endorsingConfigs, collectionConfigs} = config;
 	const result = {};
 	if (endorsingConfigs) {
-		result.endorsementPolicy = buildPolicy(endorsingConfigs);
+		result.endorsementPolicy = buildEndorsePolicy(endorsingConfigs);
 	}
 	if (collectionConfigs) {
 		const collectionSet = [];
 		for (const [name, config] of Object.entries(collectionConfigs)) {
-			const policy = buildPolicy(config.policy);
+			const policy = collectionPolicyBuilder(config.mspIds);
 			config.name = name;
 			config.policy = policy;
-			collectionSet.push(SideDBUtil.collectionConfig(config));
+			collectionSet.push(collectionConfig(config));
 		}
 		result.collectionConfig = collectionSet;
 	}

@@ -3,13 +3,11 @@
     "path": "github.com/davidkhala/chaincode/golang/master",
     "collectionConfigs": {
       "private1": {
-        "policy": {
-          "n": 1,
-          "mspId": {
-            "ASTRIMSP": 0
-          }
-        },
-        "requiredPeerCount": 4,
+        "mspIds": [
+          "ASTRIMSP",
+          "icdd"
+        ],
+        "requiredPeerCount": 3,
         "maxPeerCount": 4
       }
     }
@@ -48,12 +46,9 @@
     },
     "collectionConfigs": {
       "private1": {
-        "policy": {
-          "n": 1,
-          "mspId": {
-            "ASTRIMSP": 0
-          }
-        },
+        "mspIds": [
+          "ASTRIMSP"
+        ],
         "requiredPeerCount": 2,
         "maxPeerCount": 2
       }

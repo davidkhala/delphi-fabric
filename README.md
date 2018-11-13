@@ -90,7 +90,6 @@ TODO dep: to import third-party package in vendor folder
 - nodeJS chaincode
 - Duplicated priv-file creation, crypto-store problem in .hfc-key-store
 - chaincode setEvent: for both golang,nodejs chaincodeType
-- replace Organization name by MSP name
 - 1.2 private channel data, solved by manually set anchor peers
 - it is allowed that chaincode invoker, target peers belongs to differed organization.
 - move couchdb server to container based, and support couchdb ledger
@@ -110,6 +109,7 @@ TODO dep: to import third-party package in vendor folder
 - cross chaincode invoke on same channel and differed channel
 - migrate to use make file instead of ./install.sh
 - chaincode partial update: not all peers upgrade to latest chaincode, is it possible that old chaincode still work
+- orgs.json replace Organization name by MSP name
   
 ## New feature, patch required for node-sdk
  
