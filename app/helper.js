@@ -112,9 +112,15 @@ exports.prepareChannel = (channelName, client, isRenew) => {
 	return channel;
 };
 
+/**
+ * work as a data adapter, containerNames: array --> orgname,peerIndex,peerConfig for each newPeer
+ * @param {number[]} peerIndexes
+ * @param {string} orgName
+ * @returns {Peer[]}
+ */
 exports.newPeers = (peerIndexes, orgName) => {
 
-// work as a data adapter, containerNames: array --> orgname,peerIndex,peerConfig for each newPeer
+
 	const targets = [];
 	// find the peer that match the urls
 	for (const index of peerIndexes) {
