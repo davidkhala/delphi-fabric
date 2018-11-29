@@ -13,7 +13,7 @@ const channelUtil = require('../common/nodejs/channel');
  * @returns {Promise<T>}
  */
 exports.create = async (client, channelName, channelConfigFile, orgNames, ordererUrl) => {
-	logger.debug('Create Channel',{channelName, channelConfigFile, orgNames});
+	logger.debug('Create Channel', {channelName, channelConfigFile, orgNames});
 
 	const clients = [];
 	for (const orgName of orgNames) {

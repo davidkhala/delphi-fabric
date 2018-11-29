@@ -9,12 +9,12 @@
  */
 const helper = require('./helper');
 const logger = require('../common/nodejs/logger').new('test:serviceDiscovery', true);
-const {pretty} = require('../common/nodejs/serviceDiscovery');
+const {pretty, globalPeers} = require('../common/nodejs/serviceDiscovery');
 const task = async () => {
 	const org = 'icdd';
 	const client = await helper.getOrgAdmin(org, 'peer');
 	const peer = helper.newPeers([0], org)[0];
-	const discoveries = await client.queryPeers({target: peer, useAdmin: false});
+	const discoveries = await globalPeers(client, peer);
 	logger.debug(pretty(discoveries));
 };
 task();
