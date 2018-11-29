@@ -14,7 +14,7 @@
     }
   },
   "orderer": {
-    "type": "solo",
+    "type": "kafka",
     "genesis_block": {
       "file": "delphi.block",
       "profile": "delphiGenesis"
@@ -69,6 +69,13 @@
           "orderers": {
             "orderer0": {
               "portHost": 7050
+            },
+            "orderer1": {
+              "portHost": 8050
+            },
+            "orderer2": {
+              "portHost": 9050,
+              "stateVolume": "Documents/backupVolumes/orderer2"
             }
           }
         }

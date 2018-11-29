@@ -10,13 +10,21 @@ Profiles:
         PreferredMaxBytes: 512 KB
       Capabilities:
         V1_1: true
-      OrdererType: solo
+      OrdererType: kafka
       Addresses:
-        - 'orderer.Delphi.com:7050'
+        - 'orderer0.ICDD.ASTRI.org:7050'
+        - 'orderer1.ICDD.ASTRI.org:7050'
+        - 'orderer2.ICDD.ASTRI.org:7050'
+      Kafka:
+        Brokers:
+          - 'kafka0:9092'
+          - 'kafka1:9092'
+          - 'kafka2:9092'
+          - 'kafka3:9092'
       Organizations:
-        - Name: Delphi.com
-          ID: OrdererMSP
-          MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/Delphi.com/msp
+        - Name: ICDD.ASTRI.org
+          ID: ICDDMSP
+          MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/ICDD.ASTRI.org/msp
     Consortiums:
       SampleConsortium:
         Organizations:

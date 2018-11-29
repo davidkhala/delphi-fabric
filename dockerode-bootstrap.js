@@ -44,7 +44,7 @@ exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPRO
 	const cryptoType = 'orderer';
 	const orderers = [];
 
-	const toggle = async ({orderer, domain, port, id}, toStop, swarm, kafka) => {
+	const toggle = async ({orderer, domain, port, id}, toStop, swarm, kafka, stateVolume) => {
 		const cryptoPath = new CryptoPath(MSPROOT, {
 			orderer: {org: domain, name: orderer}
 		});
@@ -90,7 +90,7 @@ exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPRO
 						volumeName: MSPROOTVolume
 					},
 					kafkas: kafka,
-					tls
+					tls, stateVolume
 				});
 			}
 		}
@@ -102,8 +102,10 @@ exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPRO
 			const {MSP: {id}} = ordererOrgConfig;
 			for (const orderer in ordererOrgConfig.orderers) {
 				const ordererConfig = ordererOrgConfig.orderers[orderer];
+				let {stateVolume} = ordererConfig;
+				if (stateVolume) stateVolume = homeResolve(stateVolume);
 				const port = ordererConfig.portHost;
-				await toggle({orderer, domain, port, id}, toStop, swarm, true);
+				await toggle({orderer, domain, port, id}, toStop, swarm, true, stateVolume);
 			}
 		}
 	} else {
