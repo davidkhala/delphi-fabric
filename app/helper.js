@@ -122,7 +122,6 @@ exports.newPeers = (peerIndexes, orgName) => {
 
 
 	const targets = [];
-	// find the peer that match the urls
 	for (const index of peerIndexes) {
 
 		const peerConfig = orgsConfig[orgName].peers[index];
