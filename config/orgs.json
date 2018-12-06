@@ -26,9 +26,7 @@
       "ca": {
         "portHost": 7454
       },
-      "MSP": {
-        "id": "OrdererMSP"
-      }
+      "mspid": "OrdererMSP"
     },
     "kafka": {
       "M": 2,
@@ -60,9 +58,7 @@
       },
       "orgs": {
         "ICDD.ASTRI.org": {
-          "MSP": {
-            "id": "ICDDMSP"
-          },
+          "mspid": "ICDDMSP",
           "ca": {
             "portHost": 7454
           },
@@ -117,9 +113,7 @@
       "ca": {
         "portHost": 7054
       },
-      "MSP": {
-        "id": "ASTRIMSP"
-      }
+      "mspid": "ASTRIMSP"
     },
     "icdd": {
       "peers": [
@@ -136,9 +130,7 @@
       "ca": {
         "portHost": 8054
       },
-      "MSP": {
-        "id": "icdd"
-      }
+      "mspid": "icdd"
     }
   }
 }

@@ -163,7 +163,7 @@ exports.findOrgConfig = (orgName, ordererName) => {
 
 const getUserClient = async (username, orgName, client) => {
 	const {config, nodeType} = exports.findOrgConfig(orgName);
-	const mspId = config.MSP.id;
+	const mspId = config.mspid;
 	const cryptoPath = new CryptoPath(CRYPTO_CONFIG_DIR, {
 		[nodeType]: {
 			org: orgName

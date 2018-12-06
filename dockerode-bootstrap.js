@@ -44,7 +44,7 @@ exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPRO
 	const cryptoType = 'orderer';
 	const orderers = [];
 
-	const toggle = async ({orderer, domain, port, id}, toStop, swarm, kafka, stateVolume) => {
+	const toggle = async ({orderer, domain, port,  mspid}, toStop, swarm, kafka, stateVolume) => {
 		const cryptoPath = new CryptoPath(MSPROOT, {
 			orderer: {org: domain, name: orderer}
 		});
@@ -73,7 +73,7 @@ exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPRO
 					msp: {
 						volumeName: MSPROOTVolume,
 						configPath,
-						id
+						id: mspid
 					}, CONFIGTXVolume, BLOCK_FILE,
 					kafkas: kafka,
 					tls,
@@ -85,7 +85,7 @@ exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPRO
 					container_name, imageTag, port, network,
 					BLOCK_FILE, CONFIGTXVolume,
 					msp: {
-						id,
+						id: mspid,
 						configPath,
 						volumeName: MSPROOTVolume
 					},
@@ -99,20 +99,20 @@ exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPRO
 		const ordererOrgs = globalConfig.orderer.kafka.orgs;
 		for (const domain in ordererOrgs) {
 			const ordererOrgConfig = ordererOrgs[domain];
-			const {MSP: {id}} = ordererOrgConfig;
+			const {mspid} = ordererOrgConfig;
 			for (const orderer in ordererOrgConfig.orderers) {
 				const ordererConfig = ordererOrgConfig.orderers[orderer];
 				let {stateVolume} = ordererConfig;
 				if (stateVolume) stateVolume = homeResolve(stateVolume);
 				const port = ordererConfig.portHost;
-				await toggle({orderer, domain, port, id}, toStop, swarm, true, stateVolume);
+				await toggle({orderer, domain, port, mspid}, toStop, swarm, true, stateVolume);
 			}
 		}
 	} else {
 		const ordererConfig = globalConfig.orderer.solo;
-		const {orgName: domain, MSP: {id}, portHost: port} = ordererConfig;
+		const {orgName: domain, mspid, portHost: port} = ordererConfig;
 		const orderer = ordererConfig.container_name;
-		await toggle({orderer, domain, port, id}, toStop, swarm, undefined);
+		await toggle({orderer, domain, port, mspid}, toStop, swarm, undefined);
 	}
 	if (swarm) {
 		if (toStop) {
@@ -143,7 +143,7 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 		const orgConfig = orgsConfig[domain];
 		const peersConfig = orgConfig.peers;
 
-		const {MSP: {id}} = orgConfig;
+		const {mspid} = orgConfig;
 		for (const peerIndex in peersConfig) {
 			const peerConfig = peersConfig[peerIndex];
 			const {container_name, port, couchDB,} = peerConfig;
@@ -207,7 +207,7 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 					container_name, port, imageTag, network,
 					peerHostName, tls,
 					msp: {
-						id,
+						id:mspid,
 						volumeName: volumeName.MSPROOT,
 						configPath
 					}, couchDB, stateVolume

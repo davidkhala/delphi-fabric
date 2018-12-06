@@ -109,7 +109,6 @@ TODO dep: to import third-party package in vendor folder
 - cross chaincode invoke on same channel and differed channel
 - migrate to use make file instead of ./install.sh
 - chaincode partial update: not all peers upgrade to latest chaincode, is it possible that old chaincode still work
-- orgs.json replace Organization name by MSP name
   
 ## New feature, patch required for node-sdk
  

@@ -26,7 +26,7 @@ const flow = async () => {
 	const container_name = cryptoPath.ordererHostName;
 	await containerDelete(container_name);
 
-	const mspid = ordererConfig.MSP.id;
+	const {mspid} = ordererConfig;
 	await sleep(10000);
 	const configPath = cryptoPath.MSP('orderer');
 	await runOrderer({

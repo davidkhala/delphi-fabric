@@ -172,7 +172,7 @@ const runWithNewOrg = async (action) => {
 const runWithExistOrg = async (action) => {
 	const orgName = 'DelphiConsensus.Delphi.com';
 	const ordererConfig = globalConfig.orderer.kafka.orgs[orgName];
-	const mspid = ordererConfig.MSP.id;
+	const mspid = ordererConfig.mspid;
 	const caUrl = `${protocol}://localhost:${ordererConfig.ca.portHost}`;
 	const caService = await getCaService(caUrl, orgName, false);
 	const adminClient = await helper.getOrgAdmin(orgName, nodeType);

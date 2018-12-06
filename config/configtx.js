@@ -45,7 +45,7 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 			});
 			Organizations.push({
 				Name: ordererOrgName,
-				ID: ordererOrgConfig.MSP.id,
+				ID: ordererOrgConfig.mspid,
 				MSPDir: cryptoPath.ordererOrgMSP()
 			});
 		}
@@ -65,7 +65,7 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 		OrdererConfig.Organizations = [
 			{
 				Name: orgName,
-				ID: ordererConfig.solo.MSP.id,
+				ID: ordererConfig.solo.mspid,
 				MSPDir: cryptoPath.ordererOrgMSP()
 			}
 		];
@@ -85,7 +85,7 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 		});
 		const result = {
 			Name: orgName,
-			ID: orgConfig.MSP.id,
+			ID: orgConfig.mspid,
 			MSPDir: cryptoPath.peerOrgMSP(),
 		};
 		if (forAnchor) {

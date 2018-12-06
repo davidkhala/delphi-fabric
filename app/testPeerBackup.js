@@ -27,7 +27,7 @@ const resumePeer = async (org, peerIndex, TLS) => {
 	const peersConfig = orgConfig.peers;
 
 
-	const {MSP: {id}} = orgConfig;
+	const {mspid} = orgConfig;
 	const peerConfig = peersConfig[peerIndex];
 	const {container_name, port, couchDB, stateVolume} = peerConfig;
 
@@ -49,7 +49,7 @@ const resumePeer = async (org, peerIndex, TLS) => {
 		container_name, port, imageTag, network,
 		peerHostName, tls,
 		msp: {
-			id,
+			id:mspid,
 			volumeName: 'MSPROOT',
 			configPath
 		}, couchDB, stateVolume

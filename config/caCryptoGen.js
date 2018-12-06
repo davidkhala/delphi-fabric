@@ -37,7 +37,7 @@ const getCaService = async (url, domain, swarm) => {
 exports.genUser = async ({userName, password}, orgName, swarm) => {
 	logger.debug('genUser', {userName, password, orgName, swarm});
 	const {config, nodeType} = helper.findOrgConfig(orgName);
-	const mspId = config.MSP.id;
+	const mspId = config.mspid;
 	const caUrl = `${protocol}://localhost:${config.ca.portHost}`;
 	const caService = await getCaService(caUrl, orgName, swarm);
 
@@ -78,7 +78,7 @@ exports.genAll = async (swarm) => {
 			const ordererOrgs = globalConfig.orderer.kafka.orgs;
 			for (const domain in ordererOrgs) {
 				const ordererConfig = ordererOrgs[domain];
-				const mspId = ordererConfig.MSP.id;
+				const mspId = ordererConfig.mspid;
 
 				const caUrl = `${protocol}://localhost:${ordererConfig.ca.portHost}`;
 				const caService = await getCaService(caUrl, domain, swarm);
@@ -110,7 +110,7 @@ exports.genAll = async (swarm) => {
 
 		} else {
 			const ordererConfig = globalConfig.orderer.solo;
-			const mspId = ordererConfig.MSP.id;
+			const mspId = ordererConfig.mspid;
 
 			const domain = ordererConfig.orgName;
 			const adminCryptoPath = new CryptoPath(caCryptoConfig, {
@@ -143,7 +143,7 @@ exports.genAll = async (swarm) => {
 		const nodeType = 'peer';
 		for (const domain in peerOrgs) {
 			const peerOrgConfig = peerOrgs[domain];
-			const mspId = peerOrgConfig.MSP.id;
+			const mspId = peerOrgConfig.mspid;
 			const adminCryptoPath = new CryptoPath(caCryptoConfig, {
 				peer: {
 					org: domain
