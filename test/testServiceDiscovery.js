@@ -7,14 +7,20 @@
  *           identity must have been loaded by a connection profile or by
  *           using the 'setAdminSigningIdentity' method.
  */
-const helper = require('./helper');
+const helper = require('../app/helper');
 const logger = require('../common/nodejs/logger').new('test:serviceDiscovery', true);
 const {pretty, globalPeers} = require('../common/nodejs/serviceDiscovery');
-const task = async () => {
+const peerList = async () => {
 	const org = 'icdd';
 	const client = await helper.getOrgAdmin(org, 'peer');
 	const peer = helper.newPeers([0], org)[0];
 	const discoveries = await globalPeers(client, peer);
 	logger.debug(pretty(discoveries));
+};
+const discoverOrderer = async () => {
+
+};
+const task = async () => {
+	await peerList();
 };
 task();
