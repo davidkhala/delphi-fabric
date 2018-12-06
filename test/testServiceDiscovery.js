@@ -18,7 +18,7 @@ const peerList = async () => {
 	logger.debug(pretty(discoveries));
 };
 const discoverOrderer = async () => {
-
+//TODO try to get live orderer from channel.initialize
 };
 const task = async () => {
 	await peerList();
