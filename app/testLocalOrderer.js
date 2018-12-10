@@ -2,13 +2,14 @@ const globalConfig = require('../config/orgs');
 const {TLS, docker: {fabricTag, network, volumes: {MSPROOT: {dir: mspDir}}}, orderer: {genesis_block: {file: BLOCK_FILE}}} = globalConfig;
 const protocol = TLS ? 'https' : 'http';
 const logger = require('../common/nodejs/logger').new('local orderer');
-const {CryptoPath, fsExtra} = require('../common/nodejs/path');
+const {CryptoPath} = require('../common/nodejs/path');
 const {genOrderer, init} = require('../common/nodejs/ca-crypto-gen');
 const caUtil = require('../common/nodejs/ca');
 const {swarmServiceName, inflateContainerName, containerDelete, containerStart} = require('../common/docker/nodejs/dockerode-util');
 const {runOrderer, runCA} = require('../common/nodejs/fabric-dockerode');
 const dockerCmd = require('../common/docker/nodejs/dockerCmd');
 const {RequestPromise} = require('khala-nodeutils/request');
+const {fsExtra} = require('khala-nodeutils/helper');
 const peerUtil = require('../common/nodejs/peer');
 const helper = require('./helper');
 const {projectResolve} = helper;
@@ -17,8 +18,7 @@ const {port: swarmServerPort} = require('../swarm/swarm.json').swarmServer;
 const fs = require('fs');
 
 const nodeType = 'orderer';
-const arch = 'x86_64';
-const imageTag = `${arch}-${fabricTag}`;
+const imageTag = `${fabricTag}`;
 const {sleep} = require('khala-nodeutils/helper');
 const getCaService = async (url, domain, swarm) => {
 	if (TLS) {

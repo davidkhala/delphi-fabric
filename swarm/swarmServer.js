@@ -8,7 +8,7 @@ const {db = 'Redis'} = process.env;
 const {container_name, port: dbPort} = swarmConfig[db];
 const path = require('path');
 
-const {fsExtra} = require('../common/nodejs/path');
+const {fsExtra} = require('khala-nodeutils/helper');
 const {sha2_256} = require('../common/nodejs/helper');
 const {projectResolve} = require('../app/helper');
 

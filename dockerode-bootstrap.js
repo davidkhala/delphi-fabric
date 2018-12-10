@@ -11,7 +11,7 @@ const {
 	, swarmRenew,
 } = require('./common/nodejs/fabric-dockerode');
 const ClientUtil = require('./common/nodejs/client');
-const {CryptoPath, fsExtra} = require('./common/nodejs/path');
+const {CryptoPath} = require('./common/nodejs/path');
 const {PM2} = require('khala-nodeutils/pm2Manager');
 const {ping} = require('khala-nodeutils/request');
 const {projectResolve} = require('./app/helper');
@@ -24,7 +24,7 @@ const {
 	volumeRemove, prune: {system: pruneSystem},
 } = require('./common/docker/nodejs/dockerode-util');
 const {advertiseAddr, joinToken} = require('./common/docker/nodejs/dockerCmd');
-const {hostname, exec, homeResolve} = require('khala-nodeutils/helper');
+const {hostname, exec, homeResolve, fsExtra} = require('khala-nodeutils/helper');
 const {docker: {fabricTag, network, thirdPartyTag}, TLS} = globalConfig;
 
 const serverClient = require('./common/nodejs/express/serverClient');

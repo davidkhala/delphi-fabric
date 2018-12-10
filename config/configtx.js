@@ -1,7 +1,8 @@
 const globalConfig = require('./orgs.json');
 const path = require('path');
 const yaml = require('js-yaml');
-const {CryptoPath, fsExtra} = require('../common/nodejs/path');
+const {fsExtra} = require('khala-nodeutils/helper');
+const {CryptoPath} = require('../common/nodejs/path');
 exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, configtxFile, PROFILE_ANCHORPEERS = 'anchorPeers'}) => {
 	const channelsConfig = globalConfig.channels;
 	const ordererConfig = globalConfig.orderer;

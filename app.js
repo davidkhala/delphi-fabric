@@ -1,5 +1,5 @@
 const logger = require('./common/nodejs/logger').new('express API');
-const {fsExtra} = require('./common/nodejs/path');
+const {fsExtra} = require('khala-nodeutils/helper');
 const path = require('path');
 const helper = require('./app/helper.js');
 const {projectResolve} = helper;

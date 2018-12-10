@@ -6,8 +6,7 @@ const {projectResolve} = helper;
 const logger = require('../common/nodejs/logger').new('testChannel');
 const configtxlator = require('../common/nodejs/configtxlator');
 const EventHubUtil = require('../common/nodejs/eventHub');
-const {fsExtra} = require('../common/nodejs/path');
-const {exec, sleep} = require('khala-nodeutils/helper');
+const {exec, sleep,fsExtra} = require('khala-nodeutils/helper');
 const path = require('path');
 const channelName = 'allchannel';
 
