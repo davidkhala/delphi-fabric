@@ -10,6 +10,7 @@
 const helper = require('../app/helper');
 const logger = require('../common/nodejs/logger').new('test:serviceDiscovery', true);
 const {globalPeers} = require('../common/nodejs/serviceDiscovery');
+const ChannelUtil = require('../common/nodejs/channel');
 const peerList = async () => {
 	const org = 'icdd';
 	const client = await helper.getOrgAdmin(org, 'peer');
@@ -18,9 +19,17 @@ const peerList = async () => {
 	logger.debug(discoveries.pretty);
 };
 const discoverOrderer = async () => {
-//TODO try to get live orderer from channel.initialize
+	const org = 'icdd';
+	const channelName = 'allchannel';
+	const client = await helper.getOrgAdmin(org, 'peer');
+	const channel = ChannelUtil.new(client, channelName);
+	const peer = helper.newPeers([0], org)[0];
+	await ChannelUtil.initialize(channel, peer);
+	const orderers = ChannelUtil.getOrderers(channel);
+	logger.debug(orderers);
 };
 const task = async () => {
 	await peerList();
+	await discoverOrderer();
 };
 task();
