@@ -1,0 +1,2 @@
+require('./channelInit');
+require('./serviceDiscovery');
