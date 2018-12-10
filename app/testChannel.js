@@ -4,7 +4,7 @@ const {join: joinChannel, updateAnchorPeers} = require('../common/nodejs/channel
 const helper = require('./helper');
 const {projectResolve} = helper;
 const logger = require('../common/nodejs/logger').new('testChannel');
-const configtxlator = require('../common/nodejs/configtxlator');
+
 const EventHubUtil = require('../common/nodejs/eventHub');
 const {exec, sleep,fsExtra} = require('khala-nodeutils/helper');
 const path = require('path');
@@ -71,25 +71,6 @@ const task = async () => {
 			//existing swallow
 			await joinAllfcn(channelName);
 		} else throw err;
-	}
-
-	try {
-		const peerClient = await helper.getOrgAdmin(undefined, 'peer'); //only peer user can read channel
-		const channel = helper.prepareChannel(channelName, peerClient);
-		const peer = channel.getPeers()[0];
-		const {original_config} = await configtxlator.getChannelConfigReadable(channel, peer);
-
-		fsExtra.outputFileSync(`${channelName}.json`, original_config);
-	} catch (e) {
-		logger.error(e);
-	}
-	try {
-		const channel = helper.prepareChannel(undefined, ordererClient);
-		const {original_config} = await configtxlator.getChannelConfigReadable(channel);
-
-		fsExtra.outputFileSync('testchainid.json', original_config);
-	} catch (e) {
-		logger.error(e);
 	}
 
 };
