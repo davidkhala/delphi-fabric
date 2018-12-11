@@ -11,6 +11,15 @@ const helper = require('../app/helper');
 const logger = require('../common/nodejs/logger').new('test:serviceDiscovery', true);
 const {globalPeers} = require('../common/nodejs/serviceDiscovery');
 const ChannelUtil = require('../common/nodejs/channel');
+const {containerDelete} = require('../common/docker/nodejs/dockerode-util');
+const deletePeer = async () => {
+	const containerName = 'peer0.ASTRI.org';
+	await containerDelete(containerName);
+};
+const deleteOrderer = async () => {
+	const ordererContainer = 'orderer0.ICDD.ASTRI.org';
+	await containerDelete(ordererContainer);
+};
 const peerList = async () => {
 	const org = 'icdd';
 	const client = await helper.getOrgAdmin(org, 'peer');
@@ -25,11 +34,15 @@ const discoverOrderer = async () => {
 	const channel = ChannelUtil.new(client, channelName);
 	const peer = helper.newPeers([0], org)[0];
 	await ChannelUtil.initialize(channel, peer);
+	const discoveryResult = await ChannelUtil.getDiscoveryResults(channel);
+	logger.debug('discoveryResult', discoveryResult.orderers.ICDDMSP.endpoints);
 	const orderers = ChannelUtil.getOrderers(channel);
-	logger.debug(orderers);
+	logger.info(Object.keys(orderers));
 };
 const task = async () => {
+	await deletePeer();
 	await peerList();
-	await discoverOrderer();
+	await deleteOrderer();
+	await discoverOrderer();//TODO jira issue, the orderer will not disappear
 };
 task();

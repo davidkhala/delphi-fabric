@@ -65,7 +65,8 @@ const runWithNewOrg = async (action) => {
 		fsExtra.emptyDirSync(hostCryptoPath.ordererOrg());
 		return;
 	}
-	await runCA({container_name: caContainerName, port, network, imageTag, TLS});
+	const Issuer = {CN: orgName};
+	await runCA({container_name: caContainerName, port, network, imageTag, TLS, Issuer});
 
 	const caUrl = `${protocol}://localhost:${port}`;
 	const caService = await getCaService(caUrl, orgName, false);

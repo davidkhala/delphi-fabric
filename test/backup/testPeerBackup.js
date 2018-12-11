@@ -1,21 +1,21 @@
 const {
 	containerDelete,
-} = require('../common/docker/nodejs/dockerode-util');
+} = require('../../common/docker/nodejs/dockerode-util');
 const {
 	runPeer
-} = require('../common/nodejs/fabric-dockerode');
+} = require('../../common/nodejs/fabric-dockerode');
 const logger = require('khala-nodeutils/logger').new('tes HA');
 const {sleep} = require('khala-nodeutils/helper');
-const globalConfig = require('../config/orgs');
-const peerUtil = require('../common/nodejs/peer');
-const helper = require('./helper');
-const {CryptoPath} = require('../common/nodejs/path');
-const {installs} = require('./installHelper');
+const globalConfig = require('../../config/orgs');
+const peerUtil = require('../../common/nodejs/peer');
+const helper = require('../../app/helper');
+const {CryptoPath} = require('../../common/nodejs/path');
+const {installs} = require('../../app/installHelper');
 const stopPeer = async (org, peerIndex) => {
 	const peerName = globalConfig.orgs[org].peers[peerIndex].container_name;
 	await containerDelete(peerName);
 };
-const {join} = require('../common/nodejs/channel');
+const {join} = require('../../common/nodejs/channel');
 const resumePeer = async (org, peerIndex, TLS) => {
 
 
@@ -66,7 +66,7 @@ const resumePeerChannel = async (orgName, peerIndex, channelName) => {
 };
 
 const touchCC = async (org, peerIndex) => {
-	const {get} = require('../cc/masterInvoke');
+	const {get} = require('../../cc/masterInvoke');
 	const peers = helper.newPeers([peerIndex], org);
 	const counterKey = 'iterator';
 	const result = await get(peers, org, counterKey);

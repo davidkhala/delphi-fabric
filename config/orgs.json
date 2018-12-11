@@ -123,8 +123,7 @@
         },
         {
           "container_name": "peer1.icdd",
-          "port": 8151,
-          "stateVolume": "Documents/backupVolumes/peer1.icdd.org"
+          "port": 8151
         }
       ],
       "ca": {
