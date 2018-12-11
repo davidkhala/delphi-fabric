@@ -44,7 +44,7 @@ exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPRO
 	const cryptoType = 'orderer';
 	const orderers = [];
 
-	const toggle = async ({orderer, domain, port,  mspid}, toStop, swarm, kafka, stateVolume) => {
+	const toggle = async ({orderer, domain, port, mspid}, toStop, swarm, kafka, stateVolume) => {
 		const cryptoPath = new CryptoPath(MSPROOT, {
 			orderer: {org: domain, name: orderer}
 		});
@@ -207,7 +207,7 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 					container_name, port, imageTag, network,
 					peerHostName, tls,
 					msp: {
-						id:mspid,
+						id: mspid,
 						volumeName: volumeName.MSPROOT,
 						configPath
 					}, couchDB, stateVolume
@@ -232,7 +232,7 @@ exports.runCAs = async (toStop, swarm) => {
 	const imageTag = fabricTag;
 
 	const CAs = [];
-	const toggle = async ({container_name, port}, toStop, swarm) => {
+	const toggle = async ({container_name, port, Issuer}, toStop, swarm) => {
 		const serviceName = swarmServiceName(container_name);
 
 		if (toStop) {
@@ -247,7 +247,7 @@ exports.runCAs = async (toStop, swarm) => {
 				const service = await deployCA({Name: container_name, network, imageTag, port, TLS});
 				CAs.push(service);
 			} else {
-				await runCA({container_name, port, network, imageTag, TLS});
+				await runCA({container_name, port, network, imageTag, TLS, Issuer});
 			}
 		}
 	};
@@ -256,19 +256,22 @@ exports.runCAs = async (toStop, swarm) => {
 			const ordererOrgConfig = globalConfig.orderer.kafka.orgs[ordererOrg];
 			const {portHost: port} = ordererOrgConfig.ca;
 			const container_name = `ca.${ordererOrg}`;
-			await toggle({container_name, port}, toStop, swarm);
+			const Issuer = {CN: ordererOrg};
+			await toggle({container_name, port, Issuer}, toStop, swarm);
 		}
 	} else {
 		const {ca: {portHost: port}, orgName} = globalConfig.orderer.solo;
 		const container_name = `ca.${orgName}`;
-		await toggle({container_name, port}, toStop, swarm);
+		const Issuer = {CN: orgName};
+		await toggle({container_name, port, Issuer}, toStop, swarm);
 	}
 
 	for (const orgName in peerOrgsConfig) {
 		const orgConfig = peerOrgsConfig[orgName];
 		const {ca: {portHost: port}} = orgConfig;
 		const container_name = `ca.${orgName}`;
-		await toggle({container_name, port}, toStop, swarm);
+		const Issuer = {CN: orgName};
+		await toggle({container_name, port, Issuer}, toStop, swarm);
 	}
 	if (swarm) {
 		if (toStop) {

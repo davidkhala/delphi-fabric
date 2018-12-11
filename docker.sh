@@ -4,8 +4,6 @@ CURRENT=$(cd $(dirname ${BASH_SOURCE}) && pwd)
 
 function down() {
 	node -e "require('./dockerode-bootstrap').down()"
-
-
 }
 function up() {
 	prepareNetwork
