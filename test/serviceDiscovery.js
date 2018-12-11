@@ -9,7 +9,7 @@
  */
 const helper = require('../app/helper');
 const logger = require('../common/nodejs/logger').new('test:serviceDiscovery', true);
-const {globalPeers} = require('../common/nodejs/serviceDiscovery');
+const {globalPeers,getDiscoveryResults} = require('../common/nodejs/serviceDiscovery');
 const ChannelUtil = require('../common/nodejs/channel');
 const {containerDelete} = require('../common/docker/nodejs/dockerode-util');
 const deletePeer = async () => {
@@ -34,7 +34,7 @@ const discoverOrderer = async () => {
 	const channel = ChannelUtil.new(client, channelName);
 	const peer = helper.newPeers([0], org)[0];
 	await ChannelUtil.initialize(channel, peer);
-	const discoveryResult = await ChannelUtil.getDiscoveryResults(channel);
+	const discoveryResult = await getDiscoveryResults(channel);
 	logger.debug('discoveryResult', discoveryResult.orderers.ICDDMSP.endpoints);
 	const orderers = ChannelUtil.getOrderers(channel);
 	logger.info(Object.keys(orderers));
