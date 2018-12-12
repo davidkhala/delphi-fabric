@@ -3,7 +3,7 @@ const helper = require('../app/helper');
 const org = 'ASTRI.org';
 const logger = require('../common/nodejs/logger').new('test:channel:initilize');
 const ChannelUtil = require('../common/nodejs/channel');
-const flow = async () => {
+const task = async () => {
 	const client = await helper.getOrgAdmin(org, 'peer');
 	const channel = helper.prepareChannel(channelName, client, true);
 	logger.info(channel.toString());
@@ -14,4 +14,4 @@ const flow = async () => {
 	await ChannelUtil.initialize(channel, peer);
 	logger.info('after ini', channel.toString());//NOTE:can refresh orderers in network
 };
-flow();
+task();

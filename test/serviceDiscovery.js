@@ -7,9 +7,11 @@
  *           identity must have been loaded by a connection profile or by
  *           using the 'setAdminSigningIdentity' method.
  */
+const Logger = require('../common/nodejs/logger');
+const logger = Logger.new('test:serviceDiscovery', true);
+Logger.setGlobal(true);
 const helper = require('../app/helper');
-const logger = require('../common/nodejs/logger').new('test:serviceDiscovery', true);
-const {globalPeers,getDiscoveryResults} = require('../common/nodejs/serviceDiscovery');
+const {globalPeers, getDiscoveryResults} = require('../common/nodejs/serviceDiscovery');
 const ChannelUtil = require('../common/nodejs/channel');
 const OrdererUtil = require('../common/nodejs/orderer');
 const {containerDelete} = require('../common/docker/nodejs/dockerode-util');
@@ -34,10 +36,12 @@ const discoverOrderer = async () => {
 	const client = await helper.getOrgAdmin(org, 'peer');
 	const channel = ChannelUtil.new(client, channelName);
 	const peer = helper.newPeers([0], org)[0];
-	await ChannelUtil.initialize(channel, peer);
-	const orderers = ChannelUtil.getOrderers(channel);
+	await ChannelUtil.initialize(channel, peer, {asLocalhost: true});
+	const orderers = channel.getOrderers();//FIXME sdk: only one peer is here
+	logger.debug(orderers);
 	const discoveryResult = await getDiscoveryResults(channel);
 	logger.debug('discoveryResult', discoveryResult.orderers.ICDDMSP.endpoints);
+
 	for (const [name, orderer] of Object.entries(orderers)) {
 		const connectResult = await OrdererUtil.connect(orderer);
 		logger.debug('connectResult ', name, connectResult);//TODO found all failed, think of use discoveryResults
@@ -46,7 +50,7 @@ const discoverOrderer = async () => {
 const task = async () => {
 	// await deletePeer();
 	// await peerList();
-	await deleteOrderer();
+	// await deleteOrderer();
 	await discoverOrderer();
 };
 task();
