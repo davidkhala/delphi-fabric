@@ -16,7 +16,7 @@ const OrdererUtil = require('../common/nodejs/orderer');
 const channelUtil = require('../common/nodejs/channel');
 const {randomKeyOf} = require('khala-nodeutils/helper');
 
-exports.preparePeer = (orgName, peerIndex, peerConfig) => {
+const preparePeer = (orgName, peerIndex, peerConfig) => {
 	const {port: peerPort} = peerConfig;
 
 	let peer;
@@ -37,6 +37,48 @@ exports.preparePeer = (orgName, peerIndex, peerConfig) => {
 	return peer;
 };
 
+const newOrderer = (name, org, ordererSingleConfig) => {
+	const nodeType = 'orderer';
+	const ordererPort = ordererSingleConfig.portHost;
+	const cryptoPath = new CryptoPath(CRYPTO_CONFIG_DIR, {
+		orderer: {
+			org, name
+		}
+	});
+	let orderer;
+	if (globalConfig.TLS) {
+		const {ordererHostName} = cryptoPath;
+		const {caCert} = cryptoPath.TLSFile(nodeType);
+		orderer = OrdererUtil.new({
+			ordererPort,
+			cert: caCert,
+			ordererHostName
+		});
+	} else {
+		orderer = OrdererUtil.new({ordererPort});
+	}
+	orderer.org = org;
+	orderer.name = name;
+	return orderer;
+};
+
+exports.newOrderers = () => {
+	const result = [];
+	if (ordererConfig.type === 'kafka') {
+		for (const ordererOrgName in ordererConfig.kafka.orgs) {
+			const ordererOrgConfig = ordererConfig.kafka.orgs[ordererOrgName];
+			for (const ordererName in ordererOrgConfig.orderers) {
+				const ordererSingleConfig = ordererOrgConfig.orderers[ordererName];
+				const orderer = newOrderer(ordererName, ordererOrgName, ordererSingleConfig);
+				result.push(orderer);
+			}
+		}
+	} else {
+		const orderer = newOrderer(ordererConfig.solo.container_name, ordererConfig.solo.orgName, ordererConfig.solo);
+		result.push(orderer);
+	}
+	return result;
+};
 
 /**
  * @param client
@@ -52,43 +94,9 @@ exports.prepareChannel = (channelName, client, isRenew) => {
 	}
 
 	const channel = channelUtil.new(client, channelName);
-	const newOrderer = (name, org, ordererSingleConfig) => {
-		const nodeType = 'orderer';
-		const ordererPort = ordererSingleConfig.portHost;
-		const cryptoPath = new CryptoPath(CRYPTO_CONFIG_DIR, {
-			orderer: {
-				org, name
-			}
-		});
-		let orderer;
-		if (globalConfig.TLS) {
-			const {ordererHostName} = cryptoPath;
-			const {caCert} = cryptoPath.TLSFile(nodeType);
-			orderer = OrdererUtil.new({
-				ordererPort,
-				cert: caCert,
-				ordererHostName
-			});
-		} else {
-			orderer = OrdererUtil.new({ordererPort});
-		}
-		orderer.org = org;
-		orderer.name = name;
-		return orderer;
-	};
-	if (ordererConfig.type === 'kafka') {
-		for (const ordererOrgName in ordererConfig.kafka.orgs) {
-			const ordererOrgConfig = ordererConfig.kafka.orgs[ordererOrgName];
-			for (const ordererName in ordererOrgConfig.orderers) {
-				const ordererSingleConfig = ordererOrgConfig.orderers[ordererName];
-				const orderer = newOrderer(ordererName, ordererOrgName, ordererSingleConfig);
-				channel.addOrderer(orderer);
-			}
 
-		}
-	} else {
-
-		const orderer = newOrderer(ordererConfig.solo.container_name, ordererConfig.solo.orgName, ordererConfig.solo);
+	const orderers = exports.newOrderers();
+	for (const orderer of orderers) {
 		channel.addOrderer(orderer);
 	}
 
@@ -100,7 +108,7 @@ exports.prepareChannel = (channelName, client, isRenew) => {
 			for (const peerIndex of orgConfigInChannel.peerIndexes) {
 				const peerConfig = orgsConfig[orgName].peers[peerIndex];
 
-				const peer = exports.preparePeer(orgName, peerIndex, peerConfig);
+				const peer = preparePeer(orgName, peerIndex, peerConfig);
 				channel.addPeer(peer);
 
 			}
@@ -126,7 +134,7 @@ exports.newPeers = (peerIndexes, orgName) => {
 
 		const peerConfig = orgsConfig[orgName].peers[index];
 		if (!peerConfig) continue;
-		const peer = exports.preparePeer(orgName, index, peerConfig);
+		const peer = preparePeer(orgName, index, peerConfig);
 		targets.push(peer);
 	}
 	return targets;
