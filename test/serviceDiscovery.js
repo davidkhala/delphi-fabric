@@ -9,9 +9,8 @@
  */
 const Logger = require('../common/nodejs/logger');
 const logger = Logger.new('test:serviceDiscovery', true);
-Logger.setGlobal(true);
 const helper = require('../app/helper');
-const {globalPeers, getDiscoveryResults} = require('../common/nodejs/serviceDiscovery');
+const {globalPeers} = require('../common/nodejs/serviceDiscovery');
 const ChannelUtil = require('../common/nodejs/channel');
 const OrdererUtil = require('../common/nodejs/orderer');
 const {containerDelete} = require('../common/docker/nodejs/dockerode-util');
@@ -36,21 +35,19 @@ const discoverOrderer = async () => {
 	const client = await helper.getOrgAdmin(org, 'peer');
 	const channel = ChannelUtil.new(client, channelName);
 	const peer = helper.newPeers([0], org)[0];
-	await ChannelUtil.initialize(channel, peer, {asLocalhost: true});
-	const orderers = channel.getOrderers();//FIXME sdk: only one peer is here
-	logger.debug(orderers);
-	const discoveryResult = await getDiscoveryResults(channel);
-	logger.debug('discoveryResult', discoveryResult.orderers.ICDDMSP.endpoints);
+	await ChannelUtil.initialize(channel, peer);
+	const orderers = channel.getOrderers();
 
-	for (const [name, orderer] of Object.entries(orderers)) {
-		const connectResult = await OrdererUtil.connect(orderer);
-		logger.debug('connectResult ', name, connectResult);//TODO found all failed, think of use discoveryResults
+	for (const orderer of orderers) {
+		const localhostOrderer = helper.toLocalhostOrderer(orderer);
+		const connectResult = await OrdererUtil.connect(localhostOrderer);
+		logger.info('connectResult ', connectResult);
 	}
 };
 const task = async () => {
-	// await deletePeer();
-	// await peerList();
-	// await deleteOrderer();
+	await deletePeer();
+	await peerList();
+	await deleteOrderer();
 	await discoverOrderer();
 };
 task();

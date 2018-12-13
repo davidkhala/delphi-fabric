@@ -36,7 +36,22 @@ const preparePeer = (orgName, peerIndex, peerConfig) => {
 	peer.peerConfig.peerIndex = peerIndex;
 	return peer;
 };
-
+exports.toLocalhostOrderer = (orderer) => {
+	const url = orderer.getUrl();
+	if (ordererConfig.type === 'kafka') {
+		for (const [ordererOrgName, ordererOrgConfig] of Object.entries(ordererConfig.kafka.orgs)) {
+			const found = Object.keys(ordererOrgConfig.orderers).find((ordererName) => {
+				return url.includes(ordererName);
+			});
+			if (found) {
+				return newOrderer(found, ordererOrgName, ordererOrgConfig.orderers[found]);
+			}
+		}
+	} else {
+		return newOrderer(ordererConfig.solo.container_name, ordererConfig.solo.orgName, ordererConfig.solo);
+	}
+	return null;
+};
 const newOrderer = (name, org, ordererSingleConfig) => {
 	const nodeType = 'orderer';
 	const ordererPort = ordererSingleConfig.portHost;
