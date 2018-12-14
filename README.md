@@ -75,14 +75,10 @@ TODO dep: to import third-party package in vendor folder
 
 
 ## Finished
-- sample for endorsement-policy `2-of`: send proposal with single signature to peers from 2 org
 - kafka on local & swarm
 - use npm:js-yaml to write YAML files instead of jq
-- thirdPartyTag for kafka, zookeeper, couchdb...
 - swarm mode: network server to manage ip:hostname
-- stress test in nodejs: Caliper
 - update system channel ``testchainid``
-- use golang/dep instead of govendor
 - new orderer with same org
 - make pm2 signServer, swarmServer also run in single mode
 - fabric-ca CRUD user and identityService
@@ -90,12 +86,13 @@ TODO dep: to import third-party package in vendor folder
 - nodeJS chaincode
 - Duplicated priv-file creation, crypto-store problem in .hfc-key-store
 - chaincode setEvent: for both golang,nodejs chaincodeType
-- 1.2 private channel data, solved by manually set anchor peers
+- 1.2 private data (sideDB), solved by manually set anchor peers
 - it is allowed that chaincode invoker, target peers belongs to differed organization.
-- move couchdb server to container based, and support couchdb ledger
+- hybrid data storage model: couchdb, leveldb 
 - use dep to import fabric source into vendor
 ## TODO
 - TLS, java sdk and docker-swarm: keep update
+- java chaincode
 - test backup and recover
 - cooperate with official network_config.json
 - chaincode uninstall
@@ -106,18 +103,16 @@ TODO dep: to import third-party package in vendor folder
 - 1.3: idemixgen
 - take care of docker swarm init --force-new-cluster
 - will block file name be a problem in signature cache? take care docker cp from container for multiple request
-- cross chaincode invoke on same channel and differed channel
 - migrate to use make file instead of ./install.sh
 - chaincode partial update: not all peers upgrade to latest chaincode, is it possible that old chaincode still work
+    with inappropriate endorsement config
   
 ## New feature, patch required for node-sdk
  
 - feature: implement configtx in node-sdk??
 - patch: configtxgen binary allow upper case channelName
 - fabric-ca: cannot change csr.cn via '--csr.cn=${container_name}' TLS CSR: {CN:example.com Names:[{C:US ST:North Carolina L: O:Hyperledger OU:Fabric SerialNumber:}] Hosts:[02cf209b65fb localhost] KeyRequest:<nil> CA:<nil> SerialNumber:}
-- fabric-ca: `fabric-ca` line in git ignore make source copy failed
  
 ## Abandoned tasks
 - docker volume plugin
-- using Atom for Mac default keymap, align with bret Harrison
 - endorsement policy config: too flexible to build template
