@@ -44,7 +44,8 @@ Major configuration
  we cluster most of the config in ``config/orgs.json``, enjoy!
  others:
   - swarm server: ``swarm/swarm.json``
-  - chaincodes path: ``config/chaincode.json``  
+  - chaincodes path: ``config/chaincode.json``
+  - my sample chaincodes have been migrated to ``github.com/davidkhala/chaincode``  
 
 Test on single host
 -----------------------
@@ -64,17 +65,8 @@ Current machine is noted as `master`
 3. [master] run `$ ./docker-swarm.sh chaincode` to install and instantiate chaincode
 4. [slave] run `$ node invokeChaincode.js` to invoke chaincode
 
-TODO dep: to import third-party package in vendor folder
---------
-  - dep could only be run under system $GOPATH, 
-  - my sample chaincodes have been migrated to ``github.com/davidkhala/chaincode``
-
-
-## Attention
-- nodejs chaincode take longer time in install chaincode only.
-
-
-## Finished
+Finished
+-----------------------
 - kafka on local & swarm
 - use npm:js-yaml to write YAML files instead of jq
 - swarm mode: network server to manage ip:hostname
