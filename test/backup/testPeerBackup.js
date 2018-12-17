@@ -66,7 +66,7 @@ const resumePeerChannel = async (orgName, peerIndex, channelName) => {
 };
 
 const touchCC = async (org, peerIndex) => {
-	const {get} = require('../../cc/masterInvoke');
+	const {get} = require('../../cc/master/masterInvoke');
 	const peers = helper.newPeers([peerIndex], org);
 	const counterKey = 'iterator';
 	const result = await get(peers, org, counterKey);

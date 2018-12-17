@@ -26,6 +26,9 @@
       }
     }
   },
+  "diagnose": {
+    "path": "github.com/davidkhala/chaincode/golang/diagnose"
+  },
   "mainChain": {
     "path": "github.com/davidkhala/chaincode/golang/mainChain"
   },

@@ -1,7 +1,7 @@
-const {installAll} = require('../app/installHelper');
-const {instantiate} = require('../app/instantiateHelper');
+const {installAll} = require('../../app/installHelper');
+const {instantiate} = require('../../app/instantiateHelper');
 const masterCC = 'master';
-const helper = require('../app/helper');
+const helper = require('../../app/helper');
 const task = async () => {
 	await installAll(masterCC);
 	const org1 = 'ASTRI.org';

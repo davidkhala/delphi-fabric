@@ -8,8 +8,7 @@ function down() {
 function up() {
 	prepareNetwork
 	node app/testChannel
-	node cc/masterInstall
-	node cc/testMaster.js
+	node cc/diagnose
 }
 
 function prepareNetwork() {
