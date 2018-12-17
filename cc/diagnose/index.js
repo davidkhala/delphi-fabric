@@ -3,7 +3,7 @@ const logger = require('../../common/nodejs/logger').new('invoke:diagnose', true
 const helper = require('../../app/helper');
 
 const flow = async () => {
-	await require('./diagnoseInstall');
+	await require('./diagnoseInstall').task();
 	const org1 = 'icdd';
 	const org2 = 'ASTRI.org';
 	const peers = [helper.newPeers([0], org1)[0], helper.newPeers([0], org2)[0]];

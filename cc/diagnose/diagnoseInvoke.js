@@ -1,6 +1,6 @@
 const {invoke, looper} = require('../../app/invokeHelper');
 const logger = require('../../common/nodejs/logger').new('invoke:diagnose', true);
-const chaincodeId = 'master';
+const chaincodeId = 'diagnose';
 exports.put = async (peers, clientPeerOrg, key, value) => {
 	const fcn = 'put';
 	const args = [key, JSON.stringify(value)];
