@@ -180,7 +180,7 @@ exports.findOrgConfig = (orgName, ordererName) => {
 			}
 		}
 	}
-	if (!target) throw `${orgName} not found`;
+	if (!target) throw Error(`${orgName} not found`);
 	return {config: target, portHost, nodeType};
 };
 
@@ -221,7 +221,7 @@ exports.randomOrg = (nodeType) => {
 			orgName = randomKeyOf(globalConfig.orderer.kafka.orgs);
 		}
 	} else {
-		throw `invalid nodeType ${nodeType}`;
+		throw Error(`invalid nodeType ${nodeType}`);
 	}
 	logger.info(`random ${nodeType} org`, orgName);
 	return orgName;

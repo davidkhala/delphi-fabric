@@ -11,5 +11,15 @@ exports.get = async (peers, clientPeerOrg, key) => {
 	const args = [key];
 	return invoke(peers, clientPeerOrg, chaincodeId, fcn, args);
 };
+exports.cross = async (peers, clientPeerOrg, targetChaincode, fcn, args) => {
+	const Args = [JSON.stringify({
+		ChaincodeName: targetChaincode,
+		Fcn: fcn,
+		Args: Array.isArray(args) ? args : [],
+		Channel: ''
+	})];
+
+	return invoke(peers, clientPeerOrg, chaincodeId, 'delegate', Args);
+};
 
 

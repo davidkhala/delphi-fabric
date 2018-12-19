@@ -17,7 +17,13 @@
     "couchDBIndex": true
   },
   "stress": {
-    "path": "github.com/davidkhala/chaincode/golang/stress",
+    "path": "github.com/davidkhala/chaincode/golang/stress"
+  },
+  "diagnose": {
+    "path": "github.com/davidkhala/chaincode/golang/diagnose"
+  },
+  "mainChain": {
+    "path": "github.com/davidkhala/chaincode/golang/mainChain",
     "endorsingConfigs": {
       "n": 2,
       "mspId": {
@@ -25,12 +31,6 @@
         "icdd": 0
       }
     }
-  },
-  "diagnose": {
-    "path": "github.com/davidkhala/chaincode/golang/diagnose"
-  },
-  "mainChain": {
-    "path": "github.com/davidkhala/chaincode/golang/mainChain"
   },
   "sideChain": {
     "path": "github.com/davidkhala/chaincode/golang/sideChain"
