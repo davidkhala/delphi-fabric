@@ -128,7 +128,6 @@ const configParser = (config) => {
 };
 const defaultProposalTime = 45000;
 exports.instantiate = async (channel, richPeers, opts) => {
-	const logger = logUtil.new('instantiate-Helper', true);
 	const {chaincodeId} = opts;
 	const policyConfig = configParser(chaincodeConfig[chaincodeId]);
 
