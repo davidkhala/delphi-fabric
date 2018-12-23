@@ -8,7 +8,7 @@ function down() {
 function up() {
 	prepareNetwork
 	node app/testChannel
-	node cc/diagnose
+	node cc/stress
 }
 
 function prepareNetwork() {
