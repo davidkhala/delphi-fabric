@@ -1,7 +1,7 @@
 const helper = require('./helper');
 
 const LogUtil = require('../common/nodejs/logger');
-const {proposalToString} = require('../common/nodejs/chaincode');
+const {proposalStringify, proposalFlatten} = require('../common/nodejs/chaincode');
 const {invoke} = require('./chaincodeHelper');
 const channelName = 'allchannel';
 
@@ -14,7 +14,7 @@ exports.invoke = async (peers, clientPeerOrg, chaincodeId, fcn, args = [], trans
 	const client = await helper.getOrgAdmin(clientPeerOrg);
 	const channel = helper.prepareChannel(channelName, client, true);
 	const {proposalResponses} = await invoke(channel, peers, {chaincodeId, fcn, args, transientMap});
-	const result = proposalToString(proposalResponses);
+	const result = proposalResponses.map(proposalStringify).map(proposalFlatten);
 	logger.debug(result);
 	return result;
 };
