@@ -14,7 +14,7 @@ exports.invoke = async (peers, clientPeerOrg, chaincodeId, fcn, args = [], trans
 	const client = await helper.getOrgAdmin(clientPeerOrg);
 	const channel = helper.prepareChannel(channelName, client, true);
 	const {proposalResponses} = await invoke(channel, peers, {chaincodeId, fcn, args, transientMap});
-	const result = proposalResponses.map(proposalStringify).map(proposalFlatten);
+	const result = proposalResponses.map((entry) => proposalFlatten(proposalStringify(entry)));
 	logger.debug(result);
 	return result;
 };
