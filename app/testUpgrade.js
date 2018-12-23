@@ -2,7 +2,8 @@ const helper = require('./helper');
 const globalConfig = require('../config/orgs.json');
 const logger = require('../common/nodejs/logger').new('testUpgrade');
 const Query = require('../common/nodejs/query');
-const {updateInstall, nextVersion, upgrade} = require('./chaincodeHelper');
+const {incrementInstall, upgrade} = require('./chaincodeHelper');
+const {nextVersion} = require('khala-nodeutils/version')
 const chaincodeId = process.env.name ? process.env.name : 'adminChaincode';
 
 const args = [];
@@ -15,7 +16,7 @@ const updateInstallAll = async () => {
 		const client = await helper.getOrgAdmin(orgName);
 		const peers = helper.newPeers(peerIndexes, orgName);
 		for (const peer of peers) {
-			await updateInstall(peer, {chaincodeId}, client);
+			await incrementInstall(peer, {chaincodeId}, client);
 		}
 	}
 

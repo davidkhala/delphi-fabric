@@ -1,7 +1,7 @@
 const {randomKeyOf} = require('khala-nodeutils/helper');
 const {install,} = require('../common/nodejs/chaincode');
 const {instantiateOrUpgrade, invoke} = require('../common/nodejs/chaincodeHelper');
-const logUtil = require('../common/nodejs/logger');
+const Logger = require('../common/nodejs/logger');
 const ClientUtil = require('../common/nodejs/client');
 const ChannelUtil = require('../common/nodejs/channel');
 const EventHubUtil = require('../common/nodejs/eventHub');
@@ -13,6 +13,7 @@ const Query = require('../common/nodejs/query');
 
 const chaincodeConfig = require('../config/chaincode.json');
 
+const {nextVersion, newerVersion} = require('khala-nodeutils/version');
 exports.install = async (peers, {chaincodeId, chaincodeVersion, chaincodeType}, client) => {
 	const chaincodeRelPath = chaincodeConfig[chaincodeId].path;
 	let metadataPath;
@@ -37,21 +38,6 @@ exports.install = async (peers, {chaincodeId, chaincodeVersion, chaincodeType}, 
 	return install(peers, {chaincodeId, chaincodePath, chaincodeVersion, chaincodeType, metadataPath}, client);
 };
 
-/**
- * @Deprecated
- */
-exports.nextVersion = (chaincodeVersion) => {
-	const version = parseInt(chaincodeVersion.substr(1));
-	return `v${version + 1}`;
-};
-/**
- * @Deprecated
- */
-exports.newerVersion = (versionN, versionO) => {
-	const versionNumN = parseInt(versionN.substr(1));
-	const versionNumO = parseInt(versionO.substr(1));
-	return versionNumN > versionNumO;
-};
 exports.upgradeToCurrent = async (channel, richPeer, {chaincodeId, args, fcn}) => {
 	const client = channel._clientContext;
 	const {chaincodes} = await Query.chaincodes.installed(richPeer, client);
@@ -68,37 +54,31 @@ exports.upgradeToCurrent = async (channel, richPeer, {chaincodeId, args, fcn}) =
 	// 	escc: '',
 	// 	vscc: '' } ]
 
-	const chaincodeVersion = exports.nextVersion(version);
+	const chaincodeVersion = nextVersion(version);
 	return exports.upgrade(channel, [richPeer], {chaincodeId, args, chaincodeVersion, fcn}, client);
 };
 
-exports.updateInstall = async (peer, {chaincodeId, chaincodePath}, client) => {
-	const logger = logUtil.new('update install');
-	const {chaincodes} = await Query.chaincodes.installed(peer, client);
+exports.incrementInstall = async (peer, {chaincodeId, chaincodePath}, client) => {
+	const logger = Logger.new('install patch');
+	const {chaincodes} = await Query.chaincodesInstalled(peer, client);
 	const foundChaincodes = chaincodes.filter((element) => element.name === chaincodeId);
-	let chaincodeVersion = 'v0';
-	if (foundChaincodes.length === 0) {
+	let chaincodeVersion = nextVersion();
+
+
+	const reducer = (lastChaincode, currentValue) => {
+		if (!lastChaincode || newerVersion(currentValue.version, lastChaincode.version)) {
+			return currentValue;
+		} else {
+			return lastChaincode;
+		}
+	};
+	const lastChaincode = foundChaincodes.reduce(reducer);
+	if (!lastChaincode) {
 		logger.warn(`No chaincode found with name ${chaincodeId}, to use version ${chaincodeVersion}, `, {chaincodePath});
 	} else {
-		let latestChaincode = foundChaincodes[0];
-		let latestVersion = latestChaincode.version;
-		for (const chaincode of foundChaincodes) {
-			const {version} = chaincode;
-			if (exports.newerVersion(version, latestVersion)) {
-				latestVersion = version;
-				latestChaincode = chaincode;
-			}
-		}
-		chaincodePath = latestChaincode.path;
-		chaincodeVersion = exports.nextVersion(latestVersion);
+		chaincodePath = lastChaincode.path;
+		chaincodeVersion = nextVersion(lastChaincode.version);
 	}
-
-	// [ { name: 'adminChaincode',
-	// 	version: 'v0',
-	// 	path: 'github.com/admin',
-	// 	input: '',
-	// 	escc: '',
-	// 	vscc: '' } ]
 
 	return exports.install([peer], {chaincodeId, chaincodePath, chaincodeVersion}, client);
 
@@ -168,7 +148,7 @@ exports.upgrade = async (channel, richPeers, opts) => {
 	return instantiateOrUpgrade('upgrade', channel, richPeers, eventHubs, allConfig, proposalTimeout, eventWaitTime,);
 };
 exports.invoke = async (channel, richPeers, {chaincodeId, fcn, args, transientMap}, nonAdminUser) => {
-	const logger = logUtil.new('invoke-Helper', true);
+	const logger = Logger.new('invoke-Helper', true);
 	const {eventWaitTime} = channel;
 	const eventHubs = [];
 	for (const peer of richPeers) {
