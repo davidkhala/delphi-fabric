@@ -1,20 +1,18 @@
-const {looper} = require('../../app/invokeHelper');
 const helper = require('../../app/helper');
 const logger = require('../../common/nodejs/logger').new('invoke:master', true);
-const {increase, putPrivate} = require('./masterInvoke');
-
+const {increase, putPrivate, getBinding, getDecorations} = require('./masterInvoke');
+const install = require('./masterInstall');
 const flow = async () => {
-	await require('./masterInstall');
+	await install.task();
 	const org1 = 'icdd';
 	const org2 = 'ASTRI.org';
 	const peers = [helper.newPeers([0], org1)[0], helper.newPeers([0], org2)[0]];
 	const clientOrg = org2;
 
 	await putPrivate(peers, clientOrg);
-	// try {
-	// 	await looper(undefined, increase, peers, clientOrg);
-	// } catch (e) {
-	// 	logger.error(e);
-	// }
+	const binding = await getBinding(peers, clientOrg);
+	logger.info('binding', binding);
+	const decors = await getDecorations(peers, clientOrg);
+	logger.info('decors', decors);
 };
 flow();

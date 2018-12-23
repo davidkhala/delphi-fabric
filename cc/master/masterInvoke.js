@@ -2,12 +2,12 @@ const {invoke, looper} = require('../../app/invokeHelper');
 const logger = require('../../common/nodejs/logger').new('invoke:master', true);
 const chaincodeId = 'master';
 exports.putPrivate = async (peers, clientPeerOrg) => {
-	const fcn = 'put';
+	const fcn = 'putPrivate';
 	const args = [];
 	return invoke(peers, clientPeerOrg, chaincodeId, fcn, args);
 };
 exports.getPrivate = async (peers, clientPeerOrg) => {
-	const fcn = 'get';
+	const fcn = 'getPrivate';
 	const args = [];
 	return invoke(peers, clientPeerOrg, chaincodeId, fcn, args);
 };
@@ -18,9 +18,20 @@ exports.increase = async (peers, clientPeerOrg) => {
 	return result[0];
 };
 exports.get = async (peers, clientPeerOrg, key) => {
-	const fcn = 'get2';
+	const fcn = 'get';
 	const args = [key];
 	return invoke(peers, clientPeerOrg, chaincodeId, fcn, args);
 };
 
+exports.getDecorations = async (peers, clientPeerOrg) => {
+	const fcn = 'getDecorations';
+	const args = [];
+	return invoke(peers, clientPeerOrg, chaincodeId, fcn, args);
+};
+
+exports.getBinding = async (peers, clientPeerOrg) => {
+	const fcn = 'getBinding';
+	const args = [];
+	return invoke(peers, clientPeerOrg, chaincodeId, fcn, args);
+};
 

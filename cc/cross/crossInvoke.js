@@ -1,9 +1,9 @@
-const {invoke} = require('../app/invokeHelper');
+const {invoke} = require('../../app/invokeHelper');
 const mainCC = 'mainChain';
 const sideCC = 'sideChain';
 const sideCC2 = 'sideChain2';
-const helper = require('../app/helper');
-const logger = require('../common/nodejs/logger').new('crossCC Invoke');
+const helper = require('../../app/helper');
+const logger = require('../../common/nodejs/logger').new('crossCC Invoke');
 const put = async () => {
 	const org1 = 'ASTRI.org';
 	const peers = helper.newPeers([0], org1);
