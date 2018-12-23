@@ -1,4 +1,4 @@
-const {invoke, looper} = require('../../app/invokeHelper');
+const {invoke} = require('../../app/invokeHelper');
 const logger = require('../../common/nodejs/logger').new('invoke:master', true);
 const chaincodeId = 'master';
 exports.putPrivate = async (peers, clientPeerOrg) => {

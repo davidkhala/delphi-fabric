@@ -1,5 +1,6 @@
 const {randomKeyOf} = require('khala-nodeutils/helper');
-const {install, instantiateOrUpgrade, invoke} = require('../common/nodejs/chaincode');
+const {install,} = require('../common/nodejs/chaincode');
+const {instantiateOrUpgrade, invoke} = require('../common/nodejs/chaincodeHelper');
 const logUtil = require('../common/nodejs/logger');
 const ClientUtil = require('../common/nodejs/client');
 const ChannelUtil = require('../common/nodejs/channel');
@@ -36,10 +37,16 @@ exports.install = async (peers, {chaincodeId, chaincodeVersion, chaincodeType}, 
 	return install(peers, {chaincodeId, chaincodePath, chaincodeVersion, chaincodeType, metadataPath}, client);
 };
 
+/**
+ * @Deprecated
+ */
 exports.nextVersion = (chaincodeVersion) => {
 	const version = parseInt(chaincodeVersion.substr(1));
 	return `v${version + 1}`;
 };
+/**
+ * @Deprecated
+ */
 exports.newerVersion = (versionN, versionO) => {
 	const versionNumN = parseInt(versionN.substr(1));
 	const versionNumO = parseInt(versionO.substr(1));
@@ -142,7 +149,7 @@ exports.instantiate = async (channel, richPeers, opts) => {
 
 	const allConfig = Object.assign(policyConfig, opts);
 	const proposalTimeout = richPeers.length * defaultProposalTime;
-	return instantiateOrUpgrade('deploy', channel, richPeers, eventHubs, allConfig, eventWaitTime, proposalTimeout);
+	return instantiateOrUpgrade('deploy', channel, richPeers, eventHubs, allConfig, proposalTimeout, eventWaitTime,);
 };
 
 exports.upgrade = async (channel, richPeers, opts) => {
@@ -158,7 +165,7 @@ exports.upgrade = async (channel, richPeers, opts) => {
 	}
 	const allConfig = Object.assign(policyConfig, opts);
 	const proposalTimeout = richPeers.length * defaultProposalTime;
-	return instantiateOrUpgrade('upgrade', channel, richPeers, eventHubs, allConfig, eventWaitTime, proposalTimeout);
+	return instantiateOrUpgrade('upgrade', channel, richPeers, eventHubs, allConfig, proposalTimeout, eventWaitTime,);
 };
 exports.invoke = async (channel, richPeers, {chaincodeId, fcn, args, transientMap}, nonAdminUser) => {
 	const logger = logUtil.new('invoke-Helper', true);
@@ -182,14 +189,13 @@ exports.invoke = async (channel, richPeers, {chaincodeId, fcn, args, transientMa
 			args,
 			fcn,
 			transientMap,
-		}, orderer, eventWaitTime,);
+		}, orderer);
 	} catch (e) {
-		for (const eventHub of eventHubs) {
-			eventHub.close();
-		}
 		if (e.proposalResponses) {
 			throw e.proposalResponses;
-		} else throw e;
+		} else {
+			throw e;
+		}
 	}
 
 };
