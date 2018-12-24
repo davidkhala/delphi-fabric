@@ -13,14 +13,12 @@ const Query = require('../common/nodejs/query');
 
 const chaincodeConfig = require('../config/chaincode.json');
 
-const {nextVersion, newerVersion} = require('khala-nodeutils/version');
-exports.install = async (peers, {chaincodeId, chaincodeVersion, chaincodeType}, client) => {
+const {nextVersion} = require('khala-nodeutils/version');
+exports.prepareInstall = async ({chaincodeId}) => {
 	const chaincodeRelPath = chaincodeConfig[chaincodeId].path;
 	let metadataPath;
 	let chaincodePath;
-	if (!chaincodeType) {
-		chaincodeType = chaincodeConfig[chaincodeId].type;
-	}
+	const chaincodeType = chaincodeConfig[chaincodeId].type;
 	const gopath = await golangUtil.getGOPATH();
 	if (chaincodeType === 'node') {
 		chaincodePath = path.resolve(gopath, 'src', chaincodeRelPath);
@@ -35,15 +33,20 @@ exports.install = async (peers, {chaincodeId, chaincodeVersion, chaincodeType}, 
 		metadataPath = undefined;
 	}
 
-	return install(peers, {chaincodeId, chaincodePath, chaincodeVersion, chaincodeType, metadataPath}, client);
+	return {chaincodeId, chaincodePath, chaincodeType, metadataPath};
+};
+exports.install = async (peers, {chaincodeId, chaincodeVersion}, client) => {
+	const opt = await exports.prepareInstall({chaincodeId});
+	opt.chaincodeVersion = chaincodeVersion;
+	return install(peers, opt, client);
 };
 
-exports.upgradeToCurrent = async (channel, richPeer, {chaincodeId, args, fcn}) => {
+exports.upgradeToCurrent = async (channel, peer, {chaincodeId, args, fcn}) => {
 	const client = channel._clientContext;
-	const {chaincodes} = await Query.chaincodes.installed(richPeer, client);
+	const {chaincodes} = await Query.chaincodesInstalled(peer, client);
 	const foundChaincode = chaincodes.find((element) => element.name === chaincodeId);
 	if (!foundChaincode) {
-		throw `No chaincode found with name ${chaincodeId}`;
+		throw Error(`No chaincode found with name ${chaincodeId}`);
 	}
 	const {version} = foundChaincode;
 
@@ -55,34 +58,10 @@ exports.upgradeToCurrent = async (channel, richPeer, {chaincodeId, args, fcn}) =
 	// 	vscc: '' } ]
 
 	const chaincodeVersion = nextVersion(version);
-	return exports.upgrade(channel, [richPeer], {chaincodeId, args, chaincodeVersion, fcn}, client);
+	return exports.upgrade(channel, [peer], {chaincodeId, args, chaincodeVersion, fcn}, client);
 };
 
-exports.incrementInstall = async (peer, {chaincodeId, chaincodePath}, client) => {
-	const logger = Logger.new('install patch');
-	const {chaincodes} = await Query.chaincodesInstalled(peer, client);
-	const foundChaincodes = chaincodes.filter((element) => element.name === chaincodeId);
-	let chaincodeVersion = nextVersion();
 
-
-	const reducer = (lastChaincode, currentValue) => {
-		if (!lastChaincode || newerVersion(currentValue.version, lastChaincode.version)) {
-			return currentValue;
-		} else {
-			return lastChaincode;
-		}
-	};
-	const lastChaincode = foundChaincodes.reduce(reducer);
-	if (!lastChaincode) {
-		logger.warn(`No chaincode found with name ${chaincodeId}, to use version ${chaincodeVersion}, `, {chaincodePath});
-	} else {
-		chaincodePath = lastChaincode.path;
-		chaincodeVersion = nextVersion(lastChaincode.version);
-	}
-
-	return exports.install([peer], {chaincodeId, chaincodePath, chaincodeVersion}, client);
-
-};
 const buildEndorsePolicy = (config) => {
 	const {n} = config;
 	const identities = [];
