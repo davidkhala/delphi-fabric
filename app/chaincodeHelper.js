@@ -9,11 +9,9 @@ const golangUtil = require('../common/nodejs/golang');
 const {RoleIdentity, simplePolicyBuilder} = require('../common/nodejs/policy');
 const {collectionPolicyBuilder, collectionConfig} = require('../common/nodejs/privateData');
 const path = require('path');
-const Query = require('../common/nodejs/query');
 
 const chaincodeConfig = require('../config/chaincode.json');
 
-const {nextVersion} = require('khala-nodeutils/version');
 exports.prepareInstall = async ({chaincodeId}) => {
 	const chaincodeRelPath = chaincodeConfig[chaincodeId].path;
 	let metadataPath;
@@ -40,27 +38,6 @@ exports.install = async (peers, {chaincodeId, chaincodeVersion}, client) => {
 	opt.chaincodeVersion = chaincodeVersion;
 	return install(peers, opt, client);
 };
-
-exports.upgradeToCurrent = async (channel, peer, {chaincodeId, args, fcn}) => {
-	const client = channel._clientContext;
-	const {chaincodes} = await Query.chaincodesInstalled(peer, client);
-	const foundChaincode = chaincodes.find((element) => element.name === chaincodeId);
-	if (!foundChaincode) {
-		throw Error(`No chaincode found with name ${chaincodeId}`);
-	}
-	const {version} = foundChaincode;
-
-	// [ { name: 'adminChaincode',
-	// 	version: 'v0',
-	// 	path: 'github.com/admin',
-	// 	input: '',
-	// 	escc: '',
-	// 	vscc: '' } ]
-
-	const chaincodeVersion = nextVersion(version);
-	return exports.upgrade(channel, [peer], {chaincodeId, args, chaincodeVersion, fcn}, client);
-};
-
 
 const buildEndorsePolicy = (config) => {
 	const {n} = config;
@@ -127,8 +104,6 @@ exports.upgrade = async (channel, richPeers, opts) => {
 	return instantiateOrUpgrade('upgrade', channel, richPeers, eventHubs, allConfig, proposalTimeout, eventWaitTime,);
 };
 exports.invoke = async (channel, richPeers, {chaincodeId, fcn, args, transientMap}, nonAdminUser) => {
-	const logger = Logger.new('invoke-Helper', true);
-	const {eventWaitTime} = channel;
 	const eventHubs = [];
 	for (const peer of richPeers) {
 		const eventHub = EventHubUtil.newEventHub(channel, peer, true);
