@@ -49,7 +49,7 @@ const resumePeer = async (org, peerIndex, TLS) => {
 		container_name, port, imageTag, network,
 		peerHostName, tls,
 		msp: {
-			id:mspid,
+			id: mspid,
 			volumeName: 'MSPROOT',
 			configPath
 		}, couchDB, stateVolume
@@ -60,16 +60,16 @@ const resumePeer = async (org, peerIndex, TLS) => {
 const resumePeerChannel = async (orgName, peerIndex, channelName) => {
 	const client = await helper.getOrgAdmin(orgName);
 	const channel = helper.prepareChannel(channelName, client);
-	const peer = helper.newPeers([peerIndex], orgName)[0];
+	const peer = helper.newPeer(peerIndex, orgName);
 	await join(channel, peer);
 
 };
 
 const touchCC = async (org, peerIndex) => {
 	const {get} = require('../../cc/master/masterInvoke');
-	const peers = helper.newPeers([peerIndex], org);
+	const peer = helper.newPeer(peerIndex, org);
 	const counterKey = 'iterator';
-	const result = await get(peers, org, counterKey);
+	const result = await get([peer], org, counterKey);
 	logger.debug(result);
 };
 const flow = async () => {

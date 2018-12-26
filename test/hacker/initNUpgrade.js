@@ -3,15 +3,15 @@ const {instantiate, upgradeToLatest} = require('../../app/instantiateHelper');
 const {installAll, incrementInstalls} = require('../../app/installHelper');
 const {invoke} = require('../../app/invokeHelper');
 const helper = require('../../app/helper');
-const logger = require('../../common/nodejs/logger').new('initNUpgrade',true);
+const logger = require('../../common/nodejs/logger').new('initNUpgrade', true);
 const initConflict = async () => {
 	const org2 = 'icdd';
 	const org1 = 'ASTRI.org';
 
 	await installAll(chaincodeId);
-	let peers = [helper.newPeers([0], org2)[0], helper.newPeers([0], org1)[0]];
+	let peers = [helper.newPeer(0, org2), helper.newPeer(0, org1)];
 	await instantiate(org2, peers, chaincodeId, 'version', ['0.0.0']);
-	peers = [helper.newPeers([1], org2)[0], helper.newPeers([1], org1)[0]];
+	peers = [helper.newPeer(1, org2), helper.newPeer(1, org1)];
 	await instantiate(org2, peers, chaincodeId);// swallow when existence
 };
 
@@ -25,7 +25,7 @@ const wrongInstall = async (org, peerIndexes, chaincodeVersion) => {
 const upgradeConflict = async () => {
 	const org2 = 'icdd';
 	const org1 = 'ASTRI.org';
-	let peers = [helper.newPeers([1], org2)[0], helper.newPeers([1], org1)[0]];
+	let peers = [helper.newPeer(1, org2), helper.newPeer(1, org1)];
 	const incrementResult = await incrementInstalls(chaincodeId, org2, [1]);
 	logger.debug('incrementResult', incrementResult);
 

@@ -6,7 +6,7 @@ const flow = async () => {
 	await install.task();
 	const org1 = 'icdd';
 	const org2 = 'ASTRI.org';
-	const peers = [helper.newPeers([0], org1)[0], helper.newPeers([0], org2)[0]];
+	const peers = [helper.newPeer(0, org1), helper.newPeer(0, org2)];
 	const clientOrg = org2;
 
 	await putPrivate(peers, clientOrg);

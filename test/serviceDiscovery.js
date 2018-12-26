@@ -25,7 +25,7 @@ const deleteOrderer = async () => {
 const peerList = async () => {
 	const org = 'icdd';
 	const client = await helper.getOrgAdmin(org, 'peer');
-	const peer = helper.newPeers([0], org)[0];
+	const peer = helper.newPeer(0, org);
 	const discoveries = await globalPeers(client, peer);
 	logger.debug(discoveries.pretty);
 };
@@ -34,7 +34,7 @@ const discoverOrderer = async () => {
 	const channelName = 'allchannel';
 	const client = await helper.getOrgAdmin(org, 'peer');
 	const channel = ChannelUtil.new(client, channelName);
-	const peer = helper.newPeers([0], org)[0];
+	const peer = helper.newPeer(0, org);
 	await ChannelUtil.initialize(channel, peer);
 	const orderers = channel.getOrderers();
 
