@@ -98,7 +98,7 @@ Finished
 - migrate to use make file instead of ./install.sh
 - chaincode partial update: not all peers upgrade to latest chaincode, is it possible that old chaincode still work
     with inappropriate endorsement config
-- merge diagnose cc and admin cc  
+- merge diagnose cc and admin cc : move couchDBIndex into nodejs
 ## New feature, patch required for node-sdk
  
 - feature: implement configtx in node-sdk??

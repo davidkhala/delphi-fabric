@@ -29,8 +29,8 @@ function pullKafka() {
 	docker pull hyperledger/fabric-zookeeper:$IMAGE_TAG
 }
 function updateChaincode() {
-    export GOPATH=$(go env GOPATH)
-    set +e
+	export GOPATH=$(go env GOPATH)
+	set +e
 	go get -u -v "github.com/davidkhala/chaincode" # FIXME: please use your own chaincode as in config/chaincode.json
 	set -e
 	if ! dep version; then
@@ -56,16 +56,16 @@ function updateChaincode() {
 	cd $GOPATH/src/github.com/davidkhala/chaincode/golang/tokenCommon
 	dep ensure -update -v
 	cd -
-	# TODO directory scanning 
+	# TODO directory scanning
 }
 
-function PM2CLI(){
-    sudo npm install pm2@latest -g
+function PM2CLI() {
+	sudo npm install pm2@latest -g
 }
-function sync(){
+function sync() {
 	gitSync
 	$CURRENT/common/install.sh sync
-		npm install
+	npm install
 	updateChaincode
 }
 if [ -n "$fcn" ]; then
