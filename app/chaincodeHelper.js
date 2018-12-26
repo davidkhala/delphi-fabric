@@ -103,9 +103,9 @@ exports.upgrade = async (channel, richPeers, opts) => {
 	const proposalTimeout = richPeers.length * defaultProposalTime;
 	return instantiateOrUpgrade('upgrade', channel, richPeers, eventHubs, allConfig, proposalTimeout, eventWaitTime,);
 };
-exports.invoke = async (channel, richPeers, {chaincodeId, fcn, args, transientMap}, nonAdminUser) => {
+exports.invoke = async (channel, peers, {chaincodeId, fcn, args, transientMap}, nonAdminUser) => {
 	const eventHubs = [];
-	for (const peer of richPeers) {
+	for (const peer of peers) {
 		const eventHub = EventHubUtil.newEventHub(channel, peer, true);
 		eventHubs.push(eventHub);
 	}
@@ -117,13 +117,15 @@ exports.invoke = async (channel, richPeers, {chaincodeId, fcn, args, transientMa
 		ChannelUtil.setClientContext(channel, client);
 	}
 
+	const proposalTimeout = peers.length * defaultProposalTime;
+
 	try {
-		return await invoke(channel, richPeers, eventHubs, {
+		return await invoke(channel, peers, eventHubs, {
 			chaincodeId,
 			args,
 			fcn,
 			transientMap,
-		}, orderer);
+		}, orderer, proposalTimeout);
 	} catch (e) {
 		for (const eventHub of eventHubs) {
 			EventHubUtil.disconnect(eventHub);
