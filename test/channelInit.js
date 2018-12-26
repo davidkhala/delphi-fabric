@@ -10,7 +10,7 @@ const task = async () => {
 	ChannelUtil.clearOrderers(channel);
 	ChannelUtil.clearPeers(channel);
 	logger.info('after clean', channel.toString());
-	const peer = helper.newPeers([0], org)[0];
+	const peer = helper.newPeer(0, org);
 	await ChannelUtil.initialize(channel, peer);
 	logger.info('after ini', channel.toString());//NOTE:can refresh orderers in network
 };

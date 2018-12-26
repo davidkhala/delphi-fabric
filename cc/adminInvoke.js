@@ -22,7 +22,7 @@ exports.set = async (peers, clientPeerOrg) => {
 exports.flow = async () => {
 	const org1 = 'icdd';
 	const org2 = 'ASTRI.org';
-	const peers = [helper.newPeers([0], org1)[0], helper.newPeers([0], org2)[0]];
+	const peers = [helper.newPeer(0, org1), helper.newPeer(0, org2)];
 	//try to use another user
 	const orgName = helper.randomOrg('peer');
 	await exports.set(peers, orgName);

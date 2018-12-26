@@ -10,30 +10,25 @@ Profiles:
         PreferredMaxBytes: 512 KB
       Capabilities:
         V1_1: true
-      OrdererType: kafka
+      OrdererType: solo
       Addresses:
-        - 'orderer0.ICDD.ASTRI.org:7050'
-        - 'orderer1.ICDD.ASTRI.org:7050'
-        - 'orderer2.ICDD.ASTRI.org:7050'
-      Kafka:
-        Brokers:
-          - 'kafka0:9092'
-          - 'kafka1:9092'
-          - 'kafka2:9092'
-          - 'kafka3:9092'
+        - 'orderer.Delphi.com:7050'
       Organizations:
-        - Name: ICDD.ASTRI.org
-          ID: ICDDMSP
-          MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/ICDD.ASTRI.org/msp
+        - Name: Delphi.com
+          ID: OrdererMSP
+          MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/Delphi.com/msp
     Consortiums:
       SampleConsortium:
         Organizations:
           - Name: ASTRI.org
             ID: ASTRIMSP
-            MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/ASTRI.org/msp
+            MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/ASTRI.org/msp
           - Name: icdd
             ID: icdd
-            MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp
+            MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp
+          - Name: delphi
+            ID: delphi
+            MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/delphi/msp
   allchannel:
     Capabilities:
       V1_3: true
@@ -42,12 +37,17 @@ Profiles:
       Organizations:
         - Name: ASTRI.org
           ID: ASTRIMSP
-          MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/ASTRI.org/msp
+          MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/ASTRI.org/msp
           AnchorPeers:
             - {}
         - Name: icdd
           ID: icdd
-          MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp
+          MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp
+          AnchorPeers:
+            - {}
+        - Name: delphi
+          ID: delphi
+          MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/delphi/msp
           AnchorPeers:
             - {}
       Capabilities:
@@ -62,4 +62,8 @@ Profiles:
         - Name: icdd
           AnchorPeers:
             - Host: peer0.icdd
+              Port: 7051
+        - Name: delphi
+          AnchorPeers:
+            - Host: peer0.delphi
               Port: 7051

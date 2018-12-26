@@ -105,7 +105,9 @@ exports.prepareChannel = (channelName, client, isRenew) => {
 	if (isRenew) {
 		delete client._channels[channelName];
 	} else {
-		if (client._channels[channelName]) return client._channels[channelName];
+		if (client._channels[channelName]) {
+			return client._channels[channelName];
+		}
 	}
 
 	const channel = channelUtil.new(client, channelName);
@@ -135,6 +137,10 @@ exports.prepareChannel = (channelName, client, isRenew) => {
 	return channel;
 };
 
+exports.newPeer = (peerIndex, orgName) => {
+	const peerConfig = orgsConfig[orgName].peers[peerIndex];
+	return preparePeer(orgName, peerIndex, peerConfig);
+};
 /**
  * work as a data adapter, containerNames: array --> orgname,peerIndex,peerConfig for each newPeer
  * @param {number[]} peerIndexes
@@ -142,15 +148,9 @@ exports.prepareChannel = (channelName, client, isRenew) => {
  * @returns {Peer[]}
  */
 exports.newPeers = (peerIndexes, orgName) => {
-
-
 	const targets = [];
 	for (const index of peerIndexes) {
-
-		const peerConfig = orgsConfig[orgName].peers[index];
-		if (!peerConfig) continue;
-		const peer = preparePeer(orgName, index, peerConfig);
-		targets.push(peer);
+		targets.push(exports.newPeer(index, orgName));
 	}
 	return targets;
 
@@ -180,7 +180,9 @@ exports.findOrgConfig = (orgName, ordererName) => {
 			}
 		}
 	}
-	if (!target) throw Error(`${orgName} not found`);
+	if (!target) {
+		throw Error(`${orgName} not found`);
+	}
 	return {config: target, portHost, nodeType};
 };
 

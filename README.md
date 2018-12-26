@@ -98,7 +98,8 @@ Finished
 - migrate to use make file instead of ./install.sh
 - chaincode partial update: not all peers upgrade to latest chaincode, is it possible that old chaincode still work
     with inappropriate endorsement config
-- Refactor chaincode upgrade: use version standard "0.0.0", unify instantiate and upgrade  
+- merge diagnose cc and admin cc  
+- migrate some use case of helper.newPeers to helper.newPeer
 ## New feature, patch required for node-sdk
  
 - feature: implement configtx in node-sdk??

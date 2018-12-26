@@ -93,6 +93,11 @@
             0,
             1
           ]
+        },
+        "delphi": {
+          "peerIndexes": [
+            0
+          ]
         }
       }
     }
@@ -129,6 +134,18 @@
         "portHost": 8054
       },
       "mspid": "icdd"
+    },
+    "delphi": {
+      "peers": [
+        {
+          "container_name": "peer0.delphi",
+          "port": 9051
+        }
+      ],
+      "ca": {
+        "portHost": 9054
+      },
+      "mspid": "delphi"
     }
   }
 }

@@ -66,7 +66,7 @@ app.post('/channel/join/:channelName', async (req, res) => {
 
 		invalid.peer({orgName, peerIndex});
 
-		const peer = helper.newPeers([peerIndex], orgName)[0];
+		const peer = helper.newPeer(peerIndex, orgName);
 		const client = await helper.getOrgAdmin(orgName, 'peer');
 		const channel = helper.prepareChannel(channelName, client);
 		await joinChannel(channel, peer);
@@ -88,9 +88,9 @@ app.post('/query/block/height/:blockNumber', async (req, res) => {
 
 		const client = await helper.getOrgAdmin(orgName);
 		const channel = helper.prepareChannel(channelName, client);
-		const peer = helper.newPeers([peerIndex], orgName)[0];
+		const peer = helper.newPeer(peerIndex, orgName);
 
-		const message = await Query.block.height(peer, channel, blockNumber);
+		const message = await Query.blockFromHeight(peer, channel, blockNumber);
 		res.send(message);
 	} catch (err) {
 		errorSyntaxHandle(err, res);
@@ -103,10 +103,10 @@ app.post('/query/block/hash', async (req, res) => {
 	logger.debug('GET BLOCK BY HASH', {hashHex, peerIndex, orgName, channelName});
 	try {
 		invalid.peer({orgName, peerIndex});
-		const peer = helper.newPeers([peerIndex], orgName)[0];
+		const peer = helper.newPeer(peerIndex, orgName);
 		const client = await helper.getOrgAdmin(orgName);
 		const channel = helper.prepareChannel(channelName, client);
-		const message = await Query.block.hash(peer, channel, Buffer.from(hashHex, 'hex'));
+		const message = await Query.blockFromHash(peer, channel, hashHex);
 		res.send(message);
 	} catch (err) {
 		errorSyntaxHandle(err, res);
@@ -121,7 +121,7 @@ app.post('/query/tx', async (req, res) => {
 		invalid.peer({orgName, peerIndex});
 		const client = await helper.getOrgAdmin(orgName);
 		const channel = helper.prepareChannel(channelName, client);
-		const peer = helper.newPeers([peerIndex], orgName)[0];
+		const peer = helper.newPeer(peerIndex, orgName);
 		const message = await Query.tx(peer, channel, txId);
 		res.send(message);
 	} catch (err) {
@@ -139,7 +139,7 @@ app.post('/query/chain', async (req, res) => {
 		invalid.peer({orgName, peerIndex});
 		const client = await helper.getOrgAdmin(orgName);
 		const channel = helper.prepareChannel(channelName, client);
-		const peer = helper.newPeers([peerIndex], orgName)[0];
+		const peer = helper.newPeer(peerIndex, orgName);
 		const message = await Query.chain(peer, channel);
 		res.send(pretty ? {pretty: message.pretty} : message);
 	} catch (err) {
@@ -153,9 +153,9 @@ app.post('/query/chaincodes/installed', async (req, res) => {
 	logger.debug('query installed CHAINCODE', {orgName, peerIndex});
 	try {
 		invalid.peer({orgName, peerIndex});
-		const peer = helper.newPeers([peerIndex], orgName)[0];
+		const peer = helper.newPeer(peerIndex, orgName);
 		const client = await helper.getOrgAdmin(orgName);
-		const message = await Query.chaincodes.installed(peer, client);
+		const message = await Query.chaincodesInstalled(peer, client);
 		res.send(message);
 	} catch (err) {
 		errorSyntaxHandle(err, res);
@@ -166,10 +166,10 @@ app.post('/query/chaincodes/instantiated', async (req, res) => {
 	logger.debug('query instantiated CHAINCODE', {orgName, peerIndex, channelName});
 	try {
 		invalid.peer({orgName, peerIndex});
-		const peer = helper.newPeers([peerIndex], orgName)[0];
+		const peer = helper.newPeer(peerIndex, orgName;
 		const client = await helper.getOrgAdmin(orgName);
 		const channel = helper.prepareChannel(channelName, client);
-		const message = await Query.chaincodes.instantiated(peer, channel);
+		const message = await Query.chaincodesInstantiated(peer, channel);
 		res.send(message);
 	} catch (err) {
 		errorSyntaxHandle(err, res);
@@ -181,9 +181,9 @@ app.post('/query/channelJoined', async (req, res) => {
 	logger.debug('query joined CHANNELS', {orgName, peerIndex});
 	try {
 		invalid.peer({orgName, peerIndex});
-		const peer = helper.newPeers([peerIndex], orgName)[0];
+		const peer = helper.newPeer(peerIndex, orgName);
 		const client = await helper.getOrgAdmin(orgName);
-		const message = await Query.channel.joined(peer, client);
+		const message = await Query.channelJoined(peer, client);
 		res.send(message);
 	} catch (err) {
 		errorSyntaxHandle(err, res);
