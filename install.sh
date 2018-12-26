@@ -53,10 +53,20 @@ function updateChaincode() {
 	cd $GOPATH/src/github.com/davidkhala/chaincode/golang/sideChain
 	dep ensure -update -v
 	cd -
+	cd $GOPATH/src/github.com/davidkhala/chaincode/golang/tokenCommon
+	dep ensure -update -v
+	cd -
+	# TODO directory scanning 
 }
 
 function PM2CLI(){
     sudo npm install pm2@latest -g
+}
+function sync(){
+	gitSync
+	$CURRENT/common/install.sh sync
+		npm install
+	updateChaincode
 }
 if [ -n "$fcn" ]; then
 	$fcn $remain_params
