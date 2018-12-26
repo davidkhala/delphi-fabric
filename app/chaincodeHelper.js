@@ -1,4 +1,4 @@
-const {randomKeyOf} = require('khala-nodeutils/helper');
+const {randomKeyOf} = require('khala-nodeutils/random');
 const {install,} = require('../common/nodejs/chaincode');
 const {instantiateOrUpgrade, invoke} = require('../common/nodejs/chaincodeHelper');
 const Logger = require('../common/nodejs/logger');
@@ -125,11 +125,10 @@ exports.invoke = async (channel, richPeers, {chaincodeId, fcn, args, transientMa
 			transientMap,
 		}, orderer);
 	} catch (e) {
-		if (e.proposalResponses) {
-			throw e.proposalResponses;
-		} else {
-			throw e;
+		for (const eventHub of eventHubs) {
+			EventHubUtil.disconnect(eventHub);
 		}
+		throw e;
 	}
 
 };
