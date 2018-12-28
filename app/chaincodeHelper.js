@@ -8,6 +8,7 @@ const EventHubUtil = require('../common/nodejs/eventHub');
 const golangUtil = require('../common/nodejs/golang');
 const {RoleIdentity, simplePolicyBuilder} = require('../common/nodejs/policy');
 const {collectionPolicyBuilder, collectionConfig} = require('../common/nodejs/privateData');
+const {couchDBIndex} = require('../common/nodejs/couchdb');
 const path = require('path');
 
 const chaincodeConfig = require('../config/chaincode.json');
@@ -27,10 +28,11 @@ exports.prepareInstall = async ({chaincodeId}) => {
 		chaincodePath = chaincodeRelPath;
 		metadataPath = path.resolve(gopath, 'src', chaincodeRelPath, 'META-INF');//the name is arbitrary
 	}
-	if (!chaincodeConfig[chaincodeId].couchDBIndex) {
+	if (Array.isArray(chaincodeConfig[chaincodeId].couchDBIndexes)) {
+		couchDBIndex(metadataPath, undefined, ...chaincodeConfig[chaincodeId].couchDBIndexes);
+	} else {
 		metadataPath = undefined;
 	}
-
 	return {chaincodeId, chaincodePath, chaincodeType, metadataPath};
 };
 exports.install = async (peers, {chaincodeId, chaincodeVersion}, client) => {

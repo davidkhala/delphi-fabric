@@ -26,3 +26,10 @@ exports.cross = async (peers, clientPeerOrg, targetChaincode, fcn, args) => {
 };
 
 
+const {queryBuilder} = require('../../common/nodejs/couchdb');
+
+exports.richQuery = async (peers, clientPeerOrg) => {
+	const fcn = 'richQuery';
+	const args = [queryBuilder(['Time'], 1)];
+	return invoke(peers, clientPeerOrg, chaincodeId, fcn, args);
+};
