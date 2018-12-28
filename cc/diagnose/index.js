@@ -1,4 +1,4 @@
-const {get, put, cross} = require('./diagnoseInvoke');
+const {get, put, cross, whoami} = require('./diagnoseInvoke');
 const logger = require('../../common/nodejs/logger').new('invoke:diagnose', true);
 const helper = require('../../app/helper');
 
@@ -26,5 +26,7 @@ const flow = async () => {
 	} catch (err) {
 		logger.error(err);
 	}
+	const cid = await whoami(peers, org1);
+	logger.info({cid});
 };
 flow();

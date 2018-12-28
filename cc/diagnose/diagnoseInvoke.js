@@ -11,6 +11,9 @@ exports.get = async (peers, clientPeerOrg, key) => {
 	const args = [key];
 	return invoke(peers, clientPeerOrg, chaincodeId, fcn, args);
 };
+exports.whoami = async (peers, clientPeerOrg) => {
+	return invoke(peers, clientPeerOrg, chaincodeId, 'whoami', []);
+};
 exports.cross = async (peers, clientPeerOrg, targetChaincode, fcn, args) => {
 	const Args = [JSON.stringify({
 		ChaincodeName: targetChaincode,
