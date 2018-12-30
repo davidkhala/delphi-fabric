@@ -141,12 +141,14 @@ exports.newPeer = (peerIndex, orgName) => {
 	const peerConfig = orgsConfig[orgName].peers[peerIndex];
 	return preparePeer(orgName, peerIndex, peerConfig);
 };
-/**
- * work as a data adapter, containerNames: array --> orgname,peerIndex,peerConfig for each newPeer
- * @param {number[]} peerIndexes
- * @param {string} orgName
- * @returns {Peer[]}
- */
+exports.allPeers = () => {
+	let peers = [];
+	for (const [orgName, orgConfig] of Object.entries(orgsConfig)) {
+		const peerIndexes = Object.keys(orgConfig.peers);
+		peers = peers.concat(exports.newPeers(peerIndexes, orgName));
+	}
+	return peers;
+};
 exports.newPeers = (peerIndexes, orgName) => {
 	const targets = [];
 	for (const index of peerIndexes) {

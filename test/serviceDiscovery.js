@@ -40,7 +40,7 @@ const discoverOrderer = async () => {
 
 	for (const orderer of orderers) {
 		const localhostOrderer = helper.toLocalhostOrderer(orderer);
-		const connectResult = await OrdererUtil.connect(localhostOrderer);
+		const connectResult = await OrdererUtil.ping(localhostOrderer);
 		logger.info('connectResult ', connectResult);
 	}
 };
