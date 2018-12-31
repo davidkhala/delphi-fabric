@@ -31,16 +31,13 @@ function pullKafka() {
 function updateChaincode() {
 	export GOPATH=$(go env GOPATH)
 	set +e
-	go get -u -v "github.com/davidkhala/chaincode" # FIXME: please use your own chaincode as in config/chaincode.json
+	go get -u -v "github.com/davidkhala/chaincode"
 	set -e
 	if ! dep version; then
 		$CURRENT/common/install.sh golang_dep
 		GOBIN=$GOPATH/bin/
 		export PATH=$PATH:$GOBIN # ephemeral
 	fi
-	cd $GOPATH/src/github.com/davidkhala/chaincode/golang/admin
-	dep ensure -update -v
-	cd -
 	cd $GOPATH/src/github.com/davidkhala/chaincode/golang/master
 	dep ensure -update -v
 	cd -
