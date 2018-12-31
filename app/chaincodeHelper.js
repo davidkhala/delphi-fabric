@@ -1,5 +1,5 @@
 const {randomKeyOf} = require('khala-nodeutils/random');
-const {install,} = require('../common/nodejs/chaincode');
+const {install} = require('../common/nodejs/chaincode');
 const {instantiateOrUpgrade, invoke} = require('../common/nodejs/chaincodeHelper');
 const Logger = require('../common/nodejs/logger');
 const ClientUtil = require('../common/nodejs/client');
@@ -21,12 +21,12 @@ exports.prepareInstall = async ({chaincodeId}) => {
 	const gopath = await golangUtil.getGOPATH();
 	if (chaincodeType === 'node') {
 		chaincodePath = path.resolve(gopath, 'src', chaincodeRelPath);
-		metadataPath = path.resolve(chaincodePath, 'META-INF');//the name is arbitrary
+		metadataPath = path.resolve(chaincodePath, 'META-INF');// the name is arbitrary
 	}
 	if (!chaincodeType || chaincodeType === 'golang') {
 		await golangUtil.setGOPATH();
 		chaincodePath = chaincodeRelPath;
-		metadataPath = path.resolve(gopath, 'src', chaincodeRelPath, 'META-INF');//the name is arbitrary
+		metadataPath = path.resolve(gopath, 'src', chaincodeRelPath, 'META-INF');// the name is arbitrary
 	}
 	if (Array.isArray(chaincodeConfig[chaincodeId].couchDBIndexes)) {
 		couchDBIndex(metadataPath, undefined, ...chaincodeConfig[chaincodeId].couchDBIndexes);
@@ -52,8 +52,8 @@ const buildEndorsePolicy = (config) => {
 /**
  * this should apply to both instantiate and upgrade
  */
-const configParser = (config) => {
-	const {endorsingConfigs, collectionConfigs} = config;
+const configParser = (configs) => {
+	const {endorsingConfigs, collectionConfigs} = configs;
 	const result = {};
 	if (endorsingConfigs) {
 		result.endorsementPolicy = buildEndorsePolicy(endorsingConfigs);
@@ -87,7 +87,7 @@ exports.instantiate = async (channel, richPeers, opts) => {
 
 	const allConfig = Object.assign(policyConfig, opts);
 	const proposalTimeout = richPeers.length * defaultProposalTime;
-	return instantiateOrUpgrade('deploy', channel, richPeers, eventHubs, allConfig, proposalTimeout, eventWaitTime,);
+	return instantiateOrUpgrade('deploy', channel, richPeers, eventHubs, allConfig, proposalTimeout, eventWaitTime);
 };
 
 exports.upgrade = async (channel, richPeers, opts) => {
@@ -103,7 +103,7 @@ exports.upgrade = async (channel, richPeers, opts) => {
 	}
 	const allConfig = Object.assign(policyConfig, opts);
 	const proposalTimeout = richPeers.length * defaultProposalTime;
-	return instantiateOrUpgrade('upgrade', channel, richPeers, eventHubs, allConfig, proposalTimeout, eventWaitTime,);
+	return instantiateOrUpgrade('upgrade', channel, richPeers, eventHubs, allConfig, proposalTimeout, eventWaitTime);
 };
 exports.invoke = async (channel, peers, {chaincodeId, fcn, args, transientMap}, nonAdminUser) => {
 	const eventHubs = [];
