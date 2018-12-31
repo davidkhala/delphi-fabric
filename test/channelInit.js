@@ -12,6 +12,6 @@ const task = async () => {
 	logger.info('after clean', channel.toString());
 	const peer = helper.newPeer(0, org);
 	await ChannelUtil.initialize(channel, peer);
-	logger.info('after ini', channel.toString());//NOTE:can refresh orderers in network
+	logger.info('after ini', channel.toString());// NOTE:can refresh orderers in network
 };
 task();

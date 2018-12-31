@@ -6,7 +6,9 @@ const {CryptoPath} = require('../common/nodejs/path');
 exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, configtxFile, PROFILE_ANCHORPEERS = 'anchorPeers'}) => {
 	const channelsConfig = globalConfig.channels;
 	const ordererConfig = globalConfig.orderer;
-	if (!configtxFile) configtxFile = path.resolve(__dirname, 'configtx.yaml');
+	if (!configtxFile) {
+		configtxFile = path.resolve(__dirname, 'configtx.yaml');
+	}
 	//	refresh configtxFile
 	if (fsExtra.pathExistsSync(configtxFile)) {
 		fsExtra.removeSync(configtxFile);
@@ -15,7 +17,7 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 
 	const blockProfileConfig = {
 		Capabilities: {
-			V1_3: true //ChannelCapabilities
+			V1_3: true // ChannelCapabilities
 		}
 	};
 	const OrdererConfig = {
@@ -114,7 +116,7 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 	const Profiles = {
 		[PROFILE_BLOCK]: blockProfileConfig
 	};
-	//Write channel profiles
+	// Write channel profiles
 	for (const channelName in channelsConfig) {
 		const channelConfig = channelsConfig[channelName];
 		const PROFILE_CHANNEL = channelName;
@@ -136,7 +138,7 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 		};
 
 	}
-	//setAnchorPeers profile
+	// setAnchorPeers profile
 	const OrganizationsForAnchorProfile = [];
 	for (const orgName in orgsConfig) {
 		OrganizationsForAnchorProfile.push(OrganizationBuilder(orgName, true));

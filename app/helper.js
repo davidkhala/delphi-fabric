@@ -29,7 +29,7 @@ const preparePeer = (orgName, peerIndex, peerConfig) => {
 	} else {
 		peer = peerUtil.new({peerPort});
 	}
-	//NOTE append more info
+	// NOTE append more info
 	peer.peerConfig = peerConfig;
 
 	peer.peerConfig.orgName = orgName;
@@ -200,7 +200,7 @@ const getUserClient = async (username, orgName, client) => {
 		}
 	});
 	const user = await userUtil.loadFromLocal(cryptoPath, nodeType, mspId, client.getCryptoSuite());
-	//FIXME this._signingIdentity._signer._key.getSKI is not a function
+	// FIXME this._signingIdentity._signer._key.getSKI is not a function
 	await client.setUserContext(user, true);
 	return client;
 };

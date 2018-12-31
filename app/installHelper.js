@@ -1,19 +1,18 @@
 const {install, prepareInstall} = require('./chaincodeHelper');
 const helper = require('./helper');
 const {nextVersion} = require('khala-nodeutils/version');
-const logger = require('../common/nodejs/logger').new('installHelper');
 const {incrementInstall} = require('../common/nodejs/chaincodeVersion');
 
 const globalConfig = require('../config/orgs.json');
 const {channels} = globalConfig;
 
 const channelName = 'allchannel';
-//only one time, one org could deploy
+// only one time, one org could deploy
 exports.installs = async (chaincodeId, orgName, peerIndexes) => {
 	const peers = helper.newPeers(peerIndexes, orgName);
 	const client = await helper.getOrgAdmin(orgName);
 	const chaincodeVersion = nextVersion();
-	return install(peers, {chaincodeId, chaincodeVersion,}, client);
+	return install(peers, {chaincodeId, chaincodeVersion}, client);
 };
 
 exports.installAll = async (chaincodeId) => {

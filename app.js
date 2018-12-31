@@ -129,8 +129,8 @@ app.post('/query/tx', async (req, res) => {
 	}
 });
 
-//Query for Channel Information
-//NOTE: blockchain is summary for all channel and chaincode
+// Query for Channel Information
+// NOTE: blockchain is summary for all channel and chaincode
 app.post('/query/chain', async (req, res) => {
 	const {orgName, peerIndex, channelName, pretty} = req.body;
 	logger.debug('GET blockchain INFORMATION', {orgName, peerIndex, channelName});
@@ -166,7 +166,7 @@ app.post('/query/chaincodes/instantiated', async (req, res) => {
 	logger.debug('query instantiated CHAINCODE', {orgName, peerIndex, channelName});
 	try {
 		invalid.peer({orgName, peerIndex});
-		const peer = helper.newPeer(peerIndex, orgName;
+		const peer = helper.newPeer(peerIndex, orgName);
 		const client = await helper.getOrgAdmin(orgName);
 		const channel = helper.prepareChannel(channelName, client);
 		const message = await Query.chaincodesInstantiated(peer, channel);

@@ -20,12 +20,12 @@ const wrongInstall = async (org, peerIndexes, chaincodeVersion) => {
 	const chaincodePath = 'github.com/davidkhala/chaincode/golang/diagnose';
 	const peers = helper.newPeers(peerIndexes, org);
 	const client = await helper.getOrgAdmin(org);
-	await install(peers, {chaincodeId, chaincodePath, chaincodeVersion,}, client);
+	await install(peers, {chaincodeId, chaincodePath, chaincodeVersion}, client);
 };
 const upgradeConflict = async () => {
 	const org2 = 'icdd';
 	const org1 = 'ASTRI.org';
-	let peers = [helper.newPeer(1, org2), helper.newPeer(1, org1)];
+	const peers = [helper.newPeer(1, org2), helper.newPeer(1, org1)];
 	const incrementResult = await incrementInstalls(chaincodeId, org2, [1]);
 	logger.debug('incrementResult', incrementResult);
 

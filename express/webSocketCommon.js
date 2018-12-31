@@ -15,7 +15,9 @@ exports.clearEventListener = (ws, method, listener) => {
 				if (listenerEach === listener) {
 					ws.removeEventListener(method, listenerEach);
 					break;
-				} else continue;
+				} else {
+					continue;
+				}
 			} else {
 				ws.removeEventListener(method, listenerEach);
 			}
@@ -30,12 +32,14 @@ exports.wsServerBuilder = (server, onMessage, onMessageError) => {
 	const heartBeat = () => {
 		const clientsArray = Array.from(wss.clients);
 		logger.debug('ws heartBeat', 'clients pool size', clientsArray.length);
-		//typeof wss.clients === 'Set'
+		// typeof wss.clients === 'Set'
 		clientsArray.forEach((ws, index) => {
 			if (!ws.id) {
 				ws.id = index;
 			}
-			if (ws.isAlive === false) return ws.terminate();
+			if (ws.isAlive === false) {
+				return ws.terminate();
+			}
 
 			ws.isAlive = false;
 			ws.ping(() => {
@@ -85,7 +89,9 @@ const instantWS = ({wsUrl, options = {}, sendContent}, onMessage) => {
 	const ws = persistWS({wsUrl, options});
 
 	ws.on('message', (data) => {
-		if (onMessage) onMessage(data);
+		if (onMessage) {
+			onMessage(data);
+		}
 		ws.close();
 	});
 

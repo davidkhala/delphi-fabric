@@ -44,7 +44,7 @@ exports.run = () => {
 		signatures = signatures.concat(peerAdminSigns);
 
 		res.send({
-			signatures: signUtil.toBase64(signatures)//TODO needed in http?
+			signatures: signUtil.toBase64(signatures)// TODO needed in http?
 		});
 
 	});

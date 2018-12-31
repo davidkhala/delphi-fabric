@@ -1,31 +1,65 @@
 const helper = require('./helper.js');
 const logger = require('../common/nodejs/logger').new('create-Channel');
-const OrdererUtil = require('../common/nodejs/orderer');
-const channelUtil = require('../common/nodejs/channel');
+const ChannelUtil = require('../common/nodejs/channel');
+const {newEventHub, blockWaiter} = require('../common/nodejs/eventHub');
+const path = require('path');
+
+const {create, join, updateAnchorPeers} = ChannelUtil;
+const {genAnchorPeers} = require('../common/nodejs/binManager');
 
 /**
  *
- * @param client client of committer
- * @param channelName
+ * @param {Channel} channel
  * @param channelConfigFile
- * @param {string[]} orgNames orgName array of signer
- * @param {string} ordererUrl such like 'grpc://localhost:7050'; if not specified, we will use channel.getOrderers()[0]
+ * @param {Orderer} orderer
+ * @param {string[]} extraSignerOrgs orgName array of signer
  * @returns {Promise<T>}
  */
-exports.create = async (client, channelName, channelConfigFile, orgNames, ordererUrl) => {
-	logger.debug('Create Channel', {channelName, channelConfigFile, orgNames});
+exports.create = async (channel, channelConfigFile, orderer, extraSignerOrgs = []) => {
 
-	const clients = [];
-	for (const orgName of orgNames) {
-		const client = await helper.getOrgAdmin(orgName);
-		clients.push(client);
+	const clients = [channel._clientContext];
+	// extract the channel config bytes from the envelope to be signed
+	for (const orgName of extraSignerOrgs) {
+		const signingClient = await helper.getOrgAdmin(orgName);
+		clients.push(signingClient);
 	}
 
-	// extract the channel config bytes from the envelope to be signed
-	const channel = helper.prepareChannel(channelName, client, true);
-	const orderers = channel.getOrderers();
-	logger.debug(orderers.length, 'orderers in channel', channelName);
-	const orderer = OrdererUtil.find({orderers, ordererUrl});
+	return create(clients, channel, channelConfigFile, orderer);
+};
 
-	return channelUtil.create(clients, channel, channelConfigFile, orderer);
+
+const globalConfig = require('../config/orgs');
+exports.joinAll = async (channelName) => {
+
+	const channelConfig = globalConfig.channels[channelName];
+	for (const orgName in channelConfig.orgs) {
+		const {peerIndexes} = channelConfig.orgs[orgName];
+		const peers = helper.newPeers(peerIndexes, orgName);
+
+		const client = await helper.getOrgAdmin(orgName);
+
+		const channel = helper.prepareChannel(channelName, client);
+		const orderer = await ChannelUtil.getOrderers(channel, true)[0];
+		for (const peer of peers) {
+			await join(channel, peer, orderer);
+		}
+	}
+
+};
+
+exports.updateAnchorPeers = async (configtxYaml, channelName, orgName) => {
+	const anchorTx = path.resolve(`${orgName}Anchors.tx`);
+	await genAnchorPeers(configtxYaml, channelName, orgName, anchorTx);
+
+	const client = await helper.getOrgAdmin(orgName);
+
+	const channel = helper.prepareChannel(channelName, client);
+	const orderer = channel.getOrderers()[0];
+
+	const peer = helper.newPeers([0], orgName)[0];
+	const eventHub = newEventHub(channel, peer, true);
+
+	await Promise.all([updateAnchorPeers(channel, anchorTx, orderer), blockWaiter(eventHub, 1)]);
+
+
 };

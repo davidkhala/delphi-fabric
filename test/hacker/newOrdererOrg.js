@@ -27,7 +27,9 @@ const getCaService = async (url, domain, swarm) => {
 		if (swarm) {
 			const serviceName = swarmServiceName(caHostName);
 			container_name = await inflateContainerName(serviceName);
-			if (!container_name) throw `service ${serviceName} not assigned to current node`;
+			if (!container_name) {
+				throw `service ${serviceName} not assigned to current node`;
+			}
 		} else {
 			container_name = caHostName;
 		}
@@ -92,7 +94,7 @@ const runWithNewOrg = async (action) => {
 	}
 
 
-	/////////update address
+	// ///////update address
 	const ordererAdress = `${hostCryptoPath.ordererHostName}:7050`;
 
 
@@ -206,7 +208,7 @@ const run = async (orgName, caService, admin, action, mspid) => {
 	}
 
 
-	/////////update address
+	// ///////update address
 	const ordererAdress = `${hostCryptoPath.ordererHostName}:7050`;
 
 

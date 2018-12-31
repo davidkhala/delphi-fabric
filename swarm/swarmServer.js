@@ -1,4 +1,4 @@
-//work as network map server in Corda : see in readme
+// work as network map server in Corda : see in readme
 
 const logger = require('../common/nodejs/logger').new('swarm-server');
 const swarmConfig = require('./swarm.json').swarmServer;
@@ -145,7 +145,7 @@ exports.run = () => {
 	});
 	app.get('/', async (req, res) => {
 		try {
-			//touch
+			// touch
 			new dbMap[db]({name: container_name, table: swarmDoc});
 			res.json({
 				errCode: 'success',
@@ -157,8 +157,8 @@ exports.run = () => {
 		}
 
 	});
-	//TODO app.post('/docker/genOrderer'
-	//TODO app.post('/docker/genPeer'
+	// TODO app.post('/docker/genOrderer'
+	// TODO app.post('/docker/genPeer'
 	return app;
 };
 exports.clean = async () => {

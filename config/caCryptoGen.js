@@ -21,7 +21,9 @@ const getCaService = async (url, domain, swarm) => {
 		if (swarm) {
 			const serviceName = swarmServiceName(caHostName);
 			container_name = await inflateContainerName(serviceName);
-			if (!container_name) throw `service ${serviceName} not assigned to current node`;
+			if (!container_name) {
+				throw `service ${serviceName} not assigned to current node`;
+			}
 		} else {
 			container_name = caHostName;
 		}
@@ -69,7 +71,7 @@ exports.genAll = async (swarm) => {
 
 	const {type} = globalConfig.orderer;
 
-	//gen orderers
+	// gen orderers
 	{
 		const nodeType = 'orderer';
 
@@ -137,7 +139,7 @@ exports.genAll = async (swarm) => {
 			await genOrderer(caService, cryptoPath, admin, {TLS});
 		}
 	}
-	//gen peers
+	// gen peers
 	const peerOrgs = globalConfig.orgs;
 	{
 		const nodeType = 'peer';

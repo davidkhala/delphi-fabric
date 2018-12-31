@@ -20,7 +20,9 @@ const {sha2_256} = require('../common/nodejs/helper');
 
 router.post('/getSwarmSignatures', multerCache.single('proto'), async (req, res) => {
 	try {
-		if (!req.file) throw Error('no attachment found');
+		if (!req.file) {
+			throw Error('no attachment found');
+		}
 		const protoPath = req.file.path;
 
 		const proto = fs.readFileSync(protoPath);
@@ -39,13 +41,13 @@ router.post('/getSwarmSignatures', multerCache.single('proto'), async (req, res)
 				return resp.signatures;
 			} catch (e) {
 				logger.error('failed to getSignatures from', url, e);
-				//TODO error tolerance;
+				// TODO error tolerance;
 				return [];
 			}
 		});
 		const resp = await Promise.all(promises);
 
-		//resp is array of array
+		// resp is array of array
 		let joinedArray = [];
 		for (const eachResp of resp) {
 			if (Array.isArray(eachResp)) {
@@ -119,9 +121,9 @@ router.post('/createOrUpdateOrg', multerCache.fields([{name: 'admins'}, {name: '
 	, async (req, res) => {
 		logger.debug('[start]createOrUpdateOrg');
 		try {
-			const admins = req.files['admins'] ? req.files['admins'].map(({path}) => path) : [];
-			const root_certs = req.files['root_certs'] ? req.files['root_certs'].map(({path}) => path) : [];
-			const tls_root_certs = req.files['tls_root_certs'] ? req.files['tls_root_certs'].map(({path}) => path) : [];
+			const admins = req.files.admins ? req.files.admins.map(({path}) => path) : [];
+			const root_certs = req.files.root_certs ? req.files.root_certs.map(({path}) => path) : [];
+			const tls_root_certs = req.files.tls_root_certs ? req.files.tls_root_certs.map(({path}) => path) : [];
 			const {MSPID, MSPName, nodeType, skip} = req.body;
 
 			let channel;
@@ -139,7 +141,7 @@ router.post('/createOrUpdateOrg', multerCache.fields([{name: 'admins'}, {name: '
 				channel = helper.prepareChannel(channelName, client, true);
 				peer = channel.getPeers()[0];
 			}
-			const orderer = channel.getOrderers().filter(orderer => !ordererOrg || orderer.org === ordererOrg)[0]; //use same orderer
+			const orderer = channel.getOrderers().filter(orderer => !ordererOrg || orderer.org === ordererOrg)[0]; // use same orderer
 
 
 			// const peerEventHub = EventHubUtil.newEventHub(channel, peer);
@@ -151,7 +153,7 @@ router.post('/createOrUpdateOrg', multerCache.fields([{name: 'admins'}, {name: '
 
 
 			const onUpdate = (original_config) => {
-				//No update checking should be implemented in channel update
+				// No update checking should be implemented in channel update
 				const config = new ConfigFactory(original_config);
 				return config.createOrUpdateOrg(MSPName, MSPID, nodeType, {
 					admins,
