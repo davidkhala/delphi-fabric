@@ -18,17 +18,7 @@ const task = async () => {
 	const channel = helper.prepareChannel(channelName, client);
 	const orderers = await ChannelUtil.getOrderers(channel, true);
 	const orderer = orderers[0];
-	try {
-		await create(channel, channelConfigFile, orderer);
-	} catch (err) {
-		if (err.toString().includes('Error: BAD_REQUEST') ||
-			(err.status && err.status.includes('BAD_REQUEST'))) {
-			// TODO existing swallow, inspect error here
-			logger.warn('create-channel', err);
-		} else {
-			throw err;
-		}
-	}
+	await create(channel, channelConfigFile, orderer);
 	await joinAll(channelName);
 
 	await sleep(1000);
