@@ -199,7 +199,7 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 					Name: container_name, port, imageTag, network,
 					peerHostName,
 					msp: {
-						id,
+						id:mspid,
 						volumeName: volumeName.MSPROOT,
 						configPath
 					},

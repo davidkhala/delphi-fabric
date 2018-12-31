@@ -22,7 +22,7 @@ const getCaService = async (url, domain, swarm) => {
 			const serviceName = swarmServiceName(caHostName);
 			container_name = await inflateContainerName(serviceName);
 			if (!container_name) {
-				throw `service ${serviceName} not assigned to current node`;
+				throw Error(`service ${serviceName} not assigned to current node`);
 			}
 		} else {
 			container_name = caHostName;
@@ -57,7 +57,7 @@ exports.genUser = async ({userName, password}, orgName, swarm) => {
 			org: orgName
 		},
 		user: {
-			name: userUtil.adminName,
+			name: userUtil.adminName
 		},
 		password: userUtil.adminPwd
 	});
