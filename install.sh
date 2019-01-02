@@ -39,19 +39,19 @@ function updateChaincode() {
 		export PATH=$PATH:$GOBIN # ephemeral
 	fi
 	cd $GOPATH/src/github.com/davidkhala/chaincode/golang/master
-	dep ensure -update -v
+	dep ensure
 	cd -
 	cd $GOPATH/src/github.com/davidkhala/chaincode/golang/mainChain
-	dep ensure -update -v
+	dep ensure
 	cd -
 	cd $GOPATH/src/github.com/davidkhala/chaincode/golang/sideChain2
-	dep ensure -update -v
+	dep ensure
 	cd -
 	cd $GOPATH/src/github.com/davidkhala/chaincode/golang/sideChain
-	dep ensure -update -v
+	dep ensure
 	cd -
 	cd $GOPATH/src/github.com/davidkhala/chaincode/golang/tokenCommon
-	dep ensure -update -v
+	dep ensure
 	cd -
 	# TODO directory scanning
 }
