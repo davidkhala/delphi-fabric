@@ -9,6 +9,7 @@ const golangUtil = require('../common/nodejs/golang');
 const {RoleIdentity, simplePolicyBuilder} = require('../common/nodejs/policy');
 const {collectionPolicyBuilder, collectionConfig} = require('../common/nodejs/privateData');
 const {couchDBIndex} = require('../common/nodejs/couchdb');
+const {discoveryChaincodeCallBuilder} = require('../common/nodejs/serviceDiscovery');
 const path = require('path');
 
 const chaincodeConfig = require('../config/chaincode.json');
@@ -53,14 +54,14 @@ const buildEndorsePolicy = (config) => {
  * this should apply to both instantiate and upgrade
  */
 const configParser = (configs) => {
-	const {endorsingConfigs, collectionConfigs} = configs;
+	const {endorsingConfigs, collectionsConfig} = configs;
 	const result = {};
 	if (endorsingConfigs) {
 		result.endorsementPolicy = buildEndorsePolicy(endorsingConfigs);
 	}
-	if (collectionConfigs) {
+	if (collectionsConfig) {
 		const collectionSet = [];
-		for (const [name, config] of Object.entries(collectionConfigs)) {
+		for (const [name, config] of Object.entries(collectionsConfig)) {
 			const policy = collectionPolicyBuilder(config.mspIds);
 			config.name = name;
 			config.policy = policy;
@@ -126,7 +127,7 @@ exports.invoke = async (channel, peers, {chaincodeId, fcn, args, transientMap}, 
 			chaincodeId,
 			args,
 			fcn,
-			transientMap,
+			transientMap
 		}, orderer, proposalTimeout);
 	} catch (e) {
 		for (const eventHub of eventHubs) {
@@ -135,4 +136,18 @@ exports.invoke = async (channel, peers, {chaincodeId, fcn, args, transientMap}, 
 		throw e;
 	}
 
+};
+
+exports.discoveryChaincodeInterestBuilder = (chaincodeIdFilter) => {
+	let chaincodeIDs = Object.keys(chaincodeConfig);
+	if (typeof chaincodeIdFilter === 'function') {
+		chaincodeIDs = chaincodeIDs.filter(chaincodeIdFilter);
+	}
+	const chaincodes = [];
+	for (const chaincodeId of chaincodeIDs) {
+		const {collectionsConfig} = chaincodeConfig[chaincodeId];
+		const ccCall = discoveryChaincodeCallBuilder({chaincodeId, collectionsConfig});
+		chaincodes.push(ccCall);
+	}
+	return {chaincodes};
 };

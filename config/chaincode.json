@@ -1,7 +1,7 @@
 {
   "master": {
     "path": "github.com/davidkhala/chaincode/golang/master",
-    "collectionConfigs": {
+    "collectionsConfig": {
       "private1": {
         "mspIds": [
           "ASTRIMSP",
@@ -43,7 +43,7 @@
         "icdd": 0
       }
     },
-    "collectionConfigs": {
+    "collectionsConfig": {
       "tx": {
         "mspIds": [
           "ASTRIMSP",
@@ -66,7 +66,7 @@
         "ASTRIMSP": 0
       }
     },
-    "collectionConfigs": {
+    "collectionsConfig": {
       "private1": {
         "mspIds": [
           "ASTRIMSP"
