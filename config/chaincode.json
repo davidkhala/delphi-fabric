@@ -57,7 +57,7 @@
   "global": {
     "path": "github.com/davidkhala/chaincode/golang/tokenCommon"
   },
-  "node": {
+  "nodeSample": {
     "type": "node",
     "path": "github.com/davidkhala/chaincode/nodejs/sample",
     "endorsingConfigs": {
@@ -71,7 +71,7 @@
         "mspIds": [
           "ASTRIMSP"
         ],
-        "requiredPeerCount": 2,
+        "requiredPeerCount": 1,
         "maxPeerCount": 2
       }
     }

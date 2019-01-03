@@ -1,12 +1,13 @@
 const helper = require('./helper.js');
-const logger = require('../common/nodejs/logger').new('create-Channel');
+const logger = require('../common/nodejs/logger').new('channel helper');
 const ChannelUtil = require('../common/nodejs/channel');
 const {newEventHub, blockWaiter} = require('../common/nodejs/eventHub');
 const path = require('path');
 
 const {create, join, updateAnchorPeers} = ChannelUtil;
 const {genAnchorPeers} = require('../common/nodejs/binManager');
-
+const globalConfig = require('../config/orgs');
+const {sleep} = require('../common/nodejs/helper').nodeUtil.helper();
 /**
  *
  * @param {Channel} channel
@@ -28,7 +29,6 @@ exports.create = async (channel, channelConfigFile, orderer, extraSignerOrgs = [
 };
 
 
-const globalConfig = require('../config/orgs');
 exports.joinAll = async (channelName) => {
 
 	const channelConfig = globalConfig.channels[channelName];
@@ -39,9 +39,24 @@ exports.joinAll = async (channelName) => {
 		const client = await helper.getOrgAdmin(orgName);
 
 		const channel = helper.prepareChannel(channelName, client);
-		const orderer = await ChannelUtil.getOrderers(channel, true)[0];
+
+		const waitForOrderer = async () => {
+			const orderers = await ChannelUtil.getOrderers(channel, true);
+			if (orderers.length === 0) {
+				await sleep(1000);
+				return waitForOrderer();
+			}
+			return orderers[0];
+		};
+		const orderer = await waitForOrderer();
+		// Invalid results returned ::SERVICE_UNAVAILABLE
 		for (const peer of peers) {
-			await join(channel, peer, orderer);
+			try {
+				await join(channel, peer, orderer);
+			} catch (e) {
+				logger.error(e);
+			}
+
 		}
 	}
 

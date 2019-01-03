@@ -14,7 +14,7 @@
     }
   },
   "orderer": {
-    "type": "solo",
+    "type": "kafka",
     "genesis_block": {
       "file": "delphi.block",
       "profile": "delphiGenesis"
@@ -107,7 +107,11 @@
       "peers": [
         {
           "container_name": "peer0.ASTRI.org",
-          "port": 7051
+          "port": 7051,
+          "couchDB": {
+            "container_name": "couchdb.peer0.ASTRI.org",
+            "port": 7984
+          }
         },
         {
           "container_name": "peer1.ASTRI.org",
