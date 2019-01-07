@@ -1,6 +1,7 @@
 const {randomKeyOf} = require('khala-nodeutils/random');
 const {install} = require('../common/nodejs/chaincode');
 const {instantiateOrUpgrade, invoke} = require('../common/nodejs/chaincodeHelper');
+const {transactionProposal} = require('../common/nodejs/chaincode');
 const Logger = require('../common/nodejs/logger');
 const ClientUtil = require('../common/nodejs/client');
 const ChannelUtil = require('../common/nodejs/channel');
@@ -122,19 +123,12 @@ exports.invoke = async (channel, peers, {chaincodeId, fcn, args, transientMap}, 
 
 	const proposalTimeout = peers.length * defaultProposalTime;
 
-	try {
-		return await invoke(channel, peers, eventHubs, {
-			chaincodeId,
-			args,
-			fcn,
-			transientMap
-		}, orderer, proposalTimeout);
-	} catch (e) {
-		for (const eventHub of eventHubs) {
-			EventHubUtil.disconnect(eventHub);
-		}
-		throw e;
-	}
+	return await invoke(channel, peers, eventHubs, {
+		chaincodeId,
+		args,
+		fcn,
+		transientMap
+	}, orderer, proposalTimeout);
 
 };
 
@@ -150,4 +144,8 @@ exports.discoveryChaincodeInterestBuilder = (chaincodeIdFilter) => {
 		chaincodes.push(ccCall);
 	}
 	return {chaincodes};
+};
+exports.query = async (channel, peers, {chaincodeId, fcn, args, transientMap}, proposalTimeout = 30000) => {
+	const client = channel._clientContext;
+	return transactionProposal(client, peers, channel.getName(), {chaincodeId, fcn, args, transientMap}, proposalTimeout);
 };

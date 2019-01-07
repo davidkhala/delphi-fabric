@@ -1,21 +1,29 @@
 const helper = require('./helper');
 
 const LogUtil = require('../common/nodejs/logger');
+const logger = LogUtil.new('invokeHelper', true);
 const {proposalStringify, proposalFlatten} = require('../common/nodejs/chaincode');
-const {invoke} = require('./chaincodeHelper');
+const {invoke, query} = require('./chaincodeHelper');
 const channelName = 'allchannel';
 
 const {chaincodeEvent, newEventHub} = require('../common/nodejs/eventHub');
 
 const {sleep} = require('khala-nodeutils/helper');
 exports.invoke = async (peers, clientPeerOrg, chaincodeId, fcn, args = [], transientMap) => {
-	const logger = LogUtil.new('invokeHelper', true);
 	logger.debug('client org', clientPeerOrg);
 	const client = await helper.getOrgAdmin(clientPeerOrg);
 	const channel = helper.prepareChannel(channelName, client, true);
 	const {proposalResponses} = await invoke(channel, peers, {chaincodeId, fcn, args, transientMap});
 	const result = proposalResponses.map((entry) => proposalFlatten(proposalStringify(entry)));
 	logger.debug(result);
+	return result;
+};
+exports.query = async (peers, clientPeerOrg, chaincodeId, fcn, args = [], transientMap) => {
+	logger.debug('client org', clientPeerOrg);
+	const client = await helper.getOrgAdmin(clientPeerOrg);
+	const channel = helper.prepareChannel(channelName, client, true);
+	const {proposalResponses} = await query(channel, peers, {chaincodeId, fcn, args, transientMap});
+	const result = proposalResponses.map((entry) => proposalFlatten(proposalStringify(entry)));
 	return result;
 };
 exports.listenChaincodeEvent = async (peers, clientPeerOrg, chaincodeId, eventName = /event/i) => {

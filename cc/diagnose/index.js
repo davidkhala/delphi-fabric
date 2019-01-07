@@ -1,4 +1,4 @@
-const {get, put, cross, whoami} = require('./diagnoseInvoke');
+const {get, put, cross, whoami, getEndorsement, putEndorsement} = require('./diagnoseInvoke');
 const logger = require('../../common/nodejs/logger').new('invoke:diagnose', true);
 const helper = require('../../app/helper');
 
@@ -28,5 +28,16 @@ const flow = async () => {
 	}
 	const cid = await whoami(peers, org1);
 	logger.info({cid});
+	const endorseKey = key;
+	await putEndorsement(peers, org1, endorseKey, [org1, org2]);
+	let endorsingOrgs = await getEndorsement(peers, clientOrg, endorseKey);
+	logger.info(endorsingOrgs);
+	try {
+		peers = helper.newPeers(0, org1);
+		await put(peers, org1, key, 'endorsing hack');
+		logger.error('expect endorsing error');
+	} catch (e) {
+		logger.info('expect endorsing error', e);
+	}
 };
 flow();
