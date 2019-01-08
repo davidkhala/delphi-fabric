@@ -137,7 +137,7 @@
       "ca": {
         "portHost": 8054
       },
-      "mspid": "icdd"
+      "mspid": "icddMSP"
     },
     "delphi": {
       "peers": [

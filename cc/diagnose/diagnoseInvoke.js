@@ -32,13 +32,19 @@ exports.richQuery = async (peers, clientPeerOrg) => {
 	const args = [queryBuilder(['Time'], 1)];
 	return query(peers, clientPeerOrg, chaincodeId, fcn, args);
 };
-exports.putEndorsement = async (peers, clientPeerOrg, key, orgs) => {
+exports.putEndorsement = async (peers, clientPeerOrg, key, mspids) => {
 	const fcn = 'putEndorsement';
-	const args = [key, ...orgs];
+	const args = [key, ...mspids];
 	return invoke(peers, clientPeerOrg, chaincodeId, fcn, args);
 };
 exports.getEndorsement = async (peers, clientPeerOrg, key) => {
 	const fcn = 'getEndorsement';
 	const args = [key];
+	return query(peers, clientPeerOrg, chaincodeId, fcn, args);
+};
+
+exports.panic = async (peers, clientPeerOrg) => {
+	const fcn = 'panic';
+	const args = [];
 	return query(peers, clientPeerOrg, chaincodeId, fcn, args);
 };

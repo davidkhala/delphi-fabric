@@ -97,7 +97,7 @@ Finished
 - 1.3: idemixgen
 - take care of docker swarm init --force-new-cluster
 - will block file name be a problem in signature cache? take care docker cp from container for multiple request
-- migrate to use make file instead of ./install.sh
+- migrate to use make file instead of ./install.sh (https://www.gnu.org/software/make/manual/make.html#Introduction)
 - retry opts = {waitTime, retryTime}
 
 ## New feature, patch required for node-sdk
