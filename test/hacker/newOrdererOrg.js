@@ -9,7 +9,7 @@ const {swarmServiceName, inflateContainerName, containerDelete, containerStart} 
 const {runOrderer, runCA} = require('../../common/nodejs/fabric-dockerode');
 const dockerCmd = require('../../common/docker/nodejs/dockerCmd');
 const {RequestPromise} = require('khala-nodeutils/request');
-const {fsExtra} = require('khala-nodeutils/helper');
+const {fsExtra, sleep} = require('../../common/nodejs/helper').nodeUtil.helper();
 const peerUtil = require('../../common/nodejs/peer');
 const helper = require('../../app/helper');
 const {projectResolve} = helper;
@@ -19,7 +19,6 @@ const fs = require('fs');
 
 const nodeType = 'orderer';
 const imageTag = `${fabricTag}`;
-const {sleep} = require('khala-nodeutils/helper');
 const getCaService = async (url, domain, swarm) => {
 	if (TLS) {
 		const caHostName = `ca.${domain}`;
@@ -140,7 +139,7 @@ const runWithNewOrg = async (action) => {
 			Cmd,
 			Image,
 			ExposedPorts: {
-				'7050': {},
+				'7050': {}
 			},
 			Hostconfig: {
 				Binds: [
@@ -154,7 +153,7 @@ const runWithNewOrg = async (action) => {
 							HostPort: '9050'
 						}
 					]
-				},
+				}
 			},
 			NetworkingConfig: {
 				EndpointsConfig: {

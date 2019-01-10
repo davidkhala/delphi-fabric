@@ -12,8 +12,9 @@ const {
 } = require('./common/nodejs/fabric-dockerode');
 const ClientUtil = require('./common/nodejs/client');
 const {CryptoPath} = require('./common/nodejs/path');
-const {PM2} = require('khala-nodeutils/pm2Manager');
-const {ping} = require('khala-nodeutils/request');
+const {nodeUtil} = require('./common/nodejs/helper');
+const {PM2} = nodeUtil.pm2Manager();
+const {ping} = nodeUtil.request();
 const {projectResolve} = require('./app/helper');
 const MSPROOT = projectResolve(globalConfig.docker.volumes.MSPROOT.dir);
 const CONFIGTX = projectResolve(globalConfig.docker.volumes.CONFIGTX.dir);
@@ -24,7 +25,7 @@ const {
 	volumeRemove, prune: {system: pruneSystem}
 } = require('./common/docker/nodejs/dockerode-util');
 const {advertiseAddr, joinToken} = require('./common/docker/nodejs/dockerCmd');
-const {hostname, exec, homeResolve, fsExtra} = require('khala-nodeutils/helper');
+const {hostname, exec, homeResolve, fsExtra} = require('./common/nodejs/helper').nodeUtil.helper();
 const {docker: {fabricTag, network, thirdPartyTag}, TLS} = globalConfig;
 
 const serverClient = require('./common/nodejs/express/serverClient');
@@ -116,7 +117,11 @@ exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPRO
 		const ordererConfig = globalConfig.orderer.solo;
 		const {orgName: domain, mspid, portHost: port} = ordererConfig;
 		const orderer = ordererConfig.container_name;
-		await toggle({orderer, domain, port, mspid}, toStop, swarm, undefined);
+		let {stateVolume} = ordererConfig;
+		if (stateVolume) {
+			stateVolume = homeResolve(stateVolume);
+		}
+		await toggle({orderer, domain, port, mspid}, toStop, swarm, undefined, stateVolume);
 	}
 	if (swarm) {
 		if (toStop) {
@@ -199,7 +204,7 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 					Name: container_name, port, imageTag, network,
 					peerHostName,
 					msp: {
-						id:mspid,
+						id: mspid,
 						volumeName: volumeName.MSPROOT,
 						configPath
 					},

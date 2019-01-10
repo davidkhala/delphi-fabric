@@ -1,6 +1,6 @@
 const {instantiate, upgrade} = require('./chaincodeHelper');
 const helper = require('./helper');
-const {nextVersion} = require('khala-nodeutils/version');
+const {nextVersion} = require('../common/nodejs/helper').nodeUtil.version();
 const {findLatest} = require('../common/nodejs/chaincodeVersion');
 const channelName = 'allchannel';
 exports.instantiate = async (clientPeerOrg, peers, chaincodeId, fcn, args = []) => {

@@ -8,7 +8,7 @@ const channelName = 'allchannel';
 
 const {chaincodeEvent, newEventHub} = require('../common/nodejs/eventHub');
 
-const {sleep} = require('khala-nodeutils/helper');
+const {sleep} = require('../common/nodejs/helper').nodeUtil.helper();
 exports.invoke = async (peers, clientPeerOrg, chaincodeId, fcn, args = [], transientMap) => {
 	logger.debug('client org', clientPeerOrg);
 	const client = await helper.getOrgAdmin(clientPeerOrg);

@@ -1,4 +1,4 @@
-const BaseApp = require('khala-nodeutils/baseApp');
+const BaseApp = require('../common/nodejs/helper').nodeUtil.baseApp();
 const router = BaseApp.getRouter();
 
 router.get('/orgs', (req, res) => {

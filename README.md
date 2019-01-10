@@ -99,7 +99,7 @@ Finished
 - will block file name be a problem in signature cache? take care docker cp from container for multiple request
 - migrate to use make file instead of ./install.sh (https://www.gnu.org/software/make/manual/make.html#Introduction)
 - retry opts = {waitTime, retryTime}
-
+- prune: khala-nodeutils
 ## New feature, patch required for node-sdk
  
 - feature: implement configtx in node-sdk??

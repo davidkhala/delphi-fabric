@@ -3,7 +3,7 @@ const ChannelUtil = require('../common/nodejs/channel');
 const helper = require('./helper');
 const {projectResolve} = helper;
 const logger = require('../common/nodejs/logger').new('channel script');
-const {sleep} = require('khala-nodeutils/helper');
+const {sleep} = require('../common/nodejs/helper').nodeUtil.helper();
 const path = require('path');
 const channelName = 'allchannel';
 

@@ -3,12 +3,12 @@ const logger = require('../common/nodejs/logger').new('sign server');
 
 const signUtil = require('../common/nodejs/multiSign');
 const globalConfig = require('../config/orgs');
-const {sha2_256} = require('../common/nodejs/helper');
+const {sha2_256, nodeUtil} = require('../common/nodejs/helper');
+const {fsExtra} = nodeUtil.helper();
+const baseApp = nodeUtil.baseApp();
 const helper = require('../app/helper');
 const {projectResolve} = helper;
-const {fsExtra} = require('khala-nodeutils/helper');
 const Multer = require('multer');
-const baseApp = require('khala-nodeutils/baseApp');
 const cacheDir = projectResolve(cache);
 exports.run = () => {
 	const {app} = baseApp.run(port);

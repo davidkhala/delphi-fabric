@@ -8,16 +8,15 @@ const {db = 'Redis'} = process.env;
 const {container_name, port: dbPort} = swarmConfig[db];
 const path = require('path');
 
-const {fsExtra} = require('khala-nodeutils/helper');
-const {sha2_256} = require('../common/nodejs/helper');
+const {sha2_256, nodeUtil} = require('../common/nodejs/helper');
+const {fsExtra} = nodeUtil.helper();
+const {DBInterface} = nodeUtil.kvDB();
 const {projectResolve} = require('../app/helper');
 
 const dockerUtil = require('../common/docker/nodejs/dockerode-util');
 
-const dbInterface = require('khala-nodeutils/kvDB').DBInterface;
-
 const dbMap = {
-	Couchdb: class extends dbInterface {
+	Couchdb: class extends DBInterface {
 		constructor({url = `http://localhost:${port}`, name, port = '5984', table = name}) {
 			super({url, name, port});
 			this.table = table;
@@ -44,7 +43,7 @@ const dbMap = {
 				name: this.name,
 				Image: 'hyperledger/fabric-couchdb:latest',
 				ExposedPorts: {
-					'5984': {},
+					'5984': {}
 				},
 				Hostconfig: {
 					PortBindings: {
@@ -53,8 +52,8 @@ const dbMap = {
 								HostPort: this.port
 							}
 						]
-					},
-				},
+					}
+				}
 			};
 			return dockerUtil.containerStart(createOptions);
 		}
@@ -63,7 +62,7 @@ const dbMap = {
 			return dockerUtil.containerDelete(this.name);
 		}
 	},
-	Redis: class extends dbInterface {
+	Redis: class extends DBInterface {
 		constructor({url, name, port = '6379'}) {
 			super({url, name, port});
 		}
@@ -95,7 +94,7 @@ const dbMap = {
 				name: this.name,
 				Image: 'redis:latest',
 				ExposedPorts: {
-					'6379': {},
+					'6379': {}
 				},
 				Hostconfig: {
 					PortBindings: {
@@ -104,8 +103,8 @@ const dbMap = {
 								HostPort: this.port
 							}
 						]
-					},
-				},
+					}
+				}
 			};
 			return dockerUtil.containerStart(createOptions);
 		}

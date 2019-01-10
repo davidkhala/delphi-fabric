@@ -1,5 +1,5 @@
 const logger = require('./common/nodejs/logger').new('express API');
-const {fsExtra} = require('khala-nodeutils/helper');
+const {fsExtra} = require('./common/nodejs/helper').nodeUtil.helper();
 const path = require('path');
 const helper = require('./app/helper.js');
 const {projectResolve} = helper;
@@ -13,7 +13,7 @@ const {create: createChannel} = require('./app/channelHelper');
 const {join: joinChannel} = require('./common/nodejs/channel');
 
 const Query = require('./common/nodejs/query');
-const {app} = require('khala-nodeutils/baseApp').run(port);
+const {app} = require('./common/nodejs/helper').nodeUtil.baseApp().run(port);
 
 
 app.use('/config', require('./express/configExpose'));

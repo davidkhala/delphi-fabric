@@ -14,7 +14,7 @@ const CRYPTO_CONFIG_DIR = projectResolve(globalConfig.docker.volumes.MSPROOT.dir
 const userUtil = require('../common/nodejs/user');
 const OrdererUtil = require('../common/nodejs/orderer');
 const channelUtil = require('../common/nodejs/channel');
-const {randomKeyOf} = require('khala-nodeutils/random');
+const {randomKeyOf} = require('../common/nodejs/helper').nodeUtil.random();
 
 const preparePeer = (orgName, peerIndex, peerConfig) => {
 	const {port: peerPort} = peerConfig;
