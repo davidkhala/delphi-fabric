@@ -16,19 +16,19 @@ Profiles:
       Organizations:
         - Name: Delphi.com
           ID: OrdererMSP
-          MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/Delphi.com/msp
+          MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/Delphi.com/msp
     Consortiums:
       SampleConsortium:
         Organizations:
           - Name: ASTRI.org
             ID: ASTRIMSP
-            MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/ASTRI.org/msp
+            MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/ASTRI.org/msp
           - Name: icdd
-            ID: icdd
-            MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp
+            ID: icddMSP
+            MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp
           - Name: delphi
             ID: delphi
-            MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/delphi/msp
+            MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/delphi/msp
   allchannel:
     Capabilities:
       V1_3: true
@@ -37,17 +37,17 @@ Profiles:
       Organizations:
         - Name: ASTRI.org
           ID: ASTRIMSP
-          MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/ASTRI.org/msp
+          MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/ASTRI.org/msp
           AnchorPeers:
             - {}
         - Name: icdd
-          ID: icdd
-          MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp
+          ID: icddMSP
+          MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp
           AnchorPeers:
             - {}
         - Name: delphi
           ID: delphi
-          MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/delphi/msp
+          MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/delphi/msp
           AnchorPeers:
             - {}
       Capabilities:
