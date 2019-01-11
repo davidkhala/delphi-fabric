@@ -187,6 +187,5 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 	};
 	Profiles[PROFILE_ANCHORPEERS] = setAnchorPeersProfile;
 
-	fsExtra.outputFileSync(configtxFile, yaml.safeDump({Profiles}, {lineWidth: 180}));
-
+	yaml.write({Profiles}, configtxFile);
 };
