@@ -1,22 +1,9 @@
 const globalConfig = require('./orgs.json');
 const path = require('path');
-const yaml = require('js-yaml');
+const yaml = require('../common/nodejs/helper').nodeUtil.yaml();
 const {fsExtra} = require('../common/nodejs/helper').nodeUtil.helper();
 const {CryptoPath} = require('../common/nodejs/path');
-const implicitPolicies = {
-	Readers: {
-		Type: 'ImplicitMeta',
-		Rule: 'ANY Readers'
-	},
-	Writers: {
-		Type: 'ImplicitMeta',
-		Rule: 'ANY Writers'
-	},
-	Admins: {
-		Type: 'ImplicitMeta',
-		Rule: 'MAJORITY Admins'
-	}
-};
+const implicitPolicies = require('../common/nodejs/policy').configtxPolicies.implicit.Policies;
 exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, configtxFile, PROFILE_ANCHORPEERS = 'anchorPeers'}) => {
 	const channelsConfig = globalConfig.channels;
 	const ordererConfig = globalConfig.orderer;
