@@ -104,6 +104,8 @@ Finished
 - migrate to use make file instead of ./install.sh (https://www.gnu.org/software/make/manual/make.html#Introduction)
 - retry opts = {waitTime, retryTime}
 - prune: khala-nodeutils
+- "stateVolume": "Documents/backupVolumes/orderer/",
+
 ## New feature, patch required for node-sdk
  
 - feature: implement configtx in node-sdk??

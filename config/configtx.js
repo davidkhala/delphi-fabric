@@ -3,6 +3,20 @@ const path = require('path');
 const yaml = require('js-yaml');
 const {fsExtra} = require('../common/nodejs/helper').nodeUtil.helper();
 const {CryptoPath} = require('../common/nodejs/path');
+const implicitPolicies = {
+	Readers: {
+		Type: 'ImplicitMeta',
+		Rule: 'ANY Readers'
+	},
+	Writers: {
+		Type: 'ImplicitMeta',
+		Rule: 'ANY Writers'
+	},
+	Admins: {
+		Type: 'ImplicitMeta',
+		Rule: 'MAJORITY Admins'
+	}
+};
 exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, configtxFile, PROFILE_ANCHORPEERS = 'anchorPeers'}) => {
 	const channelsConfig = globalConfig.channels;
 	const ordererConfig = globalConfig.orderer;
@@ -17,8 +31,9 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 
 	const blockProfileConfig = {
 		Capabilities: {
-			V1_3: true // ChannelCapabilities
-		}
+			V1_3: true
+		},
+		Policies: implicitPolicies
 	};
 	const OrdererConfig = {
 		BatchTimeout: '1s',
@@ -29,6 +44,24 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 		},
 		Capabilities: {
 			V1_1: true
+		},
+		Policies: {
+			Readers: {
+				Type: 'ImplicitMeta',
+				Rule: 'ANY Readers'
+			},
+			Writers: {
+				Type: 'ImplicitMeta',
+				Rule: 'ANY Writers'
+			},
+			Admins: {
+				Type: 'ImplicitMeta',
+				Rule: 'MAJORITY Admins'
+			},
+			BlockValidation: {
+				Type: 'ImplicitMeta',
+				Rule: 'ANY Writers'
+			}
 		}
 	};
 	if (globalConfig.orderer.type === 'kafka') {
@@ -90,6 +123,20 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 			Name: orgName,
 			ID: orgConfig.mspid,
 			MSPDir: cryptoPath.peerOrgMSP(),
+			Policies: {
+				Readers: {
+					Type: 'Signature',
+					Rule: `OR('${orgConfig.mspid}.member')`
+				},
+				Writers: {
+					Type: 'Signature',
+					Rule: `OR('${orgConfig.mspid}.member')`
+				},
+				Admins: {
+					Type: 'Signature',
+					Rule: `OR('${orgConfig.mspid}.admin')`
+				}
+			}
 		};
 		if (forAnchor) {
 			result.AnchorPeers = [{
@@ -98,6 +145,7 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 			}];
 			delete result.ID;
 			delete result.MSPDir;
+			delete result.Policies;
 		}
 		if (forChannel) {
 			result.AnchorPeers = [{}];
@@ -125,11 +173,13 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 			Organizations.push(OrganizationBuilder(orgName, false, true));
 		}
 		Profiles[PROFILE_CHANNEL] = {
+			Policies: implicitPolicies,
 			Capabilities: {
 				V1_3: true
 			},
 			Consortium: consortiumName,
 			Application: {
+				Policies: implicitPolicies,
 				Organizations,
 				Capabilities: {
 					V1_3: true

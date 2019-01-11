@@ -2,6 +2,16 @@ Profiles:
   delphiGenesis:
     Capabilities:
       V1_3: true
+    Policies: &ref_0
+      Readers:
+        Type: ImplicitMeta
+        Rule: ANY Readers
+      Writers:
+        Type: ImplicitMeta
+        Rule: ANY Writers
+      Admins:
+        Type: ImplicitMeta
+        Rule: MAJORITY Admins
     Orderer:
       BatchTimeout: 1s
       BatchSize:
@@ -10,6 +20,19 @@ Profiles:
         PreferredMaxBytes: 512 KB
       Capabilities:
         V1_1: true
+      Policies:
+        Readers:
+          Type: ImplicitMeta
+          Rule: ANY Readers
+        Writers:
+          Type: ImplicitMeta
+          Rule: ANY Writers
+        Admins:
+          Type: ImplicitMeta
+          Rule: MAJORITY Admins
+        BlockValidation:
+          Type: ImplicitMeta
+          Rule: ANY Writers
       OrdererType: solo
       Addresses:
         - 'orderer.Delphi.com:7050'
@@ -23,31 +46,93 @@ Profiles:
           - Name: ASTRI.org
             ID: ASTRIMSP
             MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/ASTRI.org/msp
+            Policies:
+              Readers:
+                Type: Signature
+                Rule: OR('ASTRIMSP.member')
+              Writers:
+                Type: Signature
+                Rule: OR('ASTRIMSP.member')
+              Admins:
+                Type: Signature
+                Rule: OR('ASTRIMSP.admin')
           - Name: icdd
             ID: icddMSP
             MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp
+            Policies:
+              Readers:
+                Type: Signature
+                Rule: OR('icddMSP.member')
+              Writers:
+                Type: Signature
+                Rule: OR('icddMSP.member')
+              Admins:
+                Type: Signature
+                Rule: OR('icddMSP.admin')
           - Name: delphi
             ID: delphi
             MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/delphi/msp
+            Policies:
+              Readers:
+                Type: Signature
+                Rule: OR('delphi.member')
+              Writers:
+                Type: Signature
+                Rule: OR('delphi.member')
+              Admins:
+                Type: Signature
+                Rule: OR('delphi.admin')
   allchannel:
+    Policies: *ref_0
     Capabilities:
       V1_3: true
     Consortium: SampleConsortium
     Application:
+      Policies: *ref_0
       Organizations:
         - Name: ASTRI.org
           ID: ASTRIMSP
           MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/ASTRI.org/msp
+          Policies:
+            Readers:
+              Type: Signature
+              Rule: OR('ASTRIMSP.member')
+            Writers:
+              Type: Signature
+              Rule: OR('ASTRIMSP.member')
+            Admins:
+              Type: Signature
+              Rule: OR('ASTRIMSP.admin')
           AnchorPeers:
             - {}
         - Name: icdd
           ID: icddMSP
           MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp
+          Policies:
+            Readers:
+              Type: Signature
+              Rule: OR('icddMSP.member')
+            Writers:
+              Type: Signature
+              Rule: OR('icddMSP.member')
+            Admins:
+              Type: Signature
+              Rule: OR('icddMSP.admin')
           AnchorPeers:
             - {}
         - Name: delphi
           ID: delphi
           MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/delphi/msp
+          Policies:
+            Readers:
+              Type: Signature
+              Rule: OR('delphi.member')
+            Writers:
+              Type: Signature
+              Rule: OR('delphi.member')
+            Admins:
+              Type: Signature
+              Rule: OR('delphi.admin')
           AnchorPeers:
             - {}
       Capabilities:

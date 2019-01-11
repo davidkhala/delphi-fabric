@@ -23,7 +23,6 @@
       "orgName": "Delphi.com",
       "container_name": "orderer",
       "portHost": 7050,
-      "stateVolume": "Documents/backupVolumes/orderer/",
       "ca": {
         "portHost": 7454
       },

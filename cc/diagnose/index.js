@@ -19,7 +19,7 @@ const flow = async () => {
 	const endorseKey = key;
 	await putEndorsement(peers, org1, endorseKey, ['ASTRIMSP', 'icddMSP']);
 	let endorsingOrgs = await getEndorsement(peers, clientOrg, endorseKey);
-	logger.info(endorsingOrgs);
+	logger.info({endorsingOrgs});
 	try {
 		peers = helper.newPeers([0], org1);
 		await put(peers, org1, key, 'endorsing hack');
