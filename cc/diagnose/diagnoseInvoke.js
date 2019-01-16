@@ -6,6 +6,16 @@ exports.put = async (peers, clientPeerOrg, key, value) => {
 	const args = [key, JSON.stringify(value)];
 	return invoke(peers, clientPeerOrg, chaincodeId, fcn, args);
 };
+exports.putRaw = async (peers, clientPeerOrg, key, value) => {
+	const fcn = 'putRaw';
+	const args = [key, value];
+	return invoke(peers, clientPeerOrg, chaincodeId, fcn, args);
+};
+exports.getRaw = async (peers, clientPeerOrg, key) => {
+	const fcn = 'getRaw';
+	const args = [key];
+	return query(peers, clientPeerOrg, chaincodeId, fcn, args);
+};
 exports.get = async (peers, clientPeerOrg, key) => {
 	const fcn = 'get';
 	const args = [key];

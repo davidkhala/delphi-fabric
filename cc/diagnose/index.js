@@ -1,4 +1,4 @@
-const {get, put, cross, whoami, getEndorsement, putEndorsement} = require('./diagnoseInvoke');
+const {get, put, cross, putRaw, getRaw, whoami, getEndorsement, putEndorsement} = require('./diagnoseInvoke');
 const logger = require('../../common/nodejs/logger').new('invoke:diagnose', true);
 const helper = require('../../app/helper');
 
@@ -10,6 +10,8 @@ const flow = async () => {
 	let peers = [helper.newPeer(0, org1), helper.newPeer(0, org2)];
 	const clientOrg = org2;
 	const key = 'a';
+
+	await putRaw(peers, clientOrg, key, 'b');
 	await put(peers, clientOrg, key, 'b');
 	const gotValue = await get(peers, clientOrg, key);
 	logger.debug('got value', gotValue);
