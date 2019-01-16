@@ -28,7 +28,7 @@ const peerList = async () => {
 	const client = await helper.getOrgAdmin(org, 'peer');
 	const peer = helper.newPeer(0, org);
 	const discoveries = await globalPeers(client, peer);
-	logger.debug(discoveries.pretty);
+	logger.debug(discoveries);
 };
 const discoverOrderer = async () => {
 	const org = 'icdd';
@@ -62,8 +62,8 @@ const task = async () => {
 	await peerList();
 	// await deleteOrderer();
 	await discoverOrderer();
-	const discoverChannelResult = await discoverChannel(['master']);
-	logger.debug('discoverChannel', discoverChannelResult);
+	// const discoverChannelResult = await discoverChannel(['master']);
+	// logger.debug('discoverChannel', discoverChannelResult);
 
 };
 task();

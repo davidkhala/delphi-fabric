@@ -1,2 +1,2 @@
-require('./channelInit');
-require('./serviceDiscovery');
+require('./channelInitTest');
+require('./serviceDiscoveryTest');
