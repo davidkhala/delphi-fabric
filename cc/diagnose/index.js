@@ -1,4 +1,4 @@
-const {get, put, cross, putRaw, getRaw, whoami, getEndorsement, putEndorsement} = require('./diagnoseInvoke');
+const {get, put, cross, putRaw, putBatch, whoami, getEndorsement, putEndorsement,getPage} = require('./diagnoseInvoke');
 const logger = require('../../common/nodejs/logger').new('invoke:diagnose', true);
 const helper = require('../../app/helper');
 
@@ -11,7 +11,6 @@ const flow = async () => {
 	const clientOrg = org2;
 	const key = 'a';
 
-	await putRaw(peers, clientOrg, key, 'b');
 	await put(peers, clientOrg, key, 'b');
 	const gotValue = await get(peers, clientOrg, key);
 	logger.debug('got value', gotValue);
@@ -32,6 +31,16 @@ const flow = async () => {
 	peers = [helper.newPeer(0, org1), helper.newPeer(0, org2)];
 	await put(peers, org1, key, 'endorsing good');
 };
+const flowPeerHack = async () => {
+	await DRInstall.task();
+	const org1 = 'icdd';
+	const org2 = 'ASTRI.org';
+	let peers = [helper.newPeer(0, org1), helper.newPeer(0, org2)];
+	const clientOrg = org2;
+	const key = 'a';
+
+	await putRaw(peers, clientOrg, key, 'b');
+};
 const flowAttach = async () => {
 	await DRInstall.taskAttach();
 	const org1 = 'icdd';
@@ -49,4 +58,18 @@ const flowAttach = async () => {
 		logger.info('expect not exist error', err);
 	}
 };
-flow();
+const flowPagination = async () => {
+	await DRInstall.taskAttach();
+	const org1 = 'icdd';
+	const org2 = 'ASTRI.org';
+	const peers = helper.newPeers([0], org1);
+	const map = {
+		a: 'b',
+		b: 'b',
+		c: 'b',
+		d: 'b',
+		e: 'b',
+	};
+	await putBatch(peers, org1, map);
+	let pages = await getPage(peers,)
+};
