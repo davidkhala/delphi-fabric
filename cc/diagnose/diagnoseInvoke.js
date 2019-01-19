@@ -68,3 +68,8 @@ exports.putBatch = async (peers, clientPeerOrg, map) => {
 	const args = [JSON.stringify(map)];
 	return invoke(peers, clientPeerOrg, chaincodeId, fcn, args);
 };
+exports.chaincodeID = async (peers, clientPeerOrg) => {
+	const fcn = 'chaincodeId';
+	const args = [];
+	return query(peers, clientPeerOrg, chaincodeId, fcn, args);
+};

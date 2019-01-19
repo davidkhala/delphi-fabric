@@ -1,4 +1,4 @@
-const {get, put, cross, putRaw, putBatch, whoami, getEndorsement, putEndorsement, getPage} = require('./diagnoseInvoke');
+const {get, put, cross,chaincodeID, putRaw, putBatch, whoami, getEndorsement, putEndorsement, getPage} = require('./diagnoseInvoke');
 const logger = require('../../common/nodejs/logger').new('invoke:diagnose', true);
 const helper = require('../../app/helper');
 
@@ -71,8 +71,9 @@ const flowPagination = async () => {
 		e: 'b'
 	};
 	await putBatch(peers, org1, map);
+	const gotCCID = await chaincodeID(peers,org1)
+	logger.info({gotCCID})
 	let [result] = await getPage(peers, org1);
-	//TODO we could use NameSpace to get chaincode ID
 	logger.debug(1, result);
 	let {Bookmark} = JSON.parse(result).MetaData;
 	logger.debug({Bookmark})
