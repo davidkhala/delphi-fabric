@@ -60,7 +60,7 @@ exports.panic = async (peers, clientPeerOrg) => {
 };
 exports.getPage = async (peers, clientPeerOrg, startKey = '', endKey = '', pageSize = '1', bookMark = '') => {
 	const fcn = 'listPage';
-	const args = [startKey, endKey, pageSize, bookMark];
+	const args = [startKey, endKey, pageSize.toString(), bookMark];
 	return query(peers, clientPeerOrg, chaincodeId, fcn, args);
 };
 exports.putBatch = async (peers, clientPeerOrg, map) => {

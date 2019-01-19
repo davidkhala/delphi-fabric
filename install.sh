@@ -50,7 +50,7 @@ function updateChaincode() {
 	cd $GOPATH/src/github.com/davidkhala/chaincode/golang/sideChain
 	dep ensure
 	cd -
-	cd $GOPATH/src/github.com/davidkhala/chaincode/golang/tokenCommon
+	cd $GOPATH/src/github.com/davidkhala/chaincode/golang/diagnose
 	dep ensure
 	cd -
 	# TODO directory scanning

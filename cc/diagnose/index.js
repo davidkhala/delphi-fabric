@@ -1,4 +1,4 @@
-const {get, put, cross, putRaw, putBatch, whoami, getEndorsement, putEndorsement,getPage} = require('./diagnoseInvoke');
+const {get, put, cross, putRaw, putBatch, whoami, getEndorsement, putEndorsement, getPage} = require('./diagnoseInvoke');
 const logger = require('../../common/nodejs/logger').new('invoke:diagnose', true);
 const helper = require('../../app/helper');
 
@@ -59,7 +59,7 @@ const flowAttach = async () => {
 	}
 };
 const flowPagination = async () => {
-	await DRInstall.taskAttach();
+	await DRInstall.task();
 	const org1 = 'icdd';
 	const org2 = 'ASTRI.org';
 	const peers = helper.newPeers([0], org1);
@@ -68,8 +68,15 @@ const flowPagination = async () => {
 		b: 'b',
 		c: 'b',
 		d: 'b',
-		e: 'b',
+		e: 'b'
 	};
 	await putBatch(peers, org1, map);
-	let pages = await getPage(peers,)
+	let [result] = await getPage(peers, org1);
+	//TODO we could use NameSpace to get chaincode ID
+	logger.debug(1, result);
+	let {Bookmark} = JSON.parse(result).MetaData;
+	logger.debug({Bookmark})
+	result = await getPage(peers, org1, '', '', 1, Bookmark);
+	logger.debug(2, result);
 };
+flowPagination();
