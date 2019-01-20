@@ -1,6 +1,6 @@
 const helper = require('../../app/helper');
 const logger = require('../../common/nodejs/logger').new('invoke:master', true);
-const {increase, putPrivate, getBinding, getDecorations} = require('./masterInvoke');
+const {increase, putPrivate} = require('./masterInvoke');
 const install = require('./masterInstall');
 const flow = async () => {
 	await install.task();
@@ -10,9 +10,6 @@ const flow = async () => {
 	const clientOrg = org2;
 
 	await putPrivate(peers, clientOrg);
-	const binding = await getBinding(peers, clientOrg);
-	logger.info('binding', binding);
-	const decors = await getDecorations(peers, clientOrg);
-	logger.info('decors', decors);
+
 };
 flow();

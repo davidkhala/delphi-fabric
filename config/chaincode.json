@@ -5,7 +5,7 @@
       "private1": {
         "mspIds": [
           "ASTRIMSP",
-          "icdd"
+          "icddMSP"
         ],
         "requiredPeerCount": 3,
         "maxPeerCount": 4
@@ -27,7 +27,7 @@
       "n": 2,
       "mspId": {
         "ASTRIMSP": 0,
-        "icdd": 0
+        "icddMSP": 0
       }
     }
   },
@@ -40,14 +40,14 @@
       "n": 2,
       "mspId": {
         "ASTRIMSP": 0,
-        "icdd": 0
+        "icddMSP": 0
       }
     },
     "collectionsConfig": {
       "tx": {
         "mspIds": [
           "ASTRIMSP",
-          "icdd"
+          "icddMSP"
         ],
         "requiredPeerCount": 1,
         "maxPeerCount": 4
