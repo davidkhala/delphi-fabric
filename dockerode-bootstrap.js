@@ -21,9 +21,9 @@ const CONFIGTX = projectResolve(globalConfig.docker.volumes.CONFIGTX.dir);
 const arch = 'x86_64';
 const {
 	containerDelete, volumeCreateIfNotExist, networkCreateIfNotExist,
-	swarmServiceName, constraintSelf, serviceDelete,
-	volumeRemove, prune: {system: pruneSystem}
+	volumeRemove, prune: {system: pruneLocalSystem}
 } = require('./common/docker/nodejs/dockerode-util');
+const {swarmServiceName, constraintSelf, serviceDelete, prune: {system: pruneSwarmSystem}} = require('./common/docker/nodejs/dockerode-swarm-util');
 const {advertiseAddr, joinToken} = require('./common/docker/nodejs/dockerCmd');
 const {hostname, exec, homeResolve, fsExtra} = require('./common/nodejs/helper').nodeUtil.helper();
 const {docker: {fabricTag, network, thirdPartyTag}, TLS} = globalConfig;
@@ -394,7 +394,10 @@ exports.down = async (swarm) => {
 			await exports.runKafkas(toStop, swarm);
 			await exports.runZookeepers(toStop, swarm);
 		}
-		await pruneSystem(swarm);
+		if (swarm) {
+			await pruneSwarmSystem();
+		}
+		await pruneLocalSystem();
 		await chaincodeClean(true);
 		await exports.volumesAction(toStop);
 
