@@ -13,25 +13,30 @@ function up() {
 function prepareNetwork() {
 	node -e "require('./dockerode-bootstrap').up()"
 }
-function peerRecoverTest(){
-    down
-    sudo rm -rf $HOME/Documents/backupVolumes/
-    mkdir -p $HOME/Documents/backupVolumes/peer1.icdd.org/
-    up
-    node app/testPeerBackup
+function peerRecoverTest() {
+	down
+	sudo rm -rf $HOME/Documents/backupVolumes/
+	mkdir -p $HOME/Documents/backupVolumes/peer1.icdd.org/
+	up
+	node app/testPeerBackup
 }
-function ordererRecoverTest(){
-    down
-    sudo rm -rf $HOME/Documents/backupVolumes/
-    mkdir -p $HOME/Documents/backupVolumes/orderer2/
-    up
-    node app/testOrdererBackup
+function ordererRecoverTest() {
+	down
+	sudo rm -rf $HOME/Documents/backupVolumes/
+	mkdir -p $HOME/Documents/backupVolumes/orderer2/
+	up
+	node app/testOrdererBackup
 }
 function restart() {
 	down
 	up
 }
-
+function repeat() {
+	local times=5
+	for ((i = 1; i <= times; i++)); do
+		./docker.sh
+	done
+}
 if [ -z "$1" ]; then
 	restart
 else
