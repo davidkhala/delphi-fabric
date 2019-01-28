@@ -28,7 +28,7 @@ const {advertiseAddr, joinToken} = require('./common/docker/nodejs/dockerCmd');
 const {hostname, exec, homeResolve, fsExtra} = require('./common/nodejs/helper').nodeUtil.helper();
 const {docker: {fabricTag, network, thirdPartyTag}, TLS} = globalConfig;
 
-const serverClient = require('./common/nodejs/express/serverClient');
+const serverClient = require('./swarm/serverClient');
 const runConfigtxGenShell = path.resolve(__dirname, 'common', 'bin-manage', 'runConfigtxgen.sh');
 const nodeServers = {
 	swarmServer: path.resolve(__dirname, 'swarm', 'swarmServerPM2.js'),

@@ -13,7 +13,7 @@ const {port: signServerPort} = require('./swarm.json').signServer;
 const {cache, port: swarmServerPort} = require('./swarm.json').swarmServer;
 const multerCache = Multer({dest: projectResolve(cache)});
 const {RequestPromise} = require('khala-nodeutils/request');
-const {getSignatures} = require('../common/nodejs/express/serverClient');
+const {getSignatures} = require('./serverClient');
 
 const channelUtil = require('../common/nodejs/channel');
 const {sha2_256} = require('../common/nodejs/helper');

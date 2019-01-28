@@ -44,7 +44,7 @@ const getCaService = async (url, domain, swarm) => {
 
 const ordererName = 'orderer3';
 const channelName = 'allchannel';
-const serverClient = require('../../common/nodejs/express/serverClient');
+const serverClient = require('../../swarm/serverClient');
 const runWithNewOrg = async (action) => {
 	const orgName = 'NewConsensus.Delphi.com';
 	const mspName = 'NewConsensus';
