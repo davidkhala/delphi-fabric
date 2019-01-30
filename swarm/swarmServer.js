@@ -10,7 +10,7 @@ const path = require('path');
 
 const {sha2_256, nodeUtil} = require('../common/nodejs/helper');
 const {fsExtra} = nodeUtil.helper();
-const {DBInterface} = nodeUtil.kvDB();
+const {DBInterface} = require('khala-kvdb');
 const {projectResolve} = require('../app/helper');
 
 const dockerUtil = require('../common/docker/nodejs/dockerode-util');

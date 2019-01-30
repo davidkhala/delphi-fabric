@@ -13,7 +13,7 @@ const {
 const ClientUtil = require('./common/nodejs/client');
 const {CryptoPath} = require('./common/nodejs/path');
 const {nodeUtil} = require('./common/nodejs/helper');
-const {PM2} = nodeUtil.pm2Manager();
+const {PM2} = require('khala-pm2');
 const {ping} = nodeUtil.request();
 const {projectResolve} = require('./app/helper');
 const MSPROOT = projectResolve(globalConfig.docker.volumes.MSPROOT.dir);
