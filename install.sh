@@ -71,7 +71,7 @@ else
 	if [ ! -f "$CURRENT/common/install.sh" ]; then
 		gitSync
 	fi
-	$CURRENT/common/install.sh golang1_10
+	$CURRENT/common/install.sh golang1_11
 	$CURRENT/common/install.sh
 
 	./common/bin-manage/pullBIN.sh
