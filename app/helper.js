@@ -206,7 +206,7 @@ const getUserClient = async (username, orgName, client) => {
 };
 
 
-exports.getOrgAdmin = (orgName, nodeType) => {
+exports.getOrgAdmin = async (orgName, nodeType = 'peer') => {
 	const client = ClientUtil.new();
 	if (!orgName) {
 		orgName = exports.randomOrg(nodeType);
