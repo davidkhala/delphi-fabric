@@ -117,7 +117,7 @@ exports.invoke = async (channel, peers, {chaincodeId, fcn, args, transientMap}, 
 	const orderer = orderers[randomKeyOf(orderers)];
 	if (nonAdminUser) {
 		const client = ClientUtil.new();
-		await client.setUserContext(nonAdminUser, true);
+		ClientUtil.setUser(client, nonAdminUser);
 		ChannelUtil.setClientContext(channel, client);
 	}
 
@@ -147,5 +147,10 @@ exports.discoveryChaincodeInterestBuilder = (chaincodeIdFilter) => {
 };
 exports.query = async (channel, peers, {chaincodeId, fcn, args, transientMap}, proposalTimeout = 30000) => {
 	const client = channel._clientContext;
-	return transactionProposal(client, peers, channel.getName(), {chaincodeId, fcn, args, transientMap}, proposalTimeout);
+	return transactionProposal(client, peers, channel.getName(), {
+		chaincodeId,
+		fcn,
+		args,
+		transientMap
+	}, proposalTimeout);
 };

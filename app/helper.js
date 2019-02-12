@@ -11,7 +11,7 @@ const path = require('path');
 const projectRoot = path.dirname(__dirname);
 const projectResolve = (...args) => path.resolve(projectRoot, ...args);
 const CRYPTO_CONFIG_DIR = projectResolve(globalConfig.docker.volumes.MSPROOT.dir);
-const userUtil = require('../common/nodejs/user');
+const UserUtil = require('../common/nodejs/user');
 const OrdererUtil = require('../common/nodejs/orderer');
 const channelUtil = require('../common/nodejs/channel');
 const {randomKeyOf} = require('../common/nodejs/helper').nodeUtil.random();
@@ -187,8 +187,7 @@ exports.findOrgConfig = (orgName, ordererName) => {
 	}
 	return {config: target, portHost, nodeType};
 };
-
-const getUserClient = async (username, orgName, client) => {
+const getUser = async (username, orgName, cryptoSuite) => {
 	const {config, nodeType} = exports.findOrgConfig(orgName);
 	const mspId = config.mspid;
 	const cryptoPath = new CryptoPath(CRYPTO_CONFIG_DIR, {
@@ -199,9 +198,14 @@ const getUserClient = async (username, orgName, client) => {
 			name: username
 		}
 	});
-	const user = await userUtil.loadFromLocal(cryptoPath, nodeType, mspId, client.getCryptoSuite());
 	// FIXME this._signingIdentity._signer._key.getSKI is not a function
-	await client.setUserContext(user, true);
+	return await UserUtil.loadFromLocal(cryptoPath, nodeType, mspId, cryptoSuite);
+};
+exports.getUser = getUser;
+
+const getUserClient = async (username, orgName, client) => {
+	const user = await getUser(username, orgName, client.getCryptoSuite());
+	ClientUtil.setUser(client, user);
 	return client;
 };
 
@@ -212,7 +216,7 @@ exports.getOrgAdmin = async (orgName, nodeType = 'peer') => {
 		orgName = exports.randomOrg(nodeType);
 	}
 	logger.debug(`get ${orgName} Admin`);
-	return getUserClient(userUtil.adminName, orgName, client);
+	return getUserClient(UserUtil.adminName, orgName, client);
 };
 exports.randomOrg = (nodeType) => {
 	let orgName;
