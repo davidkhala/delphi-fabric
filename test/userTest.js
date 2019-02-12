@@ -1,10 +1,12 @@
 const helper = require('../app/helper');
 const {getUser} = require('../common/nodejs/client');
 const {getPrivateKey} = require('../common/nodejs/user');
+const ECDSAPRIV = require('../common/nodejs/key');
 const test = async () => {
 	const client = await helper.getOrgAdmin();
 	const user = getUser(client);
 	const key = getPrivateKey(user);
-	console.log(key.pem);
+	const ecdsaKey = new ECDSAPRIV(key);
+	console.log(ecdsaKey.pem());
 };
 test();
