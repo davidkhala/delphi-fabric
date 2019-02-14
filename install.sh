@@ -53,7 +53,6 @@ function updateChaincode() {
 	cd $GOPATH/src/github.com/davidkhala/chaincode/golang/diagnose
 	dep ensure
 	cd -
-	# TODO directory scanning
 }
 
 function PM2CLI() {
@@ -65,10 +64,10 @@ function sync() {
 	npm install
 	updateChaincode
 }
-if [ -n "$fcn" ]; then
+if [[ -n "$fcn" ]]; then
 	$fcn $remain_params
 else
-	if [ ! -f "$CURRENT/common/install.sh" ]; then
+	if [[ ! -f "$CURRENT/common/install.sh" ]]; then
 		gitSync
 	fi
 	$CURRENT/common/install.sh golang1_11

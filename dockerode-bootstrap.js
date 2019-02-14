@@ -401,9 +401,9 @@ exports.down = async (swarm) => {
 		await chaincodeClean(true);
 		await exports.volumesAction(toStop);
 
-		fsExtra.emptyDirSync(MSPROOT);// TODO taking care nfs
+		fsExtra.emptyDirSync(MSPROOT);
 		logger.info(`[done] clear MSPROOT ${MSPROOT}`);
-		fsExtra.emptyDirSync(CONFIGTX);// TODO taking care nfs
+		fsExtra.emptyDirSync(CONFIGTX);
 		logger.info(`[done] clear CONFIGTX ${CONFIGTX}`);
 		for (const [name, script] of Object.entries(nodeServers)) {
 			const pm2 = await new PM2().connect();
