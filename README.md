@@ -105,6 +105,7 @@ Finished
 - retry opts = {waitTime, retryTime}
 - prune: khala-nodeutils
 - "stateVolume": "Documents/backupVolumes/orderer/",
+- is private data automatic sync on new peer, with peer amount over max peer count.
 
 ## New feature, patch required for node-sdk
  

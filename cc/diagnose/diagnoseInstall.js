@@ -9,7 +9,10 @@ exports.task = async () => {
 	const org2 = 'icdd';
 	const p1 = helper.newPeer(0, org1);
 	const p2 = helper.newPeer(0, org2);
-	await instantiate(org1, [p1, p2], masterCC);
+	const transientMap = {
+		key: 'david'
+	};
+	await instantiate(org1, [p1, p2], masterCC, 'init', [], transientMap);
 };
 exports.taskAttach = async () => {
 	const prone = 'mainChain';

@@ -3,10 +3,10 @@ const helper = require('./helper');
 const {nextVersion} = require('../common/nodejs/helper').nodeUtil.version();
 const {findLatest} = require('../common/nodejs/chaincodeVersion');
 const channelName = 'allchannel';
-exports.instantiate = async (clientPeerOrg, peers, chaincodeId, fcn, args = []) => {
+exports.instantiate = async (clientPeerOrg, peers, chaincodeId, fcn, args = [], transientMap) => {
 	const client = await helper.getOrgAdmin(clientPeerOrg);
 	const channel = helper.prepareChannel(channelName, client, true);
-	return instantiate(channel, peers, {fcn, chaincodeId, chaincodeVersion: nextVersion(), args});
+	return instantiate(channel, peers, {fcn, chaincodeId, chaincodeVersion: nextVersion(), args, transientMap});
 };
 exports.upgrade = async (clientPeerOrg, peers, chaincodeId, chaincodeVersion, fcn, args = []) => {
 	const client = await helper.getOrgAdmin(clientPeerOrg);
