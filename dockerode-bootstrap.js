@@ -45,7 +45,7 @@ exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPRO
 	const cryptoType = 'orderer';
 	const orderers = [];
 
-	const toggle = async ({orderer, domain, port, mspid}, kafka, stateVolume, operationPort) => {
+	const toggle = async ({orderer, domain, port, mspid}, kafka, stateVolume, operations) => {
 		const cryptoPath = new CryptoPath(MSPROOT, {
 			orderer: {org: domain, name: orderer}
 		});
@@ -94,7 +94,7 @@ exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPRO
 					},
 					kafkas: kafka,
 					tls, stateVolume
-				}, operationPort);
+				}, operations);
 			}
 		}
 	};
@@ -109,19 +109,19 @@ exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPRO
 				if (stateVolume) {
 					stateVolume = homeResolve(stateVolume);
 				}
-				const {portHost, operationPort} = ordererConfig;
-				await toggle({orderer, domain, port: portHost, mspid}, true, stateVolume, operationPort);
+				const {portHost, operations} = ordererConfig;
+				await toggle({orderer, domain, port: portHost, mspid}, true, stateVolume, operations);
 			}
 		}
 	} else {
 		const ordererConfig = globalConfig.orderer.solo;
-		const {orgName: domain, mspid, portHost: port, operationPort} = ordererConfig;
+		const {orgName: domain, mspid, portHost: port, operations} = ordererConfig;
 		const orderer = ordererConfig.container_name;
 		let {stateVolume} = ordererConfig;
 		if (stateVolume) {
 			stateVolume = homeResolve(stateVolume);
 		}
-		await toggle({orderer, domain, port, mspid}, undefined, stateVolume, operationPort);
+		await toggle({orderer, domain, port, mspid}, undefined, stateVolume, operations);
 	}
 	if (swarm) {
 		if (toStop) {
@@ -155,7 +155,7 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 		const {mspid} = orgConfig;
 		for (const peerIndex in peersConfig) {
 			const peerConfig = peersConfig[peerIndex];
-			const {container_name, port, couchDB, operationPort} = peerConfig;
+			const {container_name, port, couchDB, operations} = peerConfig;
 			let {stateVolume} = peerConfig;
 			if (stateVolume) {
 				stateVolume = homeResolve(stateVolume);
@@ -226,7 +226,7 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 						volumeName: volumeName.MSPROOT,
 						configPath
 					}, couchDB, stateVolume
-				}, operationPort);
+				}, operations);
 			}
 
 		}

@@ -22,7 +22,10 @@
     "solo": {
       "orgName": "Delphi.com",
       "container_name": "orderer",
-      "operationPort": 8443,
+      "operations": {
+        "port": 8443,
+        "metrics":"prometheus"
+      },
       "portHost": 7050,
       "ca": {
         "portHost": 7454
@@ -109,7 +112,9 @@
         {
           "container_name": "peer0.ASTRI.org",
           "port": 7051,
-          "operationPort": 9443,
+          "operations": {
+            "port": 9443
+          },
           "couchDB": {
             "container_name": "couchdb.peer0.ASTRI.org",
             "port": 7984
