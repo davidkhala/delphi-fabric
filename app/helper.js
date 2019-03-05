@@ -209,6 +209,9 @@ const getUserClient = async (username, orgName, client) => {
 	return client;
 };
 
+exports.getOrgAdminUser = async (orgName, cryptoSuite) => {
+	return await getUser(UserUtil.adminName, orgName, cryptoSuite);
+};
 
 exports.getOrgAdmin = async (orgName, nodeType = 'peer') => {
 	const client = ClientUtil.new();
