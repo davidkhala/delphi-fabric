@@ -44,12 +44,7 @@ function updateChaincode() {
 	cd $GOPATH/src/github.com/davidkhala/chaincode/golang/mainChain
 	dep ensure
 	cd -
-	cd $GOPATH/src/github.com/davidkhala/chaincode/golang/sideChain2
-	dep ensure
-	cd -
-	cd $GOPATH/src/github.com/davidkhala/chaincode/golang/sideChain
-	dep ensure
-	cd -
+
 	cd $GOPATH/src/github.com/davidkhala/chaincode/golang/diagnose
 	dep ensure
 	cd -

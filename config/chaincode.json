@@ -31,29 +31,6 @@
       }
     }
   },
-  "sideChain": {
-    "path": "github.com/davidkhala/chaincode/golang/sideChain"
-  },
-  "sideChain2": {
-    "path": "github.com/davidkhala/chaincode/golang/sideChain2",
-    "endorsingConfigs": {
-      "n": 2,
-      "mspId": {
-        "ASTRIMSP": 0,
-        "icddMSP": 0
-      }
-    },
-    "collectionsConfig": {
-      "tx": {
-        "mspIds": [
-          "ASTRIMSP",
-          "icddMSP"
-        ],
-        "requiredPeerCount": 1,
-        "maxPeerCount": 4
-      }
-    }
-  },
   "global": {
     "path": "github.com/davidkhala/chaincode/golang/tokenCommon"
   },
