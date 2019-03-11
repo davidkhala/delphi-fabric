@@ -69,19 +69,6 @@ Profiles:
               Admins:
                 Type: Signature
                 Rule: OR('icddMSP.admin')
-          - Name: delphi
-            ID: delphi
-            MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/delphi/msp
-            Policies:
-              Readers:
-                Type: Signature
-                Rule: OR('delphi.member')
-              Writers:
-                Type: Signature
-                Rule: OR('delphi.member')
-              Admins:
-                Type: Signature
-                Rule: OR('delphi.admin')
   allchannel:
     Policies: *ref_0
     Capabilities:
@@ -120,21 +107,6 @@ Profiles:
               Rule: OR('icddMSP.admin')
           AnchorPeers:
             - {}
-        - Name: delphi
-          ID: delphi
-          MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/delphi/msp
-          Policies:
-            Readers:
-              Type: Signature
-              Rule: OR('delphi.member')
-            Writers:
-              Type: Signature
-              Rule: OR('delphi.member')
-            Admins:
-              Type: Signature
-              Rule: OR('delphi.admin')
-          AnchorPeers:
-            - {}
       Capabilities:
         V1_3: true
   anchorPeers:
@@ -144,11 +116,11 @@ Profiles:
           AnchorPeers:
             - Host: peer0.ASTRI.org
               Port: 7051
+            - Host: peer1.ASTRI.org
+              Port: 7051
         - Name: icdd
           AnchorPeers:
             - Host: peer0.icdd
               Port: 7051
-        - Name: delphi
-          AnchorPeers:
-            - Host: peer0.delphi
+            - Host: peer1.icdd
               Port: 7051

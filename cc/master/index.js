@@ -4,12 +4,10 @@ const {increase, putPrivate} = require('./masterInvoke');
 const install = require('./masterInstall');
 const flow = async () => {
 	await install.task();
-	const org1 = 'icdd';
-	const org2 = 'ASTRI.org';
-	const peers = [helper.newPeer(0, org1), helper.newPeer(0, org2)];
-	const clientOrg = org2;
+	const peers = [helper.newPeer(0, 'icdd'), helper.newPeer(0, 'ASTRI.org')];
+	const clientOrg = 'ASTRI.org';
 
-	await putPrivate(peers, clientOrg);
+	await increase(peers, clientOrg);
 
 };
 flow();

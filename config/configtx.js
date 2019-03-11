@@ -98,12 +98,12 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 	const Organizations = [];
 
 
-	const OrganizationBuilder = (orgName, forAnchor, forChannel) => {
+	const OrganizationBuilder = (orgName, anchorIndexes, forChannel) => {
 		const orgConfig = orgsConfig[orgName];
 
 		const cryptoPath = new CryptoPath(MSPROOT, {
 			peer: {
-				org: orgName, name: 'peer0'
+				org: orgName
 			}
 		});
 		const result = {
@@ -125,11 +125,19 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 				}
 			}
 		};
-		if (forAnchor) {
-			result.AnchorPeers = [{
-				Host: cryptoPath.peerHostName,
-				Port: 7051
-			}];
+		if (Array.isArray(anchorIndexes)) {
+
+			result.AnchorPeers = anchorIndexes.map((anchorIndex) => {
+				const anchorPeerCryptoPath = new CryptoPath(MSPROOT, {
+					peer: {
+						org: orgName, name: `peer${anchorIndex}`
+					}
+				});
+				return {
+					Host: anchorPeerCryptoPath.peerHostName,
+					Port: 7051
+				};
+			});
 			delete result.ID;
 			delete result.MSPDir;
 			delete result.Policies;
@@ -178,7 +186,7 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 	// setAnchorPeers profile
 	const OrganizationsForAnchorProfile = [];
 	for (const orgName in orgsConfig) {
-		OrganizationsForAnchorProfile.push(OrganizationBuilder(orgName, true));
+		OrganizationsForAnchorProfile.push(OrganizationBuilder(orgName, [0, 1]));// TODO anchorIndexes as parameters?
 	}
 	const setAnchorPeersProfile = {
 		Application: {

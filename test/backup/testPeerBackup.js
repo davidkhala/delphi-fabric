@@ -1,12 +1,14 @@
 const {
-	containerDelete,
+	containerDelete
 } = require('../../common/docker/nodejs/dockerode-util');
 const {
 	runPeer
 } = require('../../common/nodejs/fabric-dockerode');
-const logger = require('khala-nodeutils/logger').new('tes HA');
-const {sleep} = require('khala-nodeutils/helper');
+const {nodeUtil} = require('../../common/nodejs/helper');
+const logger = nodeUtil.devLogger('test:peer HA');
+const {sleep, homeResolve} = nodeUtil.helper();
 const globalConfig = require('../../config/orgs');
+const {TLS} = globalConfig;
 const peerUtil = require('../../common/nodejs/peer');
 const helper = require('../../app/helper');
 const {CryptoPath} = require('../../common/nodejs/path');
@@ -16,7 +18,7 @@ const stopPeer = async (org, peerIndex) => {
 	await containerDelete(peerName);
 };
 const {join} = require('../../common/nodejs/channel');
-const resumePeer = async (org, peerIndex, TLS) => {
+const resumePeer = async (org, peerIndex) => {
 
 
 	const {docker: {network, fabricTag: imageTag}} = globalConfig;
@@ -29,8 +31,12 @@ const resumePeer = async (org, peerIndex, TLS) => {
 
 	const {mspid} = orgConfig;
 	const peerConfig = peersConfig[peerIndex];
-	const {container_name, port, couchDB, stateVolume} = peerConfig;
+	const {container_name, port, couchDB} = peerConfig;
 
+	let {stateVolume} = peerConfig;
+	if (stateVolume) {
+		stateVolume = homeResolve(stateVolume);
+	}
 
 	const cryptoPath = new CryptoPath(peerUtil.container.MSPROOT, {
 		peer: {
@@ -72,11 +78,21 @@ const touchCC = async (org, peerIndex) => {
 	const result = await get([peer], org, counterKey);
 	logger.debug(result);
 };
+const flowStopPeers = async () => {
+	await stopPeer('icdd', 0);
+	await stopPeer('icdd', 1);
+	await stopPeer('ASTRI.org', 0);
+	await stopPeer('ASTRI.org', 1);
+};
+const flowResumePeers = async () => {
+	await resumePeer('icdd', 0);// anchor peers should resume first
+	await resumePeer('ASTRI.org', 0);// anchor peers should resume first
+};
 const flow = async () => {
 	const org = 'icdd';
 	const peerIndex = 1;
 	await stopPeer(org, peerIndex);
-	await resumePeer(org, peerIndex, false);
+	await resumePeer(org, peerIndex);
 	const channelName = 'allchannel';
 	const chaincodeID = 'master';
 	await resumePeerChannel(org, peerIndex, channelName, chaincodeID);
@@ -84,5 +100,10 @@ const flow = async () => {
 	await sleep(30000);
 	await touchCC(org, peerIndex);
 };
-
-flow();
+const flow2 = async () => {
+	await touchCC('icdd', 0);
+	await flowStopPeers();
+	await flowResumePeers();
+	await touchCC('icdd', 0);
+};
+flow2();

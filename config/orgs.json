@@ -24,7 +24,7 @@
       "container_name": "orderer",
       "operations": {
         "port": 8443,
-        "metrics":"prometheus"
+        "metrics": "prometheus"
       },
       "portHost": 7050,
       "ca": {
@@ -97,11 +97,6 @@
             0,
             1
           ]
-        },
-        "delphi": {
-          "peerIndexes": [
-            0
-          ]
         }
       }
     }
@@ -134,29 +129,19 @@
       "peers": [
         {
           "container_name": "peer0.icdd",
-          "port": 8051
+          "port": 8051,
+          "stateVolume": "Documents/backupVolumes/peer0.icdd.org/"
         },
         {
           "container_name": "peer1.icdd",
-          "port": 8151
+          "port": 8151,
+          "stateVolume": "Documents/backupVolumes/peer1.icdd.org/"
         }
       ],
       "ca": {
         "portHost": 8054
       },
       "mspid": "icddMSP"
-    },
-    "delphi": {
-      "peers": [
-        {
-          "container_name": "peer0.delphi",
-          "port": 9051
-        }
-      ],
-      "ca": {
-        "portHost": 9054
-      },
-      "mspid": "delphi"
     }
   }
 }
