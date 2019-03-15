@@ -82,7 +82,6 @@ Finished
 - nodeJS chaincode
 - Duplicated priv-file creation, crypto-store problem in .hfc-key-store
 - chaincode setEvent: for both golang,nodejs chaincodeType
-- 1.2 private data (sideDB), solved by manually set anchor peers
 - it is allowed that chaincode invoker, target peers belongs to differed organization.
 - hybrid data storage model: couchdb, leveldb 
 - use dep to import fabric source into vendor
