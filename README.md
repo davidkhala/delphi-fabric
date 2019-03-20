@@ -1,7 +1,5 @@
 Delphi-fabric
 ---------------------
-In memory of the old days in ASTRI, study fabric capability alone and isolatedly along with a void project proposal. 
-![](https://www.designersguild.com/image/654/1543)
 
 Installation
 -----------------------
@@ -55,7 +53,7 @@ Test on single host
 -----------------------
  * run `$ ./docker.sh` to restart network
 
-Test on docker swarm
+Test on docker swarm[deprecated]
 -----------------------
 I have migrated codes in `cluster/managerNode` to new repository [Fabric-swarm-manager](https://github.com/davidkhala/fabric-swarm-manager)
 
