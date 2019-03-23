@@ -29,15 +29,6 @@ _after first time clone this repository, submodule should be initialize_
 
 **Design idea**
  * use fabric-ca to generate all crypto material, instead of cryptogen
- * cluster: 
-    - [master] node provide 
-        1. [pm2] swarm config sharing server 'swarmServer'
-            - state storage db: Redis/Couchdb
-        2. [pm2] signature server 'signServer'
-        3. [container] 1 CA for each orderer org, 1 CA for each peer org 
-    - [slave] node provide 
-        1. [pm2] signature server 'signServer'
-        2. [container] 1 CA for peer org, 1 peer, 1 CA for orderer org(experimental) 
  * prefer to use config-less fabric-ca
  * use `npm dockerode` to run docker container & services, instead of `docker-compose` or `docker stack deploy` 
 
@@ -45,65 +36,39 @@ Major configuration
 -----------------------
  we cluster most of the config in ``config/orgs.json``, enjoy!
  others:
-  - swarm server: ``swarm/swarm.json``
   - chaincodes path: ``config/chaincode.json``
-  - my sample chaincodes have been migrated to ``github.com/davidkhala/chaincode``  
+  - sample chaincodes ``github.com/davidkhala/chaincode``  
 
 Test on single host
 -----------------------
  * run `$ ./docker.sh` to restart network
 
-Test on docker swarm[deprecated]
------------------------
-I have migrated codes in `cluster/managerNode` to new repository [Fabric-swarm-manager](https://github.com/davidkhala/fabric-swarm-manager)
-
-`fabric-swarm-manager` is used on new managerNode machine `slave` to play with existing cluster
-
-Current machine is noted as `master` 
-
-**steps**
-1. [master] run `$ ./docker-swarm.sh` to restart network and prepare channel
-2. [slave] run `$ ./manager.sh` to prepare own ca and peer, join exist channel and install chaincode
-3. [master] run `$ ./docker-swarm.sh chaincode` to install and instantiate chaincode
-4. [slave] run `$ node invokeChaincode.js` to invoke chaincode
 
 Finished
 -----------------------
-- kafka on local & swarm
 - use npm:js-yaml to write YAML files instead of jq
-- swarm mode: network server to manage ip:hostname
 - update system channel ``testchainid``
 - new orderer with same org
-- make pm2 signServer, swarmServer also run in single mode
 - fabric-ca CRUD user and identityService
-- chaincode version,ID string format
-- nodeJS chaincode
-- Duplicated priv-file creation, crypto-store problem in .hfc-key-store
-- chaincode setEvent: for both golang,nodejs chaincodeType
-- it is allowed that chaincode invoker, target peers belongs to differed organization.
+- chaincode version,ID string RegX
+- chaincode language support: nodeJS, golang
+- Fixed security leakage: priv-file, crypto-store in .hfc-key-store
+- chaincode setEvent support
 - hybrid data storage model: couchdb, leveldb 
 - use dep to import fabric source into vendor
-- chaincode partial update: not all peers upgrade to latest chaincode, is it possible that old chaincode still work
-    with inappropriate endorsement config; but with appropriate endorsement policy, we get chaincode fingerprint mismatch error
+- peer, orderer backup and instant recover: "stateVolume": "Documents/backupVolumes/orderer/",
 ## TODO
-- TLS, java sdk and docker-swarm: keep update
+- TLS, java sdk: keep update
 - java chaincode
-- test backup and recover
-- cooperate with official network_config.json
 - chaincode uninstall
-- adding kafka/zookeeper online
-- docker version problem in ver. 18.x 
 - pm2 to runConfigtxlator? without shell?
 - use nodejs scripts to replace runConfigtxgen.sh
 - 1.3: idemixgen
-- take care of docker swarm init --force-new-cluster
-- will block file name be a problem in signature cache? take care docker cp from container for multiple request
+- migrate from kafka to etcdRaft 
 - migrate to use make file instead of ./install.sh (https://www.gnu.org/software/make/manual/make.html#Introduction)
-- retry opts = {waitTime, retryTime}
-- prune: khala-nodeutils
-- "stateVolume": "Documents/backupVolumes/orderer/",
 - is private data automatic sync on new peer, with peer amount over max peer count.
 - chaincode "Indy": a fabric chaincode implementation of all claimed features of Hyperledger/indy
+- Suggestion from Paul: Question: are your repos more to do with Fabric itself, rather than pure Fabric developer resources (ie go/js/java/typescript chaincode/sdk work)? (I'm only concentrating on Fabric Developer resources in particular) If so - I would suggest to contact someone like Silona Bonewald to find a suitable home/new page on Confluence for that? I'm just asking where its 'natural' home is 🙂 Also I would suggest the README explains 1) what it is 2) what it does (as a goal of 'studying Fabric' resources) 3) what the consumer would get from trying it out or hope to achieve? 
 ## New feature, patch required for node-sdk
  
 - feature: implement configtx in node-sdk??
@@ -113,3 +78,7 @@ Finished
 ## Abandoned tasks
 - docker volume plugin
 - endorsement policy config: too flexible to build template
+- docker swarm deployment
+- cooperate with official network_config.json
+- adding kafka/zookeeper online: use etcdRaft
+
