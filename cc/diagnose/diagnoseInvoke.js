@@ -63,6 +63,11 @@ exports.getPage = async (peers, clientPeerOrg, startKey = '', endKey = '', pageS
 	const args = [startKey, endKey, pageSize.toString(), bookMark];
 	return query(peers, clientPeerOrg, chaincodeId, fcn, args);
 };
+exports.list = async (peers, clientPeerOrg) => {
+	const fcn = 'worldStates';
+	const args = [];
+	return query(peers, clientPeerOrg, chaincodeId, fcn, args);
+};
 exports.putBatch = async (peers, clientPeerOrg, map) => {
 	const fcn = 'putBatch';
 	const args = [JSON.stringify(map)];

@@ -1,4 +1,6 @@
-const {get, put, cross, chaincodeID, putRaw, putBatch, whoami, getEndorsement, putEndorsement, getPage} = require('./diagnoseInvoke');
+const {
+	get, put, cross, chaincodeID, putRaw, putBatch, whoami, getEndorsement, putEndorsement, getPage, list
+} = require('./diagnoseInvoke');
 const logger = require('../../common/nodejs/logger').new('invoke:diagnose', true);
 const helper = require('../../app/helper');
 
@@ -80,4 +82,24 @@ const flowPagination = async () => {
 	result = await getPage(peers, org1, '', '', 1, Bookmark);
 	logger.debug(2, result);
 };
-flowPagination();
+const flowOverQuerySize = async (N) => {
+
+	const map = {};
+	for (let i = 0; i < N; i++) {
+		map[`key_${i}`] = `${i}`;
+	}
+
+	const org1 = 'icdd';
+	const peers = helper.newPeers([0], org1);
+	await putBatch(peers, org1, map);
+	const worldStates = await list(peers, org1);
+	logger.debug(worldStates);
+
+};
+// flowPagination();
+const task = async () => {
+	await DRInstall.task();
+	await flowOverQuerySize(100);
+	await flowOverQuerySize(101);
+};
+task();

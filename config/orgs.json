@@ -129,13 +129,11 @@
       "peers": [
         {
           "container_name": "peer0.icdd",
-          "port": 8051,
-          "stateVolume": "Documents/backupVolumes/peer0.icdd.org/"
+          "port": 8051
         },
         {
           "container_name": "peer1.icdd",
-          "port": 8151,
-          "stateVolume": "Documents/backupVolumes/peer1.icdd.org/"
+          "port": 8151
         }
       ],
       "ca": {
