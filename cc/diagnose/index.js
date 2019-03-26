@@ -4,8 +4,9 @@ const {
 const logger = require('../../common/nodejs/logger').new('invoke:diagnose', true);
 const helper = require('../../app/helper');
 
+const fs = require('fs');
 const DRInstall = require('./diagnoseInstall');
-const flow = async () => {
+const taskKeyEndorsement = async () => {
 	await DRInstall.task();
 	const org1 = 'icdd';
 	const org2 = 'ASTRI.org';
@@ -33,7 +34,7 @@ const flow = async () => {
 	peers = [helper.newPeer(0, org1), helper.newPeer(0, org2)];
 	await put(peers, org1, key, 'endorsing good');
 };
-const flowPeerHack = async () => {
+const taskPeerHack = async () => {
 	await DRInstall.task();
 	const org1 = 'icdd';
 	const org2 = 'ASTRI.org';
@@ -82,24 +83,40 @@ const flowPagination = async () => {
 	result = await getPage(peers, org1, '', '', 1, Bookmark);
 	logger.debug(2, result);
 };
-const flowOverQuerySize = async (N) => {
-
+const taskPutBatch = async (size) => {
 	const map = {};
-	for (let i = 0; i < N; i++) {
-		map[`key_${i}`] = `${i}`;
+	for (let i = 0; i < size; i++) {
+		const iStr = `${i}`;
+		const padded = iStr.padStart(3, '0');
+		map[`key_${padded}`] = `${i}`;
 	}
-
 	const org1 = 'icdd';
 	const peers = helper.newPeers([0], org1);
 	await putBatch(peers, org1, map);
-	const worldStates = await list(peers, org1);
-	logger.debug(worldStates);
+};
+const worldStates = async () => {
+
+	const org1 = 'icdd';
+	const peers = helper.newPeers([0], org1);
+	const result = await list(peers, org1);
+	logger.debug('worldStates', result);
 
 };
-// flowPagination();
-const task = async () => {
-	await DRInstall.task();
-	await flowOverQuerySize(100);
-	await flowOverQuerySize(101);
+const overPagination = async (pageSize) => {
+	const org1 = 'icdd';
+	const peers = helper.newPeers([0], org1);
+	const result = await getPage(peers, org1, undefined, undefined, `${pageSize}`);
+	logger.debug('pagination', result);
 };
-task();
+const taskOverList = async () => {
+	await DRInstall.task();
+	await taskPutBatch(200);
+	try {
+		await worldStates();
+	} catch (e) {
+		logger.warn('worldStates failure expected');
+		logger.warn(e);
+	}
+
+};
+taskOverList();
