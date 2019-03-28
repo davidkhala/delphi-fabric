@@ -57,16 +57,16 @@ Finished
 - hybrid data storage model: couchdb, leveldb 
 - use dep to import fabric source into vendor
 - peer, orderer backup and instant recover: "stateVolume": "Documents/backupVolumes/orderer/",
+- nodejs scripts work as runConfigtxgen.sh to wrap binaries
+
 ## TODO
 - TLS, java sdk: keep update
 - java chaincode
 - chaincode uninstall
 - pm2 to runConfigtxlator? without shell?
-- use nodejs scripts to replace runConfigtxgen.sh
 - 1.3: idemixgen
 - migrate from kafka to etcdRaft 
 - migrate to use make file instead of ./install.sh (https://www.gnu.org/software/make/manual/make.html#Introduction)
-- is private data automatic sync on new peer, with peer amount over max peer count.
 - chaincode "Indy": a fabric chaincode implementation of all claimed features of Hyperledger/indy
 - Suggestion from Paul: Question: are your repos more to do with Fabric itself, rather than pure Fabric developer resources (ie go/js/java/typescript chaincode/sdk work)? (I'm only concentrating on Fabric Developer resources in particular) If so - I would suggest to contact someone like Silona Bonewald to find a suitable home/new page on Confluence for that? I'm just asking where its 'natural' home is 🙂 Also I would suggest the README explains 1) what it is 2) what it does (as a goal of 'studying Fabric' resources) 3) what the consumer would get from trying it out or hope to achieve? 
 ## New feature, patch required for node-sdk
@@ -81,4 +81,4 @@ Finished
 - docker swarm deployment
 - cooperate with official network_config.json
 - adding kafka/zookeeper online: use etcdRaft
-
+- is private data automatic sync on new peer, with peer amount over max peer count.

@@ -64,7 +64,7 @@ exports.joinAll = async (channelName) => {
 
 exports.updateAnchorPeers = async (configtxYaml, channelName, orgName) => {
 	const anchorTx = path.resolve(`${orgName}Anchors.tx`);
-	await genAnchorPeers(configtxYaml, channelName, orgName, anchorTx);
+	await genAnchorPeers(configtxYaml, anchorTx, 'anchorPeers', channelName, orgName);
 
 	const client = await helper.getOrgAdmin(orgName);
 

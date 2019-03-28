@@ -18,23 +18,21 @@ const {ping} = nodeUtil.request();
 const {projectResolve} = require('./app/helper');
 const MSPROOT = projectResolve(globalConfig.docker.volumes.MSPROOT.dir);
 const CONFIGTX = projectResolve(globalConfig.docker.volumes.CONFIGTX.dir);
-const arch = 'x86_64';
 const {
 	containerDelete, volumeCreateIfNotExist, networkCreateIfNotExist,
 	volumeRemove, prune: {system: pruneLocalSystem}
 } = require('./common/docker/nodejs/dockerode-util');
 const {swarmServiceName, constraintSelf, serviceDelete, prune: {system: pruneSwarmSystem}} = require('./common/docker/nodejs/dockerode-swarm-util');
 const {advertiseAddr, joinToken} = require('./common/docker/nodejs/dockerCmd');
-const {hostname, exec, homeResolve, fsExtra} = require('./common/nodejs/helper').nodeUtil.helper();
+const {hostname, homeResolve, fsExtra} = require('./common/nodejs/helper').nodeUtil.helper();
 const {docker: {fabricTag, network, thirdPartyTag}, TLS} = globalConfig;
 
 const serverClient = require('./swarm/serverClient');
-const runConfigtxGenShell = path.resolve(__dirname, 'common', 'bin-manage', 'runConfigtxgen.sh');
 const nodeServers = {
 	swarmServer: path.resolve(__dirname, 'swarm', 'swarmServerPM2.js'),
 	signServer: path.resolve(__dirname, 'swarm', 'signServerPM2.js')
 };
-const {configtxlator} = require('./common/nodejs/binManager');
+const {configtxlator, genBlock, genChannel} = require('./common/nodejs/binManager');
 
 exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'}, toStop, swarm) => {
 	const {orderer: {type, genesis_block: {file: BLOCK_FILE}}} = globalConfig;
@@ -424,7 +422,7 @@ exports.down = async (swarm) => {
 
 exports.up = async (swarm) => {
 	try {
-		await fabricImagePull({fabricTag, thirdPartyTag, arch});
+		await fabricImagePull({fabricTag, thirdPartyTag});
 		for (const [name, script] of Object.entries(nodeServers)) {
 			const pm2 = await new PM2().connect();
 			await pm2.reRun({name, script});
@@ -462,15 +460,13 @@ exports.up = async (swarm) => {
 
 
 		const BLOCK_FILE = globalConfig.orderer.genesis_block.file;
-		const config_dir = path.dirname(configtxFile);
 		fsExtra.ensureDirSync(CONFIGTX);
-		await exec(`export FABRIC_CFG_PATH=${config_dir} && ${runConfigtxGenShell} genBlock ${path.resolve(CONFIGTX, BLOCK_FILE)} ${PROFILE_BLOCK}`);
+		await genBlock(configtxFile, path.resolve(CONFIGTX, BLOCK_FILE), PROFILE_BLOCK);
 
 		const channelsConfig = globalConfig.channels;
-		for (const channelName in channelsConfig) {
-			const channelConfig = channelsConfig[channelName];
+		for (const [channelName, channelConfig] of Object.entries(channelsConfig)) {
 			const channelFile = path.resolve(CONFIGTX, channelConfig.file);
-			await exec(`export FABRIC_CFG_PATH=${config_dir} && ${runConfigtxGenShell} genChannel ${channelFile} ${channelName} ${channelName}`);
+			await genChannel(configtxFile, channelFile, channelName, channelName);
 		}
 
 
