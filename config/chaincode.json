@@ -7,7 +7,7 @@
           "ASTRIMSP",
           "icddMSP"
         ],
-        "requiredPeerCount": 3,
+        "requiredPeerCount": 0,
         "maxPeerCount": 4
       }
     }
