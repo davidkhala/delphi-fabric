@@ -78,3 +78,8 @@ exports.chaincodeID = async (peers, clientPeerOrg) => {
 	const args = [];
 	return query(peers, clientPeerOrg, chaincodeId, fcn, args);
 };
+exports.getCertID = async (peers, clientPeerOrg) => {
+	const fcn = 'getCertID';
+	const args = [];
+	return query(peers, clientPeerOrg, chaincodeId, fcn, args);
+};

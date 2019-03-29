@@ -1,0 +1,39 @@
+const helper = require('../../app/helper');
+const logger = require('../../common/nodejs/logger').new('invoke:master', true);
+const {stopPeer, resumePeer} = require('../backup');
+const {sleep} = require('../../common/nodejs/helper').nodeUtil.helper();
+const {putPrivate, getPrivate} = require('../../cc/master/masterInvoke');
+const install = require('../../cc/master/masterInstall');
+const flow = async () => {
+	await install.task();
+	const offlineOrg = 'ASTRI.org';
+	const offlineIndex = 0;
+	await stopPeer(offlineOrg, offlineIndex);
+	{
+		const peers = helper.newPeers([0], 'icdd');
+		const clientOrg = 'ASTRI.org';
+
+		await putPrivate(peers, clientOrg);
+	}
+	await resumePeer(offlineOrg, 0);
+
+	{
+		const peers = helper.newPeers([offlineIndex], offlineOrg);
+		const clientOrg = 'ASTRI.org';
+
+		const getPrivateLoop = async (peers, clientOrg) => {
+			const [result] = await getPrivate(peers, clientOrg);
+			if (!result) {
+				await sleep(1000);
+				logger.warn('getPrivate', 'retry');
+				return getPrivateLoop(peers, clientOrg);
+			} else {
+				logger.info('getPrivate', result);
+				return result;
+			}
+		};
+		await getPrivateLoop(peers, clientOrg);
+
+	}
+};
+flow();

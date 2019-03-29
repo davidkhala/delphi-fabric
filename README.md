@@ -81,4 +81,4 @@ Finished
 - docker swarm deployment
 - cooperate with official network_config.json
 - adding kafka/zookeeper online: use etcdRaft
-- is private data automatic sync on new peer, with peer amount over max peer count.
+

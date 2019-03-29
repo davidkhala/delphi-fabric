@@ -1,4 +1,4 @@
-const {invoke} = require('../../app/invokeHelper');
+const {invoke,query} = require('../../app/invokeHelper');
 const logger = require('../../common/nodejs/logger').new('invoke:master', true);
 const chaincodeId = 'master';
 exports.putPrivate = async (peers, clientPeerOrg) => {
@@ -9,7 +9,7 @@ exports.putPrivate = async (peers, clientPeerOrg) => {
 exports.getPrivate = async (peers, clientPeerOrg) => {
 	const fcn = 'getPrivate';
 	const args = [];
-	return invoke(peers, clientPeerOrg, chaincodeId, fcn, args);
+	return query(peers, clientPeerOrg, chaincodeId, fcn, args);
 };
 exports.increase = async (peers, clientPeerOrg) => {
 	const fcn = 'increase';
@@ -20,18 +20,18 @@ exports.increase = async (peers, clientPeerOrg) => {
 exports.get = async (peers, clientPeerOrg, key) => {
 	const fcn = 'get';
 	const args = [key];
-	return invoke(peers, clientPeerOrg, chaincodeId, fcn, args);
+	return query(peers, clientPeerOrg, chaincodeId, fcn, args);
 };
 
 exports.getDecorations = async (peers, clientPeerOrg) => {
 	const fcn = 'getDecorations';
 	const args = [];
-	return invoke(peers, clientPeerOrg, chaincodeId, fcn, args);
+	return query(peers, clientPeerOrg, chaincodeId, fcn, args);
 };
 
 exports.getBinding = async (peers, clientPeerOrg) => {
 	const fcn = 'getBinding';
 	const args = [];
-	return invoke(peers, clientPeerOrg, chaincodeId, fcn, args);
+	return query(peers, clientPeerOrg, chaincodeId, fcn, args);
 };
 

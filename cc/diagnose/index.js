@@ -1,10 +1,9 @@
 const {
-	get, put, cross, chaincodeID, putRaw, putBatch, whoami, getEndorsement, putEndorsement, getPage, list
+	get, put, cross, chaincodeID, putRaw, putBatch, whoami, getEndorsement, putEndorsement, getPage, list, getCertID
 } = require('./diagnoseInvoke');
 const logger = require('../../common/nodejs/logger').new('invoke:diagnose', true);
 const helper = require('../../app/helper');
 
-const fs = require('fs');
 const DRInstall = require('./diagnoseInstall');
 const taskKeyEndorsement = async () => {
 	await DRInstall.task();
@@ -44,7 +43,7 @@ const taskPeerHack = async () => {
 
 	await putRaw(peers, clientOrg, key, 'b');
 };
-const flowAttach = async () => {
+const taskAttach = async () => {
 	await DRInstall.taskAttach();
 	const org1 = 'icdd';
 	const org2 = 'ASTRI.org';
@@ -61,6 +60,7 @@ const flowAttach = async () => {
 		logger.info('expect not exist error', err);
 	}
 };
+
 const flowPagination = async () => {
 	await DRInstall.task();
 	const org1 = 'icdd';
@@ -83,7 +83,7 @@ const flowPagination = async () => {
 	result = await getPage(peers, org1, '', '', 1, Bookmark);
 	logger.debug(2, result);
 };
-const taskPutBatch = async (size) => {
+const putBatchTest = async (size) => {
 	const map = {};
 	for (let i = 0; i < size; i++) {
 		const iStr = `${i}`;
@@ -94,7 +94,13 @@ const taskPutBatch = async (size) => {
 	const peers = helper.newPeers([0], org1);
 	await putBatch(peers, org1, map);
 };
-const worldStates = async () => {
+const getCertIDTest = async () => {
+	const org1 = 'icdd';
+	const peers = helper.newPeers([0], org1);
+	const result = await getCertID(peers, org1);
+	logger.info('certID', result);
+};
+const worldStatesTest = async () => {
 
 	const org1 = 'icdd';
 	const peers = helper.newPeers([0], org1);
@@ -102,7 +108,7 @@ const worldStates = async () => {
 	logger.debug('worldStates', result);
 
 };
-const overPagination = async (pageSize) => {
+const overPaginationTest = async (pageSize) => {
 	const org1 = 'icdd';
 	const peers = helper.newPeers([0], org1);
 	const result = await getPage(peers, org1, undefined, undefined, `${pageSize}`);
@@ -110,13 +116,16 @@ const overPagination = async (pageSize) => {
 };
 const taskOverList = async () => {
 	await DRInstall.task();
-	await taskPutBatch(200);
+	await putBatchTest(200);
 	try {
-		await worldStates();
+		await worldStatesTest();
 	} catch (e) {
 		logger.warn('worldStates failure expected');
 		logger.warn(e);
 	}
-
 };
-taskOverList();
+const task = async () => {
+	await DRInstall.task();
+	await getCertIDTest()
+};
+task();
