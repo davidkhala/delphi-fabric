@@ -199,7 +199,7 @@ const getUser = async (username, orgName, cryptoSuite) => {
 		}
 	});
 	// FIXME this._signingIdentity._signer._key.getSKI is not a function
-	return await UserUtil.loadFromLocal(cryptoPath, nodeType, mspId, cryptoSuite);
+	return UserUtil.loadFromLocal(cryptoPath, nodeType, mspId, cryptoSuite);
 };
 exports.getUser = getUser;
 
