@@ -20,7 +20,7 @@ const getCaService = async (url, domain, swarm) => {
 		let container_name;
 		if (swarm) {
 			const serviceName = swarmServiceName(caHostName);
-			container_name = await inflateContainerName(serviceName);
+			container_name = (await inflateContainerName(serviceName))[0];
 			if (!container_name) {
 				throw Error(`service ${serviceName} not assigned to current node`);
 			}
