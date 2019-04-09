@@ -78,7 +78,6 @@ exports.instantiate = async (channel, richPeers, opts) => {
 	const {chaincodeId} = opts;
 	const policyConfig = configParser(chaincodeConfig[chaincodeId]);
 
-	const {eventWaitTime} = channel;
 
 	const eventHubs = [];
 
@@ -89,14 +88,13 @@ exports.instantiate = async (channel, richPeers, opts) => {
 
 	const allConfig = Object.assign(policyConfig, opts);
 	const proposalTimeout = richPeers.length * defaultProposalTime;
-	return instantiateOrUpgrade('deploy', channel, richPeers, eventHubs, allConfig, proposalTimeout, eventWaitTime);
+	return instantiateOrUpgrade('deploy', channel, richPeers, eventHubs, allConfig, proposalTimeout);
 };
 
 exports.upgrade = async (channel, richPeers, opts) => {
 	const {chaincodeId} = opts;
 	const policyConfig = configParser(chaincodeConfig[chaincodeId]);
 
-	const {eventWaitTime} = channel;
 	const eventHubs = [];
 
 	for (const peer of richPeers) {
@@ -105,7 +103,7 @@ exports.upgrade = async (channel, richPeers, opts) => {
 	}
 	const allConfig = Object.assign(policyConfig, opts);
 	const proposalTimeout = richPeers.length * defaultProposalTime;
-	return instantiateOrUpgrade('upgrade', channel, richPeers, eventHubs, allConfig, proposalTimeout, eventWaitTime);
+	return instantiateOrUpgrade('upgrade', channel, richPeers, eventHubs, allConfig, proposalTimeout);
 };
 exports.invoke = async (channel, peers, {chaincodeId, fcn, args, transientMap}, nonAdminUser) => {
 	const eventHubs = [];

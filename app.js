@@ -1,12 +1,11 @@
 const logger = require('./common/nodejs/logger').new('express API');
-const {fsExtra} = require('./common/nodejs/helper').nodeUtil.helper();
+const {fsExtra,homeResolve} = require('./common/nodejs/helper').nodeUtil.helper();
 const path = require('path');
 const helper = require('./app/helper.js');
-const {projectResolve} = helper;
 const port = 4000;
 const globalConfig = require('./config/orgs.json');
 const channelsConfig = globalConfig.channels;
-const CONFIGTXDir = projectResolve(globalConfig.docker.volumes.CONFIGTX.dir);
+const CONFIGTXDir = homeResolve(globalConfig.docker.volumes.CONFIGTX);
 
 
 const {create: createChannel} = require('./app/channelHelper');

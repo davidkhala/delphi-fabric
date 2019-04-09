@@ -10,8 +10,9 @@ const logger = require('../common/nodejs/logger').new('caCryptoGen');
 const globalConfig = require('../config/orgs');
 const userUtil = require('../common/nodejs/user');
 const helper = require('../app/helper');
-const {projectResolve} = helper;
-const caCryptoConfig = projectResolve(globalConfig.docker.volumes.MSPROOT.dir);
+const {nodeUtil} = require('../common/nodejs/helper');
+const {homeResolve} = nodeUtil.helper();
+const caCryptoConfig = homeResolve(globalConfig.docker.volumes.MSPROOT);
 const {TLS} = globalConfig;
 const protocol = TLS ? 'https' : 'http';
 const getCaService = async (url, domain, swarm) => {
