@@ -10,11 +10,13 @@ const {CryptoPath} = require('../common/nodejs/path');
 const path = require('path');
 const projectRoot = path.dirname(__dirname);
 const projectResolve = (...args) => path.resolve(projectRoot, ...args);
-const CRYPTO_CONFIG_DIR = projectResolve(globalConfig.docker.volumes.MSPROOT.dir);
 const UserUtil = require('../common/nodejs/user');
 const OrdererUtil = require('../common/nodejs/orderer');
 const channelUtil = require('../common/nodejs/channel');
-const {randomKeyOf} = require('../common/nodejs/helper').nodeUtil.random();
+const {nodeUtil} = require('../common/nodejs/helper');
+const {homeResolve} = nodeUtil.helper();
+const CRYPTO_CONFIG_DIR = homeResolve(globalConfig.docker.volumes.MSPROOT);
+const {randomKeyOf} = nodeUtil.random();
 
 const preparePeer = (orgName, peerIndex, peerConfig) => {
 	const {port: peerPort} = peerConfig;
@@ -130,7 +132,6 @@ exports.prepareChannel = (channelName, client, isRenew) => {
 
 			}
 		}
-		channel.eventWaitTime = channelConfig.eventWaitTime;
 		channel.orgs = channelConfig.orgs;
 	}
 

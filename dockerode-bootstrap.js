@@ -15,9 +15,7 @@ const {CryptoPath} = require('./common/nodejs/path');
 const {nodeUtil} = require('./common/nodejs/helper');
 const {PM2} = require('khala-pm2');
 const {ping} = nodeUtil.request();
-const {projectResolve} = require('./app/helper');
-const MSPROOT = projectResolve(globalConfig.docker.volumes.MSPROOT.dir);
-const CONFIGTX = projectResolve(globalConfig.docker.volumes.CONFIGTX.dir);
+
 const {
 	containerDelete, volumeCreateIfNotExist, networkCreateIfNotExist,
 	volumeRemove, prune: {system: pruneLocalSystem}
@@ -25,6 +23,8 @@ const {
 const {swarmServiceName, constraintSelf, serviceDelete, prune: {system: pruneSwarmSystem}} = require('./common/docker/nodejs/dockerode-swarm-util');
 const {advertiseAddr, joinToken} = require('./common/docker/nodejs/dockerCmd');
 const {hostname, homeResolve, fsExtra} = require('./common/nodejs/helper').nodeUtil.helper();
+const MSPROOT = homeResolve(globalConfig.docker.volumes.MSPROOT);
+const CONFIGTX = homeResolve(globalConfig.docker.volumes.CONFIGTX);
 const {docker: {fabricTag, network, thirdPartyTag}, TLS} = globalConfig;
 
 const serverClient = require('./swarm/serverClient');
@@ -136,7 +136,7 @@ exports.volumesAction = async (toStop) => {
 			await volumeRemove(Name);
 			continue;
 		}
-		const path = projectResolve(globalConfig.docker.volumes[Name].dir);
+		const path = homeResolve(globalConfig.docker.volumes[Name]);
 		await volumeCreateIfNotExist({Name, path});
 	}
 };

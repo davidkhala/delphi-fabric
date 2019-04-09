@@ -9,9 +9,8 @@ const {container_name, port: dbPort} = swarmConfig[db];
 const path = require('path');
 
 const {sha2_256, nodeUtil} = require('../common/nodejs/helper');
-const {fsExtra} = nodeUtil.helper();
+const {fsExtra,homeResolve} = nodeUtil.helper();
 const {DBInterface} = require('khala-kvdb');
-const {projectResolve} = require('../app/helper');
 
 const dockerUtil = require('../common/docker/nodejs/dockerode-util');
 
@@ -136,7 +135,7 @@ exports.run = () => {
 	app.use('/channel', require('./signaturesRouter'));
 	app.get('/block', async (req, res) => {
 		const globalConfig = require('../config/orgs');
-		const dir = projectResolve(globalConfig.docker.volumes.CONFIGTX.dir);
+		const dir = homeResolve(globalConfig.docker.volumes.CONFIGTX);
 		const blockFile = path.resolve(dir, globalConfig.orderer.genesis_block.file);
 		const buffer = fsExtra.readFileSync(blockFile, 'binary');
 		logger.info('GET block', 'check buffer hash', sha2_256(buffer));

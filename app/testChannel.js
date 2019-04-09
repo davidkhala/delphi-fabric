@@ -1,14 +1,13 @@
 const {create, joinAll, updateAnchorPeers} = require('./channelHelper');
 const ChannelUtil = require('../common/nodejs/channel');
 const helper = require('./helper');
-const {projectResolve} = helper;
-const {sleep} = require('../common/nodejs/helper').nodeUtil.helper();
+const {sleep, homeResolve} = require('../common/nodejs/helper').nodeUtil.helper();
 const path = require('path');
 const channelName = 'allchannel';
 
 const globalConfig = require('../config/orgs.json');
 const channelConfig = globalConfig.channels[channelName];
-const channelConfigFile = projectResolve(globalConfig.docker.volumes.CONFIGTX.dir, channelConfig.file);
+const channelConfigFile = homeResolve(globalConfig.docker.volumes.CONFIGTX, channelConfig.file);
 
 const createTask = async (channel, orderer) => {
 	await create(channel, channelConfigFile, orderer);

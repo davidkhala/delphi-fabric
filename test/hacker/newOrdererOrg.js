@@ -1,5 +1,5 @@
 const globalConfig = require('../../config/orgs');
-const {TLS, docker: {fabricTag, network, volumes: {MSPROOT: {dir: mspDir}}}, orderer: {genesis_block: {file: BLOCK_FILE}}} = globalConfig;
+const {TLS, docker: {fabricTag, network, volumes: {MSPROOT: mspDir}}, orderer: {genesis_block: {file: BLOCK_FILE}}} = globalConfig;
 const protocol = TLS ? 'https' : 'http';
 const logger = require('../../common/nodejs/logger').new('local orderer');
 const {CryptoPath} = require('../../common/nodejs/path');
@@ -9,11 +9,10 @@ const {swarmServiceName, inflateContainerName, containerDelete, containerStart} 
 const {runOrderer, runCA} = require('../../common/nodejs/fabric-dockerode');
 const dockerCmd = require('../../common/docker/nodejs/dockerCmd');
 const {RequestPromise} = require('khala-nodeutils/request');
-const {fsExtra, sleep} = require('../../common/nodejs/helper').nodeUtil.helper();
+const {fsExtra, sleep,homeResolve} = require('../../common/nodejs/helper').nodeUtil.helper();
 const peerUtil = require('../../common/nodejs/peer');
 const helper = require('../../app/helper');
-const {projectResolve} = helper;
-const caCryptoConfig = projectResolve(mspDir);
+const caCryptoConfig = homeResolve(mspDir);
 const {port: swarmServerPort} = require('../../swarm/swarm.json').swarmServer;
 const fs = require('fs');
 

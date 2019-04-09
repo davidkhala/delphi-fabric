@@ -5,12 +5,8 @@
     "thirdPartyTag": "0.4.14",
     "network": "delphiNetwork",
     "volumes": {
-      "CONFIGTX": {
-        "dir": "config/configtx"
-      },
-      "MSPROOT": {
-        "dir": "config/ca-crypto-config/"
-      }
+      "CONFIGTX": "Documents/delphi-fabric/config/configtx",
+      "MSPROOT": "Documents/delphi-fabric/config/ca-crypto-config/"
     }
   },
   "orderer": {
@@ -84,7 +80,6 @@
   "channels": {
     "allchannel": {
       "file": "all.tx",
-      "eventWaitTime": 45000,
       "orgs": {
         "ASTRI.org": {
           "peerIndexes": [
