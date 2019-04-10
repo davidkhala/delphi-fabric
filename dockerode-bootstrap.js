@@ -25,7 +25,7 @@ const {advertiseAddr, joinToken} = require('./common/docker/nodejs/dockerCmd');
 const {hostname, homeResolve, fsExtra} = require('./common/nodejs/helper').nodeUtil.helper();
 const MSPROOT = homeResolve(globalConfig.docker.volumes.MSPROOT);
 const CONFIGTX = homeResolve(globalConfig.docker.volumes.CONFIGTX);
-const {docker: {fabricTag, network, thirdPartyTag}, TLS} = globalConfig;
+const {docker: {fabricTag, caTag, network, thirdPartyTag}, TLS} = globalConfig;
 
 const serverClient = require('./swarm/serverClient');
 const nodeServers = {
@@ -242,7 +242,7 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 exports.runCAs = async (toStop, swarm) => {
 	const {orderer: {type}, orgs: peerOrgsConfig} = globalConfig;
 
-	const imageTag = fabricTag;
+	const imageTag = caTag;
 
 	const CAs = [];
 	const toggle = async ({container_name, port, Issuer}) => {

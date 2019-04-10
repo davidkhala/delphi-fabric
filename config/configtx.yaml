@@ -33,13 +33,35 @@ Profiles:
         BlockValidation:
           Type: ImplicitMeta
           Rule: ANY Writers
-      OrdererType: solo
+      OrdererType: etcdraft
       Addresses:
-        - 'orderer.Delphi.com:7050'
+        - 'orderer0.ICDD.ASTRI.org:7050'
+        - 'orderer1.ICDD.ASTRI.org:7050'
+        - 'orderer2.ICDD.ASTRI.org:7050'
+      EtcdRaft:
+        Consenters:
+          - Host: orderer0.ICDD.ASTRI.org
+            Port: 7050
+            ClientTLSCert: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/ICDD.ASTRI.org/orderers/orderer0.ICDD.ASTRI.org/tls/server.crt
+            ServerTLSCert: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/ICDD.ASTRI.org/orderers/orderer0.ICDD.ASTRI.org/tls/server.crt
+          - Host: orderer1.ICDD.ASTRI.org
+            Port: 7050
+            ClientTLSCert: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/ICDD.ASTRI.org/orderers/orderer1.ICDD.ASTRI.org/tls/server.crt
+            ServerTLSCert: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/ICDD.ASTRI.org/orderers/orderer1.ICDD.ASTRI.org/tls/server.crt
+          - Host: orderer2.ICDD.ASTRI.org
+            Port: 7050
+            ClientTLSCert: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/ICDD.ASTRI.org/orderers/orderer2.ICDD.ASTRI.org/tls/server.crt
+            ServerTLSCert: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/ICDD.ASTRI.org/orderers/orderer2.ICDD.ASTRI.org/tls/server.crt
+        Options:
+          TickInterval: 500ms
+          ElectionTick: 10
+          HeartbeatTick: 1
+          MaxInflightBlocks: 5
+          SnapshotIntervalSize: 20 MB
       Organizations:
-        - Name: Delphi.com
-          ID: OrdererMSP
-          MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/Delphi.com/msp
+        - Name: ICDD.ASTRI.org
+          ID: ICDDMSP
+          MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/ICDD.ASTRI.org/msp
     Consortiums:
       SampleConsortium:
         Organizations:

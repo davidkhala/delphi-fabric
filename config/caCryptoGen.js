@@ -76,9 +76,9 @@ exports.genAll = async (swarm) => {
 	{
 		const nodeType = 'orderer';
 
-		if (type === 'kafka') {
+		if (type === 'kafka' || type === 'etcdraft') {
 
-			const ordererOrgs = globalConfig.orderer.kafka.orgs;
+			const ordererOrgs = globalConfig.orderer[type].orgs;
 			for (const domain in ordererOrgs) {
 				const ordererConfig = ordererOrgs[domain];
 				const mspId = ordererConfig.mspid;

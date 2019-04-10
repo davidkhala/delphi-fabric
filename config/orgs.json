@@ -1,8 +1,9 @@
 {
   "TLS": true,
   "docker": {
-    "fabricTag": "1.4.0",
-    "thirdPartyTag": "0.4.14",
+    "fabricTag": "1.4.0-rc1",
+    "caTag": "1.4.0",
+    "thirdPartyTag": "0.4.15",
     "network": "delphiNetwork",
     "volumes": {
       "CONFIGTX": "Documents/delphi-fabric/config/configtx",
@@ -10,7 +11,7 @@
     }
   },
   "orderer": {
-    "type": "solo",
+    "type": "etcdraft",
     "genesis_block": {
       "file": "delphi.block",
       "profile": "delphiGenesis"
@@ -56,6 +57,27 @@
           "BROKER_ID": 3
         }
       },
+      "orgs": {
+        "ICDD.ASTRI.org": {
+          "mspid": "ICDDMSP",
+          "ca": {
+            "portHost": 7454
+          },
+          "orderers": {
+            "orderer0": {
+              "portHost": 7050
+            },
+            "orderer1": {
+              "portHost": 8050
+            },
+            "orderer2": {
+              "portHost": 9050
+            }
+          }
+        }
+      }
+    },
+    "etcdraft": {
       "orgs": {
         "ICDD.ASTRI.org": {
           "mspid": "ICDDMSP",

@@ -56,8 +56,7 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 
 		const Addresses = [];
 		const Organizations = [];
-		for (const ordererOrgName in globalConfig.orderer.kafka.orgs) {
-			const ordererOrgConfig = globalConfig.orderer.kafka.orgs[ordererOrgName];
+		for (const [ordererOrgName, ordererOrgConfig] of Object.entries(globalConfig.orderer.kafka.orgs)) {
 			for (const ordererName in ordererOrgConfig.orderers) {
 				Addresses.push(`${ordererName}.${ordererOrgName}:7050`);
 			}
@@ -78,7 +77,7 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 			Brokers: Object.keys(globalConfig.orderer.kafka.kafkas).map((kafka) => `${kafka}:9092`)
 		};
 		OrdererConfig.Organizations = Organizations;
-	} else {
+	} else if (globalConfig.orderer.type === 'solo') {
 		OrdererConfig.OrdererType = 'solo';
 		const {container_name, orgName, portHost} = ordererConfig.solo;
 		OrdererConfig.Addresses = [`${container_name}.${orgName}:${portHost}`];
@@ -92,6 +91,51 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 				MSPDir: cryptoPath.ordererOrgMSP()
 			}
 		];
+	} else if (globalConfig.orderer.type === 'etcdraft') {
+		OrdererConfig.OrdererType = 'etcdraft';
+
+		const Addresses = [];
+		const Organizations = [];
+		const Consenters = [];
+		for (const [ordererOrgName, ordererOrgConfig] of Object.entries(globalConfig.orderer.etcdraft.orgs)) {
+			const cryptoPath = new CryptoPath(MSPROOT, {
+				orderer: {
+					org: ordererOrgName
+				}
+			});
+			for (const ordererName in ordererOrgConfig.orderers) {
+				const ordererCryptoPath = new CryptoPath(MSPROOT, {
+					orderer: {
+						org: ordererOrgName, name: ordererName
+					}
+				});
+
+				const {cert} = ordererCryptoPath.TLSFile('orderer');
+				const Host = `${ordererName}.${ordererOrgName}`;
+				Addresses.push(`${Host}:7050`);
+				Consenters.push({Host, Port: 7050, ClientTLSCert: cert, ServerTLSCert: cert});
+			}
+
+			Organizations.push({
+				Name: ordererOrgName,
+				ID: ordererOrgConfig.mspid,
+				MSPDir: cryptoPath.ordererOrgMSP()
+			});
+		}
+		OrdererConfig.Addresses = Addresses;
+
+		const HeartbeatTick = 1;
+		OrdererConfig.EtcdRaft = {
+			Consenters,
+			Options: {
+				TickInterval: '500ms',
+				ElectionTick: Math.max(10, HeartbeatTick + 1),
+				HeartbeatTick,
+				MaxInflightBlocks: 5,
+				SnapshotIntervalSize: '20 MB'
+			}
+		};
+		OrdererConfig.Organizations = Organizations;
 	}
 	blockProfileConfig.Orderer = OrdererConfig;
 	const orgsConfig = globalConfig.orgs;
