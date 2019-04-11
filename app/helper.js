@@ -40,8 +40,11 @@ const preparePeer = (orgName, peerIndex, peerConfig) => {
 };
 exports.toLocalhostOrderer = (orderer) => {
 	const url = orderer.getUrl();
-	if (ordererConfig.type === 'kafka') {
-		for (const [ordererOrgName, ordererOrgConfig] of Object.entries(ordererConfig.kafka.orgs)) {
+	const {type} = ordererConfig;
+	if (type === 'solo') {
+		return newOrderer(ordererConfig.solo.container_name, ordererConfig.solo.orgName, ordererConfig.solo);
+	} else {
+		for (const [ordererOrgName, ordererOrgConfig] of Object.entries(ordererConfig[type].orgs)) {
 			const found = Object.keys(ordererOrgConfig.orderers).find((ordererName) => {
 				return url.includes(ordererName);
 			});
@@ -49,8 +52,6 @@ exports.toLocalhostOrderer = (orderer) => {
 				return newOrderer(found, ordererOrgName, ordererOrgConfig.orderers[found]);
 			}
 		}
-	} else {
-		return newOrderer(ordererConfig.solo.container_name, ordererConfig.solo.orgName, ordererConfig.solo);
 	}
 	return null;
 };
@@ -81,18 +82,18 @@ const newOrderer = (name, org, ordererSingleConfig) => {
 
 exports.newOrderers = () => {
 	const result = [];
-	if (ordererConfig.type === 'kafka') {
-		for (const ordererOrgName in ordererConfig.kafka.orgs) {
-			const ordererOrgConfig = ordererConfig.kafka.orgs[ordererOrgName];
+	const {type} = ordererConfig;
+	if (type === 'solo') {
+		const orderer = newOrderer(ordererConfig.solo.container_name, ordererConfig.solo.orgName, ordererConfig.solo);
+		result.push(orderer);
+	} else {
+		for (const [ordererOrgName, ordererOrgConfig] of Object.entries(ordererConfig[type].orgs)) {
 			for (const ordererName in ordererOrgConfig.orderers) {
 				const ordererSingleConfig = ordererOrgConfig.orderers[ordererName];
 				const orderer = newOrderer(ordererName, ordererOrgName, ordererSingleConfig);
 				result.push(orderer);
 			}
 		}
-	} else {
-		const orderer = newOrderer(ordererConfig.solo.container_name, ordererConfig.solo.orgName, ordererConfig.solo);
-		result.push(orderer);
 	}
 	return result;
 };
@@ -168,18 +169,19 @@ exports.findOrgConfig = (orgName, ordererName) => {
 		nodeType = 'peer';
 	} else {
 		nodeType = 'orderer';
-		if (ordererConfig.type === 'kafka') {
-			if (ordererConfig.kafka.orgs[orgName]) {
-				target = ordererConfig.kafka.orgs[orgName];
+		const {type} = ordererConfig;
+		if (type === 'solo') {
+			if (ordererConfig.solo.orgName === orgName) {
+				target = ordererConfig.solo;
+				portHost = target.portHost;
+			}
+		} else {
+			if (ordererConfig[type].orgs[orgName]) {
+				target = ordererConfig[type].orgs[orgName];
 				if (!ordererName) {
 					ordererName = randomKeyOf(target.orderers);
 				}
 				portHost = target.orderers[ordererName].portHost;
-			}
-		} else {
-			if (ordererConfig.solo.orgName === orgName) {
-				target = ordererConfig.solo;
-				portHost = target.portHost;
 			}
 		}
 	}
@@ -227,10 +229,11 @@ exports.randomOrg = (nodeType) => {
 	if (nodeType === 'peer') {
 		orgName = randomKeyOf(globalConfig.orgs);
 	} else if (nodeType === 'orderer') {
-		if (globalConfig.orderer.type === 'solo') {
+		const {type} = globalConfig.orderer;
+		if (type === 'solo') {
 			orgName = globalConfig.orderer.solo.orgName;
 		} else {
-			orgName = randomKeyOf(globalConfig.orderer.kafka.orgs);
+			orgName = randomKeyOf(globalConfig.orderer[type].orgs);
 		}
 	} else {
 		throw Error(`invalid nodeType ${nodeType}`);

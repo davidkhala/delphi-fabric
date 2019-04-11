@@ -20,15 +20,16 @@ exports.run = () => {
 
 		let signatures = [];
 		const ordererClients = [];
-		if (globalConfig.orderer.type === 'kafka') {
-			for (const ordererOrg in globalConfig.orderer.kafka.orgs) {
-				const client = await helper.getOrgAdmin(ordererOrg, 'orderer');
-				ordererClients.push(client);
-			}
-		} else {
+		const {type} = globalConfig.orderer;
+		if (type === 'solo') {
 			const ordererOrg = globalConfig.orderer.solo.orgName;
 			const client = await helper.getOrgAdmin(ordererOrg, 'orderer');
 			ordererClients.push(client);
+		} else {
+			for (const ordererOrg in globalConfig.orderer[type].orgs) {
+				const client = await helper.getOrgAdmin(ordererOrg, 'orderer');
+				ordererClients.push(client);
+			}
 		}
 		const {signatures: ordererAdminSigns} = signUtil.signs(ordererClients, proto);
 		signatures = signatures.concat(ordererAdminSigns);

@@ -76,8 +76,34 @@ exports.genAll = async (swarm) => {
 	{
 		const nodeType = 'orderer';
 
-		if (type === 'kafka' || type === 'etcdraft') {
+		if (type === 'solo') {
+			const ordererConfig = globalConfig.orderer.solo;
+			const mspId = ordererConfig.mspid;
 
+			const domain = ordererConfig.orgName;
+			const adminCryptoPath = new CryptoPath(caCryptoConfig, {
+				orderer: {
+					org: domain
+				},
+				password: userUtil.adminPwd,
+				user: {
+					name: userUtil.adminName
+				}
+			});
+
+			const caUrl = `${protocol}://localhost:${ordererConfig.ca.portHost}`;
+			const caService = await getCaService(caUrl, domain, swarm);
+			const admin = await init(caService, adminCryptoPath, nodeType, mspId);
+			const cryptoPath = new CryptoPath(caCryptoConfig, {
+				orderer: {
+					org: domain, name: ordererConfig.container_name
+				},
+				user: {
+					name: userUtil.adminName
+				}
+			});
+			await genOrderer(caService, cryptoPath, admin, {TLS});
+		} else {
 			const ordererOrgs = globalConfig.orderer[type].orgs;
 			for (const domain in ordererOrgs) {
 				const ordererConfig = ordererOrgs[domain];
@@ -107,37 +133,8 @@ exports.genAll = async (swarm) => {
 					promises.push(genOrderer(caService, cryptoPath, admin, {TLS}));
 				}
 				await Promise.all(promises);
-
-
 			}
 
-		} else {
-			const ordererConfig = globalConfig.orderer.solo;
-			const mspId = ordererConfig.mspid;
-
-			const domain = ordererConfig.orgName;
-			const adminCryptoPath = new CryptoPath(caCryptoConfig, {
-				orderer: {
-					org: domain
-				},
-				password: userUtil.adminPwd,
-				user: {
-					name: userUtil.adminName
-				}
-			});
-
-			const caUrl = `${protocol}://localhost:${ordererConfig.ca.portHost}`;
-			const caService = await getCaService(caUrl, domain, swarm);
-			const admin = await init(caService, adminCryptoPath, nodeType, mspId);
-			const cryptoPath = new CryptoPath(caCryptoConfig, {
-				orderer: {
-					org: domain, name: ordererConfig.container_name
-				},
-				user: {
-					name: userUtil.adminName
-				}
-			});
-			await genOrderer(caService, cryptoPath, admin, {TLS});
 		}
 	}
 	// gen peers
