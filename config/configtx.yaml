@@ -62,6 +62,16 @@ Profiles:
         - Name: ICDD.ASTRI.org
           ID: ICDDMSP
           MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/ICDD.ASTRI.org/msp
+          Policies:
+            Readers:
+              Type: Signature
+              Rule: OR('ICDDMSP.member')
+            Writers:
+              Type: Signature
+              Rule: OR('ICDDMSP.member')
+            Admins:
+              Type: Signature
+              Rule: OR('ICDDMSP.admin')
     Consortiums:
       SampleConsortium:
         Organizations:

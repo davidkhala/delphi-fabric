@@ -1,5 +1,5 @@
 const globalConfig = require('../../config/orgs');
-const {TLS, docker: {fabricTag, network, volumes: {MSPROOT: mspDir}}, orderer: {genesis_block: {file: BLOCK_FILE}}} = globalConfig;
+const {TLS, docker: {fabricTag, network, volumes: {MSPROOT: mspDir}}, orderer: {type: OrdererType, genesis_block: {file: BLOCK_FILE}}} = globalConfig;
 const protocol = TLS ? 'https' : 'http';
 const logger = require('../../common/nodejs/logger').new('local orderer');
 const {CryptoPath} = require('../../common/nodejs/path');
@@ -9,7 +9,7 @@ const {swarmServiceName, inflateContainerName, containerDelete, containerStart} 
 const {runOrderer, runCA} = require('../../common/nodejs/fabric-dockerode');
 const dockerCmd = require('../../common/docker/nodejs/dockerCmd');
 const {RequestPromise} = require('khala-nodeutils/request');
-const {fsExtra, sleep,homeResolve} = require('../../common/nodejs/helper').nodeUtil.helper();
+const {fsExtra, sleep, homeResolve} = require('../../common/nodejs/helper').nodeUtil.helper();
 const peerUtil = require('../../common/nodejs/peer');
 const helper = require('../../app/helper');
 const caCryptoConfig = homeResolve(mspDir);
@@ -124,7 +124,7 @@ const runWithNewOrg = async (action) => {
 		const Env = ordererUtil.envBuilder({
 			BLOCK_FILE, msp: {
 				configPath, id: mspid
-			}, kafkas: true, tls
+			}, OrdererType, tls
 		});
 
 		const createOptions = {
@@ -213,42 +213,37 @@ const run = async (orgName, caService, admin, action, mspid) => {
 	const url = `http://localhost:${swarmServerPort}/channel/newOrderer`;
 
 
-	try {
-		await RequestPromise({url, body: {address: ordererAdress}});
+	await RequestPromise({url, body: {address: ordererAdress}});
 
-		await genOrderer(caService, hostCryptoPath, admin, {TLS});
+	await genOrderer(caService, hostCryptoPath, admin, {TLS});
 
 
-		const {MSPROOT} = peerUtil.container;
+	const {MSPROOT} = peerUtil.container;
 
-		const cryptoPath = new CryptoPath(MSPROOT, {
-			orderer: {
-				org: orgName, name: ordererName
-			},
-			password: 'passwd',
-			user: {
-				name: 'Admin'
-			}
-		});
-		const tls = TLS ? cryptoPath.TLSFile(nodeType) : undefined;
-		const configPath = cryptoPath.MSP(nodeType);
-		await runOrderer({
-			container_name, imageTag,
-			port: 9050, network,
-			BLOCK_FILE, CONFIGTXVolume: 'CONFIGTX',
-			msp: {
-				id: mspid,
-				configPath,
-				volumeName: 'MSPROOT'
-			},
-			kafkas: true,
-			tls
-		});
+	const cryptoPath = new CryptoPath(MSPROOT, {
+		orderer: {
+			org: orgName, name: ordererName
+		},
+		password: 'passwd',
+		user: {
+			name: 'Admin'
+		}
+	});
+	const tls = TLS ? cryptoPath.TLSFile(nodeType) : undefined;
+	const configPath = cryptoPath.MSP(nodeType);
+	await runOrderer({
+		container_name, imageTag,
+		port: 9050, network,
+		BLOCK_FILE, CONFIGTXVolume: 'CONFIGTX',
+		msp: {
+			id: mspid,
+			configPath,
+			volumeName: 'MSPROOT'
+		},
+		OrdererType,
+		tls
+	});
 
-	} catch (e) {
-		logger.error(e);
-		process.exit(1);
-	}
 
 };
 runWithNewOrg(process.env.action);

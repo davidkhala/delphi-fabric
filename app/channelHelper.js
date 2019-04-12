@@ -49,14 +49,8 @@ exports.joinAll = async (channelName) => {
 			return orderers[0];
 		};
 		const orderer = await waitForOrderer();
-		// Invalid results returned ::SERVICE_UNAVAILABLE
 		for (const peer of peers) {
-			try {
-				await join(channel, peer, orderer);
-			} catch (e) {
-				logger.error(e);
-			}
-
+			await join(channel, peer, orderer);
 		}
 	}
 
@@ -75,6 +69,5 @@ exports.updateAnchorPeers = async (configtxYaml, channelName, orgName) => {
 	const eventHub = newEventHub(channel, peer, true);
 
 	await Promise.all([updateAnchorPeers(channel, anchorTx, orderer), blockWaiter(eventHub, 1)]);
-
 
 };

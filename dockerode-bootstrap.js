@@ -43,7 +43,7 @@ exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPRO
 	const cryptoType = 'orderer';
 	const orderers = [];
 
-	const toggle = async ({orderer, domain, port, mspid}, kafka, stateVolume, operations) => {
+	const toggle = async ({orderer, domain, port, mspid}, OrdererType, stateVolume, operations) => {
 		const cryptoPath = new CryptoPath(MSPROOT, {
 			orderer: {org: domain, name: orderer}
 		});
@@ -76,7 +76,7 @@ exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPRO
 						configPath,
 						id: mspid
 					}, CONFIGTXVolume, BLOCK_FILE,
-					kafkas: kafka,
+					OrdererType,
 					tls,
 					Constraints
 				});
@@ -90,7 +90,7 @@ exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPRO
 						configPath,
 						volumeName: MSPROOTVolume
 					},
-					kafkas: kafka,
+					OrdererType,
 					tls, stateVolume
 				}, operations);
 			}
@@ -104,7 +104,7 @@ exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPRO
 		if (stateVolume) {
 			stateVolume = homeResolve(stateVolume);
 		}
-		await toggle({orderer, domain, port, mspid}, undefined, stateVolume, operations);
+		await toggle({orderer, domain, port, mspid}, type, stateVolume, operations);
 	} else {
 		const ordererOrgs = globalConfig.orderer[type].orgs;
 		for (const [domain, ordererOrgConfig] of Object.entries(ordererOrgs)) {
@@ -115,7 +115,7 @@ exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPRO
 					stateVolume = homeResolve(stateVolume);
 				}
 				const {portHost, operations} = ordererConfig;
-				await toggle({orderer, domain, port: portHost, mspid}, true, stateVolume, operations);
+				await toggle({orderer, domain, port: portHost, mspid}, type, stateVolume, operations);
 			}
 		}
 	}

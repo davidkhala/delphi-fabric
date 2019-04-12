@@ -1,5 +1,5 @@
 const {
-	containerDelete,
+	containerDelete
 } = require('../../common/docker/nodejs/dockerode-util');
 const {
 	runOrderer
@@ -10,7 +10,7 @@ const globalConfig = require('../../config/orgs');
 const {CryptoPath} = require('../../common/nodejs/path');
 const peerUtil = require('../../common/nodejs/peer');
 const org = 'ICDD.ASTRI.org';
-const {fabricTag, network} = globalConfig.docker;
+const {docker: {fabricTag, network}, orderer: {type: OrdererType}} = globalConfig;
 const imageTag = `${fabricTag}`;
 const targetOrderer = 'orderer2';
 
@@ -36,7 +36,7 @@ const flow = async () => {
 			configPath,
 			volumeName: 'MSPROOT'
 		},
-		kafkas: true,
+		OrdererType,
 		tls: false,
 		stateVolume
 	});

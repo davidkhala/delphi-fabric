@@ -1,4 +1,5 @@
 const globalConfig = require('./orgs.json');
+const {TLS} = globalConfig;
 const path = require('path');
 const yaml = require('../common/nodejs/helper').nodeUtil.yaml();
 const {fsExtra} = require('../common/nodejs/helper').nodeUtil.helper();
@@ -15,6 +16,53 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 		fsExtra.removeSync(configtxFile);
 	}
 
+	const OrganizationBuilder = (orgName, orgConfig, anchorIndexes, forChannel, nodeType = 'peer') => {
+		const cryptoPath = new CryptoPath(MSPROOT, {
+			[nodeType]: {
+				org: orgName
+			}
+		});
+		const result = {
+			Name: orgName,
+			ID: orgConfig.mspid,
+			MSPDir: cryptoPath[`${nodeType}OrgMSP`](),
+			Policies: {
+				Readers: {
+					Type: 'Signature',
+					Rule: `OR('${orgConfig.mspid}.member')`
+				},
+				Writers: {
+					Type: 'Signature',
+					Rule: `OR('${orgConfig.mspid}.member')`
+				},
+				Admins: {
+					Type: 'Signature',
+					Rule: `OR('${orgConfig.mspid}.admin')`
+				}
+			}
+		};
+		if (Array.isArray(anchorIndexes)) {
+
+			result.AnchorPeers = anchorIndexes.map((anchorIndex) => {
+				const anchorPeerCryptoPath = new CryptoPath(MSPROOT, {
+					peer: {
+						org: orgName, name: `peer${anchorIndex}`
+					}
+				});
+				return {
+					Host: anchorPeerCryptoPath.peerHostName,
+					Port: 7051
+				};
+			});
+			delete result.ID;
+			delete result.MSPDir;
+			delete result.Policies;
+		}
+		if (forChannel) {
+			result.AnchorPeers = [{}];
+		}
+		return result;
+	};
 
 	const blockProfileConfig = {
 		Capabilities: {
@@ -60,16 +108,7 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 			for (const ordererName in ordererOrgConfig.orderers) {
 				Addresses.push(`${ordererName}.${ordererOrgName}:7050`);
 			}
-			const cryptoPath = new CryptoPath(MSPROOT, {
-				orderer: {
-					org: ordererOrgName
-				}
-			});
-			Organizations.push({
-				Name: ordererOrgName,
-				ID: ordererOrgConfig.mspid,
-				MSPDir: cryptoPath.ordererOrgMSP()
-			});
+			Organizations.push(OrganizationBuilder(ordererOrgName, ordererOrgConfig, undefined, undefined, 'orderer'));
 		}
 		OrdererConfig.Addresses = Addresses;
 
@@ -98,11 +137,6 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 		const Organizations = [];
 		const Consenters = [];
 		for (const [ordererOrgName, ordererOrgConfig] of Object.entries(globalConfig.orderer.etcdraft.orgs)) {
-			const cryptoPath = new CryptoPath(MSPROOT, {
-				orderer: {
-					org: ordererOrgName
-				}
-			});
 			for (const ordererName in ordererOrgConfig.orderers) {
 				const ordererCryptoPath = new CryptoPath(MSPROOT, {
 					orderer: {
@@ -113,14 +147,14 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 				const {cert} = ordererCryptoPath.TLSFile('orderer');
 				const Host = `${ordererName}.${ordererOrgName}`;
 				Addresses.push(`${Host}:7050`);
-				Consenters.push({Host, Port: 7050, ClientTLSCert: cert, ServerTLSCert: cert});
+				const consenter = {Host, Port: 7050};
+				if (TLS) {
+					consenter.ClientTLSCert = cert;
+					consenter.ServerTLSCert = cert;
+				}
+				Consenters.push(consenter);
 			}
-
-			Organizations.push({
-				Name: ordererOrgName,
-				ID: ordererOrgConfig.mspid,
-				MSPDir: cryptoPath.ordererOrgMSP()
-			});
+			Organizations.push(OrganizationBuilder(ordererOrgName, ordererOrgConfig, undefined, undefined, 'orderer'));
 		}
 		OrdererConfig.Addresses = Addresses;
 
@@ -128,11 +162,11 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 		OrdererConfig.EtcdRaft = {
 			Consenters,
 			Options: {
-				TickInterval: '500ms',
+				TickInterval: '500ms', // the time interval between two Node.Tick invocations.
 				ElectionTick: Math.max(10, HeartbeatTick + 1),
-				HeartbeatTick,
-				MaxInflightBlocks: 5,
-				SnapshotIntervalSize: '20 MB'
+				HeartbeatTick,     // a leader sends heartbeat messages to maintain its leadership every HeartbeatTick ticks.
+				MaxInflightBlocks: 5, // TODO limits the max number of in-flight append messages during optimistic replication phase.
+				SnapshotIntervalSize: '20 MB' // TODO number of bytes per which a snapshot is taken
 			}
 		};
 		OrdererConfig.Organizations = Organizations;
@@ -142,57 +176,8 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 	const Organizations = [];
 
 
-	const OrganizationBuilder = (orgName, anchorIndexes, forChannel) => {
-		const orgConfig = orgsConfig[orgName];
-
-		const cryptoPath = new CryptoPath(MSPROOT, {
-			peer: {
-				org: orgName
-			}
-		});
-		const result = {
-			Name: orgName,
-			ID: orgConfig.mspid,
-			MSPDir: cryptoPath.peerOrgMSP(),
-			Policies: {
-				Readers: {
-					Type: 'Signature',
-					Rule: `OR('${orgConfig.mspid}.member')`
-				},
-				Writers: {
-					Type: 'Signature',
-					Rule: `OR('${orgConfig.mspid}.member')`
-				},
-				Admins: {
-					Type: 'Signature',
-					Rule: `OR('${orgConfig.mspid}.admin')`
-				}
-			}
-		};
-		if (Array.isArray(anchorIndexes)) {
-
-			result.AnchorPeers = anchorIndexes.map((anchorIndex) => {
-				const anchorPeerCryptoPath = new CryptoPath(MSPROOT, {
-					peer: {
-						org: orgName, name: `peer${anchorIndex}`
-					}
-				});
-				return {
-					Host: anchorPeerCryptoPath.peerHostName,
-					Port: 7051
-				};
-			});
-			delete result.ID;
-			delete result.MSPDir;
-			delete result.Policies;
-		}
-		if (forChannel) {
-			result.AnchorPeers = [{}];
-		}
-		return result;
-	};
-	for (const orgName in orgsConfig) {
-		Organizations.push(OrganizationBuilder(orgName));
+	for (const [orgName, orgConfig] of Object.entries(orgsConfig)) {
+		Organizations.push(OrganizationBuilder(orgName, orgConfig));
 	}
 	blockProfileConfig.Consortiums = {
 		[consortiumName]: {
@@ -209,7 +194,7 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 		const PROFILE_CHANNEL = channelName;
 		const Organizations = [];
 		for (const orgName in channelConfig.orgs) {
-			Organizations.push(OrganizationBuilder(orgName, false, true));
+			Organizations.push(OrganizationBuilder(orgName, orgsConfig[orgName], undefined, true));
 		}
 		Profiles[PROFILE_CHANNEL] = {
 			Policies: implicitPolicies,
@@ -229,8 +214,8 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 	}
 	// setAnchorPeers profile
 	const OrganizationsForAnchorProfile = [];
-	for (const orgName in orgsConfig) {
-		OrganizationsForAnchorProfile.push(OrganizationBuilder(orgName, [0, 1]));// TODO anchorIndexes as parameters?
+	for (const [orgName, orgConfig] of Object.entries(orgsConfig)) {
+		OrganizationsForAnchorProfile.push(OrganizationBuilder(orgName, orgConfig, [0, 1]));// TODO anchorIndexes as parameters?
 	}
 	const setAnchorPeersProfile = {
 		Application: {
@@ -238,6 +223,5 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 		}
 	};
 	Profiles[PROFILE_ANCHORPEERS] = setAnchorPeersProfile;
-
 	yaml.write({Profiles}, configtxFile);
 };
