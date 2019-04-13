@@ -2,7 +2,7 @@
   "TLS": true,
   "docker": {
     "fabricTag": "1.4.1",
-    "caTag": "1.4.0",
+    "caTag": "1.4.1",
     "thirdPartyTag": "0.4.15",
     "network": "delphiNetwork",
     "volumes": {
