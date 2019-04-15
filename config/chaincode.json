@@ -34,22 +34,14 @@
   "global": {
     "path": "github.com/davidkhala/chaincode/golang/tokenCommon"
   },
-  "nodeSample": {
+  "nodeDiagnose": {
     "type": "node",
-    "path": "github.com/davidkhala/chaincode/nodejs/sample",
+    "path": "github.com/davidkhala/chaincode/nodejs/diagnose",
     "endorsingConfigs": {
       "n": 1,
       "mspId": {
-        "ASTRIMSP": 0
-      }
-    },
-    "collectionsConfig": {
-      "private1": {
-        "mspIds": [
-          "ASTRIMSP"
-        ],
-        "requiredPeerCount": 1,
-        "maxPeerCount": 2
+        "ASTRIMSP": 0,
+        "icddMSP": 0
       }
     }
   },
