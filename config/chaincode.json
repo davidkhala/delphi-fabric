@@ -52,5 +52,8 @@
         "maxPeerCount": 2
       }
     }
+  },
+  "playground": {
+    "path": "github.com/davidkhala/chaincode/golang/playground"
   }
 }
