@@ -11,3 +11,7 @@ exports.get = async (peers, clientPeerOrg, key) => {
 	const args = [key];
 	return query(peers, clientPeerOrg, chaincodeId, fcn, args);
 };
+exports.whoami = async (peers, clientPeerOrg) => {
+	const fcn = 'whoami';
+	return query(peers, clientPeerOrg, chaincodeId, fcn, []);
+};
