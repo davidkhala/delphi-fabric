@@ -70,7 +70,7 @@ Finished
 - chaincode "Indy": a fabric chaincode implementation of all claimed features of Hyperledger/indy
 - Suggestion from Paul: Question: are your repos more to do with Fabric itself, rather than pure Fabric developer resources (ie go/js/java/typescript chaincode/sdk work)? (I'm only concentrating on Fabric Developer resources in particular) If so - I would suggest to contact someone like Silona Bonewald to find a suitable home/new page on Confluence for that? I'm just asking where its 'natural' home is 🙂 Also I would suggest the README explains 1) what it is 2) what it does (as a goal of 'studying Fabric' resources) 3) what the consumer would get from trying it out or hope to achieve?
 - CRl: https://hyperledger-fabric.readthedocs.io/en/release-1.4/msp.html?highlight=CRL#msp-setup-on-the-peer-orderer-side
-
+- system upgrade: how to migrate to 1.4. from 1.1
  
 ## New feature, patch required for node-sdk
  
