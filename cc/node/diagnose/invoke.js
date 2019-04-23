@@ -1,5 +1,4 @@
-const {invoke, query} = require('../../app/invokeHelper');
-const logger = require('../../common/nodejs/logger').new('invoke:node diagnose', true);
+const {invoke, query} = require('../../../app/invokeHelper');
 const chaincodeId = 'nodeDiagnose';
 exports.put = async (peers, clientPeerOrg, key, value) => {
 	const fcn = 'put';

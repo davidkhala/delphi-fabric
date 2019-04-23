@@ -44,7 +44,7 @@ const task = async () => {
 };
 
 
-outputChannelJson();
+task();
 
 
 

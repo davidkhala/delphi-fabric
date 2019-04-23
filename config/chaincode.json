@@ -45,6 +45,10 @@
       }
     }
   },
+  "nodeStress": {
+    "type": "node",
+    "path": "github.com/davidkhala/chaincode/nodejs/stress"
+  },
   "playground": {
     "path": "github.com/davidkhala/chaincode/golang/playground"
   }
