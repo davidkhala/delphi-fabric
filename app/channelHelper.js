@@ -4,7 +4,7 @@ const ChannelUtil = require('../common/nodejs/channel');
 const {newEventHub, blockWaiter} = require('../common/nodejs/eventHub');
 const path = require('path');
 
-const {create, join, updateAnchorPeers} = ChannelUtil;
+const {create, join, updateAnchorPeers, getGenesisBlock} = ChannelUtil;
 const {genAnchorPeers} = require('../common/nodejs/binManager');
 const globalConfig = require('../config/orgs');
 const {sleep} = require('../common/nodejs/helper').nodeUtil.helper();
@@ -49,8 +49,9 @@ exports.joinAll = async (channelName) => {
 			return orderers[0];
 		};
 		const orderer = await waitForOrderer();
+		const block = await getGenesisBlock(channel, orderer);
 		for (const peer of peers) {
-			await join(channel, peer, orderer);
+			await join(channel, peer, block);
 		}
 	}
 
