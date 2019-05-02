@@ -31,6 +31,7 @@ const outputChannelJson = async (peer) => {
 	fsExtra.outputFileSync(`${channel.getName()}.json`, original_config);
 };
 const taskViewChannelBlock = async () => {
+	await task();
 	const client = await helper.getOrgAdmin(undefined, 'peer');
 	const channel = helper.prepareChannel(channelName, client);
 	const orderer = ChannelUtil.getOrderers(channel, false)[0];
@@ -51,7 +52,7 @@ const task = async () => {
 };
 
 
-taskViewChannelBlock();
+task();
 
 
 
