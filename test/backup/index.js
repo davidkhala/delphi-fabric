@@ -1,6 +1,6 @@
 const {
 	containerDelete
-} = require('../../common/docker/nodejs/dockerode-util');
+} = require('../../common/nodejs/helper').dockerode.util;
 const {
 	runPeer
 } = require('../../common/nodejs/fabric-dockerode');

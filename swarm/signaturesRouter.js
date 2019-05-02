@@ -4,7 +4,6 @@ const logger = require('../common/nodejs/logger').new('router signature');
 const signUtil = require('../common/nodejs/multiSign');
 const EventHubUtil = require('../common/nodejs/eventHub');
 const {channelUpdate, ConfigFactory, getChannelConfigReadable} = require('../common/nodejs/configtxlator');
-const {nodeList, prune: {nodes: pruneNodes}} = require('../common/docker/nodejs/dockerode-util');
 const helper = require('../app/helper');
 const {projectResolve} = helper;
 const Multer = require('multer');
@@ -17,7 +16,7 @@ const {getSignatures} = require('./serverClient');
 
 const channelUtil = require('../common/nodejs/channel');
 const {sha2_256} = require('../common/nodejs/helper');
-
+const {nodeList, prune: {nodes: pruneNodes}} = require('../common/nodejs/helper').dockerode.swarmUtil;
 router.post('/getSwarmSignatures', multerCache.single('proto'), async (req, res) => {
 	try {
 		if (!req.file) {

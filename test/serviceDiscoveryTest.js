@@ -14,7 +14,7 @@ const {discoveryChaincodeInterestBuilder} = require('../app/chaincodeHelper');
 const {globalPeers, initialize, discover, discoverPretty} = require('../common/nodejs/serviceDiscovery');
 const ChannelUtil = require('../common/nodejs/channel');
 const OrdererUtil = require('../common/nodejs/orderer');
-const {containerDelete} = require('../common/docker/nodejs/dockerode-util');
+const {containerDelete} = require('../common/nodejs/helper').dockerode.util;
 const deletePeer = async () => {
 	const containerName = 'peer0.ASTRI.org';
 	await containerDelete(containerName);

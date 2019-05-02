@@ -12,16 +12,16 @@ const {
 } = require('./common/nodejs/fabric-dockerode');
 const ClientUtil = require('./common/nodejs/client');
 const {CryptoPath} = require('./common/nodejs/path');
-const {nodeUtil} = require('./common/nodejs/helper');
+const {nodeUtil, dockerode} = require('./common/nodejs/helper');
 const {PM2} = require('khala-pm2');
 const {ping} = nodeUtil.request();
 
 const {
 	containerDelete, volumeCreateIfNotExist, networkCreateIfNotExist,
 	volumeRemove, prune: {system: pruneLocalSystem}
-} = require('./common/docker/nodejs/dockerode-util');
-const {swarmServiceName, constraintSelf, serviceDelete, prune: {system: pruneSwarmSystem}} = require('./common/docker/nodejs/dockerode-swarm-util');
-const {advertiseAddr, joinToken} = require('./common/docker/nodejs/dockerCmd');
+} = dockerode.util;
+const {swarmServiceName, constraintSelf, serviceDelete, prune: {system: pruneSwarmSystem}} = dockerode.swarmUtil;
+const {advertiseAddr, joinToken} = dockerode.cmd;
 const {hostname, homeResolve, fsExtra} = require('./common/nodejs/helper').nodeUtil.helper();
 const MSPROOT = homeResolve(globalConfig.docker.volumes.MSPROOT);
 const CONFIGTX = homeResolve(globalConfig.docker.volumes.CONFIGTX);
