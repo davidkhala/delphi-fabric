@@ -9,10 +9,10 @@ const {container_name, port: dbPort} = swarmConfig[db];
 const path = require('path');
 
 const {sha2_256, nodeUtil} = require('../common/nodejs/helper');
-const {fsExtra,homeResolve} = nodeUtil.helper();
+const {fsExtra, homeResolve} = nodeUtil.helper();
 const {DBInterface} = require('khala-kvdb');
 
-const dockerUtil = require('../common/docker/nodejs/dockerode-util');
+const dockerUtil = require('../common/nodejs/helper').dockerode.util;
 
 const dbMap = {
 	Couchdb: class extends DBInterface {
