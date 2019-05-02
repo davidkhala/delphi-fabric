@@ -23,12 +23,19 @@ const anchorPeerTask = async () => {
 };
 const outputChannelJson = async (peer) => {
 	const configtxlator = require('../common/nodejs/configtxlator');
-	const client = await helper.getOrgAdmin(!!peer ? peer.peerConfig.orgName : undefined, !!peer ? 'peer' : 'orderer');
+	const client = await helper.getOrgAdmin(peer ? peer.peerConfig.orgName : undefined, peer ? 'peer' : 'orderer');
 
-	const channel = helper.prepareChannel(!!peer ? channelName : undefined, client);
+	const channel = helper.prepareChannel(peer ? channelName : undefined, client);
 	const {original_config} = await configtxlator.getChannelConfigReadable(channel, peer);
 
 	fsExtra.outputFileSync(`${channel.getName()}.json`, original_config);
+};
+const taskViewChannelBlock = async () => {
+	const client = await helper.getOrgAdmin(undefined, 'peer');
+	const channel = helper.prepareChannel(channelName, client);
+	const orderer = ChannelUtil.getOrderers(channel, false)[0];
+	const block = await ChannelUtil.getGenesisBlock(channel, orderer);
+	console.log(block);
 };
 const task = async () => {
 	const peerOrg = helper.randomOrg('peer');
@@ -44,7 +51,7 @@ const task = async () => {
 };
 
 
-task();
+taskViewChannelBlock();
 
 
 
