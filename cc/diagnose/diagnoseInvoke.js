@@ -37,9 +37,9 @@ exports.cross = async (peers, clientPeerOrg, targetChaincode, fcn, args) => {
 
 const {queryBuilder} = require('../../common/nodejs/couchdb');
 
-exports.richQuery = async (peers, clientPeerOrg) => {
+exports.richQuery = async (peers, clientPeerOrg, selector) => {
 	const fcn = 'richQuery';
-	const args = [queryBuilder(['Time'], 1)];
+	const args = [queryBuilder(selector, ['Time'], 1)];
 	return query(peers, clientPeerOrg, chaincodeId, fcn, args);
 };
 exports.putEndorsement = async (peers, clientPeerOrg, key, mspids) => {

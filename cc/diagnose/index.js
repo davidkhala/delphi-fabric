@@ -126,6 +126,5 @@ const taskOverList = async () => {
 };
 const task = async () => {
 	await DRInstall.task();
-	await getCertIDTest()
 };
 task();
