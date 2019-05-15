@@ -2,8 +2,8 @@ const helper = require('../../app/helper');
 const logger = require('../../common/nodejs/logger').new('invoke:master', true);
 const {stopPeer, resumePeer} = require('../backup');
 const {sleep} = require('../../common/nodejs/helper').nodeUtil.helper();
-const {putPrivate, getPrivate} = require('../../cc/master/masterInvoke');
-const install = require('../../cc/master/masterInstall');
+const {putPrivate, getPrivate} = require('../../cc/golang/master/masterInvoke');
+const install = require('../../cc/golang/master/masterInstall');
 const flow = async () => {
 	await install.task();
 	const offlineOrg = 'ASTRI.org';

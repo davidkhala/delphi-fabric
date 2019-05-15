@@ -1,6 +1,6 @@
-const {installAll, installs} = require('../../app/installHelper');
-const {instantiate} = require('../../app/instantiateHelper');
-const helper = require('../../app/helper');
+const {installAll, installs} = require('../../../app/installHelper');
+const {instantiate} = require('../../../app/instantiateHelper');
+const helper = require('../../../app/helper');
 exports.task2 = async () => {
 	await installAll('global');
 	const org1 = 'ASTRI.org';

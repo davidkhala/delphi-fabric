@@ -1,6 +1,6 @@
 const {panic} = require('./diagnoseInvoke');
-const logger = require('../../common/nodejs/logger').new('invoke:diagnose', true);
-const helper = require('../../app/helper');
+const logger = require('../../../common/nodejs/logger').new('invoke:diagnose', true);
+const helper = require('../../../app/helper');
 
 const flow = async () => {
 	const org1 = 'icdd';

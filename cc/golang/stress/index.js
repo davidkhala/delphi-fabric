@@ -1,6 +1,6 @@
 const {touch} = require('./stressInvoke');
 
-const helper = require('../../app/helper');
+const helper = require('../../../app/helper');
 
 const install = require('./stressInstall');
 const flow = async () => {

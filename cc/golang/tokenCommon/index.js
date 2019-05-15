@@ -1,7 +1,7 @@
 const install = require('./install');
 const invoke = require('./invoke');
-const helper = require('../../app/helper');
-const logger = require('../../common/nodejs/logger').new('tokenCommon', true);
+const helper = require('../../../app/helper');
+const logger = require('../../../common/nodejs/logger').new('tokenCommon', true);
 const flow2 = async () => {
 	await install.task2();
 	const org1 = 'ASTRI.org';

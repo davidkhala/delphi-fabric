@@ -1,5 +1,5 @@
 const helper = require('../../app/helper');
-const {richQuery} = require('../../cc/diagnose/diagnoseInvoke');
+const {richQuery} = require('../../cc/golang/diagnose/diagnoseInvoke');
 const task = async () => {
 	const org1 = 'icdd';
 	const peers = helper.newPeers([0], org1);

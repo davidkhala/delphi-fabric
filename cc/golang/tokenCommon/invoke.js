@@ -1,4 +1,4 @@
-const {invoke} = require('../../app/invokeHelper');
+const {invoke} = require('../../../app/invokeHelper');
 
 exports.putToken = async (peers, clientPeerOrg, token) => {
 	const chaincodeId = 'global';

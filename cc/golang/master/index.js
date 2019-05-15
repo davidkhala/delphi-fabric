@@ -1,5 +1,5 @@
-const helper = require('../../app/helper');
-const logger = require('../../common/nodejs/logger').new('invoke:master', true);
+const helper = require('../../../app/helper');
+const logger = require('../../../common/nodejs/logger').new('invoke:master', true);
 const {increase, putPrivate} = require('./masterInvoke');
 const install = require('./masterInstall');
 const flow = async () => {

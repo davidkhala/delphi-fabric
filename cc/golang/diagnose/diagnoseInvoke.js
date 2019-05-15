@@ -1,5 +1,5 @@
-const {invoke, query} = require('../../app/invokeHelper');
-const logger = require('../../common/nodejs/logger').new('invoke:diagnose', true);
+const {invoke, query} = require('../../../app/invokeHelper');
+const logger = require('../../../common/nodejs/logger').new('invoke:diagnose', true);
 const chaincodeId = 'diagnose';
 exports.put = async (peers, clientPeerOrg, key, value) => {
 	const fcn = 'put';
@@ -35,7 +35,7 @@ exports.cross = async (peers, clientPeerOrg, targetChaincode, fcn, args) => {
 	return invoke(peers, clientPeerOrg, chaincodeId, 'delegate', Args);
 };
 
-const {queryBuilder} = require('../../common/nodejs/couchdb');
+const {queryBuilder} = require('../../../common/nodejs/couchdb');
 
 exports.richQuery = async (peers, clientPeerOrg, selector) => {
 	const fcn = 'richQuery';
