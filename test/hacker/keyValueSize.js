@@ -5,8 +5,8 @@ const {nodeUtil} = require('../../common/nodejs/helper');
 const {fsExtra} = nodeUtil.helper();
 const logger = nodeUtil.devLogger('test:keyValueSize');
 const path = require('path');
-const imgPath = path.resolve(__dirname, '2m.jpg');
-const outImgPath = path.resolve(__dirname, `${new Date().getTime()}.png`);
+const imgPath = path.resolve(__dirname, '8m.jpg');
+const outImgPath = path.resolve(__dirname, `${new Date().getTime()}.jpg`);
 const helper = require('../../app/helper');
 const taskKeySize = async () => {
 	// await install.task();//
