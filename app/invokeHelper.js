@@ -18,12 +18,12 @@ exports.invoke = async (peers, clientPeerOrg, chaincodeId, fcn, args = [], trans
 	logger.debug('invoke', result);
 	return result;
 };
-exports.query = async (peers, clientPeerOrg, chaincodeId, fcn, args = [], transientMap) => {
+exports.query = async (peers, clientPeerOrg, chaincodeId, fcn, args = [], transientMap, rawPayload) => {
 	logger.debug('query', 'client org', clientPeerOrg);
 	const client = await helper.getOrgAdmin(clientPeerOrg);
 	const channel = helper.prepareChannel(channelName, client, true);
 	const {proposalResponses} = await query(channel, peers, {chaincodeId, fcn, args, transientMap});
-	const result = proposalResponses.map((entry) => proposalFlatten(proposalStringify(entry)));
+	const result = proposalResponses.map((entry) => proposalFlatten(rawPayload ? entry : proposalStringify(entry)));
 	return result;
 };
 exports.listenChaincodeEvent = async (peers, clientPeerOrg, chaincodeId, eventName = /event/i) => {

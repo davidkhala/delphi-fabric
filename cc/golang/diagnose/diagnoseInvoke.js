@@ -14,7 +14,7 @@ exports.putRaw = async (peers, clientPeerOrg, key, value) => {
 exports.getRaw = async (peers, clientPeerOrg, key) => {
 	const fcn = 'getRaw';
 	const args = [key];
-	return query(peers, clientPeerOrg, chaincodeId, fcn, args);
+	return query(peers, clientPeerOrg, chaincodeId, fcn, args, undefined, true);
 };
 exports.get = async (peers, clientPeerOrg, key) => {
 	const fcn = 'get';
