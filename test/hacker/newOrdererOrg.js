@@ -1,7 +1,8 @@
 const globalConfig = require('../../config/orgs');
 const {TLS, docker: {fabricTag, network, volumes: {MSPROOT: mspDir}}, orderer: {type: OrdererType, genesis_block: {file: BLOCK_FILE}}} = globalConfig;
 const protocol = TLS ? 'https' : 'http';
-const logger = require('../../common/nodejs/logger').new('local orderer');
+const helper = require('../../app/helper');
+const logger = helper.getLogger('test:add local orderer');
 const {CryptoPath} = require('../../common/nodejs/path');
 const {genOrderer, init} = require('../../common/nodejs/ca-crypto-gen');
 const caUtil = require('../../common/nodejs/ca');
@@ -13,7 +14,7 @@ const {runOrderer, runCA} = require('../../common/nodejs/fabric-dockerode');
 const {RequestPromise} = require('khala-nodeutils/request');
 const {fsExtra, sleep, homeResolve} = nodeUtil.helper();
 const peerUtil = require('../../common/nodejs/peer');
-const helper = require('../../app/helper');
+
 const caCryptoConfig = homeResolve(mspDir);
 const {port: swarmServerPort} = require('../../swarm/swarm.json').swarmServer;
 const fs = require('fs');

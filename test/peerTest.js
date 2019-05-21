@@ -1,5 +1,5 @@
 const helper = require('../app/helper');
-const logger = require('../common/nodejs/logger').new('test:orderer', true);
+const logger = helper.getLogger('test:orderer');
 const PeerUtil = require('../common/nodejs/peer');
 const peers = helper.allPeers();
 const task = async () => {

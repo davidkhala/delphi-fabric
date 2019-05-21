@@ -2,7 +2,7 @@ const helper = require('../app/helper');
 const configtxlator = require('../common/nodejs/configtxlator');
 const channelName = 'allchannel';
 const {fsExtra} = require('khala-nodeutils/helper');
-const logger = require('../common/nodejs/logger').new('test:configtxlator');
+const logger = helper.getLogger('test:configtxlator');
 const appChannel = async () => {
 	try {
 		const peerClient = await helper.getOrgAdmin(undefined, 'peer'); // only peer user can read channel

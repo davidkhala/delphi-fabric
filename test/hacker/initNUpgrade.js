@@ -3,7 +3,7 @@ const {instantiate, upgradeToLatest} = require('../../app/instantiateHelper');
 const {installAll, incrementInstalls} = require('../../app/installHelper');
 const {invoke} = require('../../app/invokeHelper');
 const helper = require('../../app/helper');
-const logger = require('../../common/nodejs/logger').new('initNUpgrade', true);
+const logger = helper.getLogger('initNUpgrade');
 const initConflict = async () => {
 	const org2 = 'icdd';
 	const org1 = 'ASTRI.org';

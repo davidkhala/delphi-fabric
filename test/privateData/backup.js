@@ -1,5 +1,5 @@
 const helper = require('../../app/helper');
-const logger = require('../../common/nodejs/logger').new('invoke:master', true);
+const logger = helper.getLogger('test:backup: chaincode=master');
 const {stopPeer, resumePeer} = require('../backup');
 const {sleep} = require('../../common/nodejs/helper').nodeUtil.helper();
 const {putPrivate, getPrivate} = require('../../cc/golang/master/masterInvoke');

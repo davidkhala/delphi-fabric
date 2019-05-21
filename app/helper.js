@@ -1,4 +1,5 @@
-const logger = require('../common/nodejs/logger').new('Helper');
+const Logger = require('../common/nodejs/logger');
+const logger = Logger.new('Helper');
 const globalConfig = require('../config/orgs.json');
 
 const orgsConfig = globalConfig.orgs;
@@ -245,3 +246,10 @@ exports.randomChannelOrg = (channelName) => {
 	return randomKeyOf(channelsConfig[channelName].orgs);
 };
 exports.projectResolve = projectResolve;
+
+/**
+ * get a development and testing logger
+ * @param {string} moduleName
+ * @returns {*}
+ */
+exports.getLogger = (moduleName) => Logger.new(moduleName, true);

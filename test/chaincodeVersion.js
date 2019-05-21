@@ -1,7 +1,7 @@
 const {pruneChaincodeLegacy} = require('../common/nodejs/chaincodeVersion');
 const channelName = 'allchannel';
 const helper = require('../app/helper');
-const logger = require('../common/nodejs/logger').new('test:chaincodeVersion', true);
+const logger = helper.getLogger('test:chaincodeVersion');
 
 const chaincodeId = 'mainChain';
 const {instantiate, upgradeToLatest} = require('../app/instantiateHelper');

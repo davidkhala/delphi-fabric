@@ -7,9 +7,8 @@
  *           identity must have been loaded by a connection profile or by
  *           using the 'setAdminSigningIdentity' method.
  */
-const Logger = require('../common/nodejs/logger');
-const logger = Logger.new('test:serviceDiscovery', true);
 const helper = require('../app/helper');
+const logger = helper.getLogger('test:serviceDiscovery');
 const {discoveryChaincodeInterestBuilder} = require('../app/chaincodeHelper');
 const {globalPeers, initialize, discover, discoverPretty} = require('../common/nodejs/serviceDiscovery');
 const ChannelUtil = require('../common/nodejs/channel');
