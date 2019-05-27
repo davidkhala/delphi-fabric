@@ -71,5 +71,5 @@ else
 	./common/bin-manage/pullBIN.sh
 	npm install
 	updateChaincode
-	./common/docker/dockerSUDO.sh
+	curl --silent --show-error https://raw.githubusercontent.com/davidkhala/docker-manager/master/dockerSUDO.sh | bash
 fi
