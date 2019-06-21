@@ -8,5 +8,10 @@ const task = async () => {
 	const result = await OrdererUtil.ping(orderer);
 	logger.debug(orderer.toString(), result);
 };
-task();
+const composerPing = async () => {
+	const orderer = OrdererUtil.new({ordererPort: 7050});
+	const result = await OrdererUtil.ping(orderer);
+	logger.debug(orderer.toString(), result);
+};
+composerPing();
 
