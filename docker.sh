@@ -2,36 +2,36 @@
 set -e
 CURRENT=$(cd $(dirname ${BASH_SOURCE}) && pwd)
 
-function down() {
+down() {
 	node -e "require('./dockerode-bootstrap').down()"
 }
-function up() {
+up() {
 	prepareNetwork
 	node app/testChannel
 }
 
-function prepareNetwork() {
+prepareNetwork() {
 	node -e "require('./dockerode-bootstrap').up()"
 }
-function peerRecoverTest() {
+peerRecoverTest() {
 	down
 	sudo rm -rf $HOME/Documents/backupVolumes/
 	mkdir -p $HOME/Documents/backupVolumes/peer1.icdd.org/
 	up
 	node app/testPeerBackup
 }
-function ordererRecoverTest() {
+ordererRecoverTest() {
 	down
 	sudo rm -rf $HOME/Documents/backupVolumes/
 	mkdir -p $HOME/Documents/backupVolumes/orderer2/
 	up
 	node app/testOrdererBackup
 }
-function restart() {
+restart() {
 	down
 	up
 }
-function repeat() {
+repeat() {
 	local times=5
 	for ((i = 1; i <= times; i++)); do
 		./docker.sh
