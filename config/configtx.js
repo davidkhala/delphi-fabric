@@ -23,8 +23,8 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 			}
 		});
 		const result = {
-			Name: orgName,
-			ID: orgConfig.mspid,
+			Name: orgName,//Name is the key by which this org will be referenced in channel configuration transactions.
+			ID: orgConfig.mspid, //ID is the key by which this org's MSP definition will be referenced.
 			MSPDir: cryptoPath[`${nodeType}OrgMSP`](),
 			Policies: {
 				Readers: {
@@ -55,8 +55,6 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 				};
 			});
 			delete result.ID;
-			delete result.MSPDir;
-			delete result.Policies;
 		}
 		if (forChannel) {
 			result.AnchorPeers = [{}];
@@ -99,37 +97,11 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 			}
 		}
 	};
-	if (globalConfig.orderer.type === 'kafka') {
-		OrdererConfig.OrdererType = 'kafka';
-
-		const Addresses = [];
-		const Organizations = [];
-		for (const [ordererOrgName, ordererOrgConfig] of Object.entries(globalConfig.orderer.kafka.orgs)) {
-			for (const ordererName in ordererOrgConfig.orderers) {
-				Addresses.push(`${ordererName}.${ordererOrgName}:7050`);
-			}
-			Organizations.push(OrganizationBuilder(ordererOrgName, ordererOrgConfig, undefined, undefined, 'orderer'));
-		}
-		OrdererConfig.Addresses = Addresses;
-
-		OrdererConfig.Kafka = {
-			Brokers: Object.keys(globalConfig.orderer.kafka.kafkas).map((kafka) => `${kafka}:9092`)
-		};
-		OrdererConfig.Organizations = Organizations;
-	} else if (globalConfig.orderer.type === 'solo') {
+	if (globalConfig.orderer.type === 'solo') {
 		OrdererConfig.OrdererType = 'solo';
 		const {container_name, orgName, portHost} = ordererConfig.solo;
 		OrdererConfig.Addresses = [`${container_name}.${orgName}:${portHost}`];
-		const cryptoPath = new CryptoPath(MSPROOT, {
-			orderer: {org: ordererConfig.solo.orgName}
-		});
-		OrdererConfig.Organizations = [
-			{
-				Name: orgName,
-				ID: ordererConfig.solo.mspid,
-				MSPDir: cryptoPath.ordererOrgMSP()
-			}
-		];
+		OrdererConfig.Organizations = [OrganizationBuilder(orgName, ordererConfig.solo, undefined, undefined, 'orderer')];
 	} else if (globalConfig.orderer.type === 'etcdraft') {
 		OrdererConfig.OrdererType = 'etcdraft';
 
@@ -206,7 +178,8 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 				Policies: implicitPolicies,
 				Organizations,
 				Capabilities: {
-					V1_3: true
+					V1_3: true,
+					V2_0: true
 				}
 			}
 		};
@@ -218,7 +191,9 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 		OrganizationsForAnchorProfile.push(OrganizationBuilder(orgName, orgConfig, [0, 1]));// TODO anchorIndexes as parameters?
 	}
 	const setAnchorPeersProfile = {
+		Policies: implicitPolicies,
 		Application: {
+			Policies: implicitPolicies,
 			Organizations: OrganizationsForAnchorProfile
 		}
 	};

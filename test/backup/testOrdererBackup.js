@@ -18,6 +18,10 @@ const {MSPROOT} = peerUtil.container;
 const cryptoPath = new CryptoPath(MSPROOT, {
 	orderer: {org, name: targetOrderer}
 });
+/**
+ * @deprecated TODO until use etcdraft
+ * @returns {Promise<void>}
+ */
 const flow = async () => {
 	const ordererConfig = globalConfig.orderer.kafka.orgs[org];
 	let {portHost, stateVolume} = ordererConfig.orderers[targetOrderer];

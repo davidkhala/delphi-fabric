@@ -33,51 +33,29 @@ Profiles:
         BlockValidation:
           Type: ImplicitMeta
           Rule: ANY Writers
-      OrdererType: etcdraft
+      OrdererType: solo
       Addresses:
-        - 'orderer0.ICDD.ASTRI.org:7050'
-        - 'orderer1.ICDD.ASTRI.org:7050'
-        - 'orderer2.ICDD.ASTRI.org:7050'
-      EtcdRaft:
-        Consenters:
-          - Host: orderer0.ICDD.ASTRI.org
-            Port: 7050
-            ClientTLSCert: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/ICDD.ASTRI.org/orderers/orderer0.ICDD.ASTRI.org/tls/server.crt
-            ServerTLSCert: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/ICDD.ASTRI.org/orderers/orderer0.ICDD.ASTRI.org/tls/server.crt
-          - Host: orderer1.ICDD.ASTRI.org
-            Port: 7050
-            ClientTLSCert: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/ICDD.ASTRI.org/orderers/orderer1.ICDD.ASTRI.org/tls/server.crt
-            ServerTLSCert: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/ICDD.ASTRI.org/orderers/orderer1.ICDD.ASTRI.org/tls/server.crt
-          - Host: orderer2.ICDD.ASTRI.org
-            Port: 7050
-            ClientTLSCert: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/ICDD.ASTRI.org/orderers/orderer2.ICDD.ASTRI.org/tls/server.crt
-            ServerTLSCert: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/ICDD.ASTRI.org/orderers/orderer2.ICDD.ASTRI.org/tls/server.crt
-        Options:
-          TickInterval: 500ms
-          ElectionTick: 10
-          HeartbeatTick: 1
-          MaxInflightBlocks: 5
-          SnapshotIntervalSize: 20 MB
+        - 'orderer.Delphi.com:7050'
       Organizations:
-        - Name: ICDD.ASTRI.org
-          ID: ICDDMSP
-          MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/ICDD.ASTRI.org/msp
+        - Name: Delphi.com
+          ID: OrdererMSP
+          MSPDir: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/Delphi.com/msp
           Policies:
             Readers:
               Type: Signature
-              Rule: OR('ICDDMSP.member')
+              Rule: OR('OrdererMSP.member')
             Writers:
               Type: Signature
-              Rule: OR('ICDDMSP.member')
+              Rule: OR('OrdererMSP.member')
             Admins:
               Type: Signature
-              Rule: OR('ICDDMSP.admin')
+              Rule: OR('OrdererMSP.admin')
     Consortiums:
       SampleConsortium:
         Organizations:
           - Name: ASTRI.org
             ID: ASTRIMSP
-            MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/ASTRI.org/msp
+            MSPDir: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/ASTRI.org/msp
             Policies:
               Readers:
                 Type: Signature
@@ -90,7 +68,7 @@ Profiles:
                 Rule: OR('ASTRIMSP.admin')
           - Name: icdd
             ID: icddMSP
-            MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp
+            MSPDir: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp
             Policies:
               Readers:
                 Type: Signature
@@ -111,7 +89,7 @@ Profiles:
       Organizations:
         - Name: ASTRI.org
           ID: ASTRIMSP
-          MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/ASTRI.org/msp
+          MSPDir: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/ASTRI.org/msp
           Policies:
             Readers:
               Type: Signature
@@ -126,7 +104,7 @@ Profiles:
             - {}
         - Name: icdd
           ID: icddMSP
-          MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp
+          MSPDir: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp
           Policies:
             Readers:
               Type: Signature
@@ -141,16 +119,41 @@ Profiles:
             - {}
       Capabilities:
         V1_3: true
+        V2_0: true
   anchorPeers:
+    Policies: *ref_0
     Application:
+      Policies: *ref_0
       Organizations:
         - Name: ASTRI.org
+          MSPDir: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/ASTRI.org/msp
+          Policies:
+            Readers:
+              Type: Signature
+              Rule: OR('ASTRIMSP.member')
+            Writers:
+              Type: Signature
+              Rule: OR('ASTRIMSP.member')
+            Admins:
+              Type: Signature
+              Rule: OR('ASTRIMSP.admin')
           AnchorPeers:
             - Host: peer0.ASTRI.org
               Port: 7051
             - Host: peer1.ASTRI.org
               Port: 7051
         - Name: icdd
+          MSPDir: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp
+          Policies:
+            Readers:
+              Type: Signature
+              Rule: OR('icddMSP.member')
+            Writers:
+              Type: Signature
+              Rule: OR('icddMSP.member')
+            Admins:
+              Type: Signature
+              Rule: OR('icddMSP.admin')
           AnchorPeers:
             - Host: peer0.icdd
               Port: 7051

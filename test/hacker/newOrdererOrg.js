@@ -173,6 +173,11 @@ const runWithNewOrg = async (action) => {
 	}
 
 };
+/**
+ * @deprecated TODO until using etcdraft
+ * @param action
+ * @returns {Promise<void>}
+ */
 const runWithExistOrg = async (action) => {
 	const orgName = 'DelphiConsensus.Delphi.com';
 	const ordererConfig = globalConfig.orderer.kafka.orgs[orgName];
