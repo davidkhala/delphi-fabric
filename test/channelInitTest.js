@@ -1,3 +1,5 @@
+const {setGlobal} = require('../common/nodejs/logger');
+// setGlobal(true);
 const channelName = 'allchannel';
 const helper = require('../app/helper');
 const org = 'ASTRI.org';
@@ -15,5 +17,7 @@ const task = async () => {
 	const peer = helper.newPeer(0, org);
 	await ServiceDiscoveryUtil.initialize(channel, peer);
 	logger.info('after ini', channel.toString());// NOTE:can refresh orderers in network
+	logger.info('channel.getOrganisations()', channel.getOrganizations());
+	logger.info('pretty', ChannelUtil.pretty(channel))
 };
 task();
