@@ -24,23 +24,15 @@ exports.installAll = async (chaincodeId) => {
 
 
 exports.incrementInstalls = async (chaincodeId, orgName, peerIndexes) => {
-	const result = {};
 	const client = await helper.getOrgAdmin(orgName);
 	const peers = helper.newPeers(peerIndexes, orgName);
-	for (const peer of peers) {
-		const opt = await prepareInstall({chaincodeId});
-		const {chaincodeVersion} = await incrementInstall(peer, opt, client);
-		result[peer.getName()] = chaincodeVersion;
-	}
-	return result;
+	const opt = await prepareInstall({chaincodeId});
+	await incrementInstall(peers, opt, client);
 };
 exports.incrementInstallAll = async (chaincodeId) => {
-	let result = {};
 	const orgsConfig = channels[channelName].orgs;
 	for (const orgName in orgsConfig) {
 		const {peerIndexes} = orgsConfig[orgName];
-		const temp = await exports.incrementInstalls(chaincodeId, orgName, peerIndexes);
-		result = Object.assign(result, temp);
+		await exports.incrementInstalls(chaincodeId, orgName, peerIndexes);
 	}
-	return result;
 };

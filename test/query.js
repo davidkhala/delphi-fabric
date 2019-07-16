@@ -9,18 +9,17 @@
 	  previousBlockHash: 'd3b9daa05f453ce96f94666a04422b2b4ef5906590a331a11caed27215f47a87' }
  */
 
-const {chain} = require('../common/nodejs/query');
-const {touch} = require('../cc/golang/stress/stressInvoke');
+const {chain, chaincodesInstantiated, chaincodesInstalled} = require('../common/nodejs/query');
 const helper = require('../app/helper');
 const task = async () => {
 	const peers = helper.newPeers([0], 'icdd');
 	const clientOrg = 'icdd';
-	await touch(peers, clientOrg);
 	const client = await helper.getOrgAdmin(clientOrg);
 	const channel = helper.prepareChannel('allchannel', client);
-	const {pretty} = await chain(peers[0], channel);
-	console.log(pretty);
+	let result = await chain(peers[0], channel);
+	console.log('chainInfo', result.pretty);
 
-
+	result = await chaincodesInstantiated(peers[0], channel);
+	console.log('chaincodesInstantiated', result.pretty);
 };
 task();

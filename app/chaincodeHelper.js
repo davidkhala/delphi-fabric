@@ -1,8 +1,8 @@
 const {randomKeyOf} = require('../common/nodejs/helper').nodeUtil.random();
 const {install} = require('../common/nodejs/chaincode');
 const {instantiateOrUpgrade, invoke} = require('../common/nodejs/chaincodeHelper');
+const {incrementUpgrade} = require('../common/nodejs/chaincodeVersion');
 const {transactionProposal} = require('../common/nodejs/chaincode');
-const Logger = require('../common/nodejs/logger');
 const ClientUtil = require('../common/nodejs/client');
 const ChannelUtil = require('../common/nodejs/channel');
 const EventHubUtil = require('../common/nodejs/eventHub');
@@ -73,24 +73,8 @@ const configParser = (configs) => {
 	return result;
 
 };
-const defaultProposalTime = 45000;
-exports.instantiate = async (channel, richPeers, opts) => {
-	const {chaincodeId} = opts;
-	const policyConfig = configParser(chaincodeConfig[chaincodeId]);
 
-
-	const eventHubs = [];
-
-	for (const peer of richPeers) {
-		const eventHub = EventHubUtil.newEventHub(channel, peer, true);
-		eventHubs.push(eventHub);
-	}
-
-	const allConfig = Object.assign(policyConfig, opts);
-	return instantiateOrUpgrade('deploy', channel, richPeers, eventHubs, allConfig);
-};
-
-exports.upgrade = async (channel, richPeers, opts) => {
+exports.upgrade = async (channel, richPeers, opts, orderer) => {
 	const {chaincodeId} = opts;
 	const policyConfig = configParser(chaincodeConfig[chaincodeId]);
 
@@ -101,7 +85,7 @@ exports.upgrade = async (channel, richPeers, opts) => {
 		eventHubs.push(eventHub);
 	}
 	const allConfig = Object.assign(policyConfig, opts);
-	return instantiateOrUpgrade('upgrade', channel, richPeers, eventHubs, allConfig);
+	return incrementUpgrade(channel, richPeers, eventHubs, allConfig, orderer);
 };
 exports.invoke = async (channel, peers, {chaincodeId, fcn, args, transientMap}, nonAdminUser) => {
 	const eventHubs = [];
@@ -111,14 +95,14 @@ exports.invoke = async (channel, peers, {chaincodeId, fcn, args, transientMap}, 
 	}
 	const orderers = channel.getOrderers();
 	const orderer = orderers[randomKeyOf(orderers)];
+	const client = channel._clientContext;
 	if (nonAdminUser) {
-		const client = ClientUtil.new();
 		ClientUtil.setUser(client, nonAdminUser);
 		ChannelUtil.setClientContext(channel, client);
 	}
 
 
-	return await invoke(channel, peers, eventHubs, {
+	return await invoke(client, channel.getName(), peers, eventHubs, {
 		chaincodeId,
 		args,
 		fcn,

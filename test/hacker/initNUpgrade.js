@@ -1,5 +1,5 @@
 const chaincodeId = 'mainChain';
-const {instantiate, upgradeToLatest} = require('../../app/instantiateHelper');
+const {instantiate, upgrade} = require('../../app/instantiateHelper');
 const {installAll, incrementInstalls} = require('../../app/installHelper');
 const {invoke} = require('../../app/invokeHelper');
 const helper = require('../../app/helper');
@@ -30,7 +30,7 @@ const upgradeConflict = async () => {
 	logger.debug('incrementResult', incrementResult);
 
 	const nextVersion = Object.values(incrementResult)[0];
-	await upgradeToLatest(org2, peers[0], chaincodeId, 'version', ['0.0.1']);
+	await upgrade(org2, peers[0], chaincodeId, 'version', ['0.0.1']);
 
 	await wrongInstall(org1, [1], nextVersion);
 
