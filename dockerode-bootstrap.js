@@ -408,7 +408,6 @@ exports.down = async (swarm) => {
 		require('./swarm/signServer').clean();
 
 		await configtxlator('down');
-		ClientUtil.clean();
 	} catch (err) {
 		logger.error(err);
 		process.exit(1);
