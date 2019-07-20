@@ -9,12 +9,12 @@ for ((i = 2; i <= ${#}; i++)); do
 done
 
 utilsDir=$CURRENT/common/docker/utils/
-function gitSync() {
+gitSync() {
 	git pull
 	git submodule update --init --recursive
 }
 
-function pull() {
+pull() {
 	local fabricTag=1.4.1
 	local IMAGE_TAG="$fabricTag"
 	docker pull hyperledger/fabric-ccenv:$IMAGE_TAG
@@ -22,13 +22,13 @@ function pull() {
 	docker pull hyperledger/fabric-peer:$IMAGE_TAG
 	docker pull hyperledger/fabric-ca:$IMAGE_TAG
 }
-function pullKafka() {
+pullKafka() {
 	local thirdPartyTag=0.4.14
 	local IMAGE_TAG="$thirdPartyTag"
 	docker pull hyperledger/fabric-kafka:$IMAGE_TAG
 	docker pull hyperledger/fabric-zookeeper:$IMAGE_TAG
 }
-function updateChaincode() {
+updateChaincode() {
 	export GOPATH=$(go env GOPATH)
 	set +e
 	go get -u -v "github.com/davidkhala/chaincode"
@@ -50,10 +50,10 @@ function updateChaincode() {
 	cd -
 }
 
-function PM2CLI() {
+PM2CLI() {
 	sudo npm install pm2@latest -g
 }
-function sync() {
+sync() {
 	gitSync
 	$CURRENT/common/install.sh sync
 	npm install
