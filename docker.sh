@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 CURRENT=$(cd $(dirname ${BASH_SOURCE}) && pwd)
-
+export binPath=$CURRENT/common/bin/
 down() {
 	node -e "require('./dockerode-bootstrap').down()"
 }
@@ -37,7 +37,7 @@ repeat() {
 		./docker.sh
 	done
 }
-if [ -z "$1" ]; then
+if [[ -z "$1" ]]; then
 	restart
 else
 	$1

@@ -32,7 +32,7 @@ const nodeServers = {
 	swarmServer: path.resolve(__dirname, 'swarm', 'swarmServerPM2.js'),
 	signServer: path.resolve(__dirname, 'swarm', 'signServerPM2.js')
 };
-const {configtxlator, genBlock, genChannel} = require('./common/nodejs/binManager');
+const BinManager = require('./common/nodejs/binManager');
 
 exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'}, toStop, swarm) => {
 	const {orderer: {type, genesis_block: {file: BLOCK_FILE}}} = globalConfig;
@@ -407,7 +407,9 @@ exports.down = async (swarm) => {
 		require('./swarm/swarmServer').clean();
 		require('./swarm/signServer').clean();
 
-		await configtxlator('down');
+		const binManager = new BinManager();
+
+		await binManager.configtxlator('down');
 	} catch (err) {
 		logger.error(err);
 		process.exit(1);
@@ -417,25 +419,15 @@ exports.down = async (swarm) => {
 
 exports.up = async (swarm) => {
 	try {
+
 		await fabricImagePull({fabricTag, thirdPartyTag});
 		for (const [name, script] of Object.entries(nodeServers)) {
 			const pm2 = await new PM2().connect();
 			await pm2.reRun({name, script});
 			pm2.disconnect();
 		}
-		logger.info('[start]swarm Server init steps');
-		if (swarm) {
-			await swarmRenew();
-
-			const {address: ip} = await advertiseAddr();
-			const managerToken = await joinToken();
-			const workerToken = await joinToken('worker');
-			const {port} = require('./swarm/swarm').swarmServer;
-			const swarmServerUrl = `http://localhost:${port}`;
-			await ping(swarmServerUrl);
-			await serverClient.leader.update(swarmServerUrl, {ip, hostname: hostname(), managerToken, workerToken});
-		}
-		await configtxlator('up');
+		const binManager = new BinManager();
+		await binManager.configtxlator('start');
 
 		await networkCreateIfNotExist({Name: network}, swarm);
 
@@ -456,12 +448,12 @@ exports.up = async (swarm) => {
 
 		const BLOCK_FILE = globalConfig.orderer.genesis_block.file;
 		fsExtra.ensureDirSync(CONFIGTX);
-		await genBlock(configtxFile, path.resolve(CONFIGTX, BLOCK_FILE), PROFILE_BLOCK);
+		await binManager.configtxgen(PROFILE_BLOCK, configtxFile).genBlock(path.resolve(CONFIGTX, BLOCK_FILE));
 
 		const channelsConfig = globalConfig.channels;
 		for (const [channelName, channelConfig] of Object.entries(channelsConfig)) {
 			const channelFile = path.resolve(CONFIGTX, channelConfig.file);
-			await genChannel(configtxFile, channelFile, channelName, channelName);
+			await binManager.configtxgen(channelName, configtxFile, channelName).genChannel(channelFile);
 		}
 
 

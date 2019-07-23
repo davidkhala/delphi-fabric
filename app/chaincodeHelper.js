@@ -1,6 +1,6 @@
 const {randomKeyOf} = require('../common/nodejs/helper').nodeUtil.random();
 const {install} = require('../common/nodejs/chaincode');
-const {instantiateOrUpgrade, invoke} = require('../common/nodejs/chaincodeHelper');
+const {invoke} = require('../common/nodejs/chaincodeHelper');
 const {incrementUpgrade} = require('../common/nodejs/chaincodeVersion');
 const {transactionProposal} = require('../common/nodejs/chaincode');
 const ClientUtil = require('../common/nodejs/client');
