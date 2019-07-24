@@ -3,6 +3,8 @@ const {put, get, whoami} = require('./invoke');
 const chaincodeId = 'nodeDiagnose';
 const logger = require('../../../common/nodejs/logger').new(`test:${chaincodeId}`, true);
 const helper = require('../../../app/helper');
+
+const log = require('why-is-node-running'); // should be your first require
 const task = async () => {
 	await install.task();
 	const org1 = 'ASTRI.org';
@@ -13,4 +15,8 @@ const task = async () => {
 	const cid = await whoami(peers, org1);
 	logger.debug('CID', cid);
 };
-task();
+
+task().catch(err => {
+	log();
+});
+
