@@ -14,5 +14,5 @@ const composerPing = async (composerRoot = '/home/david/') => {
 	const result = await PeerUtil.ping(peer);
 	logger.debug(peer.toString(), result);
 };
-// ping2Preconfig();
-composerPing();
+ping2Preconfig();
+// composerPing();
