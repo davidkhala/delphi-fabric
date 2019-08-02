@@ -10,7 +10,7 @@ const golangUtil = require('../common/nodejs/golang');
 const {RoleIdentity, simplePolicyBuilder} = require('../common/nodejs/policy');
 const {collectionPolicyBuilder, collectionConfig} = require('../common/nodejs/privateData');
 const {couchDBIndex} = require('../common/nodejs/couchdb');
-const {discoveryChaincodeCallBuilder} = require('../common/nodejs/serviceDiscovery');
+const {endorsementHintsBuilder} = require('../common/nodejs/serviceDiscovery');
 const path = require('path');
 
 const chaincodeConfig = require('../config/chaincode.json');
@@ -112,15 +112,16 @@ exports.invoke = async (channel, peers, {chaincodeId, fcn, args, transientMap}, 
 };
 
 exports.discoveryChaincodeInterestBuilder = (chaincodeIdFilter) => {
-	let chaincodeIDs = Object.keys(chaincodeConfig);
-	if (typeof chaincodeIdFilter === 'function') {
-		chaincodeIDs = chaincodeIDs.filter(chaincodeIdFilter);
-	}
-	const chaincodes = [];
-	for (const chaincodeId of chaincodeIDs) {
-		const {collectionsConfig} = chaincodeConfig[chaincodeId];
-		const ccCall = discoveryChaincodeCallBuilder({chaincodeId, collectionsConfig});
-		chaincodes.push(ccCall);
+	let chaincodes = [];
+	for (const [chaincodeID, config] of Object.entries(chaincodeConfig)) {
+		if (typeof chaincodeIdFilter === 'function' && !chaincodeIdFilter(chaincodeID)) {
+			continue;
+		}
+		const {collectionsConfig} = config;
+		if (collectionsConfig) {
+			const ccCalls = endorsementHintsBuilder({[chaincodeID]: Object.keys(collectionsConfig)});
+			chaincodes = chaincodes.concat(ccCalls);
+		}
 	}
 	return {chaincodes};
 };
