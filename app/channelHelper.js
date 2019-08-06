@@ -58,7 +58,7 @@ exports.joinAll = async (channelName) => {
 };
 
 exports.updateAnchorPeers = async (configtxYaml, channelName, orgName) => {
-	const anchorTx = path.resolve(`${orgName}Anchors.tx`);
+	const anchorTx = helper.projectResolve('config', 'configtx', `${orgName}Anchors.tx`);
 	const binManager = new BinManager();
 	await binManager.configtxgen('anchorPeers', configtxYaml, channelName).genAnchorPeers(anchorTx, orgName);
 
