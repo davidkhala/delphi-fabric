@@ -67,7 +67,7 @@ exports.updateAnchorPeers = async (configtxYaml, channelName, orgName) => {
 	const channel = helper.prepareChannel(channelName, client);
 	const orderer = channel.getOrderers()[0];
 
-	const peer = helper.newPeers([0], orgName)[0];
+	const peer = helper.newPeer(0, orgName);
 	const eventHub = newEventHub(channel, peer, true);
 
 	await Promise.all([updateAnchorPeers(channel, anchorTx, orderer), blockWaiter(eventHub, 1)]);
