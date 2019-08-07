@@ -25,7 +25,5 @@ const task = async () => {
 	await initialize(channel, p1, {asLocalhost: true, TLS: true});
 	let result = await getDiscoveryResults(channel);
 	console.debug(result);
-	result = await globalPeers(client, p1);
-	console.debug(result);
 };
 task();
