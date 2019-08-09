@@ -1,7 +1,8 @@
 const caUtil = require('../common/nodejs/ca');
 
 const fs = require('fs');
-const {initAdmin, genPeer, init, genOrderer, genUser} = require('../common/nodejs/ca-crypto-gen');
+const {initAdmin, genPeer, init, genOrderer, genUser, genClientKeyPair} = require('../common/nodejs/ca-crypto-gen');
+const {pkcs11_key} = require('../common/nodejs/ca');
 const pathUtil = require('../common/nodejs/path');
 const {nodeUtil, dockerode} = require('../common/nodejs/helper');
 const dockerCmd = dockerode.cmd;
@@ -11,7 +12,8 @@ const globalConfig = require('../config/orgs');
 const userUtil = require('../common/nodejs/user');
 const helper = require('../app/helper');
 
-const {homeResolve} = nodeUtil.helper();
+const {homeResolve, fsExtra} = nodeUtil.helper();
+const path = require('path');
 const caCryptoConfig = homeResolve(globalConfig.docker.volumes.MSPROOT);
 const {TLS} = globalConfig;
 const protocol = TLS ? 'https' : 'http';
@@ -131,6 +133,18 @@ exports.genAll = async (swarm) => {
 	const peerOrgs = globalConfig.orgs;
 	{
 		const nodeType = 'peer';
+
+		const genNSaveClientKeyPair = async (caService, cryptoPath, admin, domain) => {
+			const {key, certificate, rootCertificate} = await genClientKeyPair(caService, {
+				enrollmentID: `${domain}.client`,
+				enrollmentSecret: 'password'
+			}, admin, domain);
+			const rootDir = path.resolve(cryptoPath.peerOrg(), 'client');
+			const keyFile = path.resolve(rootDir, 'clientKey');
+			const certFile = path.resolve(rootDir, 'clientCert');
+			fsExtra.outputFileSync(certFile, certificate);
+			pkcs11_key.save(keyFile, key);
+		};
 		for (const domain in peerOrgs) {
 			const peerOrgConfig = peerOrgs[domain];
 			const mspId = peerOrgConfig.mspid;
@@ -146,6 +160,7 @@ exports.genAll = async (swarm) => {
 			const caService = await getCaService(peerOrgConfig.ca.portHost, domain, swarm);
 			const admin = await init(caService, adminCryptoPath, nodeType, mspId);
 			const promises = [];
+			await genNSaveClientKeyPair(caService, adminCryptoPath, admin, domain);
 			for (let peerIndex = 0; peerIndex < peerOrgConfig.peers.length; peerIndex++) {
 				const peerName = `peer${peerIndex}`;
 				const cryptoPath = new CryptoPath(caCryptoConfig, {
