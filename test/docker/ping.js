@@ -2,7 +2,7 @@ const fs = require('fs');
 const PeerUtil = require('khala-fabric-sdk-node/peer');
 const {homeResolve} = require('khala-fabric-sdk-node/helper').nodeUtil.helper();
 const ping = async () => {
-	const host = 'peer1.icdd';
+	const host = 'peer0.icdd';
 	const cert = homeResolve('ca.crt');
 	const pem = fs.readFileSync(cert).toString();
 	const peerUrl = `grpcs://${host}:7051`;
@@ -12,6 +12,24 @@ const ping = async () => {
 	};
 	const peer = new PeerUtil.Peer(peerUrl, peerOpts);
 	await PeerUtil.ping(peer);
-	await PeerUtil.ping(peer); // to test gRpcs lock
+};
+const ping2 = async () => {
+	const host = 'peer1.icdd';
+	const keyFile = homeResolve('clientKey');
+	const certFile = homeResolve('clientCert');
+	const permFile = homeResolve('ca.crt');
+	const pem = fs.readFileSync(permFile).toString();
+	const clientKey = fs.readFileSync(keyFile).toString();
+	const clientCert = fs.readFileSync(certFile).toString();
+	const peerUrl = `grpcs://${host}:7051`;
+	// Error: PEM encoded certificate is required.
+	const peerOpts = {
+		clientKey,
+		clientCert,
+		pem,
+	};
+	const peer = new PeerUtil.Peer(peerUrl, peerOpts);
+	await PeerUtil.ping(peer);
 };
 ping();
+ping2();

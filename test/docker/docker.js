@@ -9,7 +9,6 @@ const portMap = '';
 
 const {containerStart, containerDelete, ContainerOptsBuilder} = dockerode.util;
 const {imageBuild} = dockerode.cmd;
-const path = require('path');
 const up = async () => {
 	const builder = new ContainerOptsBuilder(Image, Cmd);
 	builder.setName(container);
@@ -19,6 +18,8 @@ const up = async () => {
 	const envObject = {};
 
 	builder.setVolume(projectResolve('config/ca-crypto-config/peerOrganizations/icdd/tlsca/tlsca.icdd-cert.pem'), '/root/ca.crt');
+	builder.setVolume(projectResolve('config/ca-crypto-config/peerOrganizations/icdd/client/clientKey'), '/root/clientKey');
+	builder.setVolume(projectResolve('config/ca-crypto-config/peerOrganizations/icdd/client/clientCert'), '/root/clientCert');
 
 	builder.setNetwork(network, []);
 	builder.setEnvObject(envObject);
