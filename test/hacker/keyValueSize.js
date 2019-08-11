@@ -12,7 +12,7 @@ const taskKeySize = async () => {
 	// await install.task();//
 	const imageBuffer = fsExtra.readFileSync(imgPath);
 	const org1 = 'icdd';
-	const org2 = 'ASTRI.org';
+	const org2 = 'astri.org';
 	let peers = [helper.newPeer(0, org1), helper.newPeer(0, org2)];
 	const key = 'img';
 	logger.info('put value:pic size', imageBuffer.length);

@@ -4,7 +4,7 @@ const helper = require('../../../app/helper');
 const logger = require('../../../common/nodejs/logger').new('tokenCommon', true);
 const flow2 = async () => {
 	await install.task2();
-	const org1 = 'ASTRI.org';
+	const org1 = 'astri.org';
 	const org2 = 'icdd';
 
 	const peers = [helper.newPeer(0, org1), helper.newPeer(0, org2)];
@@ -15,7 +15,7 @@ const flow2 = async () => {
 };
 const flow = async () => {
 	await install.task();
-	const org1 = 'ASTRI.org';
+	const org1 = 'astri.org';
 	const org2 = 'icdd';
 
 	const peers = [helper.newPeer(0, org1), helper.newPeer(0, org2)];

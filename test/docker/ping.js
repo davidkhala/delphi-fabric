@@ -2,7 +2,7 @@ const fs = require('fs');
 const PeerUtil = require('khala-fabric-sdk-node/peer');
 const {homeResolve} = require('khala-fabric-sdk-node/helper').nodeUtil.helper();
 const ping = async () => {
-	const host = 'peer0.icdd';
+	const host = 'peer0.astri.org';
 	const cert = homeResolve('ca.crt');
 	const pem = fs.readFileSync(cert).toString();
 	const peerUrl = `grpcs://${host}:7051`;
@@ -14,7 +14,7 @@ const ping = async () => {
 	await PeerUtil.ping(peer);
 };
 const ping2 = async () => {
-	const host = 'peer1.icdd';
+	const host = 'peer1.astri.org';
 	const keyFile = homeResolve('clientKey');
 	const certFile = homeResolve('clientCert');
 	const permFile = homeResolve('ca.crt');

@@ -5,7 +5,7 @@ const chaincodeId = 'mainChain';
 const helper = require('../../../app/helper');
 exports.task = async () => {
 	await installAll(chaincodeId);
-	const org1 = 'ASTRI.org';
+	const org1 = 'astri.org';
 	const org2 = 'icdd';
 	const p1 = helper.newPeer(0, org1);
 	const p2 = helper.newPeer(0, org2);

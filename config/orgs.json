@@ -58,7 +58,7 @@
         }
       },
       "orgs": {
-        "ICDD.ASTRI.org": {
+        "icdd.astri.org": {
           "mspid": "ICDDMSP",
           "ca": {
             "portHost": 7454
@@ -79,7 +79,7 @@
     },
     "etcdraft": {
       "orgs": {
-        "ICDD.ASTRI.org": {
+        "icdd.astri.org": {
           "mspid": "ICDDMSP",
           "ca": {
             "portHost": 7454
@@ -103,7 +103,7 @@
     "allchannel": {
       "file": "all.tx",
       "orgs": {
-        "ASTRI.org": {
+        "astri.org": {
           "peerIndexes": [
             0,
             1
@@ -119,21 +119,21 @@
     }
   },
   "orgs": {
-    "ASTRI.org": {
+    "astri.org": {
       "peers": [
         {
-          "container_name": "peer0.ASTRI.org",
+          "container_name": "peer0.astri.org",
           "port": 7051,
           "operations": {
             "port": 9443
           },
           "couchDB": {
-            "container_name": "couchdb.peer0.ASTRI.org",
+            "container_name": "couchdb.peer0.astri.org",
             "port": 7984
           }
         },
         {
-          "container_name": "peer1.ASTRI.org",
+          "container_name": "peer1.astri.org",
           "port": 7151
         }
       ],

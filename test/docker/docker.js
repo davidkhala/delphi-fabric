@@ -17,9 +17,9 @@ const up = async () => {
 
 	const envObject = {};
 
-	builder.setVolume(projectResolve('config/ca-crypto-config/peerOrganizations/icdd/tlsca/tlsca.icdd-cert.pem'), '/root/ca.crt');
-	builder.setVolume(projectResolve('config/ca-crypto-config/peerOrganizations/icdd/client/clientKey'), '/root/clientKey');
-	builder.setVolume(projectResolve('config/ca-crypto-config/peerOrganizations/icdd/client/clientCert'), '/root/clientCert');
+	builder.setVolume(projectResolve('config/ca-crypto-config/peerOrganizations/astri.org/tlsca/tlsca.astri.org-cert.pem'), '/root/ca.crt');
+	builder.setVolume(projectResolve('config/ca-crypto-config/peerOrganizations/astri.org/client/clientKey'), '/root/clientKey');
+	builder.setVolume(projectResolve('config/ca-crypto-config/peerOrganizations/astri.org/client/clientCert'), '/root/clientCert');
 
 	builder.setNetwork(network, []);
 	builder.setEnvObject(envObject);

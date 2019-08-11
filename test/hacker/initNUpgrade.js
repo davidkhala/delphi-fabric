@@ -6,7 +6,7 @@ const helper = require('../../app/helper');
 const logger = helper.getLogger('initNUpgrade');
 const initConflict = async () => {
 	const org2 = 'icdd';
-	const org1 = 'ASTRI.org';
+	const org1 = 'astri.org';
 
 	await installAll(chaincodeId);
 	let peers = [helper.newPeer(0, org2), helper.newPeer(0, org1)];
@@ -24,7 +24,7 @@ const wrongInstall = async (org, peerIndexes, chaincodeVersion) => {
 };
 const upgradeConflict = async () => {
 	const org2 = 'icdd';
-	const org1 = 'ASTRI.org';
+	const org1 = 'astri.org';
 	const peers = [helper.newPeer(1, org2), helper.newPeer(1, org1)];
 	const incrementResult = await incrementInstalls(chaincodeId, org2, [1]);
 	logger.debug('incrementResult', incrementResult);

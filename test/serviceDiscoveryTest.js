@@ -15,11 +15,11 @@ const ChannelUtil = require('../common/nodejs/channel');
 const OrdererUtil = require('../common/nodejs/orderer');
 const {containerDelete} = require('../common/nodejs/helper').dockerode.util;
 const deletePeer = async () => {
-	const containerName = 'peer0.ASTRI.org';
+	const containerName = 'peer0.astri.org';
 	await containerDelete(containerName);
 };
 const deleteOrderer = async () => {
-	const ordererContainer = 'orderer0.ICDD.ASTRI.org';
+	const ordererContainer = 'orderer0.icdd.astri.org';
 	await containerDelete(ordererContainer);
 };
 const peerList = async () => {

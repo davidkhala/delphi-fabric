@@ -13,7 +13,7 @@ const createTask = async (channel, orderer) => {
 };
 
 const task = async () => {
-	const peerOrg = 'ASTRI.org';
+	const peerOrg = 'astri.org';
 	const client = await helper.getOrgAdmin(peerOrg);
 	const channel = helper.prepareChannel(channelName, client);
 	const orderers = await ChannelUtil.getOrderers(channel, true);

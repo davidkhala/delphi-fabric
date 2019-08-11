@@ -4,7 +4,7 @@ const helper = require('../../../app/helper');
 
 const install = require('./install');
 const org1 = 'icdd';
-const org2 = 'ASTRI.org';
+const org2 = 'astri.org';
 const flow = async () => {
 	await install.task();
 

@@ -1,6 +1,6 @@
 const channelName = 'allchannel';
 const helper = require('../app/helper');
-const org = 'ASTRI.org';
+const org = 'astri.org';
 const logger = helper.getLogger('test:channel:initialize');
 const ChannelUtil = require('../common/nodejs/channel');
 const ServiceDiscoveryUtil = require('../common/nodejs/serviceDiscovery');

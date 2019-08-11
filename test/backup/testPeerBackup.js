@@ -23,12 +23,12 @@ const touchCC = async (org, peerIndex) => {
 const flowStopPeers = async () => {
 	await stopPeer('icdd', 0);
 	await stopPeer('icdd', 1);
-	await stopPeer('ASTRI.org', 0);
-	await stopPeer('ASTRI.org', 1);
+	await stopPeer('astri.org', 0);
+	await stopPeer('astri.org', 1);
 };
 const flowResumePeers = async () => {
 	await resumePeer('icdd', 0);// anchor peers should resume first
-	await resumePeer('ASTRI.org', 0);// anchor peers should resume first
+	await resumePeer('astri.org', 0);// anchor peers should resume first
 };
 const flow = async () => {
 	const org = 'icdd';
