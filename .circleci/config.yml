@@ -7,7 +7,11 @@ jobs:
     steps:
       - checkout
       - run:
-          command: apt update;apt install -y git;git branch --set-upstream-to=origin/release-1.4 release-1.4
+          command: apt update;
+      - run:
+          command: apt -qq install -y git
+      - run:
+          command: git checkout -b release-1.4; git branch --set-upstream-to=origin/release-1.4 release-1.4
       - run:
           command: ./install.sh
 
