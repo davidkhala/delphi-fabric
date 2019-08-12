@@ -2,15 +2,14 @@ version: 2
 jobs:
   build:
     docker:
-      - image: node:8
+      - image: circleci/node:8
 
     steps:
       - checkout
-
       - run:
-          name: install
+          command: git branch --set-upstream-to=origin/release-1.4 release-1.4
+      - run:
           command: ./install.sh
 
       - run:
-          name: fabricNetwork
           command: ./docker.sh
