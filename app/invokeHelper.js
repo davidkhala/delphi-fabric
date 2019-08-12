@@ -9,11 +9,11 @@ const channelName = 'allchannel';
 const {chaincodeEvent, newEventHub} = require('../common/nodejs/eventHub');
 
 const {sleep} = require('../common/nodejs/helper').nodeUtil.helper();
-exports.invoke = async (peers, clientPeerOrg, chaincodeId, fcn, args = [], transientMap) => {
+exports.invoke = async (peers, clientPeerOrg, chaincodeId, fcn, args = [], transientMap, eventHubs) => {
 	logger.debug('invoke', 'client org', clientPeerOrg);
 	const client = await helper.getOrgAdmin(clientPeerOrg);
 	const channel = helper.prepareChannel(channelName, client, true);
-	const {proposalResponses} = await invoke(channel, peers, {chaincodeId, fcn, args, transientMap});
+	const {proposalResponses} = await invoke(channel, peers, {chaincodeId, fcn, args, transientMap}, undefined, eventHubs);
 	const result = proposalResponses.map((entry) => proposalFlatten(proposalStringify(entry)));
 	logger.debug('invoke', result);
 	return result;

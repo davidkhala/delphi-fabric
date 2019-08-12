@@ -87,11 +87,13 @@ exports.upgrade = async (channel, richPeers, opts, orderer) => {
 	const allConfig = Object.assign(policyConfig, opts);
 	return incrementUpgrade(channel, richPeers, eventHubs, allConfig, orderer);
 };
-exports.invoke = async (channel, peers, {chaincodeId, fcn, args, transientMap}, nonAdminUser) => {
-	const eventHubs = [];
-	for (const peer of peers) {
-		const eventHub = EventHubUtil.newEventHub(channel, peer, true);
-		eventHubs.push(eventHub);
+exports.invoke = async (channel, peers, {chaincodeId, fcn, args, transientMap}, nonAdminUser, eventHubs) => {
+	if (!eventHubs) {
+		eventHubs = [];
+		for (const peer of peers) {
+			const eventHub = EventHubUtil.newEventHub(channel, peer, true);
+			eventHubs.push(eventHub);
+		}
 	}
 	const orderers = channel.getOrderers();
 	const orderer = orderers[randomKeyOf(orderers)];
