@@ -56,7 +56,9 @@ exports.joinAll = async (channelName) => {
 	}
 
 };
-
+//TODO create multiple eventHubs from orgs.json
+exports.newEventHubs = async () => {
+};
 exports.updateAnchorPeers = async (configtxYaml, channelName, orgName) => {
 	const anchorTx = helper.projectResolve('config', 'configtx', `${orgName}Anchors.tx`);
 	const binManager = new BinManager();
