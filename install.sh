@@ -62,6 +62,7 @@ sync() {
 if [[ -n "$fcn" ]]; then
 	$fcn $remain_params
 else
+    ssh -o StrictHostKeyChecking=no git@github.com
 	if [[ ! -f "$CURRENT/common/install.sh" ]]; then
 		gitSync
 	fi
