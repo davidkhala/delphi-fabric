@@ -13,7 +13,7 @@ jobs:
       - run:
           command: git checkout -b release-1.4; git branch --set-upstream-to=origin/release-1.4 release-1.4;
       - run:
-          command: ssh -o StrictHostKeyChecking=no git@github.com; git remote set-url origin git@github.com:davidkhala/delphi-fabric.git
+          command: ssh -o StrictHostKeyChecking=no git@github.com; git remote set-url origin https://github.com/davidkhala/delphi-fabric.git
       - run:
           command: ./install.sh
 
