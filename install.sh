@@ -62,6 +62,7 @@ sync() {
 if [[ -n "$fcn" ]]; then
 	$fcn $remain_params
 else
+    echo [debug] Current = ${CURRENT}
 	if [[ ! -f "$CURRENT/common/install.sh" ]]; then
 		gitSync
 	fi
