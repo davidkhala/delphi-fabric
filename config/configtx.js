@@ -210,11 +210,10 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 	for (const [orgName, orgConfig] of Object.entries(orgsConfig)) {
 		OrganizationsForAnchorProfile.push(OrganizationBuilder(orgName, orgConfig, [0, 1]));// TODO anchorIndexes as parameters?
 	}
-	const setAnchorPeersProfile = {
+	Profiles[PROFILE_ANCHORPEERS] = {
 		Application: {
 			Organizations: OrganizationsForAnchorProfile
 		}
 	};
-	Profiles[PROFILE_ANCHORPEERS] = setAnchorPeersProfile;
 	yaml.write({Profiles}, configtxFile);
 };
