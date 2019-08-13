@@ -15,7 +15,7 @@ gitSync() {
 }
 
 pull() {
-	local fabricTag=1.4.1
+	local fabricTag=1.4.2
 	local IMAGE_TAG="$fabricTag"
 	docker pull hyperledger/fabric-ccenv:$IMAGE_TAG
 	docker pull hyperledger/fabric-orderer:$IMAGE_TAG

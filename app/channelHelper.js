@@ -2,7 +2,6 @@ const helper = require('./helper.js');
 const logger = require('../common/nodejs/logger').new('channel helper');
 const ChannelUtil = require('../common/nodejs/channel');
 const {newEventHub, blockWaiter} = require('../common/nodejs/eventHub');
-const path = require('path');
 
 const {create, join, updateAnchorPeers, getGenesisBlock} = ChannelUtil;
 const BinManager = require('../common/nodejs/binManager');
@@ -56,8 +55,11 @@ exports.joinAll = async (channelName) => {
 	}
 
 };
-//TODO create multiple eventHubs from orgs.json
-exports.newEventHubs = async () => {
+exports.newEventHubs = async (channel, peerIndexes, orgName, inlineConnected = true) => {
+	const peers = helper.newPeers(peerIndexes, orgName);
+	return peers.map(peer => {
+		return newEventHub(channel, peer, inlineConnected);
+	});
 };
 exports.updateAnchorPeers = async (configtxYaml, channelName, orgName) => {
 	const anchorTx = helper.projectResolve('config', 'configtx', `${orgName}Anchors.tx`);
