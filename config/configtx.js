@@ -124,11 +124,7 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 			orderer: {org: ordererConfig.solo.orgName}
 		});
 		OrdererConfig.Organizations = [
-			{
-				Name: orgName,
-				ID: ordererConfig.solo.mspid,
-				MSPDir: cryptoPath.ordererOrgMSP()
-			}
+			OrganizationBuilder(orgName, ordererConfig.solo, undefined, undefined, 'orderer')
 		];
 	} else if (globalConfig.orderer.type === 'etcdraft') {
 		OrdererConfig.OrdererType = 'etcdraft';
@@ -199,14 +195,14 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 		Profiles[PROFILE_CHANNEL] = {
 			Policies: implicitPolicies,
 			Capabilities: {
-				V1_3: true
+				V1_4_2: true
 			},
 			Consortium: consortiumName,
 			Application: {
 				Policies: implicitPolicies,
 				Organizations,
 				Capabilities: {
-					V1_3: true
+					V1_4_2: true
 				}
 			}
 		};
