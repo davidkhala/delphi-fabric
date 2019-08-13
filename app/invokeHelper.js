@@ -37,7 +37,6 @@ exports.query = async (peers, clientOrg, chaincodeId, fcn, args = [], transientM
 	const result = proposalResponses.map((entry) => proposalFlatten(rawPayload ? entry : proposalStringify(entry)));
 	return result;
 };
-// TODO chaincode Event not found.
 exports.listenChaincodeEvent = async (peer, clientPeerOrg, chaincodeId, eventName = /event/i, onSuccess) => {
 	const logger = LogUtil.new('chaincode event', true);
 	const client = await helper.getOrgAdmin(clientPeerOrg);
