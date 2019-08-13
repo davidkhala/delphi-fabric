@@ -1,10 +1,11 @@
 const {
 	get, put, cross, chaincodeID, putRaw, putBatch, whoami, getEndorsement, putEndorsement, getPage, list, getCertID
-} = require('./diagnoseInvoke');
-const logger = require('../../../common/nodejs/logger').new('invoke:diagnose', true);
-const helper = require('../../../app/helper');
+} = require('../diagnoseInvoke');
 
-const DRInstall = require('./diagnoseInstall');
+const helper = require('../../../../app/helper');
+const logger = helper.getLogger('invoke:diagnose');
+
+const DRInstall = require('../diagnoseInstall');
 const taskKeyEndorsement = async () => {
 	await DRInstall.task();
 	const org1 = 'icdd';

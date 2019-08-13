@@ -9,9 +9,4 @@ exports.task = async () => {
 	const peers = helper.newPeers([0], org1);
 	await instantiate(org1, peers, chaincodeId);
 };
-exports.partialInstall = async (orgName, peerIndexes) => {
-	await installs(chaincodeId, orgName, peerIndexes);
-	const org1 = orgName;
-	const peers = helper.newPeers([0], org1);
-	await instantiate(org1, peers, chaincodeId);
-};
+

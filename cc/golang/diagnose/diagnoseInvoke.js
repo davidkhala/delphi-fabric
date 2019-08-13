@@ -94,3 +94,8 @@ exports.getCertID = async (peers, clientOrg) => {
 	const args = [];
 	return query(peers, clientOrg, chaincodeId, fcn, args);
 };
+exports.setEvent = async (peers, clientPeerOrg, {name, event}) => {
+	const fcn = 'setEvent';
+	const args = [name, event];
+	return invoke(peers, clientPeerOrg, chaincodeId, fcn, args);
+};

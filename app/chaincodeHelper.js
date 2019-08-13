@@ -89,11 +89,9 @@ exports.upgrade = async (channel, richPeers, opts, orderer) => {
 };
 exports.invoke = async (channel, peers, {chaincodeId, fcn, args, transientMap}, nonAdminUser, eventHubs) => {
 	if (!eventHubs) {
-		eventHubs = [];
-		for (const peer of peers) {
-			const eventHub = EventHubUtil.newEventHub(channel, peer, true);
-			eventHubs.push(eventHub);
-		}
+		eventHubs = peers.map(peer=>{
+			return EventHubUtil.newEventHub(channel, peer, true);
+		});
 	}
 	const orderers = channel.getOrderers();
 	const orderer = orderers[randomKeyOf(orderers)];

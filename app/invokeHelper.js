@@ -9,11 +9,22 @@ const channelName = 'allchannel';
 const {chaincodeEvent, newEventHub} = require('../common/nodejs/eventHub');
 
 const {sleep} = require('../common/nodejs/helper').nodeUtil.helper();
-exports.invoke = async (peers, clientPeerOrg, chaincodeId, fcn, args = [], transientMap, eventHubs) => {
+exports.invoke = async (peers, clientPeerOrg, chaincodeId, fcn, args = [], transientMap, commitPeers = []) => {
 	logger.debug('invoke', 'client org', clientPeerOrg);
 	const client = await helper.getOrgAdmin(clientPeerOrg);
 	const channel = helper.prepareChannel(channelName, client, true);
-	const {proposalResponses} = await invoke(channel, peers, {chaincodeId, fcn, args, transientMap}, undefined, eventHubs);
+	let eventHubs = undefined;
+	if (commitPeers.length > 0) {
+		eventHubs = commitPeers.map(peer => {
+			return newEventHub(channel, peer, true);
+		});
+	}
+	const {proposalResponses} = await invoke(channel, peers, {
+		chaincodeId,
+		fcn,
+		args,
+		transientMap
+	}, undefined, eventHubs);
 	const result = proposalResponses.map((entry) => proposalFlatten(proposalStringify(entry)));
 	logger.debug('invoke', result);
 	return result;
@@ -26,17 +37,17 @@ exports.query = async (peers, clientOrg, chaincodeId, fcn, args = [], transientM
 	const result = proposalResponses.map((entry) => proposalFlatten(rawPayload ? entry : proposalStringify(entry)));
 	return result;
 };
-exports.listenChaincodeEvent = async (peers, clientPeerOrg, chaincodeId, eventName = /event/i) => {
+// TODO chaincode Event not found.
+exports.listenChaincodeEvent = async (peer, clientPeerOrg, chaincodeId, eventName = /event/i, onSuccess) => {
 	const logger = LogUtil.new('chaincode event', true);
 	const client = await helper.getOrgAdmin(clientPeerOrg);
 	const channel = helper.prepareChannel(channelName, client, true);
-	const eventHub = newEventHub(channel, peers[0], true);
+	const eventHub = newEventHub(channel, peer, true);
 	const validator = (data) => {
 		logger.debug('default validator', data);
 		return {valid: true, interrupt: false};
 	};
-	return chaincodeEvent(eventHub, validator, {chaincodeId, eventName}, () => {
-	}, (err) => {
+	return chaincodeEvent(eventHub, validator, {chaincodeId, eventName}, onSuccess, (err) => {
 		logger.error('onError', err);
 	});
 };

@@ -14,8 +14,3 @@ exports.whoami = async (peers, clientPeerOrg) => {
 	const fcn = 'whoami';
 	return query(peers, clientPeerOrg, chaincodeId, fcn, []);
 };
-exports.setEvent = async (peers, clientPeerOrg, {name, event}, eventHubs) => {
-	const fcn = 'setEvent';
-	const args = [name, event];
-	return invoke(peers, clientPeerOrg, chaincodeId, fcn, args, undefined, eventHubs);
-};

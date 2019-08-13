@@ -1,10 +1,9 @@
-const install = require('../install');
+const install = require('../../../nodejs/diagnose/install');
 const {put, get, whoami} = require('../invoke');
 const chaincodeId = 'nodeDiagnose';
-const logger = require('../../../../common/nodejs/logger').new(`test:${chaincodeId}`, true);
 const helper = require('../../../../app/helper');
+const logger = helper.getLogger(`test:${chaincodeId}`);
 
-const log = require('why-is-node-running'); // should be your first require
 const task = async () => {
 	await install.task();
 	const org1 = 'astri.org';
@@ -16,7 +15,5 @@ const task = async () => {
 	logger.debug('CID', cid);
 };
 
-task().catch(err => {
-	log();
-});
+task();
 
