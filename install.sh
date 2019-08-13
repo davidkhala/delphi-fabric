@@ -23,7 +23,7 @@ pull() {
 	docker pull hyperledger/fabric-ca:$IMAGE_TAG
 }
 pullKafka() {
-	local thirdPartyTag=0.4.14
+	local thirdPartyTag=0.4.15
 	local IMAGE_TAG="$thirdPartyTag"
 	docker pull hyperledger/fabric-kafka:$IMAGE_TAG
 	docker pull hyperledger/fabric-zookeeper:$IMAGE_TAG
