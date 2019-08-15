@@ -4,13 +4,7 @@ node_js:
 dist: bionic
 install:
   - ./install.sh
-deploy:
-  - provider: script
-    script: echo no deployment plan; exit 1
-    on:
-      branch: release-1.4
-  - provider: script
-    script: echo no deployment plan; exit 1
-    on:
-      branch: master
+script:
+  - ./docker.sh
+  - node cc/golang/diagnose/test/
 
