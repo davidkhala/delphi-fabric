@@ -48,7 +48,7 @@ const ordererName = 'orderer3';
 const channelName = 'allchannel';
 const serverClient = require('../../swarm/serverClient');
 const runWithNewOrg = async (action) => {
-	const orgName = 'NewConsensus.Delphi.com';
+	const orgName = 'NewConsensus.delphi';
 	const mspName = 'NewConsensus';
 	const mspid = 'NewConsensusMSP';
 	const caContainerName = `ca.${orgName}`;
@@ -174,7 +174,7 @@ const runWithNewOrg = async (action) => {
 
 };
 const runWithExistOrg = async (action) => {
-	const orgName = 'DelphiConsensus.Delphi.com';
+	const orgName = 'DelphiConsensus.delphi';
 	const ordererConfig = globalConfig.orderer.kafka.orgs[orgName];
 	const mspid = ordererConfig.mspid;
 	const caUrl = `${protocol}://localhost:${ordererConfig.ca.portHost}`;

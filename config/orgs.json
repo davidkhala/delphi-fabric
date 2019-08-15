@@ -11,13 +11,13 @@
     }
   },
   "orderer": {
-    "type": "solo",
+    "type": "kafka",
     "genesis_block": {
       "file": "delphi.block",
       "profile": "delphiGenesis"
     },
     "solo": {
-      "orgName": "Delphi.com",
+      "orgName": "delphi",
       "container_name": "orderer",
       "operations": {
         "port": 8443,
