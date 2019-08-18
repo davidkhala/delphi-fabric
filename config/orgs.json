@@ -11,7 +11,7 @@
     }
   },
   "orderer": {
-    "type": "kafka",
+    "type": "solo",
     "genesis_block": {
       "file": "delphi.block",
       "profile": "delphiGenesis"

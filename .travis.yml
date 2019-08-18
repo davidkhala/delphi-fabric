@@ -4,6 +4,7 @@ node_js:
 dist: bionic
 install:
   - ./install.sh
+  - cd common/nodejs; npm install ; cd -
 script:
   - ./docker.sh
   - node cc/golang/diagnose/test/
