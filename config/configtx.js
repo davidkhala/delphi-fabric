@@ -66,7 +66,7 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 
 	const blockProfileConfig = {
 		Capabilities: {
-			v1_4_2: true
+			V1_3: true
 		},
 		Policies: implicitPolicies
 	};
