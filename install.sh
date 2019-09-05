@@ -48,6 +48,8 @@ updateChaincode() {
 	cd $GOPATH/src/github.com/davidkhala/chaincode/golang/diagnose
 	dep ensure
 	cd -
+
+	go get -u -v "github.com/davidkhala/stupid"
 }
 
 PM2CLI() {
