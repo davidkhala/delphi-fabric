@@ -1,8 +1,8 @@
 Profiles:
   delphiGenesis:
     Capabilities:
-      V1_3: true
-    Policies: &ref_0
+      V1_4_3: true
+    Policies: &ref_1
       Readers:
         Type: ImplicitMeta
         Rule: ANY Readers
@@ -19,7 +19,7 @@ Profiles:
         AbsoluteMaxBytes: 99 MB
         PreferredMaxBytes: 512 KB
       Capabilities:
-        V1_1: true
+        V1_4_2: true
       Policies:
         Readers:
           Type: ImplicitMeta
@@ -34,12 +34,10 @@ Profiles:
           Type: ImplicitMeta
           Rule: ANY Writers
       OrdererType: solo
-      Addresses:
-        - 'orderer.Delphi.com:7050'
       Organizations:
-        - Name: Delphi.com
+        - Name: delphi
           ID: OrdererMSP
-          MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/Delphi.com/msp
+          MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/delphi/msp
           Policies:
             Readers:
               Type: Signature
@@ -50,12 +48,14 @@ Profiles:
             Admins:
               Type: Signature
               Rule: OR('OrdererMSP.admin')
+          OrdererEndpoints:
+            - 'orderer.delphi:7050'
     Consortiums:
       SampleConsortium:
         Organizations:
           - Name: astri.org
             ID: ASTRIMSP
-            MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/astri.org/msp
+            MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/astri.org/msp
             Policies:
               Readers:
                 Type: Signature
@@ -66,9 +66,11 @@ Profiles:
               Admins:
                 Type: Signature
                 Rule: OR('ASTRIMSP.admin')
+            OrdererEndpoints: &ref_0
+              - 'orderer.delphi:7050'
           - Name: icdd
             ID: icddMSP
-            MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp
+            MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp
             Policies:
               Readers:
                 Type: Signature
@@ -79,17 +81,18 @@ Profiles:
               Admins:
                 Type: Signature
                 Rule: OR('icddMSP.admin')
+            OrdererEndpoints: *ref_0
   allchannel:
-    Policies: *ref_0
+    Policies: *ref_1
     Capabilities:
-      V1_4_2: true
+      V1_4_3: true
     Consortium: SampleConsortium
     Application:
-      Policies: *ref_0
+      Policies: *ref_1
       Organizations:
         - Name: astri.org
           ID: ASTRIMSP
-          MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/astri.org/msp
+          MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/astri.org/msp
           Policies:
             Readers:
               Type: Signature
@@ -104,7 +107,7 @@ Profiles:
             - {}
         - Name: icdd
           ID: icddMSP
-          MSPDir: /home/david/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp
+          MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp
           Policies:
             Readers:
               Type: Signature

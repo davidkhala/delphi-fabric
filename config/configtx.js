@@ -16,7 +16,7 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 		fsExtra.removeSync(configtxFile);
 	}
 
-	const OrganizationBuilder = (orgName, orgConfig, anchorIndexes, forChannel, nodeType = 'peer') => {
+	const OrganizationBuilder = (orgName, orgConfig, anchorIndexes, forChannel, nodeType = 'peer', Addresses) => {
 		const cryptoPath = new CryptoPath(MSPROOT, {
 			[nodeType]: {
 				org: orgName
@@ -61,12 +61,15 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 		if (forChannel) {
 			result.AnchorPeers = [{}];
 		}
+		if (Array.isArray(Addresses)) {
+			result.OrdererEndpoints = Addresses;
+		}
 		return result;
 	};
 
 	const blockProfileConfig = {
 		Capabilities: {
-			V1_3: true
+			V1_4_3: true
 		},
 		Policies: implicitPolicies
 	};
@@ -78,7 +81,7 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 			PreferredMaxBytes: '512 KB'
 		},
 		Capabilities: {
-			V1_1: true
+			V1_4_2: true
 		},
 		Policies: {
 			Readers: {
@@ -99,18 +102,16 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 			}
 		}
 	};
+	let globalOrdererAddresses = [];
 	if (globalConfig.orderer.type === 'kafka') {
 		OrdererConfig.OrdererType = 'kafka';
 
-		const Addresses = [];
 		const Organizations = [];
 		for (const [ordererOrgName, ordererOrgConfig] of Object.entries(globalConfig.orderer.kafka.orgs)) {
-			for (const ordererName in ordererOrgConfig.orderers) {
-				Addresses.push(`${ordererName}.${ordererOrgName}:7050`);
-			}
-			Organizations.push(OrganizationBuilder(ordererOrgName, ordererOrgConfig, undefined, undefined, 'orderer'));
+			const Addresses = Object.keys(ordererOrgConfig.orderers).map(ordererName => `${ordererName}.${ordererOrgName}:7050`);
+			Organizations.push(OrganizationBuilder(ordererOrgName, ordererOrgConfig, undefined, undefined, 'orderer', Addresses));
+			globalOrdererAddresses = globalOrdererAddresses.concat(Addresses);
 		}
-		OrdererConfig.Addresses = Addresses;
 
 		OrdererConfig.Kafka = {
 			Brokers: Object.keys(globalConfig.orderer.kafka.kafkas).map((kafka) => `${kafka}:9092`)
@@ -119,18 +120,20 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 	} else if (globalConfig.orderer.type === 'solo') {
 		OrdererConfig.OrdererType = 'solo';
 		const {container_name, orgName, portHost} = ordererConfig.solo;
-		OrdererConfig.Addresses = [`${container_name}.${orgName}:${portHost}`];
 
+		const Addresses = [`${container_name}.${orgName}:${portHost}`];
 		OrdererConfig.Organizations = [
-			OrganizationBuilder(orgName, ordererConfig.solo, undefined, undefined, 'orderer')
+			OrganizationBuilder(orgName, ordererConfig.solo, undefined, undefined, 'orderer', Addresses)
 		];
+		globalOrdererAddresses = globalOrdererAddresses.concat(Addresses);
 	} else if (globalConfig.orderer.type === 'etcdraft') {
 		OrdererConfig.OrdererType = 'etcdraft';
 
-		const Addresses = [];
+
 		const Organizations = [];
 		const Consenters = [];
 		for (const [ordererOrgName, ordererOrgConfig] of Object.entries(globalConfig.orderer.etcdraft.orgs)) {
+			const Addresses = [];
 			for (const ordererName in ordererOrgConfig.orderers) {
 				const ordererCryptoPath = new CryptoPath(MSPROOT, {
 					orderer: {
@@ -148,9 +151,9 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 				}
 				Consenters.push(consenter);
 			}
-			Organizations.push(OrganizationBuilder(ordererOrgName, ordererOrgConfig, undefined, undefined, 'orderer'));
+			Organizations.push(OrganizationBuilder(ordererOrgName, ordererOrgConfig, undefined, undefined, 'orderer', Addresses));
+			globalOrdererAddresses = globalOrdererAddresses.concat(Addresses);
 		}
-		OrdererConfig.Addresses = Addresses;
 
 		const HeartbeatTick = 1;
 		OrdererConfig.EtcdRaft = {
@@ -171,7 +174,7 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 
 
 	for (const [orgName, orgConfig] of Object.entries(orgsConfig)) {
-		Organizations.push(OrganizationBuilder(orgName, orgConfig));
+		Organizations.push(OrganizationBuilder(orgName, orgConfig, undefined, undefined, 'peer', globalOrdererAddresses));
 	}
 	blockProfileConfig.Consortiums = {
 		[consortiumName]: {
@@ -193,7 +196,7 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 		Profiles[PROFILE_CHANNEL] = {
 			Policies: implicitPolicies,
 			Capabilities: {
-				V1_4_2: true
+				V1_4_3: true
 			},
 			Consortium: consortiumName,
 			Application: {
