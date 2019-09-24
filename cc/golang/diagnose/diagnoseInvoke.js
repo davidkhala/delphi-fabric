@@ -79,6 +79,21 @@ exports.list = async (peers, clientOrg) => {
 	const args = [];
 	return query(peers, clientOrg, chaincodeId, fcn, args);
 };
+exports.GetStateByRange = async (peers, clientOrg, startKey = '', endKey = '') => {
+	const fcn = 'GetStateByRange';
+	const args = [startKey, endKey];
+	return query(peers, clientOrg, chaincodeId, fcn, args);
+};
+exports.GetCompositeStateByRange = async (peers, clientOrg, objectType) => {
+	const fcn = 'GetCompositeStateByRange';
+	const args = [objectType];
+	return query(peers, clientOrg, chaincodeId, fcn, args);
+};
+exports.putCompositeBatch = async (peers, clientOrg, objectType, map) => {
+	const fcn = 'putCompositeBatch';
+	const args = [objectType];
+	return invoke(peers, clientOrg, chaincodeId, fcn, args, map);
+};
 exports.putBatch = async (peers, clientOrg, map) => {
 	const fcn = 'putBatch';
 	const args = [JSON.stringify(map)];

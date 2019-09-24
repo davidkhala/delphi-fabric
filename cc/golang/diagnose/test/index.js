@@ -5,9 +5,8 @@ const {
 const helper = require('../../../../app/helper');
 const logger = helper.getLogger('invoke:diagnose');
 
-const DRInstall = require('../diagnoseInstall');
+const diagnoseInstall = require('../diagnoseInstall');
 const taskKeyEndorsement = async () => {
-	await DRInstall.task();
 	const org1 = 'icdd';
 	const org2 = 'astri.org';
 	let peers = [helper.newPeer(0, org1), helper.newPeer(0, org2)];
@@ -35,19 +34,17 @@ const taskKeyEndorsement = async () => {
 	await put(peers, org1, key, 'endorsing good');
 };
 const taskPeerHack = async () => {
-	await DRInstall.task();
 	const org1 = 'icdd';
 	const org2 = 'astri.org';
-	let peers = [helper.newPeer(0, org1), helper.newPeer(0, org2)];
+	const peers = [helper.newPeer(0, org1), helper.newPeer(0, org2)];
 	const clientOrg = org2;
 	const key = 'a';
 
 	await putRaw(peers, clientOrg, key, 'b');
 };
+
 const taskAttach = async () => {
-	await DRInstall.taskAttach();
 	const org1 = 'icdd';
-	const org2 = 'astri.org';
 	const peers = helper.newPeers([0], org1);
 	try {
 		await cross(peers, org1, 'mainChain', 'put', ['a', 'avalueFromAttacker']);
@@ -62,8 +59,7 @@ const taskAttach = async () => {
 	}
 };
 
-const flowPagination = async () => {
-	await DRInstall.task();
+const taskPagination = async () => {
 	const org1 = 'icdd';
 	const org2 = 'astri.org';
 	const peers = helper.newPeers([0], org1);
@@ -84,17 +80,7 @@ const flowPagination = async () => {
 	result = await getPage(peers, org1, '', '', 1, Bookmark);
 	logger.debug(2, result);
 };
-const putBatchTest = async (size) => {
-	const map = {};
-	for (let i = 0; i < size; i++) {
-		const iStr = `${i}`;
-		const padded = iStr.padStart(3, '0');
-		map[`key_${padded}`] = `${i}`;
-	}
-	const org1 = 'icdd';
-	const peers = helper.newPeers([0], org1);
-	await putBatch(peers, org1, map);
-};
+
 const getCertIDTest = async () => {
 	const org1 = 'icdd';
 	const peers = helper.newPeers([0], org1);
@@ -102,30 +88,22 @@ const getCertIDTest = async () => {
 	logger.info('certID', result);
 };
 const worldStatesTest = async () => {
-
 	const org1 = 'icdd';
 	const peers = helper.newPeers([0], org1);
 	const result = await list(peers, org1);
 	logger.debug('worldStates', result);
-
 };
+
 const overPaginationTest = async (pageSize) => {
 	const org1 = 'icdd';
 	const peers = helper.newPeers([0], org1);
 	const result = await getPage(peers, org1, undefined, undefined, `${pageSize}`);
 	logger.debug('pagination', result);
 };
-const taskOverList = async () => {
-	await DRInstall.task();
-	await putBatchTest(200);
-	try {
-		await worldStatesTest();
-	} catch (e) {
-		logger.warn('worldStates failure expected');
-		logger.warn(e);
-	}
-};
+
+
 const task = async () => {
-	await DRInstall.task();
+	await diagnoseInstall.task();
+	await taskPagination();
 };
 task();
