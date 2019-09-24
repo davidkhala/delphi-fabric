@@ -71,7 +71,7 @@ else
 	$CURRENT/common/install.sh golang11
 	$CURRENT/common/install.sh
 
-	./common/bin-manage/pullBIN.sh
+	./common/bash/pullBIN.sh
 	npm install
 	updateChaincode
 	curl --silent --show-error https://raw.githubusercontent.com/davidkhala/docker-manager/master/dockerSUDO.sh | bash
