@@ -54,11 +54,11 @@ Finished
 - chaincode version,ID string RegX
 - chaincode language support: nodeJS, golang
 - Fixed security leakage: priv-file, crypto-store in .hfc-key-store
-- chaincode setEvent support
 - hybrid data storage model: couchdb, leveldb 
 - use dep to import fabric source into vendor
 - peer, orderer backup and instant recover: "stateVolume": "Documents/backupVolumes/orderer/",
 - nodejs scripts work as runConfigtxgen.sh to wrap binaries
+- CICD: using travis
 
 ## TODO
 - TLS, java sdk: keep update
@@ -73,7 +73,6 @@ Finished
 - CRl: https://hyperledger-fabric.readthedocs.io/en/release-1.4/msp.html?highlight=CRL#msp-setup-on-the-peer-orderer-side
 - system upgrade: how to migrate to 1.4. from 1.1
 - 开发模式:--peer-chaincodedev: try to set via core.yaml
-- travis deploy script: https://docs.travis-ci.com/user/deployment/script/
  
 ## New feature, patch required for node-sdk
  
