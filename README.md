@@ -5,7 +5,7 @@ Delphi-fabric
 Installation
 -----------------------
 
- **Recommended OS** ubuntu 16.04
+ **Compatible OS** ubuntu xenial/bionic  
 
 **Installation Script**
 1. `$ ./install.sh gitSync`   
