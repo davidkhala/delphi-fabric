@@ -5,11 +5,10 @@ const swarmConfig = require('./swarm.json').swarmServer;
 const {port, cache} = swarmConfig;
 
 const {db = 'Redis'} = process.env;
-const {container_name, port: dbPort} = swarmConfig[db];
+const {container_name} = swarmConfig[db];
 const path = require('path');
 
-const {sha2_256, nodeUtil} = require('../common/nodejs/helper');
-const {fsExtra, homeResolve} = nodeUtil.helper();
+const {sha2_256, nodeUtil: {helper: {fsExtra, homeResolve}}} = require('../common/nodejs/helper');
 const {DBInterface} = require('khala-kvdb');
 
 const dockerUtil = require('../common/nodejs/helper').dockerode.util;

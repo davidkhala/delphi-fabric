@@ -6,13 +6,13 @@ const logger = helper.getLogger('test:add local orderer');
 const {CryptoPath} = require('../../common/nodejs/path');
 const {genOrderer, init} = require('../../common/nodejs/ca-crypto-gen');
 const caUtil = require('../../common/nodejs/ca');
-const {nodeUtil, dockerode} = require('../../common/nodejs/helper');
+const {dockerode} = require('../../common/nodejs/helper');
+const {fsExtra, sleep, homeResolve} = require('../../common/nodejs');
 const {inflateContainerName, containerDelete, containerStart} = dockerode.util;
 const {swarmServiceName} = dockerode.swarmUtil;
 const dockerCmd = dockerode.cmd;
 const {runOrderer, runCA} = require('../../common/nodejs/fabric-dockerode');
 const {RequestPromise} = require('khala-nodeutils/request');
-const {fsExtra, sleep, homeResolve} = nodeUtil.helper();
 const peerUtil = require('../../common/nodejs/peer');
 
 const caCryptoConfig = homeResolve(mspDir);

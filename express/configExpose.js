@@ -1,5 +1,4 @@
-const BaseApp = require('../common/nodejs/helper').nodeUtil.baseApp();
-const router = BaseApp.getRouter();
+const router = require('../common/nodejs/helper').nodeUtil.baseApp.getRouter();
 
 router.get('/orgs', (req, res) => {
 	const orgsJson = require('../config/orgs.json');

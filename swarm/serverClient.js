@@ -1,9 +1,7 @@
 const logger = require('../common/nodejs/logger').new('ServerClient');
 const fs = require('fs');
 const path = require('path');
-const {nodeUtil, sha2_256} = require('../common/nodejs/helper');
-const {fsExtra} = nodeUtil.helper();
-const {RequestPromise} = nodeUtil.request();
+const {nodeUtil: {helper: {fsExtra}, request: {RequestPromise}}, sha2_256} = require('../common/nodejs/helper');
 
 exports.leader = {
 	update: (serverBaseUrl, {ip, hostname, managerToken, workerToken}) => {
