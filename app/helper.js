@@ -14,10 +14,8 @@ const projectResolve = (...args) => path.resolve(projectRoot, ...args);
 const UserUtil = require('../common/nodejs/user');
 const OrdererUtil = require('../common/nodejs/orderer');
 const channelUtil = require('../common/nodejs/channel');
-const {nodeUtil} = require('../common/nodejs/helper');
-const {homeResolve} = nodeUtil.helper();
+const {helper: {homeResolve}, random: {randomKeyOf}} = require('../common/nodejs/helper').nodeUtil;
 const CRYPTO_CONFIG_DIR = homeResolve(globalConfig.docker.volumes.MSPROOT);
-const {randomKeyOf} = nodeUtil.random();
 
 const preparePeer = (orgName, peerIndex, peerConfig) => {
 	const {port: peerPort} = peerConfig;

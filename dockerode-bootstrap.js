@@ -10,24 +10,20 @@ const {
 	chaincodeClean, tasksWaitUntilLive, fabricImagePull, tasksWaitUntilDead
 	, swarmRenew
 } = require('./common/nodejs/fabric-dockerode');
-const ClientUtil = require('./common/nodejs/client');
 const {CryptoPath} = require('./common/nodejs/path');
-const {nodeUtil, dockerode} = require('./common/nodejs/helper');
+const {dockerode} = require('./common/nodejs/helper');
 const {PM2} = require('khala-pm2');
-const {ping} = nodeUtil.request();
 
 const {
 	containerDelete, volumeCreateIfNotExist, networkCreateIfNotExist,
 	volumeRemove, prune: {system: pruneLocalSystem}
 } = dockerode.util;
 const {swarmServiceName, constraintSelf, serviceDelete, prune: {system: pruneSwarmSystem}} = dockerode.swarmUtil;
-const {advertiseAddr, joinToken} = dockerode.cmd;
-const {hostname, homeResolve, fsExtra} = require('./common/nodejs/helper').nodeUtil.helper();
+const {homeResolve, fsExtra} = require('./common/nodejs');
 const MSPROOT = homeResolve(globalConfig.docker.volumes.MSPROOT);
 const CONFIGTX = homeResolve(globalConfig.docker.volumes.CONFIGTX);
 const {docker: {fabricTag, caTag, network, thirdPartyTag}, TLS} = globalConfig;
 
-const serverClient = require('./swarm/serverClient');
 const nodeServers = {
 	swarmServer: path.resolve(__dirname, 'swarm', 'swarmServerPM2.js'),
 	signServer: path.resolve(__dirname, 'swarm', 'signServerPM2.js')

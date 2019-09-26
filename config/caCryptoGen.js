@@ -4,7 +4,7 @@ const fs = require('fs');
 const {initAdmin, genPeer, init, genOrderer, genUser, genClientKeyPair} = require('../common/nodejs/ca-crypto-gen');
 const {pkcs11_key} = require('../common/nodejs/ca');
 const pathUtil = require('../common/nodejs/path');
-const {nodeUtil, dockerode} = require('../common/nodejs/helper');
+const {nodeUtil: {helper: {homeResolve, fsExtra}}, dockerode} = require('../common/nodejs/helper');
 const dockerCmd = dockerode.cmd;
 const {CryptoPath} = pathUtil;
 const logger = require('../common/nodejs/logger').new('caCryptoGen');
@@ -12,7 +12,6 @@ const globalConfig = require('../config/orgs');
 const userUtil = require('../common/nodejs/user');
 const helper = require('../app/helper');
 
-const {homeResolve, fsExtra} = nodeUtil.helper();
 const path = require('path');
 const caCryptoConfig = homeResolve(globalConfig.docker.volumes.MSPROOT);
 const {TLS} = globalConfig;

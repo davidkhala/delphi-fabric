@@ -1,5 +1,5 @@
 // docker run --detach --publish=3001:3001 --env deployment=$deployment --name ucare fabric-middleware-ucare
-const {dockerode, nodeUtil} = require('../../common/nodejs/helper');
+const {dockerode} = require('../../common/nodejs/helper');
 const {action} = process.env;
 const {projectResolve} = require('../../app/helper');
 const Cmd = ['node', 'ping.js'];

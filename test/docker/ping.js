@@ -1,6 +1,6 @@
 const fs = require('fs');
 const PeerUtil = require('khala-fabric-sdk-node/peer');
-const {homeResolve} = require('khala-fabric-sdk-node/helper').nodeUtil.helper();
+const {helper: {homeResolve}} = require('khala-fabric-sdk-node').nodeUtil;
 const ping = async () => {
 	const host = 'peer0.astri.org';
 	const cert = homeResolve('ca.crt');
@@ -26,7 +26,7 @@ const ping2 = async () => {
 	const peerOpts = {
 		clientKey,
 		clientCert,
-		pem,
+		pem
 	};
 	const peer = new PeerUtil.Peer(peerUrl, peerOpts);
 	await PeerUtil.ping(peer);

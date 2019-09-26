@@ -4,8 +4,7 @@ const {
 const {
 	runPeer
 } = require('../../common/nodejs/fabric-dockerode');
-const {nodeUtil} = require('../../common/nodejs/helper');
-const {homeResolve} = nodeUtil.helper();
+const {nodeUtil: {helper: {homeResolve}}} = require('../../common/nodejs/helper');
 const globalConfig = require('../../config/orgs');
 const {TLS} = globalConfig;
 const peerUtil = require('../../common/nodejs/peer');

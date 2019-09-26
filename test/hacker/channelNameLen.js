@@ -1,6 +1,6 @@
 const helper = require('../../app/helper');
 const {create} = require('../../app/channelHelper');
-const {homeResolve} = require('../../common/nodejs/helper').nodeUtil.helper();
+const {helper: {homeResolve}} = require('../../common/nodejs/helper').nodeUtil;
 const ChannelUtil = require('../../common/nodejs/channel');
 const globalConfig = require('../../config/orgs.json');
 
@@ -21,15 +21,6 @@ const task = async () => {
 	await createTask(channel, orderer);
 
 };
-
-
-
-
-
-
-
-
-
 
 
 task();

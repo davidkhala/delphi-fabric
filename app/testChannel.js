@@ -1,7 +1,7 @@
 const {create, joinAll, updateAnchorPeers} = require('./channelHelper');
 const ChannelUtil = require('../common/nodejs/channel');
 const helper = require('./helper');
-const {sleep, homeResolve, fsExtra} = require('../common/nodejs/helper').nodeUtil.helper();
+const {sleep, homeResolve, fsExtra} = require('../common/nodejs');
 const path = require('path');
 const channelName = 'allchannel';
 

@@ -1,6 +1,5 @@
-const {nodeUtil} = require('../../common/nodejs/helper');
-const logger = nodeUtil.devLogger('test:peer HA');
-const {sleep} = nodeUtil.helper();
+const {devLogger, helper: {sleep}} = require('../../common/nodejs/helper').nodeUtil;
+const logger = devLogger('test:peer HA');
 const helper = require('../../app/helper');
 const {installs} = require('../../app/installHelper');
 const {join} = require('../../common/nodejs/channel');
