@@ -1,3 +1,6 @@
+/*
+outputChannelJson has been moved to test/configtxlatorReadTest.js
+ */
 const {create, joinAll, updateAnchorPeers} = require('./channelHelper');
 const ChannelUtil = require('../common/nodejs/channel');
 const helper = require('./helper');
@@ -20,15 +23,6 @@ const anchorPeerTask = async () => {
 		await updateAnchorPeers(path.resolve(__dirname, '../config/configtx.yaml'), channelName, org);
 		await sleep(1000);// TODO wait block to broadcast
 	}
-};
-const outputChannelJson = async (peer) => {
-	const configtxlator = require('../common/nodejs/configtxlator');
-	const client = await helper.getOrgAdmin(peer ? peer.peerConfig.orgName : undefined, peer ? 'peer' : 'orderer');
-
-	const channel = helper.prepareChannel(peer ? channelName : undefined, client);
-	const {original_config} = await configtxlator.getChannelConfigReadable(channel, peer);
-
-	fsExtra.outputFileSync(`${channel.getName()}.json`, original_config);
 };
 const taskViewChannelBlock = async () => {
 	await task();

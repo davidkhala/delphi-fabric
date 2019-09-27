@@ -5,9 +5,10 @@ const {fsExtra} = require('khala-nodeutils/helper');
 const logger = helper.getLogger('test:configtxlator');
 const appChannel = async () => {
 	try {
-		const peerClient = await helper.getOrgAdmin(undefined, 'peer'); // only peer user can read channel
+		const peerOrg = helper.randomOrg('peer');
+		const peerClient = await helper.getOrgAdmin(peerOrg, 'peer'); // only peer user can read channel
 		const channel = helper.prepareChannel(channelName, peerClient);
-		const peer = channel.getPeers()[0];
+		const peer = helper.newPeer(0, peerOrg);
 		const {original_config} = await configtxlator.getChannelConfigReadable(channel, peer);
 
 		fsExtra.outputFileSync(`${channelName}.json`, original_config);
