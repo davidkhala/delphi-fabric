@@ -245,7 +245,7 @@ exports.down = async () => {
 
 		const binManager = new BinManager();
 
-		await binManager.configtxlator('down');
+		await binManager.configtxlatorRESTServer('down');
 	} catch (err) {
 		logger.error(err);
 		process.exit(1);
@@ -259,7 +259,7 @@ exports.up = async () => {
 		await fabricImagePull({fabricTag, thirdPartyTag});
 
 		const binManager = new BinManager();
-		await binManager.configtxlator('start');
+		await binManager.configtxlatorRESTServer('start');
 
 		await networkCreateIfNotExist({Name: network});
 
