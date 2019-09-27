@@ -31,11 +31,11 @@ const getCaService = async (port, domain) => {
 	return caUtil.new(caUrl);
 };
 exports.getCaService = getCaService;
-exports.genUser = async ({userName, password}, orgName, swarm) => {
-	logger.debug('genUser', {userName, password, orgName, swarm});
+exports.genUser = async ({userName, password}, orgName) => {
+	logger.debug('genUser', {userName, password, orgName});
 	const {config, nodeType} = helper.findOrgConfig(orgName);
 	const mspId = config.mspid;
-	const caService = await getCaService(config.ca.portHost, orgName, swarm);
+	const caService = await getCaService(config.ca.portHost, orgName);
 
 	const cryptoPath = new CryptoPath(caCryptoConfig, {
 		[nodeType]: {
@@ -61,7 +61,7 @@ exports.genUser = async ({userName, password}, orgName, swarm) => {
 
 };
 
-exports.genAll = async (swarm) => {
+exports.genAll = async () => {
 
 	const {type} = globalConfig.orderer;
 
@@ -84,7 +84,7 @@ exports.genAll = async (swarm) => {
 				}
 			});
 
-			const caService = await getCaService(ordererConfig.ca.portHost, domain, swarm);
+			const caService = await getCaService(ordererConfig.ca.portHost, domain);
 			const admin = await init(caService, adminCryptoPath, nodeType, mspId);
 			const cryptoPath = new CryptoPath(caCryptoConfig, {
 				orderer: {
@@ -101,7 +101,7 @@ exports.genAll = async (swarm) => {
 				const ordererConfig = ordererOrgs[domain];
 				const mspId = ordererConfig.mspid;
 
-				const caService = await getCaService(ordererConfig.ca.portHost, domain, swarm);
+				const caService = await getCaService(ordererConfig.ca.portHost, domain);
 				const adminCryptoPath = new CryptoPath(caCryptoConfig, {
 					orderer: {
 						org: domain
@@ -156,7 +156,7 @@ exports.genAll = async (swarm) => {
 				},
 				password: userUtil.adminPwd
 			});
-			const caService = await getCaService(peerOrgConfig.ca.portHost, domain, swarm);
+			const caService = await getCaService(peerOrgConfig.ca.portHost, domain);
 			const admin = await init(caService, adminCryptoPath, nodeType, mspId);
 			const promises = [];
 			await genNSaveClientKeyPair(caService, adminCryptoPath, admin, domain);
