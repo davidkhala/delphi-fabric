@@ -1,4 +1,5 @@
 const helper = require('../app/helper');
+process.env.binPath = helper.projectResolve('common/bin');
 const configtxlator = require('../common/nodejs/configtxlator');
 const channelName = 'allchannel';
 const {fsExtra} = require('../common/nodejs');
