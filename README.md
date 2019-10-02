@@ -73,7 +73,7 @@ Finished
 - CRl: https://hyperledger-fabric.readthedocs.io/en/release-1.4/msp.html?highlight=CRL#msp-setup-on-the-peer-orderer-side
 - system upgrade: how to migrate to 1.4. from 1.1
 - 开发模式:--peer-chaincodedev: try to set via core.yaml
-- resume feature [channelUpdate](./channelUpdate.md) 
+- resume feature [channelUpdate](test/migrate/channelUpdate.md) 
 ## New feature, patch required for node-sdk
  
 - feature: implement configtx in node-sdk??
