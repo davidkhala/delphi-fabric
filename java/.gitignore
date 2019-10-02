@@ -1,8 +1,6 @@
-.idea/
-/.gradle/
-/gradle/
-/gradlew
-/gradlew.bat
-/out/
-/src/test/
+.gradle
+gradle
+gradlew
+gradlew.bat
+out
 
