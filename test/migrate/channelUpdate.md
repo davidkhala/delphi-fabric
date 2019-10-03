@@ -1,4 +1,21 @@
 ```
+const signatureCollector = async (proto) => {
+	const tempFile = projectResolve(cache, 'proto');
+	fs.writeFileSync(tempFile, proto);
+	const formData = {
+		proto: fs.createReadStream(tempFile)
+	};
+	const url = `http://localhost:${swarmServerPort}/channel/getSwarmSignatures`;
+	const resp = await RequestPromise({url, formData});
+
+	const {signatures} = resp;
+	logger.debug('signatureCollector got', signatures.length);
+	return {
+		signatures: signUtil.fromBase64(signatures),
+	};
+
+};
+
 router.post('/createOrUpdateOrg', multerCache.fields([{name: 'admins'}, {name: 'root_certs'}, {name: 'tls_root_certs'}])
 	, async (req, res) => {
 		logger.debug('[start]createOrUpdateOrg');

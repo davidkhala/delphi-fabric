@@ -161,8 +161,8 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 				TickInterval: '500ms', // the time interval between two Node.Tick invocations.
 				ElectionTick: Math.max(10, HeartbeatTick + 1),
 				HeartbeatTick,     // a leader sends heartbeat messages to maintain its leadership every HeartbeatTick ticks.
-				MaxInflightBlocks: 5, // TODO limits the max number of in-flight append messages during optimistic replication phase.
-				SnapshotIntervalSize: '20 MB' // TODO number of bytes per which a snapshot is taken
+				MaxInflightBlocks: 5, // limits the max number of in-flight append messages during optimistic replication phase.
+				SnapshotIntervalSize: '20 MB' // number of bytes per which a snapshot is taken
 			}
 		};
 		OrdererConfig.Organizations = Organizations;

@@ -48,7 +48,7 @@ Test on single host
 Finished
 -----------------------
 - use npm:js-yaml to write YAML files instead of jq
-- update system channel ``testchainid``
+- update system channel `testchainid`
 - new orderer with same org
 - fabric-ca CRUD user and identityService
 - chaincode version,ID string RegX
