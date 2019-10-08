@@ -17,6 +17,18 @@ const appChannel = async (viaServer) => {
 		logger.error(e);
 	}
 };
+const appChannelByOrderer = async (viaServer) => {
+	try {
+		const ordererOrg = helper.randomOrg('orderer');
+		const ordererClient = await helper.getOrgAdmin(ordererOrg, 'orderer'); // only peer user can read channel
+		const channel = helper.prepareChannel(channelName, ordererClient);
+		const {original_config} = await configtxlator.getChannelConfigReadable(channel, undefined, viaServer);
+
+		fsExtra.outputFileSync(`${channelName}-viaOrderer${viaServer ? '-viaServer' : ''}.json`, original_config);
+	} catch (e) {
+		logger.error(e);
+	}
+};
 const systemChannel = async (viaServer) => {
 	try {
 		const ordererOrg = helper.randomOrg('orderer');
@@ -33,7 +45,8 @@ const flow = async () => {
 	await appChannel();
 	await systemChannel();
 	await appChannel(true);
-	await appChannel(true);
+	await systemChannel(true);
+	await appChannelByOrderer();
 };
 flow();
 
