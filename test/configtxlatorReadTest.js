@@ -1,8 +1,8 @@
 const helper = require('../app/helper');
+const testHelper = require('./testHelper');
 process.env.binPath = helper.projectResolve('common/bin');
 const configtxlator = require('../common/nodejs/configtxlator');
 const channelName = 'allchannel';
-const {fsExtra} = require('../common/nodejs');
 const logger = helper.getLogger('test:configtxlator');
 const appChannel = async (viaServer) => {
 	try {
@@ -12,7 +12,7 @@ const appChannel = async (viaServer) => {
 		const peer = helper.newPeer(0, peerOrg);
 		const {original_config} = await configtxlator.getChannelConfigReadable(channel, peer, viaServer);
 
-		fsExtra.outputFileSync(`${channelName}${viaServer ? '-viaServer' : ''}.json`, original_config);
+		testHelper.writeArtifacts(original_config, `${channelName}${viaServer ? '-viaServer' : ''}.json`);
 	} catch (e) {
 		logger.error(e);
 	}
@@ -24,7 +24,7 @@ const appChannelByOrderer = async (viaServer) => {
 		const channel = helper.prepareChannel(channelName, ordererClient);
 		const {original_config} = await configtxlator.getChannelConfigReadable(channel, undefined, viaServer);
 
-		fsExtra.outputFileSync(`${channelName}-viaOrderer${viaServer ? '-viaServer' : ''}.json`, original_config);
+		testHelper.writeArtifacts(original_config, `${channelName}-viaOrderer${viaServer ? '-viaServer' : ''}.json`);
 	} catch (e) {
 		logger.error(e);
 	}
@@ -36,7 +36,7 @@ const systemChannel = async (viaServer) => {
 		const channel = helper.prepareChannel(undefined, ordererClient);
 		const {original_config} = await configtxlator.getChannelConfigReadable(channel, undefined, viaServer);
 
-		fsExtra.outputFileSync(`testchainid${viaServer ? '-viaServer' : ''}.json`, original_config);
+		testHelper.writeArtifacts(original_config, `testchainid${viaServer ? '-viaServer' : ''}.json`);
 	} catch (e) {
 		logger.error(e);
 	}
