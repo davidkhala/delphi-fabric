@@ -42,8 +42,8 @@ const systemChannel = async (viaServer) => {
 	}
 };
 const flow = async () => {
-	await appChannel();
 	await systemChannel();
+	await appChannel();
 	await appChannel(true);
 	await systemChannel(true);
 	await appChannelByOrderer();

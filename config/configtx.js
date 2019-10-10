@@ -143,27 +143,15 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 				const {cert} = ordererCryptoPath.TLSFile('orderer');
 				const Host = `${ordererName}.${ordererOrgName}`;
 				Addresses.push(`${Host}:7050`);
-				const consenter = {Host, Port: 7050};
-				if (TLS) {
-					consenter.ClientTLSCert = cert;
-					consenter.ServerTLSCert = cert;
-				}
+				const consenter = {Host, Port: 7050, ClientTLSCert: cert, ServerTLSCert: cert}; // TODO is there any leakage
 				Consenters.push(consenter);
 			}
 			Organizations.push(OrganizationBuilder(ordererOrgName, ordererOrgConfig, undefined, undefined, 'orderer', Addresses));
 			globalOrdererAddresses = globalOrdererAddresses.concat(Addresses);
 		}
 
-		const HeartbeatTick = 1;
 		OrdererConfig.EtcdRaft = {
-			Consenters,
-			Options: {
-				TickInterval: '500ms', // the time interval between two Node.Tick invocations.
-				ElectionTick: Math.max(10, HeartbeatTick + 1),
-				HeartbeatTick,     // a leader sends heartbeat messages to maintain its leadership every HeartbeatTick ticks.
-				MaxInflightBlocks: 5, // limits the max number of in-flight append messages during optimistic replication phase.
-				SnapshotIntervalSize: '20 MB' // number of bytes per which a snapshot is taken
-			}
+			Consenters
 		};
 		OrdererConfig.Organizations = Organizations;
 	}
