@@ -1,9 +1,10 @@
-const {Configtxlator: {channelUpdate, ConfigFactory}, Channel: ChannelUtil, Signature: {signs}, sleep} = require('../../common/nodejs');
+const {ChannelConfig: {channelUpdate, ConfigFactory}, Channel: ChannelUtil, Signature: {signs}, sleep} = require('../../common/nodejs');
 const helper = require('../../app/helper');
 const logger = helper.getLogger('kafka migrate: maintain mode');
 process.env.binPath = helper.projectResolve('common/bin');
 
-const channelUpdateTest = async (channel, orderer, toMaintenance, viaServer, peer, signers = [channel._clientContext], alternativeClient) => {
+// peer is not used since peer could not get latest config during maintenance
+const channelUpdateTest = async (channel, orderer, toMaintenance, viaServer, signers = [channel._clientContext], alternativeClient) => {
 	const signatureCollector = async (proto) => {
 		const signatures = signs(signers, proto);
 		return signatures;
@@ -14,29 +15,38 @@ const channelUpdateTest = async (channel, orderer, toMaintenance, viaServer, pee
 		return config.maintenanceMode(toMaintenance).build();
 	};
 
-	await channelUpdate(channel, orderer, configChangeCallback, signatureCollector, {viaServer, peer, client: alternativeClient});
+	await channelUpdate(channel, orderer, configChangeCallback, signatureCollector, {viaServer, client: alternativeClient});
 };
 const task = async () => {
 	const ordererClient = await helper.getOrgAdmin(undefined, 'orderer');
 	const systemChannel = helper.prepareChannel('testchainid', ordererClient);
 	const orderers = await ChannelUtil.getOrderers(systemChannel, true);
 	const orderer = orderers[0];
-
-	logger.debug('T1: migrate sysChannel to STATE_MAINTENANCE');
-	await channelUpdateTest(systemChannel, orderer, true, true);
+	logger.debug('target orderer', orderer.getName());
 
 	const peerClient = await helper.getOrgAdmin('icdd', 'peer');
 	const peerClient1 = await helper.getOrgAdmin('astri.org', 'peer');
-	const appChannel = helper.prepareChannel('allchannel', peerClient);
-	const peer = helper.newPeer(0, 'icdd');
-	logger.debug('T2: migrate appChannel to STATE_MAINTENANCE');
-	await channelUpdateTest(appChannel, orderer, true, false, peer, [peerClient, peerClient1, ordererClient], ordererClient);
 
-	await sleep(10000);
-	logger.debug('T3: migrate to STATE_NORMAL');
-	await channelUpdateTest(systemChannel, orderer);
-	logger.debug('T4: migrate appChannel to STATE_NORMAL');
-	await channelUpdateTest(appChannel, orderer, false, false, peer, [peerClient, peerClient1, ordererClient], ordererClient);
+	const appChannel = helper.prepareChannel('allchannel', ordererClient);
+	switch (parseInt(process.env.taskID)) {
+		case 1:
+			logger.debug('T1: migrate sysChannel to STATE_MAINTENANCE');
+			await channelUpdateTest(systemChannel, orderer, true, true);
+			break;
+		case 2:
+			logger.debug('T2: migrate appChannel to STATE_MAINTENANCE');
+			await channelUpdateTest(appChannel, orderer, true, false, [peerClient, peerClient1, ordererClient], ordererClient);
+			break;
+		case 3:
+			logger.debug('T3: migrate to STATE_NORMAL');
+			await channelUpdateTest(systemChannel, orderer);
+			break;
+		case 4:
+			logger.debug('T4: migrate appChannel to STATE_NORMAL');
+			await channelUpdateTest(appChannel, orderer, false, false, [peerClient, peerClient1, ordererClient], ordererClient);
+			break;
+	}
+
 
 };
 task();
