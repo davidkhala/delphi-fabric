@@ -14,6 +14,7 @@ Profiles:
         Rule: MAJORITY Admins
     Orderer:
       BatchTimeout: 1s
+      Addresses: {}
       BatchSize:
         MaxMessageCount: 1
         AbsoluteMaxBytes: 99 MB
@@ -43,7 +44,7 @@ Profiles:
       Organizations:
         - Name: icdd.astri.org
           ID: ICDDMSP
-          MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/icdd.astri.org/msp
+          MSPDir: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/icdd.astri.org/msp
           Policies:
             Readers:
               Type: Signature
@@ -63,7 +64,7 @@ Profiles:
         Organizations:
           - Name: astri.org
             ID: ASTRIMSP
-            MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/astri.org/msp
+            MSPDir: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/astri.org/msp
             Policies:
               Readers:
                 Type: Signature
@@ -80,7 +81,7 @@ Profiles:
               - 'orderer2.icdd.astri.org:7050'
           - Name: icdd
             ID: icddMSP
-            MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp
+            MSPDir: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp
             Policies:
               Readers:
                 Type: Signature
@@ -102,7 +103,7 @@ Profiles:
       Organizations:
         - Name: astri.org
           ID: ASTRIMSP
-          MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/astri.org/msp
+          MSPDir: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/astri.org/msp
           Policies:
             Readers:
               Type: Signature
@@ -117,7 +118,7 @@ Profiles:
             - {}
         - Name: icdd
           ID: icddMSP
-          MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp
+          MSPDir: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp
           Policies:
             Readers:
               Type: Signature

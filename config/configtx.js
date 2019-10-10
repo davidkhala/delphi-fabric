@@ -1,5 +1,4 @@
 const globalConfig = require('./orgs.json');
-const {TLS} = globalConfig;
 const path = require('path');
 const {yaml, helper: {fsExtra}} = require('../common/nodejs/helper').nodeUtil;
 const {CryptoPath} = require('../common/nodejs/path');
@@ -74,6 +73,7 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 	};
 	const OrdererConfig = {
 		BatchTimeout: '1s',
+		Addresses: {}, // empty to overwrite default ['127.0.0.1:7050']
 		BatchSize: {
 			MaxMessageCount: 1,
 			AbsoluteMaxBytes: '99 MB',
@@ -143,7 +143,7 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 				const {cert} = ordererCryptoPath.TLSFile('orderer');
 				const Host = `${ordererName}.${ordererOrgName}`;
 				Addresses.push(`${Host}:7050`);
-				const consenter = {Host, Port: 7050, ClientTLSCert: cert, ServerTLSCert: cert}; // TODO is there any leakage
+				const consenter = {Host, Port: 7050, ClientTLSCert: cert, ServerTLSCert: cert}; // only accept TLS cert
 				Consenters.push(consenter);
 			}
 			Organizations.push(OrganizationBuilder(ordererOrgName, ordererOrgConfig, undefined, undefined, 'orderer', Addresses));
