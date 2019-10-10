@@ -30,19 +30,19 @@ const task = async () => {
 	const appChannel = helper.prepareChannel('allchannel', ordererClient);
 	switch (parseInt(process.env.taskID)) {
 		case 1:
-			logger.debug('T1: migrate sysChannel to STATE_MAINTENANCE');
+			logger.debug(`${process.env.taskID}: migrate sysChannel to STATE_MAINTENANCE`);
 			await channelUpdateTest(systemChannel, orderer, true, true);
 			break;
 		case 2:
-			logger.debug('T2: migrate appChannel to STATE_MAINTENANCE');
+			logger.debug(`${process.env.taskID}: migrate appChannel to STATE_MAINTENANCE`);
 			await channelUpdateTest(appChannel, orderer, true, false, [peerClient, peerClient1, ordererClient], ordererClient);
 			break;
 		case 3:
-			logger.debug('T3: migrate to STATE_NORMAL');
+			logger.debug(`${process.env.taskID}: migrate to STATE_NORMAL`);
 			await channelUpdateTest(systemChannel, orderer);
 			break;
 		case 4:
-			logger.debug('T4: migrate appChannel to STATE_NORMAL');
+			logger.debug(`${process.env.taskID}: migrate appChannel to STATE_NORMAL`);
 			await channelUpdateTest(appChannel, orderer, false, false, [peerClient, peerClient1, ordererClient], ordererClient);
 			break;
 	}

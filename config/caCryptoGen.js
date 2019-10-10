@@ -119,7 +119,10 @@ exports.genAll = async () => {
 					const cryptoPath = new CryptoPath(caCryptoConfig, {
 						orderer: {
 							org: domain, name: ordererName
-						}
+						},
+						user: {
+							name: userUtil.adminName
+						},
 					});
 					promises.push(genOrderer(caService, cryptoPath, admin, {TLS}));
 				}
