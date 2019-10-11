@@ -15,15 +15,13 @@ prepareNetwork() {
 }
 peerRecoverTest() {
 	down
-	sudo rm -rf $HOME/Documents/backupVolumes/
-	mkdir -p $HOME/Documents/backupVolumes/peer1.icdd.org/
+	sudo rm -rf $CURRENT/stateVolumes/*
 	up
 	node app/testPeerBackup
 }
 ordererRecoverTest() {
 	down
-	sudo rm -rf $HOME/Documents/backupVolumes/
-	mkdir -p $HOME/Documents/backupVolumes/orderer2/
+	sudo rm -rf $CURRENT/stateVolumes/*
 	up
 	node app/testOrdererBackup
 }

@@ -73,6 +73,7 @@ Finished
 - CRl: https://hyperledger-fabric.readthedocs.io/en/release-1.4/msp.html?highlight=CRL#msp-setup-on-the-peer-orderer-side
 - system upgrade: how to migrate to 1.4. from 1.1
 - 开发模式:--peer-chaincodedev: try to set via core.yaml
+- [orgs.json] use directly orderer container name key to orderer and same for peers  
 ## New feature, patch required for node-sdk
  
 - feature: implement configtx in node-sdk??
