@@ -19,10 +19,10 @@ const getOrdererContainerName = (org, index) => {
 		return `orderer${index}.${org}`;
 	}
 };
-exports.stopOrderer = async (org, index) => { // TODO
+exports.stopOrderer = async (org, index) => {
 	await containerDelete(getOrdererContainerName(org, index));
 };
-exports.resumeOrderer = async (org, index) => { // TODO
+exports.resumeOrderer = async (org, index) => {
 	const container_name = getOrdererContainerName(org, index);
 	const {type} = globalConfig.orderer;
 	let ordererConfig;
@@ -46,7 +46,6 @@ exports.resumeOrderer = async (org, index) => { // TODO
 	});
 };
 exports.resumePeer = async (org, peerIndex) => {
-
 	const orgsConfig = globalConfig.orgs;
 	const orgConfig = orgsConfig[org];
 	const peersConfig = orgConfig.peers;
@@ -66,10 +65,8 @@ exports.resumePeer = async (org, peerIndex) => {
 		}
 	});
 	const {peerHostName} = cryptoPath;
-
 	const nodeType = 'peer';
 	const tls = TLS ? cryptoPath.TLSFile(nodeType) : undefined;
-
 	const configPath = cryptoPath.MSP(nodeType);
 
 	await runPeer({
@@ -81,6 +78,5 @@ exports.resumePeer = async (org, peerIndex) => {
 			configPath
 		}, couchDB, stateVolume
 	});
-
-
 };
+

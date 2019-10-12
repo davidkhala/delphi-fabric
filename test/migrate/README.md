@@ -24,8 +24,13 @@ Please apply all [channelConfigUpdate] to a single orderer during migration step
     1. stop orderers
     2. stop kafkas 
     3. stop zookeepers
-    4. restart orderers only the ordering service nodes. 
-    5. Validate that a leader has been elected on each channel by inspecting the node logs. 
+    4. restart only the orderers with additional environment set, at least including
+        ```shell script
+                General.Cluster.ClientCertificate = ""
+                General.Cluster.ClientPrivateKey = ""
+                General.Cluster.RootCAs = []
+        ```
+    5. sleep ~2s; then validate that a leader has been elected on each channel by inspecting the node logs. 
     ```shell script
     2019-05-26 10:07:44.075 UTC [orderer.consensus.etcdraft] serveRequest -> INFO 047 Raft leader changed: 0 -> 1 channel=testchannel1 node=2
     ```

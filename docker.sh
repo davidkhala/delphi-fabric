@@ -4,6 +4,7 @@ CURRENT=$(cd $(dirname ${BASH_SOURCE}) && pwd)
 export binPath=$CURRENT/common/bin/
 down() {
 	node -e "require('./dockerode-bootstrap').down()"
+	sudo rm -rf $CURRENT/stateVolumes/*
 }
 up() {
 	prepareNetwork
@@ -12,18 +13,6 @@ up() {
 
 prepareNetwork() {
 	node -e "require('./dockerode-bootstrap').up()"
-}
-peerRecoverTest() {
-	down
-	sudo rm -rf $CURRENT/stateVolumes/*
-	up
-	node app/testPeerBackup
-}
-ordererRecoverTest() {
-	down
-	sudo rm -rf $CURRENT/stateVolumes/*
-	up
-	node app/testOrdererBackup
 }
 restart() {
 	down

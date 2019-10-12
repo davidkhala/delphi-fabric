@@ -89,12 +89,15 @@
           },
           "orderers": {
             "orderer0": {
+              "stateVolume": "Documents/delphi-fabric/stateVolumes/orderer0",
               "portHost": 7050
             },
             "orderer1": {
+              "stateVolume": "Documents/delphi-fabric/stateVolumes/orderer1",
               "portHost": 8050
             },
             "orderer2": {
+              "stateVolume": "Documents/delphi-fabric/stateVolumes/orderer2",
               "portHost": 9050
             }
           }

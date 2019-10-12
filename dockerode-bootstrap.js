@@ -23,13 +23,13 @@ const {docker: {fabricTag, caTag, network, thirdPartyTag}, TLS} = globalConfig;
 
 const BinManager = require('./common/nodejs/binManager');
 
-exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'}, toStop) => {
-	const {orderer: {type, genesis_block: {file: BLOCK_FILE}}} = globalConfig;
+exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'}, toStop, type = globalConfig.orderer.type) => {
+	const {orderer: {genesis_block: {file: BLOCK_FILE}}} = globalConfig;
 	const CONFIGTXVolume = volumeName.CONFIGTX;
 	const MSPROOTVolume = volumeName.MSPROOT;
 	const imageTag = fabricTag;
 	const {MSPROOT} = peerUtil.container;
-	const cryptoType = 'orderer';
+	const nodeType = 'orderer';
 
 	const toggle = async ({orderer, domain, port, mspid}, OrdererType, stateVolume, operations) => {
 		const cryptoPath = new CryptoPath(MSPROOT, {
@@ -38,12 +38,12 @@ exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPRO
 
 		const {ordererHostName} = cryptoPath;
 		const container_name = ordererHostName;
-		const configPath = cryptoPath.MSP(cryptoType);
+		const configPath = cryptoPath.MSP(nodeType);
 
 		if (toStop) {
 			await containerDelete(container_name);
 		} else {
-			const tls = TLS ? cryptoPath.TLSFile(cryptoType) : undefined;
+			const tls = TLS ? cryptoPath.TLSFile(nodeType) : undefined;
 
 			await runOrderer({
 				container_name, imageTag, port, network,

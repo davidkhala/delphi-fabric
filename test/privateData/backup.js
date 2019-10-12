@@ -1,6 +1,6 @@
 const helper = require('../../app/helper');
 const logger = helper.getLogger('test:backup: chaincode=master');
-const {stopPeer, resumePeer} = require('../backup');
+const {stopPeer, resumePeer} = require('../../operations/backup');
 const {sleep} = require('../../common/nodejs');
 const {putPrivate, getPrivate} = require('../../cc/golang/master/masterInvoke');
 const install = require('../../cc/golang/master/masterInstall');
