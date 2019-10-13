@@ -1,7 +1,6 @@
 const helper = require('../app/helper');
 const logger = helper.getLogger('test:peer');
 const PeerUtil = require('../common/nodejs/peer');
-const fs = require('fs');
 const ping2Preconfig = async () => {
 	const peers = helper.allPeers();
 	const peer = peers[1];
@@ -15,18 +14,5 @@ const composerPing = async (composerRoot = '/home/david/') => {
 	const result = await PeerUtil.ping(peer);
 	logger.debug(peer.toString(), result);
 };
-const pingMCC = async () => {
-	const host = 'peer0.BC';
-	const cert = '/home/davidliu/crypto-config/peerOrganizations/BC/peers/peer0.BC/tls/ca.crt';
-	const pem = fs.readFileSync(cert).toString();
-	const peerUrl = 'grpcs://localhost:8051';
-	const peerOpts = {
-		'ssl-target-name-override': host,
-		pem
-	};
-	const peer = new PeerUtil.Peer(peerUrl, peerOpts);
-	await PeerUtil.ping(peer);
-};
-// ping2Preconfig();
-// composerPing();
-pingMCC();
+ping2Preconfig();
+composerPing();
