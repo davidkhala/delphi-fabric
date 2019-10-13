@@ -8,7 +8,7 @@ const ChannelUtil = require('../common/nodejs/channel');
 const EventHubUtil = require('../common/nodejs/eventHub');
 const golangUtil = require('../common/nodejs/golang');
 const {RoleIdentity, simplePolicyBuilder} = require('../common/nodejs/policy');
-const {collectionPolicyBuilder, collectionConfig} = require('../common/nodejs/privateData');
+const {collectionPolicyBuilder, ensureCollectionConfig} = require('../common/nodejs/privateData');
 const {couchDBIndex} = require('../common/nodejs/couchdb');
 const {endorsementHintsBuilder} = require('../common/nodejs/serviceDiscovery');
 const path = require('path');
@@ -66,7 +66,7 @@ const configParser = (configs) => {
 			const policy = collectionPolicyBuilder(config.mspIds);
 			config.name = name;
 			config.policy = policy;
-			collectionSet.push(collectionConfig(config));
+			collectionSet.push(ensureCollectionConfig(config));
 		}
 		result.collectionConfig = collectionSet;
 	}

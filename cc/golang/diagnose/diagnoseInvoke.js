@@ -114,3 +114,14 @@ exports.setEvent = async (peers, clientPeerOrg, {name, event}) => {
 	const args = [name, event];
 	return invoke(peers, clientPeerOrg, chaincodeId, fcn, args);
 };
+exports.putPrivate = async (peers, clientOrg, dataSet) => {
+	const fcn = 'putPrivate';
+	if (typeof dataSet !== 'object') {
+		throw Error('transient map should be a js object');
+	}
+	return invoke(peers, clientOrg, chaincodeId, fcn, [], dataSet);
+};
+exports.getPrivate = async (peers, clientOrg, key) => {
+	const fcn = 'getPrivate';
+	return query(peers, clientOrg, chaincodeId, fcn, [], {[key]: ''});
+};

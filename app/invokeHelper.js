@@ -34,8 +34,7 @@ exports.query = async (peers, clientOrg, chaincodeId, fcn, args = [], transientM
 	const client = await helper.getOrgAdmin(clientOrg);
 	const channel = helper.prepareChannel(channelName, client, true);
 	const {proposalResponses} = await query(channel, peers, {chaincodeId, fcn, args, transientMap});
-	const result = proposalResponses.map((entry) => proposalFlatten(rawPayload ? entry : proposalStringify(entry)));
-	return result;
+	return proposalResponses.map((entry) => proposalFlatten(rawPayload ? entry : proposalStringify(entry)));
 };
 exports.listenChaincodeEvent = async (peer, clientPeerOrg, chaincodeId, eventName = /event/i, onSuccess) => {
 	const logger = LogUtil.new('chaincode event', true);

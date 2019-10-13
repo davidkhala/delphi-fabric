@@ -43,7 +43,7 @@ const taskPeerHack = async () => {
 	await putRaw(peers, clientOrg, key, 'b');
 };
 
-const taskAttach = async () => {
+const taskHack = async () => {
 	const org1 = 'icdd';
 	const peers = helper.newPeers([0], org1);
 	try {
@@ -102,8 +102,22 @@ const overPaginationTest = async (pageSize) => {
 };
 
 
-const task = async () => {
+const task = async (taskID = process.env.taskID) => {
 	await diagnoseInstall.task();
-	await taskPagination();
+	switch (taskID) {
+		case 1:
+			await taskPagination();
+			break;
+		case 2:
+			await taskKeyEndorsement();
+			break;
+		case 3:
+			await taskPeerHack();
+			break;
+		case 4:
+			await taskHack();
+			break;
+	}
+
 };
 task();

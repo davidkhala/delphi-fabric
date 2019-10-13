@@ -19,7 +19,16 @@
     "path": "github.com/davidkhala/chaincode/golang/diagnose",
     "couchDBIndexes": [
       "Time"
-    ]
+    ],
+    "collectionsConfig": {
+      "private": {
+        "mspIds": [
+          "ASTRIMSP"
+        ],
+        "requiredPeerCount": 0,
+        "maxPeerCount": 4
+      }
+    }
   },
   "mainChain": {
     "path": "github.com/davidkhala/chaincode/golang/mainChain",
@@ -49,7 +58,6 @@
     "type": "node",
     "path": "github.com/davidkhala/chaincode/nodejs/stress"
   },
-
   "stupid": {
     "path": "github.com/davidkhala/stupid/chaincodes"
   }
