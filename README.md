@@ -18,10 +18,10 @@ _after first time clone this repository, submodule should be initialize_
 ----
  
 **Requirements & dependencies**
-  * fabric: 1.4.1 (for docker image, binary tool and fabric-sdk)
+  * fabric: 1.4.3 (for docker image, binary tool and fabric-sdk)
   * docker-ce 18.x
   * golang 1.11 
-  * node 8.10, npm 5.6 : npm install卡死的话，可以考虑添加淘宝的源
+  * node 8.16, npm 6.10.3 : npm install卡死的话，可以考虑添加淘宝的源
         - ``$ npm config set registry  https://registry.npm.taobao.org/``
   * java 1.8.0_151 (optional for java-sdk)
   * jq 1.5：a command line tool for parsing json format https://github.com/mikefarah/yq
@@ -61,7 +61,7 @@ Finished
 - CICD: using travis
 
 ## TODO
-- TLS, java sdk: keep update
+- java sdk: keep update
 - java chaincode
 - chaincode uninstall
 - pm2 to runConfigtxlator? without shell?
