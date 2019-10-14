@@ -10,5 +10,7 @@ matrix:
       script:
         - ./docker.sh
         - node cc/golang/diagnose/test/
+        - node test
+        - ./test/hsm.sh
 
 
