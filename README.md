@@ -59,7 +59,7 @@ Finished
 - peer, orderer backup and instant recover: "stateVolume": "Documents/backupVolumes/orderer/",
 - nodejs scripts work as runConfigtxgen.sh to wrap binaries
 - CICD: using travis
-
+- update anchor peers  /channel_group/groups/Application/groups/astri.org/values/AnchorPeers
 ## TODO
 - java sdk: keep update
 - java chaincode
@@ -72,6 +72,7 @@ Finished
 - CRl: https://hyperledger-fabric.readthedocs.io/en/release-1.4/msp.html?highlight=CRL#msp-setup-on-the-peer-orderer-side
 - system upgrade: how to migrate to 1.4. from 1.1
 - 开发模式:--peer-chaincodedev: try to set via core.yaml
+- create channel via ChannelConfig.js, add channelConfig validator as alternative of block waiter
 ## New feature, patch required for node-sdk
  
 - feature: implement configtx in node-sdk??

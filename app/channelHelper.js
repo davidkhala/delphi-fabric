@@ -1,9 +1,9 @@
 const helper = require('./helper.js');
-const logger = require('../common/nodejs/logger').new('channel helper');
 const ChannelUtil = require('../common/nodejs/channel');
+const {setupAnchorPeers, setAnchorPeers} = require('../common/nodejs/channelConfig');
 const {newEventHub, blockWaiter} = require('../common/nodejs/eventHub');
 
-const {create, join, updateAnchorPeers, getGenesisBlock} = ChannelUtil;
+const {create, join, getGenesisBlock} = ChannelUtil;
 const BinManager = require('../common/nodejs/binManager');
 const globalConfig = require('../config/orgs');
 const {sleep} = require('../common/nodejs');
@@ -61,7 +61,24 @@ exports.newEventHubs = async (channel, peerIndexes, orgName, inlineConnected = t
 		return newEventHub(channel, peer, inlineConnected);
 	});
 };
-exports.updateAnchorPeers = async (configtxYaml, channelName, orgName) => {
+
+exports.setAnchorPeersByOrg = async (channelName, OrgName) => {
+	const orderers = helper.newOrderers();
+	const orderer = orderers[0];
+	const orgConfig = globalConfig.channels[channelName].orgs[OrgName];
+	const {anchorPeerIndexes} = orgConfig;
+	const client = await helper.getOrgAdmin(OrgName);
+	const channel = helper.prepareChannel(channelName, client);
+
+	const anchorPeers = [];
+	for (const peerIndex of anchorPeerIndexes) {
+		const {container_name} = globalConfig.orgs[OrgName].peers[peerIndex];
+		anchorPeers.push({host: container_name, port: 7051});
+	}
+	await setAnchorPeers(channel, orderer, OrgName, anchorPeers);
+};
+
+exports.setupAnchorPeersFromFile = async (configtxYaml, channelName, orgName) => {
 	const anchorTx = helper.projectResolve('config', 'configtx', `${orgName}Anchors.tx`);
 	const binManager = new BinManager();
 	await binManager.configtxgen('anchorPeers', configtxYaml, channelName).genAnchorPeers(anchorTx, orgName);
@@ -70,10 +87,5 @@ exports.updateAnchorPeers = async (configtxYaml, channelName, orgName) => {
 
 	const channel = helper.prepareChannel(channelName, client);
 	const orderer = channel.getOrderers()[0];
-
-	const peer = helper.newPeer(0, orgName);
-	const eventHub = newEventHub(channel, peer, true);
-
-	await Promise.all([updateAnchorPeers(channel, anchorTx, orderer), blockWaiter(eventHub, 1)]);
-
+	await setupAnchorPeers(channel, orderer, anchorTx);
 };

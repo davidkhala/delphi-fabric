@@ -98,8 +98,8 @@ exports.newOrderers = () => {
 };
 
 /**
- * @param client
  * @param channelName default to system channel
+ * @param client
  * @param isRenew
  */
 exports.prepareChannel = (channelName, client, isRenew) => {

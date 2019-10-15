@@ -113,10 +113,18 @@
           "peerIndexes": [
             0,
             1
+          ],
+          "anchorPeerIndexes": [
+            0,
+            1
           ]
         },
         "icdd": {
           "peerIndexes": [
+            0,
+            1
+          ],
+          "anchorPeerIndexes": [
             0,
             1
           ]

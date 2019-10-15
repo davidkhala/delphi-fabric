@@ -1,7 +1,7 @@
 /*
 outputChannelJson has been moved to test/configtxlatorReadTest.js
  */
-const {create, joinAll, updateAnchorPeers} = require('./channelHelper');
+const {create, joinAll, setupAnchorPeersFromFile, setAnchorPeersByOrg} = require('./channelHelper');
 const ChannelUtil = require('../common/nodejs/channel');
 const helper = require('./helper');
 const {sleep, homeResolve, fsExtra} = require('../common/nodejs');
@@ -18,10 +18,15 @@ const createTask = async (channel, orderer) => {
 const joinTask = async () => {
 	await joinAll(channelName);
 };
-const anchorPeerTask = async () => {
+
+const anchorPeerTask = async (byFile) => {
 	for (const org in channelConfig.orgs) {
-		await updateAnchorPeers(path.resolve(__dirname, '../config/configtx.yaml'), channelName, org);
-		await sleep(1000);// TODO wait block to broadcast
+		if (byFile) {
+			await setupAnchorPeersFromFile(path.resolve(__dirname, '../config/configtx.yaml'), channelName, org);
+		} else {
+			await setAnchorPeersByOrg(channelName, org);
+		}
+		await sleep(1000);// TODO not to use block waiter, validate config fetch from orderer
 	}
 };
 const taskViewChannelBlock = async () => {
