@@ -13,7 +13,7 @@ const {sleep} = require('../common/nodejs');
  * @param channelConfigFile
  * @param {Orderer} orderer
  * @param {string[]} extraSignerOrgs orgName array of signer
- * @returns {Promise<T>}
+ * @returns {Promise<Client.BroadcastResponse>}
  */
 exports.create = async (channel, channelConfigFile, orderer, extraSignerOrgs = []) => {
 
@@ -24,7 +24,7 @@ exports.create = async (channel, channelConfigFile, orderer, extraSignerOrgs = [
 		clients.push(signingClient);
 	}
 
-	return create(clients, channel, channelConfigFile, orderer);
+	return create(channel, orderer, channelConfigFile, clients);
 };
 
 
