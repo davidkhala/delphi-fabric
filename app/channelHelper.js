@@ -6,7 +6,7 @@ const {newEventHub} = require('../common/nodejs/eventHub');
 const {create, join, getGenesisBlock} = ChannelUtil;
 const BinManager = require('../common/nodejs/binManager');
 const globalConfig = require('../config/orgs');
-const {sleep, JSONEqual} = require('../common/nodejs');
+const {sleep} = require('../common/nodejs');
 /**
  *
  * @param {Channel} channel
