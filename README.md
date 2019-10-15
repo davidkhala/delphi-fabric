@@ -72,7 +72,7 @@ Finished
 - CRl: https://hyperledger-fabric.readthedocs.io/en/release-1.4/msp.html?highlight=CRL#msp-setup-on-the-peer-orderer-side
 - system upgrade: how to migrate to 1.4. from 1.1
 - 开发模式:--peer-chaincodedev: try to set via core.yaml
-- create channel via ChannelConfig.js, add channelConfig validator as alternative of block waiter
+- create channel via ChannelConfig.js
 ## New feature, patch required for node-sdk
  
 - feature: implement configtx in node-sdk??

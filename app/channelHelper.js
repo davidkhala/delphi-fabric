@@ -1,12 +1,12 @@
 const helper = require('./helper.js');
 const ChannelUtil = require('../common/nodejs/channel');
-const {setupAnchorPeers, setAnchorPeers} = require('../common/nodejs/channelConfig');
-const {newEventHub, blockWaiter} = require('../common/nodejs/eventHub');
+const {setupAnchorPeers, setAnchorPeers, getChannelConfigReadable, ConfigFactory} = require('../common/nodejs/channelConfig');
+const {newEventHub} = require('../common/nodejs/eventHub');
 
 const {create, join, getGenesisBlock} = ChannelUtil;
 const BinManager = require('../common/nodejs/binManager');
 const globalConfig = require('../config/orgs');
-const {sleep} = require('../common/nodejs');
+const {sleep, JSONEqual} = require('../common/nodejs');
 /**
  *
  * @param {Channel} channel
@@ -76,16 +76,22 @@ exports.setAnchorPeersByOrg = async (channelName, OrgName) => {
 		anchorPeers.push({host: container_name, port: 7051});
 	}
 	await setAnchorPeers(channel, orderer, OrgName, anchorPeers);
+	const ordererClient = await helper.getOrgAdmin(OrgName, 'orderer');
+	ChannelUtil.setClientContext(channel, ordererClient);
+	const {configJSON} = await getChannelConfigReadable(channel);
+	const updatedAnchorPeers = new ConfigFactory(configJSON).getAnchorPeers(OrgName);
+	if (JSON.stringify(updatedAnchorPeers) === JSON.stringify(anchorPeers)) {
+		throw Error(`{OrgName:${OrgName} anchor peer updated failed: updatedAnchorPeers ${updatedAnchorPeers}`);
+	}
 };
 
-exports.setupAnchorPeersFromFile = async (configtxYaml, channelName, orgName) => {
-	const anchorTx = helper.projectResolve('config', 'configtx', `${orgName}Anchors.tx`);
+exports.setupAnchorPeersFromFile = async (configtxYaml, channelName, OrgName) => {
+	const anchorTx = helper.projectResolve('config', 'configtx', `${OrgName}Anchors.tx`);
 	const binManager = new BinManager();
-	await binManager.configtxgen('anchorPeers', configtxYaml, channelName).genAnchorPeers(anchorTx, orgName);
-
-	const client = await helper.getOrgAdmin(orgName);
-
+	await binManager.configtxgen('anchorPeers', configtxYaml, channelName).genAnchorPeers(anchorTx, OrgName);
+	const client = await helper.getOrgAdmin(OrgName);
 	const channel = helper.prepareChannel(channelName, client);
 	const orderer = channel.getOrderers()[0];
 	await setupAnchorPeers(channel, orderer, anchorTx);
+	// No easy way to validate success
 };

@@ -89,7 +89,7 @@ exports.upgrade = async (channel, richPeers, opts, orderer) => {
 };
 exports.invoke = async (channel, peers, {chaincodeId, fcn, args, transientMap}, nonAdminUser, eventHubs) => {
 	if (!eventHubs) {
-		eventHubs = peers.map(peer=>{
+		eventHubs = peers.map(peer => {
 			return EventHubUtil.newEventHub(channel, peer, true);
 		});
 	}
