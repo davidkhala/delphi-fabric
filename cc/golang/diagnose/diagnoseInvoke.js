@@ -2,6 +2,7 @@ const {invoke, query} = require('../../../app/invokeHelper');
 const logger = require('../../../common/nodejs/logger').new('invoke:diagnose', true);
 const {base64} = require('../../../common/nodejs/helper').nodeUtil.format;
 const chaincodeId = 'diagnose';
+const {getActionSet} = require('../../../common/nodejs/systemChaincode');
 exports.put = async (peers, clientOrg, key, value) => {
 	const fcn = 'put';
 	const args = [key, JSON.stringify(value)];
@@ -124,4 +125,15 @@ exports.putPrivate = async (peers, clientOrg, dataSet) => {
 exports.getPrivate = async (peers, clientOrg, key) => {
 	const fcn = 'getPrivate';
 	return query(peers, clientOrg, chaincodeId, fcn, [], {[key]: ''});
+};
+
+exports.lsccQuery = async (peers, clientOrg, {action, channel, chaincode}) => {
+	const fcn = 'lscc';
+	const actionsSet = getActionSet('lscc');
+
+	if (!actionsSet.includes(action)) {
+		throw Error(`Invalid lscc action: ${action}`);
+	}
+	const args = [action, channel, chaincode];
+	return query(peers, clientOrg, chaincodeId, fcn, args);
 };
