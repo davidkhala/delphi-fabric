@@ -78,7 +78,7 @@ exports.setAnchorPeersByOrg = async (channelName, OrgName) => {
 	await setAnchorPeers(channel, orderer, OrgName, anchorPeers);
 	const ordererClient = await helper.getOrgAdmin(OrgName, 'orderer');
 	ChannelUtil.setClientContext(channel, ordererClient);
-	const {configJSON} = await getChannelConfigReadable(channel);
+	const {configJSON} = await getChannelConfigReadable(channel, {orderer});
 	const updatedAnchorPeers = new ConfigFactory(configJSON).getAnchorPeers(OrgName);
 	if (JSON.stringify(updatedAnchorPeers) === JSON.stringify(anchorPeers)) {
 		throw Error(`{OrgName:${OrgName} anchor peer updated failed: updatedAnchorPeers ${updatedAnchorPeers}`);

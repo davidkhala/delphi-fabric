@@ -7,11 +7,9 @@ const task = async () => {
 
 	const result = await OrdererUtil.ping(orderer);
 	logger.debug(orderer.toString(), result);
+
+	logger.debug(orderer._options['grpc.ssl_target_name_override'], orderer._name.split(':')[0]);
 };
-const composerPing = async () => {
-	const orderer = OrdererUtil.new({ordererPort: 7050});
-	const result = await OrdererUtil.ping(orderer);
-	logger.debug(orderer.toString(), result);
-};
-composerPing();
+
+task();
 
