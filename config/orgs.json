@@ -131,7 +131,7 @@
         }
       }
     },
-    "extraChannel": {
+    "extrachannel": {
       "file": "extra.tx",
       "orgs": {
         "astri.org": {

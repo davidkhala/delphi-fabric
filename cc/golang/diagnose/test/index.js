@@ -104,14 +104,22 @@ const chaincodeExistTest = async (peers, clientOrg, checkedChaincode = 'diagnose
 	let operationChannel = '';
 	let result = await lsccQuery(peers, clientOrg, {action, channel, chaincode: checkedChaincode}, operationChannel);
 	logger.debug({result, operationChannel});
-	operationChannel = 'extraChannel';
-	result = await lsccQuery(peers, clientOrg, {action, channel, chaincode: checkedChaincode}, operationChannel);
-	logger.debug({result, operationChannel});
-	operationChannel = 'allchannel';
-	result = await lsccQuery(peers, clientOrg, {action, channel, chaincode: checkedChaincode}, operationChannel);
-	logger.debug({result, operationChannel});
+	try {
+		operationChannel = 'extrachannel';
+		result = await lsccQuery(peers, clientOrg, {action, channel, chaincode: checkedChaincode}, operationChannel);
+		logger.debug({result, operationChannel});
+	} catch (e) {
+		logger.error(e);
+	}
 
-	return true;
+	try {
+		operationChannel = 'allchannel';
+		result = await lsccQuery(peers, clientOrg, {action, channel, chaincode: checkedChaincode}, operationChannel);
+		logger.debug({result, operationChannel});
+	} catch (e) {
+		logger.error(e);
+	}
+
 };
 
 
