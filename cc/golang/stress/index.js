@@ -3,11 +3,15 @@ const {touch} = require('./stressInvoke');
 const helper = require('../../../app/helper');
 
 const install = require('./stressInstall');
-const flow = async () => {
-	await install.task();
-	const org1 = 'icdd';
-	const org2 = 'astri.org';
-	const clientOrg = org2;
-	await touch(helper.newPeers([0], org1), clientOrg);
+const task = async (taskID = parseInt(process.env.taskID)) => {
+	let peers = helper.newPeers([0], 'icdd');
+	let clientOrg = 'astri.org';
+	switch (taskID) {
+		case 1:
+			await touch(peers, clientOrg);
+			break;
+		default:
+			await install.task();
+	}
 };
-flow();
+task();

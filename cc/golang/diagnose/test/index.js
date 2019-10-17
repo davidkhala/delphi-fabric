@@ -1,5 +1,5 @@
 const {
-	get, put, cross, chaincodeID, putRaw, putBatch, whoami, getEndorsement, putEndorsement, getPage, list, getCertID
+	get, put, cross, chaincodeID, putRaw, putBatch, whoami, getEndorsement, putEndorsement, getPage, list, getCertID, lsccQuery
 } = require('../diagnoseInvoke');
 
 const helper = require('../../../../app/helper');
@@ -94,16 +94,26 @@ const worldStatesTest = async () => {
 	logger.debug('worldStates', result);
 };
 
-const overPaginationTest = async (pageSize) => {
-	const org1 = 'icdd';
-	const peers = helper.newPeers([0], org1);
-	const result = await getPage(peers, org1, undefined, undefined, `${pageSize}`);
+const overPaginationTest = async (peers, clientOrg, pageSize) => {
+
+	const result = await getPage(peers, clientOrg, undefined, undefined, `${pageSize}`);
 	logger.debug('pagination', result);
+};
+const chaincodeExistTest = async (peers, clientOrg, checkedChaincode = 'diagnose') => {
+	const action = 'getid';
+	const channel = 'allchannel';
+	const result = await lsccQuery(peers, clientOrg, {action, channel, chaincode: checkedChaincode});
+	if (result[0] !== checkedChaincode) {
+		throw Error('assertion failed, result[0]!==chaincode');
+	}
+	return true;
 };
 
 
-const task = async (taskID = process.env.taskID) => {
-	await diagnoseInstall.task();
+const task = async (taskID = parseInt(process.env.taskID)) => {
+
+	let peers = helper.newPeers([0], 'icdd');
+	let clientOrg = 'icdd';
 	switch (taskID) {
 		case 1:
 			await taskPagination();
@@ -117,6 +127,20 @@ const task = async (taskID = process.env.taskID) => {
 		case 4:
 			await taskHack();
 			break;
+		case 5:
+			await getCertIDTest();
+			break;
+		case 6:
+			await worldStatesTest();
+			break;
+		case 7:
+			await overPaginationTest(peers, clientOrg, 10);
+			break;
+		case 8:
+			await chaincodeExistTest(peers, clientOrg);
+			break;
+		default:
+			await diagnoseInstall.task();
 	}
 
 };
