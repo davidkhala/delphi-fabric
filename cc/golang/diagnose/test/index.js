@@ -61,7 +61,6 @@ const taskHack = async () => {
 
 const taskPagination = async () => {
 	const org1 = 'icdd';
-	const org2 = 'astri.org';
 	const peers = helper.newPeers([0], org1);
 	const map = {
 		a: 'b',
@@ -102,10 +101,16 @@ const overPaginationTest = async (peers, clientOrg, pageSize) => {
 const chaincodeExistTest = async (peers, clientOrg, checkedChaincode = 'diagnose') => {
 	const action = 'getid';
 	const channel = 'allchannel';
-	const result = await lsccQuery(peers, clientOrg, {action, channel, chaincode: checkedChaincode});
-	if (result[0] !== checkedChaincode) {
-		throw Error('assertion failed, result[0]!==chaincode');
-	}
+	let operationChannel = '';
+	let result = await lsccQuery(peers, clientOrg, {action, channel, chaincode: checkedChaincode}, operationChannel);
+	logger.debug({result, operationChannel});
+	operationChannel = 'extraChannel';
+	result = await lsccQuery(peers, clientOrg, {action, channel, chaincode: checkedChaincode}, operationChannel);
+	logger.debug({result, operationChannel});
+	operationChannel = 'allchannel';
+	result = await lsccQuery(peers, clientOrg, {action, channel, chaincode: checkedChaincode}, operationChannel);
+	logger.debug({result, operationChannel});
+
 	return true;
 };
 
