@@ -98,27 +98,33 @@ const overPaginationTest = async (peers, clientOrg, pageSize) => {
 	const result = await getPage(peers, clientOrg, undefined, undefined, `${pageSize}`);
 	logger.debug('pagination', result);
 };
+//TODO
 const chaincodeExistTest = async (peers, clientOrg, checkedChaincode = 'diagnose') => {
 	const action = 'getid';
-	const channel = 'allchannel';
+	let channel = 'allchannel'; // useless but having access right check
 	let operationChannel = '';
 	let result = await lsccQuery(peers, clientOrg, {action, channel, chaincode: checkedChaincode}, operationChannel);
-	logger.debug({result, operationChannel});
+	logger.debug({result, operationChannel, channel});
 	try {
 		operationChannel = 'extrachannel';
+		channel = 'extrachannel';
 		result = await lsccQuery(peers, clientOrg, {action, channel, chaincode: checkedChaincode}, operationChannel);
-		logger.debug({result, operationChannel});
+		logger.debug({result, channel, operationChannel});
 	} catch (e) {
 		logger.error(e);
 	}
-
 	try {
 		operationChannel = 'allchannel';
+		channel = 'extrachannel';
 		result = await lsccQuery(peers, clientOrg, {action, channel, chaincode: checkedChaincode}, operationChannel);
-		logger.debug({result, operationChannel});
+		logger.debug({result, channel, operationChannel});
 	} catch (e) {
 		logger.error(e);
 	}
+	channel = 'allchannel';
+	operationChannel = 'allchannel';
+	result = await lsccQuery(peers, clientOrg, {action, channel, chaincode: checkedChaincode}, operationChannel);
+	logger.debug({result, operationChannel, channel});
 
 };
 
@@ -153,7 +159,7 @@ const task = async (taskID = parseInt(process.env.taskID)) => {
 			await chaincodeExistTest(peers, clientOrg);
 			break;
 		default:
-			await diagnoseInstall.task();
+			await diagnoseInstall.task(process.env.channelName);
 	}
 
 };
