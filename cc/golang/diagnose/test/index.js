@@ -98,7 +98,7 @@ const overPaginationTest = async (peers, clientOrg, pageSize) => {
 	const result = await getPage(peers, clientOrg, undefined, undefined, `${pageSize}`);
 	logger.debug('pagination', result);
 };
-//TODO
+//TODO 2
 const chaincodeExistTest = async (peers, clientOrg, checkedChaincode = 'diagnose') => {
 	const action = 'getid';
 	let channel = 'allchannel'; // useless but having access right check
