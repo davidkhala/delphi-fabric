@@ -1,8 +1,9 @@
-
+This document is a cheat sheet of official [migration document](https://hyperledger-fabric.readthedocs.io/en/release-1.4/kafka_raft_migration.html)
 ## Notes
 
-For [channelConfigUpdate], usually we need orderer admin identity to view and operate configuration related to orderer, even for application channel
-Please apply all [channelConfigUpdate] to a single orderer during migration steps   
+- For [channelConfigUpdate], usually we need orderer admin identity to view and operate configuration related to orderer, even for application channel
+- Please apply all [channelConfigUpdate] to a single orderer during migration steps
+- migration requires orderer down-time tolerance   
 
 
 ## Migration steps

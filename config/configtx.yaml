@@ -133,6 +133,46 @@ Profiles:
             - {}
       Capabilities:
         V1_4_2: true
+  extrachannel:
+    Policies: *ref_1
+    Capabilities:
+      V1_4_3: true
+    Consortium: SampleConsortium
+    Application:
+      Policies: *ref_1
+      Organizations:
+        - Name: astri.org
+          ID: ASTRIMSP
+          MSPDir: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/astri.org/msp
+          Policies:
+            Readers:
+              Type: Signature
+              Rule: OR('ASTRIMSP.member')
+            Writers:
+              Type: Signature
+              Rule: OR('ASTRIMSP.member')
+            Admins:
+              Type: Signature
+              Rule: OR('ASTRIMSP.admin')
+          AnchorPeers:
+            - {}
+        - Name: icdd
+          ID: icddMSP
+          MSPDir: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp
+          Policies:
+            Readers:
+              Type: Signature
+              Rule: OR('icddMSP.member')
+            Writers:
+              Type: Signature
+              Rule: OR('icddMSP.member')
+            Admins:
+              Type: Signature
+              Rule: OR('icddMSP.admin')
+          AnchorPeers:
+            - {}
+      Capabilities:
+        V1_4_2: true
   anchorPeers:
     Application:
       Organizations:
