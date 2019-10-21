@@ -125,14 +125,4 @@ exports.getPrivate = async (peers, clientOrg, key) => {
 	const fcn = 'getPrivate';
 	return query(peers, clientOrg, chaincodeId, fcn, [], {[key]: ''});
 };
-//TODO
-exports.lsccQuery = async (peers, clientOrg, {action, channel, chaincode}, operationChannel = '') => {
-	const fcn = 'lscc';
-	const actionsSet = getActionSet('lscc');
 
-	if (!actionsSet.includes(action)) {
-		throw Error(`Invalid lscc action: ${action}`);
-	}
-	const args = [action, operationChannel, channel, chaincode];
-	return query(peers, clientOrg, chaincodeId, fcn, args);
-};

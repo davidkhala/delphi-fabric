@@ -1,5 +1,5 @@
 const {
-	get, put, cross, chaincodeID, putRaw, putBatch, whoami, getEndorsement, putEndorsement, getPage, list, getCertID, lsccQuery
+	get, put, cross, chaincodeID, putRaw, putBatch, whoami, getEndorsement, putEndorsement, getPage, list, getCertID
 } = require('../diagnoseInvoke');
 
 const helper = require('../../../../app/helper');
@@ -98,35 +98,6 @@ const overPaginationTest = async (peers, clientOrg, pageSize) => {
 	const result = await getPage(peers, clientOrg, undefined, undefined, `${pageSize}`);
 	logger.debug('pagination', result);
 };
-//TODO 2
-const chaincodeExistTest = async (peers, clientOrg, checkedChaincode = 'diagnose') => {
-	const action = 'getid';
-	let channel = 'allchannel'; // useless but having access right check
-	let operationChannel = '';
-	let result = await lsccQuery(peers, clientOrg, {action, channel, chaincode: checkedChaincode}, operationChannel);
-	logger.debug({result, operationChannel, channel});
-	try {
-		operationChannel = 'extrachannel';
-		channel = 'extrachannel';
-		result = await lsccQuery(peers, clientOrg, {action, channel, chaincode: checkedChaincode}, operationChannel);
-		logger.debug({result, channel, operationChannel});
-	} catch (e) {
-		logger.error(e);
-	}
-	try {
-		operationChannel = 'allchannel';
-		channel = 'extrachannel';
-		result = await lsccQuery(peers, clientOrg, {action, channel, chaincode: checkedChaincode}, operationChannel);
-		logger.debug({result, channel, operationChannel});
-	} catch (e) {
-		logger.error(e);
-	}
-	channel = 'allchannel';
-	operationChannel = 'allchannel';
-	result = await lsccQuery(peers, clientOrg, {action, channel, chaincode: checkedChaincode}, operationChannel);
-	logger.debug({result, operationChannel, channel});
-
-};
 
 
 const task = async (taskID = parseInt(process.env.taskID)) => {
@@ -154,9 +125,6 @@ const task = async (taskID = parseInt(process.env.taskID)) => {
 			break;
 		case 7:
 			await overPaginationTest(peers, clientOrg, 10);
-			break;
-		case 8:
-			await chaincodeExistTest(peers, clientOrg);
 			break;
 		default:
 			await diagnoseInstall.task(process.env.channelName);

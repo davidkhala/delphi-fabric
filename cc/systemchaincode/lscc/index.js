@@ -13,8 +13,9 @@ const ChaincodeExistsTest = async (peers, clientOrg, channelName) => {
 const GetChaincodeDataTest = async (peers, clientOrg, channelName) => {
 	const chaincode = 'diagnose';
 
-	const {chaincodeId, args, fcn} = GetChaincodeData(channelName, chaincode);
-	const result = await query(peers, clientOrg, chaincodeId, fcn, args);
+	const args = ['GetChaincodeData', channelName, chaincode];
+	const fcn = 'lscc';
+	const result = await query(peers, clientOrg, chaincode, fcn, args);
 	logger.debug({channelName, chaincode}, result);
 };
 const GetDeploymentSpecTest = async (peers, clientOrg, channelName) => {
@@ -39,6 +40,12 @@ const task = async (taskID = parseInt(process.env.taskID)) => {
 			break;
 		case 4:
 			await ChaincodeExistsTest(peers, clientOrg, 'extrachannel');
+			break;
+		case 5:
+			await GetChaincodeDataTest(peers, clientOrg, 'allchannel');
+			break;
+		case 6:
+			await GetDeploymentSpecTest(peers, clientOrg, 'allchannel');
 			break;
 		default:
 	}
