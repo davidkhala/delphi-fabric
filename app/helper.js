@@ -14,6 +14,7 @@ const projectResolve = (...args) => path.resolve(projectRoot, ...args);
 const UserUtil = require('../common/nodejs/user');
 const OrdererUtil = require('../common/nodejs/orderer');
 const channelUtil = require('../common/nodejs/channel');
+const {OrdererType} = require('../common/nodejs/constants')
 const {helper: {homeResolve}, random: {randomKeyOf}} = require('../common/nodejs/helper').nodeUtil;
 const CRYPTO_CONFIG_DIR = homeResolve(globalConfig.docker.volumes.MSPROOT);
 
@@ -40,7 +41,7 @@ const preparePeer = (orgName, peerIndex, peerConfig) => {
 exports.toLocalhostOrderer = (orderer) => {
 	const url = orderer.getUrl();
 	const {type} = ordererConfig;
-	if (type === 'solo') {
+	if (type === OrdererType.solo) {
 		return newOrderer(ordererConfig.solo.container_name, ordererConfig.solo.orgName, ordererConfig.solo);
 	} else {
 		for (const [ordererOrgName, ordererOrgConfig] of Object.entries(ordererConfig[type].orgs)) {
@@ -82,7 +83,7 @@ const newOrderer = (name, org, ordererSingleConfig) => {
 exports.newOrderers = () => {
 	const result = [];
 	const {type} = ordererConfig;
-	if (type === 'solo') {
+	if (type === OrdererType.solo) {
 		const orderer = newOrderer(ordererConfig.solo.container_name, ordererConfig.solo.orgName, ordererConfig.solo);
 		result.push(orderer);
 	} else {
@@ -169,7 +170,7 @@ exports.findOrgConfig = (orgName, ordererName) => {
 	} else {
 		nodeType = 'orderer';
 		const {type} = ordererConfig;
-		if (type === 'solo') {
+		if (type === OrdererType.solo) {
 			if (ordererConfig.solo.orgName === orgName) {
 				target = ordererConfig.solo;
 				portHost = target.portHost;
@@ -229,7 +230,7 @@ exports.randomOrg = (nodeType) => {
 		orgName = randomKeyOf(globalConfig.orgs);
 	} else if (nodeType === 'orderer') {
 		const {type} = globalConfig.orderer;
-		if (type === 'solo') {
+		if (type === OrdererType.solo) {
 			orgName = globalConfig.orderer.solo.orgName;
 		} else {
 			orgName = randomKeyOf(globalConfig.orderer[type].orgs);

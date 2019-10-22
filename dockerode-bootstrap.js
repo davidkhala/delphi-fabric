@@ -2,6 +2,7 @@ const globalConfig = require('./config/orgs.json');
 const path = require('path');
 const logger = require('./common/nodejs/logger').new('dockerode-bootstrap');
 const peerUtil = require('./common/nodejs/peer');
+const {OrdererType} = require('./common/nodejs/constants')
 const {
 	runCouchDB,
 	runCA,
@@ -31,7 +32,7 @@ exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPRO
 	const {MSPROOT} = peerUtil.container;
 	const nodeType = 'orderer';
 
-	const toggle = async ({orderer, domain, port, mspid}, OrdererType, stateVolume, operations) => {
+	const toggle = async ({orderer, domain, port, mspid}, ordererType, stateVolume, operations) => {
 		const cryptoPath = new CryptoPath(MSPROOT, {
 			orderer: {org: domain, name: orderer}
 		});
@@ -53,12 +54,12 @@ exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPRO
 					configPath,
 					volumeName: MSPROOTVolume
 				},
-				OrdererType,
+				ordererType,
 				tls, stateVolume
 			}, operations);
 		}
 	};
-	if (type === 'solo') {
+	if (type === OrdererType.solo) {
 		const ordererConfig = globalConfig.orderer.solo;
 		const {orgName: domain, mspid, portHost: port, operations} = ordererConfig;
 		const orderer = ordererConfig.container_name;
@@ -162,7 +163,7 @@ exports.runCAs = async (toStop) => {
 			await runCA({container_name, port, network, imageTag, TLS, Issuer});
 		}
 	};
-	if (type === 'solo') {
+	if (type === OrdererType.solo) {
 		const {ca: {portHost: port}, orgName} = globalConfig.orderer.solo;
 		const container_name = `ca.${orgName}`;
 		const Issuer = {CN: orgName};
@@ -228,7 +229,7 @@ exports.down = async () => {
 
 		await exports.runPeers(undefined, toStop);
 		await exports.runOrderers(undefined, toStop);
-		if (type === 'kafka') {
+		if (type === OrdererType.kafka) {
 			await exports.runKafkas(toStop);
 			await exports.runZookeepers(toStop);
 		}
@@ -267,7 +268,7 @@ exports.up = async () => {
 		await exports.volumesAction();
 		await exports.runCAs();
 
-		if (type === 'kafka') {
+		if (type === OrdererType.kafka) {
 			await exports.runZookeepers();
 			await exports.runKafkas();
 		}

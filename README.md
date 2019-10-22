@@ -73,6 +73,7 @@ Finished
 - system upgrade: how to migrate to 1.4. from 1.1
 - 开发模式:--peer-chaincodedev: try to set via core.yaml
 - create channel via ChannelConfig.js
+- [grafana](https://github.com/grafana/grafana)
 ## New feature, patch required for node-sdk
  
 - feature: implement configtx in node-sdk??

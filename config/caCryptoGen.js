@@ -11,6 +11,7 @@ const logger = require('../common/nodejs/logger').new('caCryptoGen');
 const globalConfig = require('../config/orgs');
 const userUtil = require('../common/nodejs/user');
 const helper = require('../app/helper');
+const {OrdererType} = require('../common/nodejs/constants');
 
 const path = require('path');
 const caCryptoConfig = homeResolve(globalConfig.docker.volumes.MSPROOT);
@@ -69,7 +70,7 @@ exports.genAll = async () => {
 	{
 		const nodeType = 'orderer';
 
-		if (type === 'solo') {
+		if (type === OrdererType.solo) {
 			const ordererConfig = globalConfig.orderer.solo;
 			const mspId = ordererConfig.mspid;
 
@@ -122,7 +123,7 @@ exports.genAll = async () => {
 						},
 						user: {
 							name: userUtil.adminName
-						},
+						}
 					});
 					promises.push(genOrderer(caService, cryptoPath, admin, {TLS}));
 				}

@@ -3,6 +3,7 @@ const path = require('path');
 const {yaml, helper: {fsExtra}} = require('../common/nodejs/helper').nodeUtil;
 const {CryptoPath} = require('../common/nodejs/path');
 const implicitPolicies = require('../common/nodejs/policy').configtxPolicies.implicit.Policies;
+const {OrdererType} = require('../common/nodejs/constants');
 exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, configtxFile, PROFILE_ANCHORPEERS = 'anchorPeers'}) => {
 	const channelsConfig = globalConfig.channels;
 	const ordererConfig = globalConfig.orderer;
@@ -102,8 +103,8 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 		}
 	};
 	let globalOrdererAddresses = [];
-	if (globalConfig.orderer.type === 'kafka') {
-		OrdererConfig.OrdererType = 'kafka';
+	if (globalConfig.orderer.type === OrdererType.kafka) {
+		OrdererConfig.OrdererType = OrdererType.kafka;
 
 		const Organizations = [];
 		for (const [ordererOrgName, ordererOrgConfig] of Object.entries(globalConfig.orderer.kafka.orgs)) {
@@ -116,8 +117,8 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 			Brokers: Object.keys(globalConfig.orderer.kafka.kafkas).map((kafka) => `${kafka}:9092`)
 		};
 		OrdererConfig.Organizations = Organizations;
-	} else if (globalConfig.orderer.type === 'solo') {
-		OrdererConfig.OrdererType = 'solo';
+	} else if (globalConfig.orderer.type === OrdererType.solo) {
+		OrdererConfig.OrdererType = OrdererType.solo;
 		const {container_name, orgName, portHost} = ordererConfig.solo;
 
 		const Addresses = [`${container_name}.${orgName}:${portHost}`];
@@ -125,8 +126,8 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 			OrganizationBuilder(orgName, ordererConfig.solo, undefined, undefined, 'orderer', Addresses)
 		];
 		globalOrdererAddresses = globalOrdererAddresses.concat(Addresses);
-	} else if (globalConfig.orderer.type === 'etcdraft') {
-		OrdererConfig.OrdererType = 'etcdraft';
+	} else if (globalConfig.orderer.type === OrdererType.etcdraft) {
+		OrdererConfig.OrdererType = OrdererType.etcdraft;
 
 
 		const Organizations = [];

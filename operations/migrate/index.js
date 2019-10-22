@@ -1,4 +1,5 @@
 const {ChannelConfig: {channelUpdate, ConfigFactory}, Channel, Signature: {signs}, homeResolve, sleep} = require('../../common/nodejs');
+const {OrdererType} = require('../../common/nodejs/constants');
 const helper = require('../../app/helper');
 const logger = helper.getLogger('kafka migrate to etcdraft');
 process.env.binPath = helper.projectResolve('common/bin');
@@ -44,7 +45,7 @@ const toRaftTest = async (channel, orderer) => {
 	}
 	const configChangeCallback = (original_config) => {
 		const config = new ConfigFactory(original_config);
-		config.setConsensusType('etcdraft');
+		config.setConsensusType(OrdererType.etcdraft);
 		config.setConsensusMetadata(consenters);
 		return config.build();
 	};
@@ -61,7 +62,7 @@ const pruneKafka = async () => {
 	await dockerHandler.runOrderers(undefined, true);
 	await dockerHandler.runKafkas(true);
 	await dockerHandler.runZookeepers(true);
-	await dockerHandler.runOrderers(undefined, undefined, 'etcdraft');
+	await dockerHandler.runOrderers(undefined, undefined, OrdererType.etcdraft);
 };
 const task = async (taskID = parseInt(process.env.taskID)) => {
 	const ordererClient = await helper.getOrgAdmin(undefined, 'orderer');

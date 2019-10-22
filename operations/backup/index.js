@@ -5,6 +5,7 @@ const globalConfig = require('../../config/orgs');
 const {TLS} = globalConfig;
 const peerUtil = require('../../common/nodejs/peer');
 const {CryptoPath} = require('../../common/nodejs/path');
+const {OrdererType} = require('../../common/nodejs/constants');
 const {docker: {network, fabricTag: imageTag}} = globalConfig;
 const CONFIGTXVolume = 'CONFIGTX';
 exports.stopPeer = async (org, peerIndex) => {
@@ -13,7 +14,7 @@ exports.stopPeer = async (org, peerIndex) => {
 };
 const getOrdererContainerName = (org, index) => {
 	const {type} = globalConfig.orderer;
-	if (type === 'solo') {
+	if (type === OrdererType.solo) {
 		return globalConfig.orderer.solo.container_name;
 	} else {
 		return `orderer${index}.${org}`;
@@ -26,7 +27,7 @@ exports.resumeOrderer = async (org, index) => {
 	const container_name = getOrdererContainerName(org, index);
 	const {type} = globalConfig.orderer;
 	let ordererConfig;
-	if (type === 'solo') {
+	if (type === OrdererType.solo) {
 		ordererConfig = globalConfig.orderer.solo;
 	} else {
 		ordererConfig = globalConfig.orderer[type].orgs[org].orderers[`orderer${index}`];
@@ -42,7 +43,7 @@ exports.resumeOrderer = async (org, index) => {
 
 	await runOrderer({
 		container_name, imageTag, port: portHost, network, BLOCK_FILE, CONFIGTXVolume,
-		msp: {id, configPath, volumeName: 'MSPROOT'}, OrdererType: type, tls, stateVolume
+		msp: {id, configPath, volumeName: 'MSPROOT'}, ordererType: type, tls, stateVolume
 	});
 };
 exports.resumePeer = async (org, peerIndex) => {
