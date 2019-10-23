@@ -12,7 +12,7 @@ const {sleep} = require('../common/nodejs');
  * @param {Channel} channel
  * @param channelConfigFile
  * @param {Orderer} orderer
- * @param {string[]} extraSignerOrgs orgName array of signer
+ * @param {OrgName[]} extraSignerOrgs orgName array of signer
  * @returns {Promise<Client.BroadcastResponse>}
  */
 exports.create = async (channel, channelConfigFile, orderer, extraSignerOrgs = []) => {

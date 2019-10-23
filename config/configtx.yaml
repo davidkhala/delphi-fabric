@@ -34,37 +34,29 @@ Profiles:
         BlockValidation:
           Type: ImplicitMeta
           Rule: ANY Writers
-      OrdererType: kafka
-      Kafka:
-        Brokers:
-          - 'kafka0:9092'
-          - 'kafka1:9092'
-          - 'kafka2:9092'
-          - 'kafka3:9092'
+      OrdererType: solo
       Organizations:
-        - Name: icdd.astri.org
-          ID: ICDDMSP
-          MSPDir: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/icdd.astri.org/msp
+        - Name: delphi
+          ID: OrdererMSP
+          MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/delphi/msp
           Policies:
             Readers:
               Type: Signature
-              Rule: OR('ICDDMSP.member')
+              Rule: OR('OrdererMSP.member')
             Writers:
               Type: Signature
-              Rule: OR('ICDDMSP.member')
+              Rule: OR('OrdererMSP.member')
             Admins:
               Type: Signature
-              Rule: OR('ICDDMSP.admin')
+              Rule: OR('OrdererMSP.admin')
           OrdererEndpoints:
-            - 'orderer0.icdd.astri.org:7050'
-            - 'orderer1.icdd.astri.org:7050'
-            - 'orderer2.icdd.astri.org:7050'
+            - 'orderer.delphi:7050'
     Consortiums:
       SampleConsortium:
         Organizations:
           - Name: astri.org
             ID: ASTRIMSP
-            MSPDir: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/astri.org/msp
+            MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/astri.org/msp
             Policies:
               Readers:
                 Type: Signature
@@ -76,12 +68,10 @@ Profiles:
                 Type: Signature
                 Rule: OR('ASTRIMSP.admin')
             OrdererEndpoints: &ref_0
-              - 'orderer0.icdd.astri.org:7050'
-              - 'orderer1.icdd.astri.org:7050'
-              - 'orderer2.icdd.astri.org:7050'
+              - 'orderer.delphi:7050'
           - Name: icdd
             ID: icddMSP
-            MSPDir: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp
+            MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp
             Policies:
               Readers:
                 Type: Signature
@@ -103,7 +93,7 @@ Profiles:
       Organizations:
         - Name: astri.org
           ID: ASTRIMSP
-          MSPDir: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/astri.org/msp
+          MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/astri.org/msp
           Policies:
             Readers:
               Type: Signature
@@ -118,7 +108,7 @@ Profiles:
             - {}
         - Name: icdd
           ID: icddMSP
-          MSPDir: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp
+          MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp
           Policies:
             Readers:
               Type: Signature
@@ -143,7 +133,7 @@ Profiles:
       Organizations:
         - Name: astri.org
           ID: ASTRIMSP
-          MSPDir: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/astri.org/msp
+          MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/astri.org/msp
           Policies:
             Readers:
               Type: Signature
@@ -158,7 +148,7 @@ Profiles:
             - {}
         - Name: icdd
           ID: icddMSP
-          MSPDir: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp
+          MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp
           Policies:
             Readers:
               Type: Signature
