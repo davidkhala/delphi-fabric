@@ -20,8 +20,10 @@
       "orgName": "delphi",
       "container_name": "orderer",
       "operations": {
-        "port": 8443,
-        "metrics": "prometheus"
+        "port": 8443
+      },
+      "metrics": {
+        "provider": "prometheus"
       },
       "portHost": 7050,
       "ca": {
@@ -161,6 +163,9 @@
           "port": 7051,
           "operations": {
             "port": 9443
+          },
+          "metrics": {
+            "provider": null
           },
           "couchDB": {
             "container_name": "couchdb.peer0.astri.org",

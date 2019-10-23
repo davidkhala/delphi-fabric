@@ -2,7 +2,7 @@ const globalConfig = require('./config/orgs.json');
 const path = require('path');
 const logger = require('./common/nodejs/logger').new('dockerode-bootstrap');
 const peerUtil = require('./common/nodejs/peer');
-const {OrdererType} = require('./common/nodejs/constants')
+const {OrdererType} = require('./common/nodejs/constants');
 const {
 	runCouchDB,
 	runCA,
@@ -32,7 +32,7 @@ exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPRO
 	const {MSPROOT} = peerUtil.container;
 	const nodeType = 'orderer';
 
-	const toggle = async ({orderer, domain, port, mspid}, ordererType, stateVolume, operations) => {
+	const toggle = async ({orderer, domain, port, mspid}, ordererType, stateVolume, operations, metrics) => {
 		const cryptoPath = new CryptoPath(MSPROOT, {
 			orderer: {org: domain, name: orderer}
 		});
@@ -56,18 +56,18 @@ exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPRO
 				},
 				ordererType,
 				tls, stateVolume
-			}, operations);
+			}, operations, metrics);
 		}
 	};
 	if (type === OrdererType.solo) {
 		const ordererConfig = globalConfig.orderer.solo;
-		const {orgName: domain, mspid, portHost: port, operations} = ordererConfig;
+		const {orgName: domain, mspid, portHost: port, operations, metrics} = ordererConfig;
 		const orderer = ordererConfig.container_name;
 		let {stateVolume} = ordererConfig;
 		if (stateVolume) {
 			stateVolume = homeResolve(stateVolume);
 		}
-		await toggle({orderer, domain, port, mspid}, type, stateVolume, operations);
+		await toggle({orderer, domain, port, mspid}, type, stateVolume, operations, metrics);
 	} else {
 		const ordererOrgs = globalConfig.orderer[type].orgs;
 		for (const [domain, ordererOrgConfig] of Object.entries(ordererOrgs)) {
@@ -77,8 +77,8 @@ exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPRO
 				if (stateVolume) {
 					stateVolume = homeResolve(stateVolume);
 				}
-				const {portHost, operations} = ordererConfig;
-				await toggle({orderer, domain, port: portHost, mspid}, type, stateVolume, operations);
+				const {portHost, operations, metrics} = ordererConfig;
+				await toggle({orderer, domain, port: portHost, mspid}, type, stateVolume, operations, metrics);
 			}
 		}
 	}
@@ -106,7 +106,7 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 		const {mspid} = orgConfig;
 		for (const peerIndex in peersConfig) {
 			const peerConfig = peersConfig[peerIndex];
-			const {container_name, port, couchDB, operations} = peerConfig;
+			const {container_name, port, couchDB, operations, metrics} = peerConfig;
 			let {stateVolume} = peerConfig;
 			if (stateVolume) {
 				stateVolume = homeResolve(stateVolume);
@@ -143,7 +143,7 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 					volumeName: volumeName.MSPROOT,
 					configPath
 				}, couchDB, stateVolume
-			}, operations);
+			}, operations, metrics);
 
 		}
 
