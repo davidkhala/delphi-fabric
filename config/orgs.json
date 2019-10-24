@@ -165,7 +165,10 @@
             "port": 9443
           },
           "metrics": {
-            "provider": "prometheus"
+            "provider": "statsd",
+            "statsD": {
+              "host": "statsD"
+            }
           },
           "couchDB": {
             "container_name": "couchdb.peer0.astri.org",
@@ -174,7 +177,13 @@
         },
         {
           "container_name": "peer1.astri.org",
-          "port": 7151
+          "port": 7151,
+          "metrics": {
+            "provider": "statsd",
+            "statsD": {
+              "host": "statsdExporter"
+            }
+          }
         }
       ],
       "ca": {
