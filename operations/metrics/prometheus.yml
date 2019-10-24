@@ -1,24 +1,22 @@
-# TODO
 global:
   scrape_interval:     15s # Set the scrape interval to every 15 seconds. Default is every 1 minute.
   evaluation_interval: 15s # Evaluate rules every 15 seconds. The default is every 1 minute.
   scrape_timeout:    10s
 
 scrape_configs:
-  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
   - job_name: 'orderer'
-    metrics_path: /metrics # metrics_path defaults to '/metrics'
-    scheme: https # scheme defaults to 'http'.
+    scheme: https
     tls_config:
-      insecure_skip_verify: true
-      ca_file: /etc/prometheus/tlsca.delphi-cert.pem
+      key_file: /etc/prometheus/orderer-clientKey
+      cert_file: /etc/prometheus/orderer-clientCert
+      ca_file: /etc/prometheus/orderer-caCert
     static_configs:
-      - targets: ['orderer.delphi:8443']
+      - targets: ['orderer.delphi:8443'] # replace with your config
   - job_name: 'peer'
-    metrics_path: /metrics # metrics_path defaults to '/metrics'
-    scheme: https # scheme defaults to 'http'.
+    scheme: https
     tls_config:
-      insecure_skip_verify: true
-      ca_file: /etc/prometheus/tlsca.astri.org-cert.pem
+      key_file: /etc/prometheus/peer-clientKey
+      cert_file: /etc/prometheus/peer-clientCert
+      ca_file: /etc/prometheus/peer-caCert
     static_configs:
-      - targets: ['peer0.astri.org:9443']
+      - targets: ['peer0.astri.org:9443'] # replace with your config
