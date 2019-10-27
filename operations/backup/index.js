@@ -1,6 +1,6 @@
-const {containerDelete} = require('../../common/nodejs/helper').dockerode.util;
+const {containerDelete} = require('khala-dockerode/dockerode-util');
 const {runPeer, runOrderer} = require('../../common/nodejs/fabric-dockerode');
-const {helper: {homeResolve}} = require('../../common/nodejs/helper').nodeUtil;
+const {homeResolve} = require('khala-nodeutils/helper');
 const globalConfig = require('../../config/orgs');
 const {TLS} = globalConfig;
 const peerUtil = require('../../common/nodejs/peer');

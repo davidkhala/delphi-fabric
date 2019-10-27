@@ -1,6 +1,6 @@
 const {install, prepareInstall} = require('./chaincodeHelper');
 const helper = require('./helper');
-const {version: {nextVersion}} = require('../common/nodejs/helper').nodeUtil;
+const {nextVersion} = require('khala-nodeutils/version');
 const {incrementInstall} = require('../common/nodejs/chaincodeVersion');
 
 const globalConfig = require('../config/orgs.json');

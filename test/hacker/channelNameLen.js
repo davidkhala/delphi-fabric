@@ -1,6 +1,6 @@
 const helper = require('../../app/helper');
 const {create} = require('../../app/channelHelper');
-const {helper: {homeResolve}} = require('../../common/nodejs/helper').nodeUtil;
+const {homeResolve} = require('khala-nodeutils/helper');
 const ChannelUtil = require('../../common/nodejs/channel');
 const globalConfig = require('../../config/orgs.json');
 

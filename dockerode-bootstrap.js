@@ -11,12 +11,11 @@ const {
 	chaincodeClean, fabricImagePull
 } = require('./common/nodejs/fabric-dockerode');
 const {CryptoPath} = require('./common/nodejs/path');
-const {dockerode} = require('./common/nodejs/helper');
 
 const {
 	containerDelete, volumeCreateIfNotExist, networkCreateIfNotExist,
 	volumeRemove, prune: {system: pruneLocalSystem}
-} = dockerode.util;
+} = require('khala-dockerode/dockerode-util');
 const {homeResolve, fsExtra} = require('./common/nodejs');
 const MSPROOT = homeResolve(globalConfig.docker.volumes.MSPROOT);
 const CONFIGTX = homeResolve(globalConfig.docker.volumes.CONFIGTX);

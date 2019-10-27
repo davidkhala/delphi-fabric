@@ -1,6 +1,7 @@
 const globalConfig = require('./orgs.json');
 const path = require('path');
-const {yaml, helper: {fsExtra}} = require('../common/nodejs/helper').nodeUtil;
+const yaml = require('khala-nodeutils/yaml');
+const {fsExtra} = require('khala-nodeutils/helper');
 const {CryptoPath} = require('../common/nodejs/path');
 const implicitPolicies = require('../common/nodejs/policy').configtxPolicies.implicit.Policies;
 const {OrdererType} = require('../common/nodejs/constants');

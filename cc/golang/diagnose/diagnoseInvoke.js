@@ -1,6 +1,5 @@
 const {invoke, query} = require('../../../app/invokeHelper');
-const {getActionSet} = require('../../../common/nodejs/systemChaincode');
-const {base64} = require('../../../common/nodejs/helper').nodeUtil.format;
+const {base64} = require('khala-nodeutils/format');
 const chaincodeId = 'diagnose';
 exports.put = async (peers, clientOrg, key, value) => {
 	const fcn = 'put';

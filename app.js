@@ -12,7 +12,7 @@ const {create: createChannel} = require('./app/channelHelper');
 const {join: joinChannel} = require('./common/nodejs/channel');
 
 const Query = require('./common/nodejs/query');
-const {app} = require('./common/nodejs/helper').nodeUtil.baseApp.run(port);
+const {app} = require('khala-nodeutils/baseApp').run(port);
 
 
 app.use('/config', require('./express/configExpose'));

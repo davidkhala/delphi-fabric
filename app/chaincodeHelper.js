@@ -1,4 +1,4 @@
-const {randomKeyOf} = require('../common/nodejs/helper').nodeUtil.random;
+const {randomKeyOf} = require('khala-nodeutils/random');
 const {install} = require('../common/nodejs/chaincode');
 const {invoke} = require('../common/nodejs/chaincodeHelper');
 const {incrementUpgrade} = require('../common/nodejs/chaincodeVersion');

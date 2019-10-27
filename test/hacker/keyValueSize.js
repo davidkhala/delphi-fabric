@@ -1,6 +1,7 @@
 const install = require('../../cc/golang/diagnose/diagnoseInstall');
 const invoke = require('../../cc/golang/diagnose/diagnoseInvoke');
-const {helper: {fsExtra}, devLogger} = require('../../common/nodejs/helper').nodeUtil;
+const {fsExtra} = require('khala-nodeutils/helper');
+const {devLogger} = require('khala-logger/dev');
 const testHelper = require('../testHelper');
 const logger = devLogger('test:keyValueSize');
 const path = require('path');

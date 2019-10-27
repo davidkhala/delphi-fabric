@@ -1,5 +1,4 @@
 // docker run --detach --publish=3001:3001 --env deployment=$deployment --name ucare fabric-middleware-ucare
-const {dockerode} = require('../../common/nodejs/helper');
 const {action} = process.env;
 const {projectResolve} = require('../../app/helper');
 const Cmd = ['node', 'ping.js'];
@@ -7,8 +6,8 @@ const Image = 'ping-docker';
 const container = 'test-docker';
 const portMap = '';
 
-const {containerStart, containerDelete, ContainerOptsBuilder} = dockerode.util;
-const {imageBuild} = dockerode.cmd;
+const {containerStart, containerDelete, ContainerOptsBuilder} = require('khala-dockerode/dockerode-util');
+const {imageBuild} = require('khala-dockerode/dockerCmd');
 const up = async () => {
 	const builder = new ContainerOptsBuilder(Image, Cmd);
 	builder.setName(container);

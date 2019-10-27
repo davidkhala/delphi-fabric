@@ -1,4 +1,5 @@
-const {devLogger, helper: {sleep}} = require('../../common/nodejs/helper').nodeUtil;
+const {devLogger} = require('khala-logger/dev');
+const {sleep} = require('khala-nodeutils/helper');
 const logger = devLogger('test:peer HA');
 const helper = require('../../app/helper');
 const {installs} = require('../../app/installHelper');
