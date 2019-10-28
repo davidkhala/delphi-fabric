@@ -11,9 +11,14 @@ set -e
 clean() {
 	docker system prune --force
 }
-up() {
+statsd() {
 	cd ../../common/operations
-	docker-compose up
+	docker-compose -f docker-compose-statsd.yml up
+	cd -
+}
+prometheus() {
+	cd ../../common/operations
+	docker-compose -f docker-compose-prometheus.yml up
 	cd -
 }
 

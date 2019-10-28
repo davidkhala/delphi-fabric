@@ -167,7 +167,7 @@
           "metrics": {
             "provider": "statsd",
             "statsD": {
-              "host": "statsD"
+              "host": "statsd-exporter"
             }
           },
           "couchDB": {
@@ -181,7 +181,7 @@
           "metrics": {
             "provider": "statsd",
             "statsD": {
-              "host": "statsdExporter"
+              "host": "statsd-exporter"
             }
           }
         }
