@@ -55,16 +55,13 @@ Finished
 - chaincode language support: nodeJS, golang
 - Fixed security leakage: priv-file, crypto-store in .hfc-key-store
 - hybrid data storage model: couchdb, leveldb 
-- use dep to import fabric source into vendor
-- peer, orderer backup and instant recover: "stateVolume": "Documents/backupVolumes/orderer/",
-- nodejs scripts work as runConfigtxgen.sh to wrap binaries
+- peer, orderer backup and instant recover: "stateVolume": "Documents/delphi-fabric/stateVolumes/orderer1",
 - CICD: using travis
-- update anchor peers  /channel_group/groups/Application/groups/astri.org/values/AnchorPeers
+- update anchor peers as channel config update
 ## TODO
 - java sdk: keep update
 - java chaincode
 - chaincode uninstall
-- pm2 to runConfigtxlator? without shell?
 - 1.3: idemixgen
 - migrate to use make file instead of ./install.sh (https://www.gnu.org/software/make/manual/make.html#Introduction)
 - chaincode "Indy": a fabric chaincode implementation of all claimed features of Hyperledger/indy
