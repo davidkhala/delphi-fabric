@@ -165,7 +165,7 @@
             "port": 9443
           },
           "metrics": {
-            "provider": "statsd",
+            "provider": null,
             "statsD": {
               "host": "statsd-exporter"
             }
@@ -179,7 +179,7 @@
           "container_name": "peer1.astri.org",
           "port": 7151,
           "metrics": {
-            "provider": "statsd",
+            "provider": null,
             "statsD": {
               "host": "statsd-exporter"
             }
