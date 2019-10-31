@@ -1,7 +1,7 @@
 const helper = require('./helper.js');
 const ChannelUtil = require('../common/nodejs/channel');
 const {setupAnchorPeers, setAnchorPeers, getChannelConfigReadable, ConfigFactory} = require('../common/nodejs/channelConfig');
-const {newEventHub} = require('../common/nodejs/eventHub');
+const Eventhub = require('../common/nodejs/eventHub');
 
 const {create, join, getGenesisBlock} = ChannelUtil;
 const BinManager = require('../common/nodejs/binManager');
@@ -57,8 +57,12 @@ exports.joinAll = async (channelName) => {
 };
 exports.newEventHubs = async (channel, peerIndexes, orgName, inlineConnected = true) => {
 	const peers = helper.newPeers(peerIndexes, orgName);
-	return peers.map(peer => {
-		return newEventHub(channel, peer, inlineConnected);
+	return peers.map(async peer => {
+		const eventHub = new Eventhub(channel, peer);
+		if (inlineConnected) {
+			await eventHub.connect();
+		}
+		return eventHub;
 	});
 };
 

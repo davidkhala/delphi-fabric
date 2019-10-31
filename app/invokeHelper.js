@@ -6,7 +6,7 @@ const {proposalStringify, proposalFlatten} = require('../common/nodejs/chaincode
 const {invoke, query} = require('./chaincodeHelper');
 const channelName = 'allchannel';
 
-const {chaincodeEvent, newEventHub} = require('../common/nodejs/eventHub');
+const Eventhub = require('../common/nodejs/eventHub');
 
 const {sleep} = require('khala-nodeutils/helper');
 exports.invoke = async (peers, clientPeerOrg, chaincodeId, fcn, args = [], transientMap, commitPeers = []) => {
@@ -15,8 +15,10 @@ exports.invoke = async (peers, clientPeerOrg, chaincodeId, fcn, args = [], trans
 	const channel = helper.prepareChannel(channelName, client, true);
 	let eventHubs = undefined;
 	if (commitPeers.length > 0) {
-		eventHubs = commitPeers.map(peer => {
-			return newEventHub(channel, peer, true);
+		eventHubs = commitPeers.map(async peer => {
+			const eventHub = new Eventhub(channel, peer);
+			await eventHub.connect();
+			return eventHub;
 		});
 	}
 	const {proposalResponses} = await invoke(channel, peers, {
@@ -40,12 +42,13 @@ exports.listenChaincodeEvent = async (peer, clientPeerOrg, chaincodeId, eventNam
 	const logger = LogUtil.new('chaincode event', true);
 	const client = await helper.getOrgAdmin(clientPeerOrg);
 	const channel = helper.prepareChannel(channelName, client, true);
-	const eventHub = newEventHub(channel, peer, true);
+	const eventHub = new Eventhub(channel, peer);
+	await eventHub.connect();
 	const validator = (data) => {
 		logger.debug('default validator', data);
 		return {valid: true, interrupt: false};
 	};
-	return chaincodeEvent(eventHub, validator, {chaincodeId, eventName}, onSuccess, (err) => {
+	return eventHub.chaincodeEvent(validator, {chaincodeId, eventName}, onSuccess, (err) => {
 		logger.error('onError', err);
 	});
 };

@@ -125,3 +125,10 @@ exports.getPrivate = async (peers, clientOrg, key) => {
 	return query(peers, clientOrg, chaincodeId, fcn, [], {[key]: ''});
 };
 
+exports.readWritePrivate = async (peers, clientOrg, dataSet) => {
+	const fcn = 'readWritePrivate';
+	if (typeof dataSet !== 'object') {
+		throw Error('transient map should be a js object');
+	}
+	return invoke(peers, clientOrg, chaincodeId, fcn, [], dataSet);
+};

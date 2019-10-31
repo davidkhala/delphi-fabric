@@ -38,7 +38,7 @@ Profiles:
       Organizations:
         - Name: delphi
           ID: OrdererMSP
-          MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/delphi/msp
+          MSPDir: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/delphi/msp
           Policies:
             Readers:
               Type: Signature
@@ -56,7 +56,7 @@ Profiles:
         Organizations:
           - Name: astri.org
             ID: ASTRIMSP
-            MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/astri.org/msp
+            MSPDir: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/astri.org/msp
             Policies:
               Readers:
                 Type: Signature
@@ -71,7 +71,7 @@ Profiles:
               - 'orderer.delphi:7050'
           - Name: icdd
             ID: icddMSP
-            MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp
+            MSPDir: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp
             Policies:
               Readers:
                 Type: Signature
@@ -93,7 +93,7 @@ Profiles:
       Organizations:
         - Name: astri.org
           ID: ASTRIMSP
-          MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/astri.org/msp
+          MSPDir: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/astri.org/msp
           Policies:
             Readers:
               Type: Signature
@@ -108,7 +108,7 @@ Profiles:
             - {}
         - Name: icdd
           ID: icddMSP
-          MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp
+          MSPDir: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp
           Policies:
             Readers:
               Type: Signature
@@ -133,7 +133,7 @@ Profiles:
       Organizations:
         - Name: astri.org
           ID: ASTRIMSP
-          MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/astri.org/msp
+          MSPDir: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/astri.org/msp
           Policies:
             Readers:
               Type: Signature
@@ -148,7 +148,7 @@ Profiles:
             - {}
         - Name: icdd
           ID: icddMSP
-          MSPDir: /home/mediconcen/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp
+          MSPDir: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp
           Policies:
             Readers:
               Type: Signature

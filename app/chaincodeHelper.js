@@ -5,7 +5,7 @@ const {incrementUpgrade} = require('../common/nodejs/chaincodeVersion');
 const {transactionProposal} = require('../common/nodejs/chaincode');
 const ClientUtil = require('../common/nodejs/client');
 const ChannelUtil = require('../common/nodejs/channel');
-const EventHubUtil = require('../common/nodejs/eventHub');
+const Eventhub = require('../common/nodejs/eventHub');
 const golangUtil = require('../common/nodejs/golang');
 const {RoleIdentity, simplePolicyBuilder} = require('../common/nodejs/policy');
 const {collectionPolicyBuilder, ensureCollectionConfig} = require('../common/nodejs/privateData');
@@ -81,7 +81,8 @@ exports.upgrade = async (channel, richPeers, opts, orderer) => {
 	const eventHubs = [];
 
 	for (const peer of richPeers) {
-		const eventHub = EventHubUtil.newEventHub(channel, peer, true);
+		const eventHub = new Eventhub(channel, peer);
+		await eventHub.connect();
 		eventHubs.push(eventHub);
 	}
 	const allConfig = Object.assign(policyConfig, opts);
@@ -89,8 +90,10 @@ exports.upgrade = async (channel, richPeers, opts, orderer) => {
 };
 exports.invoke = async (channel, peers, {chaincodeId, fcn, args, transientMap}, nonAdminUser, eventHubs) => {
 	if (!eventHubs) {
-		eventHubs = peers.map(peer => {
-			return EventHubUtil.newEventHub(channel, peer, true);
+		eventHubs = peers.map(async peer => {
+			const eventHub = new Eventhub(channel, peer);
+			await eventHub.connect();
+			return eventHub;
 		});
 	}
 	const orderers = channel.getOrderers();

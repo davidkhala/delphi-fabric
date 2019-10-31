@@ -1,5 +1,5 @@
 const {
-	get, put, cross, chaincodeID, putRaw, putBatch, whoami, getEndorsement, putEndorsement, getPage, list, getCertID
+	get, put, cross, chaincodeID, putRaw, putBatch, whoami, getEndorsement, putEndorsement, getPage, list, getCertID, readWritePrivate
 } = require('../diagnoseInvoke');
 
 const helper = require('../../../../app/helper');
@@ -21,7 +21,7 @@ const taskKeyEndorsement = async () => {
 	logger.info({cid});
 	const endorseKey = key;
 	await putEndorsement(peers, org1, endorseKey, ['ASTRIMSP', 'icddMSP']);
-	let endorsingOrgs = await getEndorsement(peers, clientOrg, endorseKey);
+	const endorsingOrgs = await getEndorsement(peers, clientOrg, endorseKey);
 	logger.info({endorsingOrgs});
 	try {
 		peers = helper.newPeers([0], org1);
@@ -74,7 +74,7 @@ const taskPagination = async () => {
 	logger.info({gotCCID});
 	let [result] = await getPage(peers, org1);// FIXME sometime there is no result
 	logger.debug(1, result);
-	let {Bookmark} = JSON.parse(result).MetaData;
+	const {Bookmark} = JSON.parse(result).MetaData;
 	logger.debug({Bookmark});
 	result = await getPage(peers, org1, '', '', 1, Bookmark);
 	logger.debug(2, result);
@@ -98,12 +98,16 @@ const overPaginationTest = async (peers, clientOrg, pageSize) => {
 	const result = await getPage(peers, clientOrg, undefined, undefined, `${pageSize}`);
 	logger.debug('pagination', result);
 };
-
+const readWritePrivateTest = async (peers, clientOrg) => {
+	const key = 'a';
+	const dataSet = {[key]: 'b'};
+	await readWritePrivate(peers, clientOrg, dataSet);
+};
 
 const task = async (taskID = parseInt(process.env.taskID)) => {
 
-	let peers = helper.newPeers([0], 'icdd');
-	let clientOrg = 'icdd';
+	const peers = helper.newPeers([0], 'icdd');
+	const clientOrg = 'icdd';
 	switch (taskID) {
 		case 1:
 			await taskPagination();
@@ -125,6 +129,9 @@ const task = async (taskID = parseInt(process.env.taskID)) => {
 			break;
 		case 7:
 			await overPaginationTest(peers, clientOrg, 10);
+			break;
+		case 8:
+			await readWritePrivateTest(helper.newPeers([0], 'astri.org'), 'astri.org');
 			break;
 		default:
 			await diagnoseInstall.task(process.env.channelName);
