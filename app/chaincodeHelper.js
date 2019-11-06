@@ -1,5 +1,5 @@
 const {randomKeyOf} = require('khala-nodeutils/random');
-const {install} = require('../common/nodejs/chaincode');
+const {install,ChaincodeType} = require('../common/nodejs/chaincode');
 const {invoke} = require('../common/nodejs/chaincodeHelper');
 const {incrementUpgrade} = require('../common/nodejs/chaincodeVersion');
 const {transactionProposal} = require('../common/nodejs/chaincode');
@@ -21,11 +21,11 @@ exports.prepareInstall = async ({chaincodeId}) => {
 	let chaincodePath;
 	const chaincodeType = chaincodeConfig[chaincodeId].type;
 	const gopath = await golangUtil.getGOPATH();
-	if (chaincodeType === 'node') {
+	if (chaincodeType === ChaincodeType.node) {
 		chaincodePath = path.resolve(gopath, 'src', chaincodeRelPath);
 		metadataPath = path.resolve(chaincodePath, 'META-INF');// the name is arbitrary
 	}
-	if (!chaincodeType || chaincodeType === 'golang') {
+	if (!chaincodeType || chaincodeType === ChaincodeType.golang) {
 		await golangUtil.setGOPATH();
 		chaincodePath = chaincodeRelPath;
 		metadataPath = path.resolve(gopath, 'src', chaincodeRelPath, 'META-INF');// the name is arbitrary
