@@ -16,7 +16,7 @@
     "khala-level": "^0.0.1",
     "khala-nodeutils": "^0.7.4",
     "khala-logger": "^0.0.1",
-    "khala-dockerode": "^0.0.7",
+    "khala-dockerode": "^0.1.0",
     "multer": "^1.3.0",
     "ws": "^3.3.2"
   },

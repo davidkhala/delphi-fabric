@@ -4,7 +4,7 @@ outputChannelJson has been moved to test/configtxlatorReadTest.js
 const {create, joinAll, setupAnchorPeersFromFile, setAnchorPeersByOrg} = require('./channelHelper');
 const ChannelUtil = require('../common/nodejs/channel');
 const helper = require('./helper');
-const {sleep, homeResolve} = require('../common/nodejs');
+const {sleep, homeResolve} = require('khala-nodeutils/helper');
 const path = require('path');
 
 const globalConfig = require('../config/orgs.json');

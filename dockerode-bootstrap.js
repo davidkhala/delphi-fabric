@@ -16,7 +16,7 @@ const {
 	containerDelete, volumeCreateIfNotExist, networkCreateIfNotExist,
 	volumeRemove, prune: {system: pruneLocalSystem}
 } = require('khala-dockerode/dockerode-util');
-const {homeResolve, fsExtra} = require('./common/nodejs');
+const {homeResolve, fsExtra} = require('khala-nodeutils/helper');
 const MSPROOT = homeResolve(globalConfig.docker.volumes.MSPROOT);
 const CONFIGTX = homeResolve(globalConfig.docker.volumes.CONFIGTX);
 const {docker: {fabricTag, caTag, network, thirdPartyTag}, TLS} = globalConfig;
