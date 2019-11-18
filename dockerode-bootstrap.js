@@ -58,27 +58,16 @@ exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPRO
 			}, operations, metrics);
 		}
 	};
-	if (type === OrdererType.solo) {
-		const ordererConfig = globalConfig.orderer.solo;
-		const {orgName: domain, mspid, portHost: port, operations, metrics} = ordererConfig;
-		const orderer = ordererConfig.container_name;
-		let {stateVolume} = ordererConfig;
-		if (stateVolume) {
-			stateVolume = homeResolve(stateVolume);
-		}
-		await toggle({orderer, domain, port, mspid}, type, stateVolume, operations, metrics);
-	} else {
-		const ordererOrgs = globalConfig.orderer[type].orgs;
-		for (const [domain, ordererOrgConfig] of Object.entries(ordererOrgs)) {
-			const {mspid} = ordererOrgConfig;
-			for (const [orderer, ordererConfig] of Object.entries(ordererOrgConfig.orderers)) {
-				let {stateVolume} = ordererConfig;
-				if (stateVolume) {
-					stateVolume = homeResolve(stateVolume);
-				}
-				const {portHost, operations, metrics} = ordererConfig;
-				await toggle({orderer, domain, port: portHost, mspid}, type, stateVolume, operations, metrics);
+	const ordererOrgs = globalConfig.orderer[type].orgs;
+	for (const [domain, ordererOrgConfig] of Object.entries(ordererOrgs)) {
+		const {mspid} = ordererOrgConfig;
+		for (const [orderer, ordererConfig] of Object.entries(ordererOrgConfig.orderers)) {
+			let {stateVolume} = ordererConfig;
+			if (stateVolume) {
+				stateVolume = homeResolve(stateVolume);
 			}
+			const {portHost, operations, metrics} = ordererConfig;
+			await toggle({orderer, domain, port: portHost, mspid}, type, stateVolume, operations, metrics);
 		}
 	}
 };
@@ -162,18 +151,11 @@ exports.runCAs = async (toStop) => {
 			await runCA({container_name, port, network, imageTag, TLS, Issuer});
 		}
 	};
-	if (type === OrdererType.solo) {
-		const {ca: {portHost: port}, orgName} = globalConfig.orderer.solo;
-		const container_name = `ca.${orgName}`;
-		const Issuer = {CN: orgName};
+	for (const [ordererOrg, ordererOrgConfig] of Object.entries(globalConfig.orderer[type].orgs)) {
+		const {portHost: port} = ordererOrgConfig.ca;
+		const container_name = `ca.${ordererOrg}`;
+		const Issuer = {CN: ordererOrg};
 		await toggle({container_name, port, Issuer});
-	} else {
-		for (const [ordererOrg, ordererOrgConfig] of Object.entries(globalConfig.orderer[type].orgs)) {
-			const {portHost: port} = ordererOrgConfig.ca;
-			const container_name = `ca.${ordererOrg}`;
-			const Issuer = {CN: ordererOrg};
-			await toggle({container_name, port, Issuer});
-		}
 	}
 
 	for (const [orgName, orgConfig] of Object.entries(peerOrgsConfig)) {

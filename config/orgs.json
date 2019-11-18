@@ -11,25 +11,10 @@
     }
   },
   "orderer": {
-    "type": "solo",
+    "type": "etcdraft",
     "genesis_block": {
       "file": "delphi.block",
       "profile": "delphiGenesis"
-    },
-    "solo": {
-      "orgName": "delphi",
-      "container_name": "orderer",
-      "operations": {
-        "port": 8443
-      },
-      "metrics": {
-        "provider": "prometheus"
-      },
-      "portHost": 7050,
-      "ca": {
-        "portHost": 7454
-      },
-      "mspid": "OrdererMSP"
     },
     "kafka": {
       "M": 2,

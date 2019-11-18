@@ -118,15 +118,6 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 			Brokers: Object.keys(globalConfig.orderer.kafka.kafkas).map((kafka) => `${kafka}:9092`)
 		};
 		OrdererConfig.Organizations = Organizations;
-	} else if (globalConfig.orderer.type === OrdererType.solo) {
-		OrdererConfig.OrdererType = OrdererType.solo;
-		const {container_name, orgName, portHost} = ordererConfig.solo;
-
-		const Addresses = [`${container_name}.${orgName}:${portHost}`];
-		OrdererConfig.Organizations = [
-			OrganizationBuilder(orgName, ordererConfig.solo, undefined, undefined, 'orderer', Addresses)
-		];
-		globalOrdererAddresses = globalOrdererAddresses.concat(Addresses);
 	} else if (globalConfig.orderer.type === OrdererType.etcdraft) {
 		OrdererConfig.OrdererType = OrdererType.etcdraft;
 

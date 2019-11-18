@@ -5,7 +5,6 @@ const globalConfig = require('../../config/orgs');
 const {TLS} = globalConfig;
 const peerUtil = require('../../common/nodejs/peer');
 const {CryptoPath} = require('../../common/nodejs/path');
-const {OrdererType} = require('../../common/nodejs/constants');
 const {docker: {network, fabricTag: imageTag}} = globalConfig;
 const CONFIGTXVolume = 'CONFIGTX';
 exports.stopPeer = async (org, peerIndex) => {
@@ -13,12 +12,7 @@ exports.stopPeer = async (org, peerIndex) => {
 	await containerDelete(peerName);
 };
 const getOrdererContainerName = (org, index) => {
-	const {type} = globalConfig.orderer;
-	if (type === OrdererType.solo) {
-		return globalConfig.orderer.solo.container_name;
-	} else {
-		return `orderer${index}.${org}`;
-	}
+	return `orderer${index}.${org}`;
 };
 exports.stopOrderer = async (org, index) => {
 	await containerDelete(getOrdererContainerName(org, index));
@@ -26,12 +20,8 @@ exports.stopOrderer = async (org, index) => {
 exports.resumeOrderer = async (org, index) => {
 	const container_name = getOrdererContainerName(org, index);
 	const {type} = globalConfig.orderer;
-	let ordererConfig;
-	if (type === OrdererType.solo) {
-		ordererConfig = globalConfig.orderer.solo;
-	} else {
-		ordererConfig = globalConfig.orderer[type].orgs[org].orderers[`orderer${index}`];
-	}
+
+	const ordererConfig = globalConfig.orderer[type].orgs[org].orderers[`orderer${index}`];
 	const {portHost, mspid: id} = ordererConfig;
 	const stateVolume = homeResolve(ordererConfig.stateVolume);
 	const cryptoPath = new CryptoPath(peerUtil.container.MSPROOT, {

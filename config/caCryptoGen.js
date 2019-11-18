@@ -80,68 +80,39 @@ exports.genAll = async () => {
 	{
 		const nodeType = 'orderer';
 
-		if (type === OrdererType.solo) {
-			const ordererConfig = globalConfig.orderer.solo;
+		const ordererOrgs = globalConfig.orderer[type].orgs;
+		for (const domain in ordererOrgs) {
+			const ordererConfig = ordererOrgs[domain];
 			const mspId = ordererConfig.mspid;
 
-			const domain = ordererConfig.orgName;
+			const caService = await getCaService(ordererConfig.ca.portHost, domain);
 			const adminCryptoPath = new CryptoPath(caCryptoConfig, {
 				orderer: {
 					org: domain
 				},
-				password: userUtil.adminPwd,
 				user: {
 					name: userUtil.adminName
-				}
-			});
-
-			const caService = await getCaService(ordererConfig.ca.portHost, domain);
-			const admin = await init(caService, adminCryptoPath, nodeType, mspId);
-			const cryptoPath = new CryptoPath(caCryptoConfig, {
-				orderer: {
-					org: domain, name: ordererConfig.container_name
 				},
-				user: {
-					name: userUtil.adminName
-				}
+				password: userUtil.adminPwd
 			});
-			await genNSaveClientKeyPair(caService, cryptoPath, admin, domain, nodeType);
-			await genOrderer(caService, cryptoPath, admin, {TLS});
-		} else {
-			const ordererOrgs = globalConfig.orderer[type].orgs;
-			for (const domain in ordererOrgs) {
-				const ordererConfig = ordererOrgs[domain];
-				const mspId = ordererConfig.mspid;
+			const admin = await init(caService, adminCryptoPath, nodeType, mspId);
+			await genNSaveClientKeyPair(caService, adminCryptoPath, admin, domain, nodeType);
+			const promises = [];
+			for (const ordererName in ordererConfig.orderers) {
 
-				const caService = await getCaService(ordererConfig.ca.portHost, domain);
-				const adminCryptoPath = new CryptoPath(caCryptoConfig, {
+				const cryptoPath = new CryptoPath(caCryptoConfig, {
 					orderer: {
-						org: domain
+						org: domain, name: ordererName
 					},
 					user: {
 						name: userUtil.adminName
-					},
-					password: userUtil.adminPwd
+					}
 				});
-				const admin = await init(caService, adminCryptoPath, nodeType, mspId);
-				await genNSaveClientKeyPair(caService, adminCryptoPath, admin, domain, nodeType);
-				const promises = [];
-				for (const ordererName in ordererConfig.orderers) {
-
-					const cryptoPath = new CryptoPath(caCryptoConfig, {
-						orderer: {
-							org: domain, name: ordererName
-						},
-						user: {
-							name: userUtil.adminName
-						}
-					});
-					promises.push(genOrderer(caService, cryptoPath, admin, {TLS}));
-				}
-				await Promise.all(promises);
+				promises.push(genOrderer(caService, cryptoPath, admin, {TLS}));
 			}
-
+			await Promise.all(promises);
 		}
+
 	}
 	// gen peers
 	const peerOrgs = globalConfig.orgs;
