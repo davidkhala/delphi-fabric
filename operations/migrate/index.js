@@ -1,4 +1,4 @@
-const {ChannelConfig: {channelUpdate, ConfigFactory}, Channel, Signature: {signs}, homeResolve, sleep} = require('../../common/nodejs');
+const {ChannelConfig: {channelUpdate, ConfigFactory}, Channel, Signature: {signChannelConfig}, homeResolve, sleep} = require('../../common/nodejs');
 const {OrdererType} = require('../../common/nodejs/constants');
 const helper = require('../../app/helper');
 const logger = helper.getLogger('kafka migrate to etcdraft');
@@ -7,7 +7,7 @@ process.env.binPath = helper.projectResolve('common/bin');
 // peer is not used since peer could not get latest config during maintenance
 const channelUpdateTest = async (channel, orderer, configChangeCallback, alternativeClient, signers = [channel._clientContext]) => {
 	const signatureCollector = async (proto) => {
-		return signs(signers, proto);
+		return signChannelConfig(signers, proto);
 	};
 	await channelUpdate(channel, orderer, configChangeCallback, signatureCollector, {viaServer: false, client: alternativeClient});
 };

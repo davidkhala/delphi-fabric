@@ -1,12 +1,3 @@
-/**
- *  @typedef {Object} PeerQueryRequest
- * @property {Peer | string} target - The {@link Peer} object or peer name to
- *           use for the service discovery request
- * @property {boolean} useAdmin - Optional. Indicates that the admin credentials
- *           should be used in making this call to the peer. An administrative
- *           identity must have been loaded by a connection profile or by
- *           using the 'setAdminSigningIdentity' method.
- */
 const helper = require('../app/helper');
 const logger = helper.getLogger('test:serviceDiscovery');
 const {discoveryChaincodeInterestBuilder} = require('../app/chaincodeHelper');
