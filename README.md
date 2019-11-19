@@ -18,7 +18,7 @@ _after first time clone this repository, submodule should be initialize_
 ----
  
 **Requirements & dependencies**
-  * fabric: 1.4.3 (for docker image, binary tool and fabric-sdk)
+  * fabric: 1.4.4 (for docker image, binary tool and fabric-sdk)
   * docker-ce 18.x
   * golang 1.11 
   * node 8.16, npm 6.10.3 : npm install卡死的话，可以考虑添加淘宝的源

@@ -41,14 +41,6 @@ Profiles:
             Port: 7050
             ClientTLSCert: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/icdd.astri.org/orderers/orderer0.icdd.astri.org/tls/server.crt
             ServerTLSCert: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/icdd.astri.org/orderers/orderer0.icdd.astri.org/tls/server.crt
-          - Host: orderer1.icdd.astri.org
-            Port: 7050
-            ClientTLSCert: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/icdd.astri.org/orderers/orderer1.icdd.astri.org/tls/server.crt
-            ServerTLSCert: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/icdd.astri.org/orderers/orderer1.icdd.astri.org/tls/server.crt
-          - Host: orderer2.icdd.astri.org
-            Port: 7050
-            ClientTLSCert: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/icdd.astri.org/orderers/orderer2.icdd.astri.org/tls/server.crt
-            ServerTLSCert: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/icdd.astri.org/orderers/orderer2.icdd.astri.org/tls/server.crt
       Organizations:
         - Name: icdd.astri.org
           ID: ICDDMSP
@@ -65,8 +57,6 @@ Profiles:
               Rule: OR('ICDDMSP.admin')
           OrdererEndpoints:
             - 'orderer0.icdd.astri.org:7050'
-            - 'orderer1.icdd.astri.org:7050'
-            - 'orderer2.icdd.astri.org:7050'
     Consortiums:
       SampleConsortium:
         Organizations:
@@ -85,8 +75,6 @@ Profiles:
                 Rule: OR('ASTRIMSP.admin')
             OrdererEndpoints: &ref_0
               - 'orderer0.icdd.astri.org:7050'
-              - 'orderer1.icdd.astri.org:7050'
-              - 'orderer2.icdd.astri.org:7050'
           - Name: icdd
             ID: icddMSP
             MSPDir: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp

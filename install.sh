@@ -15,7 +15,7 @@ gitSync() {
 }
 
 pull() {
-	local fabricTag=1.4.3
+	local fabricTag=1.4.4
 	local IMAGE_TAG="$fabricTag"
 	docker pull hyperledger/fabric-ccenv:$IMAGE_TAG
 	docker pull hyperledger/fabric-orderer:$IMAGE_TAG
@@ -23,7 +23,7 @@ pull() {
 	docker pull hyperledger/fabric-ca:$IMAGE_TAG
 }
 pullKafka() {
-	local thirdPartyTag=0.4.15
+	local thirdPartyTag=0.4.18
 	local IMAGE_TAG="$thirdPartyTag"
 	docker pull hyperledger/fabric-kafka:$IMAGE_TAG
 	docker pull hyperledger/fabric-zookeeper:$IMAGE_TAG
