@@ -20,14 +20,20 @@ const task = async () => {
 	const orderer = helper.newOrderers()[0];
 
 	const {proposal} = offlineCC.unsignedTransactionProposal(channelName, {fcn, args, chaincodeId}, mspId, certificate);
-	const proposal_bytes = proposal.toBuffer();
-	const signature = User.sign(user, proposal_bytes);
-	const signedProposal = {proposal_bytes, signature};
+	const proposalBytes = proposal.toBuffer();
+	const signedProposal = {
+		signature: User.sign(user, proposalBytes),
+		proposal_bytes: proposalBytes
+	};
 	const proposalResponses = await offlineCC.sendSignedProposal(peers, signedProposal);
 	const commit = offlineCC.unsignedTransaction(channelName, proposalResponses, proposal);
-	const signedTransaction = User.sign(user, commit.toBuffer());
-
+	const commitBytes = commit.toBuffer();
+	const signedTransaction = {
+		signature: User.sign(user, commitBytes),
+		proposal_bytes: commitBytes
+	};
 	const response = await offlineCC.sendSignedTransaction(signedTransaction, orderer);
 	console.log(response);
+
 };
 task();
