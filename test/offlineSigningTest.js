@@ -4,6 +4,8 @@ const channelName = 'allchannel';
 const offlineCC = require('../common/nodejs/offline/chaincode');
 const User = require('../common/nodejs/user');
 const Client = require('../common/nodejs/client');
+const Eventhub = require('../common/nodejs/eventHub');
+const {emptyChannel} = require('../common/nodejs/offline/channel');
 const task = async () => {
 
 	// Environment section
@@ -22,7 +24,7 @@ const task = async () => {
 	// Environment section
 
 
-	const {proposal} = offlineCC.unsignedTransactionProposal(channelName, {fcn, args, chaincodeId}, mspId, certificate);
+	const {proposal, txId} = offlineCC.unsignedTransactionProposal(channelName, {fcn, args, chaincodeId}, mspId, certificate);
 	const proposalBytes = proposal.toBuffer();
 	const signedProposal = {
 		signature: User.sign(user, proposalBytes),
@@ -36,7 +38,23 @@ const task = async () => {
 		proposal_bytes: commitBytes
 	};
 	const response = await offlineCC.sendSignedTransaction(signedTransaction, orderer);
-	console.log(response);
+
+	const channel = emptyChannel(channelName);
+	const eventHub = new Eventhub(channel, peers[0]);
+
+
+	const unsignedEvent = eventHub.unsignedRegistration(certificate, mspId);
+	const signedEvent = {
+		signature: User.sign(user, unsignedEvent),
+		payload: unsignedEvent
+	};
+
+	await eventHub.connect({signedEvent});
+	eventHub.txEvent({txId}, undefined, (tx, code, blockNum) => {
+		console.log({tx, code, blockNum});
+	}, (err) => {
+		throw err;
+	});
 
 };
 task();
