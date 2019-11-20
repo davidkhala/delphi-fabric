@@ -6,6 +6,7 @@ const User = require('../common/nodejs/user');
 const Client = require('../common/nodejs/client');
 const task = async () => {
 
+	// Environment section
 	const orgName = 'astri.org';
 	const client = helper.getOrgAdmin(orgName);
 	const peers = helper.newPeers([0], orgName);
@@ -18,6 +19,8 @@ const task = async () => {
 	const user = Client.getUser(client);
 	const certificate = User.getCertificate(user);
 	const orderer = helper.newOrderers()[0];
+	// Environment section
+
 
 	const {proposal} = offlineCC.unsignedTransactionProposal(channelName, {fcn, args, chaincodeId}, mspId, certificate);
 	const proposalBytes = proposal.toBuffer();
