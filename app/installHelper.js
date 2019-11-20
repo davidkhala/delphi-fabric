@@ -10,7 +10,7 @@ const channelName = 'allchannel';
 // only one time, one org could deploy
 exports.installs = async (chaincodeId, orgName, peerIndexes) => {
 	const peers = helper.newPeers(peerIndexes, orgName);
-	const client = await helper.getOrgAdmin(orgName);
+	const client = helper.getOrgAdmin(orgName);
 	const chaincodeVersion = nextVersion();
 	return install(peers, {chaincodeId, chaincodeVersion}, client);
 };
@@ -24,7 +24,7 @@ exports.installAll = async (chaincodeId) => {
 
 
 exports.incrementInstalls = async (chaincodeId, orgName, peerIndexes) => {
-	const client = await helper.getOrgAdmin(orgName);
+	const client = helper.getOrgAdmin(orgName);
 	const peers = helper.newPeers(peerIndexes, orgName);
 	const opt = await prepareInstall({chaincodeId});
 	await incrementInstall(peers, opt, client);

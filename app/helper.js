@@ -175,7 +175,7 @@ exports.findOrgConfig = (orgName, ordererName) => {
 	}
 	return {config: target, portHost, nodeType};
 };
-const getUser = async (username, orgName, cryptoSuite) => {
+const getUser = (username, orgName, cryptoSuite) => {
 	const {config, nodeType} = exports.findOrgConfig(orgName);
 	const mspId = config.mspid;
 	const cryptoPath = new CryptoPath(CRYPTO_CONFIG_DIR, {
@@ -191,17 +191,21 @@ const getUser = async (username, orgName, cryptoSuite) => {
 };
 exports.getUser = getUser;
 
-const getUserClient = async (username, orgName, client) => {
-	const user = await getUser(username, orgName, client.getCryptoSuite());
+const getUserClient = (username, orgName, client) => {
+	const user = getUser(username, orgName, client.getCryptoSuite());
 	ClientUtil.setUser(client, user);
 	return client;
 };
 
-exports.getOrgAdminUser = async (orgName, cryptoSuite) => {
-	return await getUser(UserUtil.adminName, orgName, cryptoSuite);
+exports.getOrgAdminUser = (orgName, cryptoSuite) => {
+	return getUser(UserUtil.adminName, orgName, cryptoSuite);
 };
-
-exports.getOrgAdmin = async (orgName, nodeType = 'peer') => {
+/**
+ * @param orgName
+ * @param nodeType
+ * @return {Client}
+ */
+exports.getOrgAdmin = (orgName, nodeType = 'peer') => {
 	const client = ClientUtil.new();
 	if (!orgName) {
 		orgName = exports.randomOrg(nodeType);

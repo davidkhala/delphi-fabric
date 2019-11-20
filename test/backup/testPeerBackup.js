@@ -6,7 +6,7 @@ const {installs} = require('../../app/installHelper');
 const {join} = require('../../common/nodejs/channel');
 const {resumePeer, stopPeer} = require('./');
 const resumePeerChannel = async (orgName, peerIndex, channelName) => {
-	const client = await helper.getOrgAdmin(orgName);
+	const client = helper.getOrgAdmin(orgName);
 	const channel = helper.prepareChannel(channelName, client);
 	const peer = helper.newPeer(peerIndex, orgName);
 	await join(channel, peer);

@@ -65,7 +65,7 @@ const pruneKafka = async () => {
 	await dockerHandler.runOrderers(undefined, undefined, OrdererType.etcdraft);
 };
 const task = async (taskID = parseInt(process.env.taskID)) => {
-	const ordererClient = await helper.getOrgAdmin(undefined, 'orderer');
+	const ordererClient = helper.getOrgAdmin(undefined, 'orderer');
 	const systemChannel = helper.prepareChannel('testchainid', ordererClient);
 	const orderers = await Channel.getOrderers(systemChannel, true);
 

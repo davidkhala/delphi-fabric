@@ -21,7 +21,7 @@ const anchorPeerTask = async (channelName, channelConfig, byFile) => {
 	}
 };
 const taskViewChannelBlock = async (channelName) => {
-	const client = await helper.getOrgAdmin(undefined, 'peer');
+	const client = helper.getOrgAdmin(undefined, 'peer');
 	const channel = helper.prepareChannel(channelName, client);
 	const orderer = ChannelUtil.getOrderers(channel, false)[0];
 	const block = await ChannelUtil.getGenesisBlock(channel, orderer);
@@ -31,7 +31,7 @@ const taskViewChannelBlock = async (channelName) => {
 
 const e2eTask = async (channelName) => {
 	const peerOrg = helper.randomOrg('peer');
-	const client = await helper.getOrgAdmin(peerOrg);
+	const client = helper.getOrgAdmin(peerOrg);
 	const channel = helper.prepareChannel(channelName, client);
 	const orderers = await ChannelUtil.getOrderers(channel, true);
 	const orderer = orderers[0];

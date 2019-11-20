@@ -7,7 +7,7 @@ const logger = helper.getLogger('test:eventHub');
 const ChannelUtil = require('../common/nodejs/channel');
 
 const task = async () => {
-	const client = await helper.getOrgAdmin(org, 'peer');
+	const client = helper.getOrgAdmin(org, 'peer');
 	const channel = helper.prepareChannel(channelName, client, true);
 	logger.info(channel.toString());
 	ChannelUtil.clearOrderers(channel);

@@ -7,7 +7,7 @@ const path = require('path');
 const task = async () => {
 	const domain = 'icdd';
 	const caService = await getCaService(8054, domain);
-	const admin = await helper.getOrgAdminUser(domain);
+	const admin = helper.getOrgAdminUser(domain);
 	const {key, certificate, rootCertificate} = await caCryptoGen.genClientKeyPair(caService, {
 		enrollmentID: `${domain}.client`,
 		enrollmentSecret: 'password'

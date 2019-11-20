@@ -7,7 +7,7 @@ const logger = helper.getLogger('test:configtxlator');
 const appChannel = async (viaServer) => {
 	try {
 		const peerOrg = helper.randomOrg('peer');
-		const peerClient = await helper.getOrgAdmin(peerOrg, 'peer'); // only peer user can read channel
+		const peerClient = helper.getOrgAdmin(peerOrg, 'peer'); // only peer user can read channel
 		const channel = helper.prepareChannel(channelName, peerClient);
 		const peer = helper.newPeer(0, peerOrg);
 		const {configJSON} = await ChannelConfig.getChannelConfigReadable(channel, {peer}, viaServer);
@@ -20,7 +20,7 @@ const appChannel = async (viaServer) => {
 const appChannelByOrderer = async (viaServer) => {
 	try {
 		const ordererOrg = helper.randomOrg('orderer');
-		const ordererClient = await helper.getOrgAdmin(ordererOrg, 'orderer'); // only peer user can read channel
+		const ordererClient = helper.getOrgAdmin(ordererOrg, 'orderer'); // only peer user can read channel
 		const channel = helper.prepareChannel(channelName, ordererClient);
 		const orderer = channel.getOrderers()[0];
 		const {configJSON} = await ChannelConfig.getChannelConfigReadable(channel, {orderer}, viaServer);
@@ -33,7 +33,7 @@ const appChannelByOrderer = async (viaServer) => {
 const systemChannel = async (viaServer) => {
 	try {
 		const ordererOrg = helper.randomOrg('orderer');
-		const ordererClient = await helper.getOrgAdmin(ordererOrg, 'orderer');
+		const ordererClient = helper.getOrgAdmin(ordererOrg, 'orderer');
 		const channel = helper.prepareChannel(undefined, ordererClient);
 		const orderer = channel.getOrderers()[0];
 		const {configJSON} = await ChannelConfig.getChannelConfigReadable(channel, {orderer}, viaServer);

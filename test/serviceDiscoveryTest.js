@@ -15,7 +15,7 @@ const deleteOrderer = async () => {
 };
 const peerList = async () => {
 	const org = 'icdd';
-	const client = await helper.getOrgAdmin(org, 'peer');
+	const client = helper.getOrgAdmin(org, 'peer');
 	const peer = helper.newPeer(0, org);
 	const discoveries = await globalPeers(client, peer);
 	logger.debug(discoveries);
@@ -23,7 +23,7 @@ const peerList = async () => {
 const discoverOrderer = async () => {
 	const org = 'icdd';
 	const channelName = 'allchannel';
-	const client = await helper.getOrgAdmin(org, 'peer');
+	const client = helper.getOrgAdmin(org, 'peer');
 	const channel = ChannelUtil.new(client, channelName);
 	const peer = helper.newPeer(0, org);
 	await initialize(channel, peer);
@@ -38,7 +38,7 @@ const discoverOrderer = async () => {
 const discoverChannel = async (chaincodeIds) => {
 	const org = 'icdd';
 	const channelName = 'allchannel';
-	const client = await helper.getOrgAdmin(org, 'peer');
+	const client = helper.getOrgAdmin(org, 'peer');
 	const channel = ChannelUtil.new(client, channelName);
 	const peer = helper.newPeer(0, org);
 	const filter = Array.isArray(chaincodeIds) ? (chaincodeid) => chaincodeIds.includes(chaincodeid) : undefined;

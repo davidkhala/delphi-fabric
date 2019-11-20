@@ -3,7 +3,7 @@ const helper = require('../../app/helper');
 const task = async () => {
 	const clientOrg = 'icdd';
 	const peerOrg = 'astri.org';
-	const client = await helper.getOrgAdmin(clientOrg);
+	const client = helper.getOrgAdmin(clientOrg);
 	const peers = helper.newPeers([0], peerOrg);
 	try {
 		await install(peers, {chaincodeId: 'stress', chaincodeVersion: '0.0.0'}, client);

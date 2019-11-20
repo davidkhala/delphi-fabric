@@ -20,7 +20,7 @@ exports.create = async (channel, channelConfigFile, orderer, extraSignerOrgs = [
 	const clients = [channel._clientContext];
 	// extract the channel config bytes from the envelope to be signed
 	for (const orgName of extraSignerOrgs) {
-		const signingClient = await helper.getOrgAdmin(orgName);
+		const signingClient = helper.getOrgAdmin(orgName);
 		clients.push(signingClient);
 	}
 
@@ -35,7 +35,7 @@ exports.joinAll = async (channelName) => {
 		const {peerIndexes} = channelConfig.orgs[orgName];
 		const peers = helper.newPeers(peerIndexes, orgName);
 
-		const client = await helper.getOrgAdmin(orgName);
+		const client = helper.getOrgAdmin(orgName);
 
 		const channel = helper.prepareChannel(channelName, client);
 
@@ -71,7 +71,7 @@ exports.setAnchorPeersByOrg = async (channelName, OrgName) => {
 	const orderer = orderers[0];
 	const orgConfig = globalConfig.channels[channelName].orgs[OrgName];
 	const {anchorPeerIndexes} = orgConfig;
-	const client = await helper.getOrgAdmin(OrgName);
+	const client = helper.getOrgAdmin(OrgName);
 	const channel = helper.prepareChannel(channelName, client);
 
 	const anchorPeers = [];
@@ -80,7 +80,7 @@ exports.setAnchorPeersByOrg = async (channelName, OrgName) => {
 		anchorPeers.push({host: container_name, port: 7051});
 	}
 	await setAnchorPeers(channel, orderer, OrgName, anchorPeers);
-	const ordererClient = await helper.getOrgAdmin(OrgName, 'orderer');
+	const ordererClient = helper.getOrgAdmin(OrgName, 'orderer');
 	ChannelUtil.setClientContext(channel, ordererClient);
 	const {configJSON} = await getChannelConfigReadable(channel, {orderer});
 	const updatedAnchorPeers = new ConfigFactory(configJSON).getAnchorPeers(OrgName);
@@ -93,7 +93,7 @@ exports.setupAnchorPeersFromFile = async (configtxYaml, channelName, OrgName) =>
 	const anchorTx = helper.projectResolve('config', 'configtx', `${OrgName}Anchors.tx`);
 	const binManager = new BinManager();
 	await binManager.configtxgen('anchorPeers', configtxYaml, channelName).genAnchorPeers(anchorTx, OrgName);
-	const client = await helper.getOrgAdmin(OrgName);
+	const client = helper.getOrgAdmin(OrgName);
 	const channel = helper.prepareChannel(channelName, client);
 	const orderer = channel.getOrderers()[0];
 	await setupAnchorPeers(channel, orderer, anchorTx);

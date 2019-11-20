@@ -7,7 +7,7 @@ const Client = require('../common/nodejs/client');
 const task = async () => {
 
 	const orgName = 'astri.org';
-	const client = await helper.getOrgAdmin(orgName);
+	const client = helper.getOrgAdmin(orgName);
 	const peers = helper.newPeers([0], orgName);
 	const fcn = 'putRaw';
 	const key = 'a';
@@ -17,11 +17,17 @@ const task = async () => {
 	const mspId = 'ASTRIMSP';
 	const user = Client.getUser(client);
 	const certificate = User.getCertificate(user);
+	const orderer = helper.newOrderers()[0];
 
-	const {proposal} = await offlineCC.unsignedTransactionProposal(channelName, {fcn, args, chaincodeId}, mspId, certificate);
-	const proposalBytes = proposal.toBuffer();
-	const signature = User.sign(user, proposalBytes);
-	const result = await offlineCC.sendSignedProposal(peers, signature, proposalBytes);
-	console.log(result);
+	const {proposal} = offlineCC.unsignedTransactionProposal(channelName, {fcn, args, chaincodeId}, mspId, certificate);
+	const proposal_bytes = proposal.toBuffer();
+	const signature = User.sign(user, proposal_bytes);
+	const signedProposal = {proposal_bytes, signature};
+	const proposalResponses = await offlineCC.sendSignedProposal(peers, signedProposal);
+	const commit = offlineCC.unsignedTransaction(channelName, proposalResponses, proposal);
+	const signedTransaction = User.sign(user, commit.toBuffer());
+
+	const response = await offlineCC.sendSignedTransaction(signedTransaction, orderer);
+	console.log(response);
 };
 task();

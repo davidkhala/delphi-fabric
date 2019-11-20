@@ -18,7 +18,7 @@ const flow = async () => {
 const channelName = 'allchannel';
 const {initialize, getDiscoveryResults, globalPeers} = require('../../../common/nodejs/serviceDiscovery');
 const task = async () => {
-	const client = await helper.getOrgAdmin(org1);
+	const client = helper.getOrgAdmin(org1);
 	const channel = helper.prepareChannel(channelName, client);
 	const p1 = helper.newPeer(0, org1);
 

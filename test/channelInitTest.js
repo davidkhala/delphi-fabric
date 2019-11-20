@@ -6,7 +6,7 @@ const ChannelUtil = require('../common/nodejs/channel');
 const ServiceDiscoveryUtil = require('../common/nodejs/serviceDiscovery');
 
 const task = async () => {
-	const client = await helper.getOrgAdmin(org, 'peer');
+	const client = helper.getOrgAdmin(org, 'peer');
 	const channel = helper.prepareChannel(channelName, client, true);
 	logger.info(channel.toString());
 	ChannelUtil.clearOrderers(channel);

@@ -14,7 +14,7 @@ const helper = require('../app/helper');
 const task = async () => {
 	const peers = helper.newPeers([0], 'icdd');
 	const clientOrg = 'icdd';
-	const client = await helper.getOrgAdmin(clientOrg);
+	const client = helper.getOrgAdmin(clientOrg);
 	const channel = helper.prepareChannel('allchannel', client);
 	let result = await chain(peers[0], channel);
 	console.log('chainInfo', result.pretty);

@@ -85,7 +85,7 @@ app.post('/query/block/height/:blockNumber', async (req, res) => {
 		invalid.peer({orgName, peerIndex});
 		logger.debug('GET BLOCK BY NUMBER ', {blockNumber, peerIndex, orgName, channelName});
 
-		const client = await helper.getOrgAdmin(orgName);
+		const client = helper.getOrgAdmin(orgName);
 		const channel = helper.prepareChannel(channelName, client);
 		const peer = helper.newPeer(peerIndex, orgName);
 
@@ -103,7 +103,7 @@ app.post('/query/block/hash', async (req, res) => {
 	try {
 		invalid.peer({orgName, peerIndex});
 		const peer = helper.newPeer(peerIndex, orgName);
-		const client = await helper.getOrgAdmin(orgName);
+		const client = helper.getOrgAdmin(orgName);
 		const channel = helper.prepareChannel(channelName, client);
 		const message = await Query.blockFromHash(peer, channel, hashHex);
 		res.send(message);
@@ -118,7 +118,7 @@ app.post('/query/tx', async (req, res) => {
 	logger.debug('GET TRANSACTION BY TRANSACTION_ID', {txId, orgName, peerIndex, channelName});
 	try {
 		invalid.peer({orgName, peerIndex});
-		const client = await helper.getOrgAdmin(orgName);
+		const client = helper.getOrgAdmin(orgName);
 		const channel = helper.prepareChannel(channelName, client);
 		const peer = helper.newPeer(peerIndex, orgName);
 		const message = await Query.tx(peer, channel, txId);
@@ -166,7 +166,7 @@ app.post('/query/chaincodes/instantiated', async (req, res) => {
 	try {
 		invalid.peer({orgName, peerIndex});
 		const peer = helper.newPeer(peerIndex, orgName);
-		const client = await helper.getOrgAdmin(orgName);
+		const client = helper.getOrgAdmin(orgName);
 		const channel = helper.prepareChannel(channelName, client);
 		const message = await Query.chaincodesInstantiated(peer, channel);
 		res.send(message);

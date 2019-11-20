@@ -19,7 +19,7 @@ const wrongInstall = async (org, peerIndexes, chaincodeVersion) => {
 	const {install} = require('../../common/nodejs/chaincode');
 	const chaincodePath = 'github.com/davidkhala/chaincode/golang/diagnose';
 	const peers = helper.newPeers(peerIndexes, org);
-	const client = await helper.getOrgAdmin(org);
+	const client = helper.getOrgAdmin(org);
 	await install(peers, {chaincodeId, chaincodePath, chaincodeVersion}, client);
 };
 const upgradeConflict = async () => {
