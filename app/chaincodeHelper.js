@@ -1,5 +1,5 @@
 const {randomKeyOf} = require('khala-nodeutils/random');
-const {install,ChaincodeType} = require('../common/nodejs/chaincode');
+const {install, ChaincodeType} = require('../common/nodejs/chaincode');
 const {invoke} = require('../common/nodejs/chaincodeHelper');
 const {incrementUpgrade} = require('../common/nodejs/chaincodeVersion');
 const {transactionProposal} = require('../common/nodejs/chaincode');
@@ -78,23 +78,20 @@ exports.upgrade = async (channel, richPeers, opts, orderer) => {
 	const {chaincodeId} = opts;
 	const policyConfig = configParser(chaincodeConfig[chaincodeId]);
 
-	const eventHubs = [];
+	const eventHubs = richPeers.map(peer => new Eventhub(channel, peer));
 
-	for (const peer of richPeers) {
-		const eventHub = new Eventhub(channel, peer);
+	for (const eventHub of eventHubs) {
 		await eventHub.connect();
-		eventHubs.push(eventHub);
 	}
 	const allConfig = Object.assign(policyConfig, opts);
 	return incrementUpgrade(channel, richPeers, eventHubs, allConfig, orderer);
 };
 exports.invoke = async (channel, peers, {chaincodeId, fcn, args, transientMap}, nonAdminUser, eventHubs) => {
 	if (!eventHubs) {
-		eventHubs = peers.map(async peer => {
-			const eventHub = new Eventhub(channel, peer);
+		eventHubs = peers.map(peer => new Eventhub(channel, peer));
+		for (const eventHub of eventHubs) {
 			await eventHub.connect();
-			return eventHub;
-		});
+		}
 	}
 	const orderers = channel.getOrderers();
 	const orderer = orderers[randomKeyOf(orderers)];

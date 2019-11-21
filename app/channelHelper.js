@@ -57,13 +57,15 @@ exports.joinAll = async (channelName) => {
 };
 exports.newEventHubs = async (channel, peerIndexes, orgName, inlineConnected = true) => {
 	const peers = helper.newPeers(peerIndexes, orgName);
-	return peers.map(async peer => {
-		const eventHub = new Eventhub(channel, peer);
-		if (inlineConnected) {
+
+	const eventHubs = peers.map(peer => new Eventhub(channel, peer));
+	if (inlineConnected) {
+		for (const eventHub of eventHubs) {
 			await eventHub.connect();
 		}
-		return eventHub;
-	});
+	}
+
+	return eventHubs;
 };
 
 exports.setAnchorPeersByOrg = async (channelName, OrgName) => {

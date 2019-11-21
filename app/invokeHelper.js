@@ -15,11 +15,10 @@ exports.invoke = async (peers, clientPeerOrg, chaincodeId, fcn, args = [], trans
 	const channel = helper.prepareChannel(channelName, client, true);
 	let eventHubs = undefined;
 	if (commitPeers.length > 0) {
-		eventHubs = commitPeers.map(async peer => {
-			const eventHub = new Eventhub(channel, peer);
+		eventHubs = commitPeers.map(peer => new Eventhub(channel, peer));
+		for (const eventHub of eventHubs) {
 			await eventHub.connect();
-			return eventHub;
-		});
+		}
 	}
 	const {proposalResponses} = await invoke(channel, peers, {
 		chaincodeId,
