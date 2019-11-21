@@ -104,27 +104,27 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 		}
 	};
 	let globalOrdererAddresses = [];
-	if (globalConfig.orderer.type === OrdererType.kafka) {
+	if (ordererConfig.type === OrdererType.kafka) {
 		OrdererConfig.OrdererType = OrdererType.kafka;
 
 		const Organizations = [];
-		for (const [ordererOrgName, ordererOrgConfig] of Object.entries(globalConfig.orderer.kafka.orgs)) {
+		for (const [ordererOrgName, ordererOrgConfig] of Object.entries(ordererConfig.kafka.orgs)) {
 			const Addresses = Object.keys(ordererOrgConfig.orderers).map(ordererName => `${ordererName}.${ordererOrgName}:7050`);
 			Organizations.push(OrganizationBuilder(ordererOrgName, ordererOrgConfig, undefined, undefined, 'orderer', Addresses));
 			globalOrdererAddresses = globalOrdererAddresses.concat(Addresses);
 		}
 
 		OrdererConfig.Kafka = {
-			Brokers: Object.keys(globalConfig.orderer.kafka.kafkas).map((kafka) => `${kafka}:9092`)
+			Brokers: Object.keys(ordererConfig.kafka.kafkas).map((kafka) => `${kafka}:9092`)
 		};
 		OrdererConfig.Organizations = Organizations;
-	} else if (globalConfig.orderer.type === OrdererType.etcdraft) {
+	} else if (ordererConfig.type === OrdererType.etcdraft) {
 		OrdererConfig.OrdererType = OrdererType.etcdraft;
 
 
 		const Organizations = [];
 		const Consenters = [];
-		for (const [ordererOrgName, ordererOrgConfig] of Object.entries(globalConfig.orderer.etcdraft.orgs)) {
+		for (const [ordererOrgName, ordererOrgConfig] of Object.entries(ordererConfig.etcdraft.orgs)) {
 			const Addresses = [];
 			for (const ordererName in ordererOrgConfig.orderers) {
 				const ordererCryptoPath = new CryptoPath(MSPROOT, {
