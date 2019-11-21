@@ -24,7 +24,7 @@ const task = async () => {
 	// Environment section
 
 
-	const {proposal, txId} = offlineCC.unsignedTransactionProposal(channelName, {fcn, args, chaincodeId}, mspId, certificate);
+	const {proposal, transactionID} = offlineCC.unsignedTransactionProposal(channelName, {fcn, args, chaincodeId}, mspId, certificate);
 	const proposalBytes = proposal.toBuffer();
 	const signedProposal = {
 		signature: User.sign(user, proposalBytes),
@@ -50,7 +50,7 @@ const task = async () => {
 	};
 
 	await eventHub.connect({signedEvent});
-	eventHub.txEvent({txId}, undefined, (tx, code, blockNum) => {
+	eventHub.txEvent({transactionID}, undefined, (tx, code, blockNum) => {
 		console.log({tx, code, blockNum});
 	}, (err) => {
 		throw err;
