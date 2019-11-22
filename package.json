@@ -11,7 +11,6 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "ioredis": "^3.2.2",
     "khala-kvdb": "^0.0.0",
     "khala-level": "^0.0.1",
     "khala-nodeutils": "^0.7.8",
@@ -21,8 +20,6 @@
     "ws": "^3.3.2"
   },
   "devDependencies": {
-    "x509": "^0.3.2",
-    "log4js": "^3.0.6",
-    "why-is-node-running": "^2.1.0"
+    "log4js": "^3.0.6"
   }
 }
