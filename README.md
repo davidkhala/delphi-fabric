@@ -20,7 +20,7 @@ _after first time clone this repository, submodule should be initialize_
 **Requirements & dependencies**
   * fabric: 1.4.4 (for docker image, binary tool and fabric-sdk)
   * docker-ce 18.x
-  * golang 1.11 
+  * golang 1.12 
   * node 10.17, npm 6.11 : npm install卡死的话，可以考虑添加淘宝的源
         - ``$ npm config set registry  https://registry.npm.taobao.org/``
   * java 1.8.0_151 (optional for java-sdk)
