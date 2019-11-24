@@ -4,9 +4,9 @@ const channelName = 'allchannel';
 const offlineCC = require('../common/nodejs/offline/chaincode');
 const User = require('../common/nodejs/user');
 const Client = require('../common/nodejs/client');
-const Eventhub = require('../common/nodejs/eventHub');
+const EventHub = require('../common/nodejs/eventHub');
 const {emptyChannel} = require('../common/nodejs/offline/channel');
-const {serializeProposal, deserializeProposal, serializeToHex, deserializeFromHex, serializeProposalResponse,deserializeProposalResponse} = require('../common/nodejs/offline/serialize');
+const {serializeProposal, deserializeProposal, serializeToHex, deserializeFromHex, serializeProposalResponse, deserializeProposalResponse} = require('../common/nodejs/offline/serialize');
 const logger = require('khala-logger/dev').devLogger('test:offline sign');
 const task = async () => {
 
@@ -80,13 +80,26 @@ const task = async () => {
 		};
 	}
 	logger.info(serverInterface);
-
 	{
 
 		const unsignedTransaction = deserializeFromHex(serverInterface.unsignedTransaction);
 		const signedTransaction = {
 			signature: User.sign(user, unsignedTransaction),
 			proposal_bytes: unsignedTransaction
+		};
+
+		serverInterface = {
+			transactionID,
+			signature: serializeToHex(signedTransaction.signature),
+			proposal_bytes: serializeToHex(signedTransaction.proposal_bytes)
+		};
+	}
+	logger.info(serverInterface);
+	{
+
+		const signedTransaction = {
+			signature: deserializeFromHex(serverInterface.signature),
+			proposal_bytes: deserializeFromHex(serverInterface.proposal_bytes)
 		};
 		const response = await offlineCC.sendSignedTransaction(signedTransaction, orderer);
 		serverInterface = {
@@ -96,7 +109,7 @@ const task = async () => {
 	logger.info(serverInterface);
 	{
 		const channel = emptyChannel(channelName);
-		const eventHub = new Eventhub(channel, peers[0]);
+		const eventHub = new EventHub(channel, peers[0]);
 		const unsignedEvent = eventHub.unsignedRegistration(certificate, mspId);
 		serverInterface = {
 			unsignedEvent: serializeToHex(unsignedEvent)
@@ -111,8 +124,21 @@ const task = async () => {
 			payload: unsignedEvent
 		};
 
+		serverInterface = {
+			transactionID,
+			signature: serializeToHex(signedEvent.signature),
+			payload: serializeToHex(signedEvent.payload)
+		};
+	}
+	logger.info(serverInterface);
+	{
+		const signedEvent = {
+			signature: deserializeFromHex(serverInterface.signature),
+			payload: deserializeFromHex(serverInterface.payload)
+		};
+
 		const channel = emptyChannel(channelName);
-		const eventHub = new Eventhub(channel, peers[0]);
+		const eventHub = new EventHub(channel, peers[0]);
 		await eventHub.connect({signedEvent});
 		await new Promise((resolve, reject) => {
 			eventHub.txEvent({transactionID}, undefined, (tx, code, blockNum) => {
