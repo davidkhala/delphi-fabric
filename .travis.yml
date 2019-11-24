@@ -1,10 +1,8 @@
 matrix:
   include:
-    - language: node_js
+    - language: golang
       go:
         - 1.12.x
-      node_js:
-        - "10"
       dist: bionic
       install:
         - ./install.sh
