@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -e
+set -e -x
 CURRENT=$(cd $(dirname ${BASH_SOURCE}) && pwd)
 fcn=$1
 remain_params=""
