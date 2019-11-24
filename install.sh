@@ -49,7 +49,10 @@ updateChaincode() {
 	dep ensure
 	cd -
 
-	go get -u -v "github.com/davidkhala/stupid"
+	go get "github.com/davidkhala/stupid"
+	cd $GOPATH/src/github.com/davidkhala/stupid
+	go build
+	cd -
 }
 
 PM2CLI() {
