@@ -1,14 +1,18 @@
-language: golang
-go:
-  - 1.12.x
-dist: bionic
-install:
-  - ./install.sh
-  - cd common/nodejs; npm install ; cd -
-  - sudo apt-get install -y softhsm2
-script:
-  - ./docker.sh
-  - node cc/golang/diagnose/test/
-  - node test
-  - ./test/hsm.sh
+matrix:
+  include:
+    - language: node_js
+      node_js:
+        - "10"
+      dist: bionic
+      before_install:
+        - eval "$(gimme 1.12.x)"
+      install:
+        - ./install.sh
+        - cd common/nodejs; npm install ; cd -
+        - sudo apt-get install -y softhsm2
+      script:
+        - ./docker.sh
+        - node cc/golang/diagnose/test/
+        - node test
+        - ./test/hsm.sh
 
