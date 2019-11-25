@@ -3,7 +3,7 @@ matrix:
     - language: node_js
       node_js:
         - "10"
-      go
+      go:
         - 1.12.x
       dist: bionic
       install:
