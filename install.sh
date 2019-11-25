@@ -49,7 +49,7 @@ updateChaincode() {
 	dep ensure
 	cd -
 
-	go get "github.com/davidkhala/stupid"
+	go get "github.com/davidkhala/stupid" # TODO package github.com/hyperledger/fabric/protos/common: cannot find package "github.com/hyperledger/fabric/protos/common" in any of:
 	cd $GOPATH/src/github.com/davidkhala/stupid
 	go build
 	cd -
