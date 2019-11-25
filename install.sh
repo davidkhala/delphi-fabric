@@ -32,7 +32,7 @@ updateChaincode() {
 	export GO111MODULE=on
 
 	goCmd="curl --silent --show-error https://raw.githubusercontent.com/davidkhala/goutils/master/scripts/goCmd.sh"
-	$goCmd | bash -s get git@github.com:davidkhala/chaincode.git
+	$goCmd | bash -s get https://github.com/davidkhala/chaincode.git
 
 	cd $GOPATH/src/github.com/davidkhala/chaincode/golang/master
 	go mod vendor
@@ -46,7 +46,7 @@ updateChaincode() {
 	go mod vendor
 	cd -
 
-	$goCmd | bash -s get git@github.com:davidkhala/stupid.git
+	$goCmd | bash -s get https://github.com/davidkhala/stupid.git
 
 	cd $GOPATH/src/github.com/davidkhala/stupid
 	go mod vendor
