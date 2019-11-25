@@ -29,29 +29,25 @@ pullKafka() {
 	docker pull hyperledger/fabric-zookeeper:$IMAGE_TAG
 }
 updateChaincode() {
-	export GOPATH=$(go env GOPATH)
-	set +e
-	go get -u -v "github.com/davidkhala/chaincode"
-	set -e
-	if ! dep version; then
-		$CURRENT/common/install.sh golang_dep
-		GOBIN=$GOPATH/bin/
-		export PATH=$PATH:$GOBIN # ephemeral
-	fi
+	export GO111MODULE=on
+	go get "github.com/davidkhala/chaincode"
+
 	cd $GOPATH/src/github.com/davidkhala/chaincode/golang/master
-	dep ensure
+	go mod vendor
 	cd -
+
 	cd $GOPATH/src/github.com/davidkhala/chaincode/golang/mainChain
-	dep ensure
+	go mod vendor
 	cd -
 
 	cd $GOPATH/src/github.com/davidkhala/chaincode/golang/diagnose
-	dep ensure
+	go mod vendor
 	cd -
 
-	go get "github.com/davidkhala/stupid" # TODO package github.com/hyperledger/fabric/protos/common: cannot find package "github.com/hyperledger/fabric/protos/common" in any of:
+	go get "github.com/davidkhala/stupid"
+
 	cd $GOPATH/src/github.com/davidkhala/stupid
-	go build
+	go mod vendor
 	cd -
 }
 
@@ -67,7 +63,7 @@ sync() {
 if [[ -n "$fcn" ]]; then
 	$fcn $remain_params
 else
-    echo [debug] Current = ${CURRENT}
+	echo [debug] Current = ${CURRENT}
 	if [[ ! -f "$CURRENT/common/install.sh" ]]; then
 		gitSync
 	fi

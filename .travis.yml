@@ -3,9 +3,9 @@ matrix:
     - language: node_js
       node_js:
         - "10"
-      go:
-        - 1.12.x
       dist: bionic
+      before_install:
+        - eval "$(gimme 1.12.x)"
       install:
         - ./install.sh
         - cd common/nodejs; npm install ; cd -
