@@ -58,6 +58,10 @@
     "type": "node",
     "path": "github.com/davidkhala/chaincode/nodejs/stress"
   },
+  "nodeContracts": {
+    "type": "node",
+    "path": "github.com/davidkhala/chaincode/nodejs/contracts"
+  },
   "stupid": {
     "path": "github.com/davidkhala/stupid/chaincodes"
   }
