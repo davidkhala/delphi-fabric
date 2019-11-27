@@ -74,6 +74,9 @@
           "ca": {
             "portHost": 7454
           },
+          "intermediateCA": {
+            "portHost": 7455
+          },
           "orderers": {
             "orderer0": {
               "stateVolume": "Documents/delphi-fabric/stateVolumes/orderer0",

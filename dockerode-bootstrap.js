@@ -12,6 +12,7 @@ const {
 } = require('./common/nodejs/fabric-dockerode');
 const {CryptoPath} = require('./common/nodejs/path');
 
+const caCrypoGenUtil = require('./config/caCryptoGen');
 const {
 	containerDelete, volumeCreateIfNotExist, networkCreateIfNotExist,
 	volumeRemove, prune: {system: pruneLocalSystem}
@@ -143,28 +144,63 @@ exports.runCAs = async (toStop) => {
 
 	const imageTag = caTag;
 
-	const toggle = async ({container_name, port, Issuer}) => {
+	const toggle = async ({container_name, port, issuer}) => {
 
 		if (toStop) {
 			await containerDelete(container_name);
 		} else {
-			await runCA({container_name, port, network, imageTag, TLS, Issuer});
+			await runCA({container_name, port, network, imageTag, TLS, issuer});
 		}
 	};
 	for (const [ordererOrg, ordererOrgConfig] of Object.entries(globalConfig.orderer[type].orgs)) {
 		const {portHost: port} = ordererOrgConfig.ca;
 		const container_name = `ca.${ordererOrg}`;
-		const Issuer = {CN: ordererOrg};
-		await toggle({container_name, port, Issuer});
+		const issuer = {CN: ordererOrg};
+		await toggle({container_name, port, issuer});
 	}
 
 	for (const [orgName, orgConfig] of Object.entries(peerOrgsConfig)) {
 		const {ca: {portHost: port}} = orgConfig;
 		const container_name = `ca.${orgName}`;
-		const Issuer = {CN: orgName};
-		await toggle({container_name, port, Issuer});
+		const issuer = {CN: orgName};
+		await toggle({container_name, port, issuer});
 	}
 };
+
+exports.runIntermediateCAs = async (toStop) => {
+	const {orderer: {type}, orgs: peerOrgsConfig} = globalConfig;
+
+	const toggle = async (org, orgConfig, nodeType) => {
+		if (!orgConfig.intermediateCA) {
+			return;
+		}
+		const parentHost = `ca.${org}`;
+		const {portHost: parentPort} = orgConfig.ca;
+		const container_name = `ca.intermediate.${org}`;
+		const port = orgConfig.intermediateCA.portHost;
+		/**
+		 * @type {Issuer}
+		 */
+		const issuer = {CN: `intermediate.${org}`};
+
+		if (toStop) {
+			await containerDelete(container_name);
+		} else {
+			const {enrollmentID, enrollmentSecret} = await caCrypoGenUtil.genIntermediate(org, parentPort, nodeType);
+			const intermediate = {host: parentHost, port: parentPort, enrollmentID, enrollmentSecret};
+			await runCA({container_name, port, network, imageTag: caTag, TLS, issuer}, intermediate);
+		}
+	};
+
+	for (const [ordererOrg, ordererOrgConfig] of Object.entries(globalConfig.orderer[type].orgs)) {
+		await toggle(ordererOrg, ordererOrgConfig, 'orderer');
+	}
+
+	for (const [orgName, orgConfig] of Object.entries(peerOrgsConfig)) {
+		await toggle(orgName, orgConfig, 'peer');
+	}
+};
+
 
 exports.runZookeepers = async (toStop) => {
 	const zkConfigs = globalConfig.orderer.kafka.zookeepers;
@@ -253,7 +289,7 @@ exports.up = async () => {
 			await exports.runZookeepers();
 			await exports.runKafkas();
 		}
-		await require('./config/caCryptoGen').genAll();
+		await caCrypoGenUtil.genAll();
 
 		const PROFILE_BLOCK = globalConfig.orderer.genesis_block.profile;
 		const configtxFile = path.resolve(__dirname, 'config', 'configtx.yaml');

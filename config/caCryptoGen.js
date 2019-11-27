@@ -1,35 +1,37 @@
 const caUtil = require('../common/nodejs/ca');
 
 const fs = require('fs');
-const {initAdmin, genPeer, init, genOrderer, genUser, genClientKeyPair} = require('../common/nodejs/ca-crypto-gen');
-const {pkcs11_key} = require('../common/nodejs/ca');
-const pathUtil = require('../common/nodejs/path');
 const dockerCmd = require('khala-dockerode/dockerCmd');
+const {initAdmin, genPeer, init, genOrderer, genUser, genClientKeyPair} = require('../common/nodejs/ca-crypto-gen');
+const {pkcs11_key, intermediateCA} = require('../common/nodejs/ca');
+const pathUtil = require('../common/nodejs/path');
 const {homeResolve, fsExtra} = require('khala-nodeutils/helper');
 const {CryptoPath} = pathUtil;
 const logger = require('../common/nodejs/logger').new('caCryptoGen');
 const globalConfig = require('../config/orgs');
 const userUtil = require('../common/nodejs/user');
 const helper = require('../app/helper');
-const {OrdererType} = require('../common/nodejs/constants');
 
 const path = require('path');
 const caCryptoConfig = homeResolve(globalConfig.docker.volumes.MSPROOT);
 const {TLS} = globalConfig;
 const protocol = TLS ? 'https' : 'http';
+const hackCACert = async (domain) => {
+	const caHostName = `ca.${domain}`;
+	const container_name = caHostName;
+	const from = caUtil.container.caCert; // signcert === caRoot
+	const to = `${caHostName}-cert.pem`;
+	await dockerCmd.copy(container_name, from, to);
+	return fs.readFileSync(to).toString();
+};
 const getCaService = async (port, domain) => {
 	const caUrl = `${protocol}://localhost:${port}`;
+	const trustedRoots = [];
 	if (TLS) {
-		const caHostName = `ca.${domain}`;
-		const container_name = caHostName;
-		const from = caUtil.container.caCert;
-		const to = `${caHostName}-cert.pem`;
-		await dockerCmd.copy(container_name, from, to);
-
-		const pem = fs.readFileSync(to);
-		return caUtil.new(caUrl, [pem]);
+		const pem = await hackCACert(domain);
+		trustedRoots.push(pem);
 	}
-	return caUtil.new(caUrl);
+	return caUtil.new(caUrl, trustedRoots);
 };
 exports.getCaService = getCaService;
 exports.genUser = async ({userName, password}, orgName) => {
@@ -71,6 +73,35 @@ const genNSaveClientKeyPair = async (caService, cryptoPath, admin, domain, nodeT
 	const certFile = path.resolve(rootDir, 'clientCert');
 	fsExtra.outputFileSync(certFile, certificate);
 	pkcs11_key.save(keyFile, key);
+};
+/**
+ *
+ * @param parentCADomain
+ * @param parentCAPort
+ * @param nodeType
+ * @return {Promise<void>}
+ */
+exports.genIntermediate = async (parentCADomain, parentCAPort, nodeType) => {
+	const caService = await getCaService(parentCAPort, parentCADomain);
+	const mspId = nodeType === 'orderer' ? globalConfig.orderer.etcdraft.orgs[parentCADomain].mspid : globalConfig.orgs[parentCADomain].mspid;
+	const adminCryptoPath = new CryptoPath(caCryptoConfig, {
+		[nodeType]: {
+			org: parentCADomain
+		},
+		user: {
+			name: userUtil.adminName
+		},
+		password: userUtil.adminPwd
+	});
+	const admin = await initAdmin(caService, adminCryptoPath, nodeType, mspId, TLS);
+	const enrollmentID = `${userUtil.adminName}.intermediate`;
+	let enrollmentSecret = userUtil.adminPwd;
+	const result = await intermediateCA.register(caService, admin, {
+		enrollmentID, enrollmentSecret,
+		affiliation: parentCADomain
+	});
+	logger.debug(result);
+	return {enrollmentSecret, enrollmentID};
 };
 exports.genAll = async () => {
 

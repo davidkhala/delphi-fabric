@@ -1,24 +1,38 @@
 const helper = require('../app/helper');
 const IDService = require('../common/nodejs/identityService');
 const CAUtil = require('../common/nodejs/ca');
+const logger = require('khala-logger/dev').devLogger('test:ca');
 
-const nameLengthTask = async (org) => {
-	// [[{"code":0,"message":"The CN 'david.repeat(20)@Merchant' exceeds the maximum character limit of 64"}]]
-	const caCryptoGen = require('../config/caCryptoGen');
-	caCryptoGen.genUser({userName: 'david'.repeat(5)}, org);
-};
 const identitySericeTask = async (caService, admin) => {
 	const idService = IDService.new(caService);
 	return await IDService.getAll(idService, admin);
 };
 
-const task = async () => {
+const task = async (taskID) => {
 	const org = 'icdd';
 	const caUrl = 'https://localhost:8054';
 	const admin = helper.getOrgAdminUser(org);
 	const caService = CAUtil.new(caUrl);
 
-	const allIDs = await identitySericeTask(caService, admin);
-	console.log(allIDs);
+	let result;
+	switch (taskID) {
+		case 0:
+			const allIDs = await identitySericeTask(caService, admin);
+			for (const id of allIDs) {
+				logger.debug(id.id, id.attrs);
+			}
+			break;
+		case 1:
+			result = await CAUtil.intermediateCA.register(caService, admin, {
+				enrollmentID: `${org}.intermediate`,
+				affiliation: org,
+				enrollmentSecret: 'password'
+			});
+			logger.debug(result);
+			break;
+
+	}
+
+
 };
-task();
+task(parseInt(process.env.taskID));
