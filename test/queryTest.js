@@ -11,21 +11,28 @@
 
 const {chain, chaincodesInstantiated, chaincodesInstalled, blockFromHash} = require('../common/nodejs/query');
 const helper = require('../app/helper');
-const task = async () => {
+const task = async (taskID) => {
 	const peers = helper.newPeers([0], 'icdd');
 	const clientOrg = 'icdd';
 	const client = helper.getOrgAdmin(clientOrg);
 	const channel = helper.prepareChannel('allchannel', client);
-	let result = await chain(peers[0], channel);
-	console.log('chainInfo', result.pretty);
-	const {currentBlockHash} = result.pretty;
 	const peer = peers[0];
-
-	result = await chaincodesInstantiated(peers[0], channel);
-	console.log('chaincodesInstantiated', result.pretty);
-	result = await blockFromHash(peer, channel, currentBlockHash);
-	console.log('blockFromHash', result);
-	result = await chaincodesInstalled(peers[0], client);
-	console.log('chaincodesInstalled', result.pretty);
+	let result;
+	switch (taskID) {
+		case 0:
+			result = await chain(peers[0], channel);
+			console.log('chainInfo', result.pretty);
+			result = await blockFromHash(peer, channel, result.pretty.currentBlockHash);
+			console.log('blockFromHash', result);
+			break;
+		case 1:
+			result = await chaincodesInstantiated(peer, channel);
+			console.log('chaincodesInstantiated', result.pretty);
+			break;
+		case 2:
+			result = await chaincodesInstalled(peer, client);
+			console.log('chaincodesInstalled', result.pretty);
+			break;
+	}
 };
-task();
+task(parseInt(process.env.taskID));

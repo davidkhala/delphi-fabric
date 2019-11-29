@@ -74,7 +74,7 @@ const task = async () => {
 	logger.info(serverInterface);
 	{
 		const proposalResponses = serverInterface.proposalResponses.map(deserializeProposalResponse);
-		const unsignedTransaction = offlineCC.unsignedTransaction(channelName, proposalResponses, deserializeProposal(proposal));
+		const unsignedTransaction = offlineCC.unsignedTransaction(proposalResponses, deserializeProposal(proposal));
 		serverInterface = {
 			unsignedTransaction: serializeToHex(unsignedTransaction.toBuffer())
 		};
