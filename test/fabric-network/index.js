@@ -23,5 +23,5 @@ const task = async () => {
 	logger.info(result.toString());
 	gateway.disconnect();
 };
-task();
+module.exports = task();
 
