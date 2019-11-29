@@ -126,7 +126,7 @@ exports.genAll = async () => {
 				},
 				password: userUtil.adminPwd
 			});
-			const admin = await init(caService, adminCryptoPath, nodeType, mspId);
+			const admin = await init(caService, adminCryptoPath, nodeType, mspId, TLS);
 			await genNSaveClientKeyPair(caService, adminCryptoPath, admin, domain, nodeType);
 			const promises = [];
 			for (const ordererName in ordererConfig.orderers) {
@@ -163,7 +163,7 @@ exports.genAll = async () => {
 				password: userUtil.adminPwd
 			});
 			const caService = await getCaService(peerOrgConfig.ca.portHost, domain);
-			const admin = await init(caService, adminCryptoPath, nodeType, mspId);
+			const admin = await init(caService, adminCryptoPath, nodeType, mspId, TLS);
 			const promises = [];
 			await genNSaveClientKeyPair(caService, adminCryptoPath, admin, domain, nodeType);
 			for (let peerIndex = 0; peerIndex < peerOrgConfig.peers.length; peerIndex++) {
