@@ -84,7 +84,8 @@ exports.upgrade = async (channel, richPeers, opts, orderer) => {
 		await eventHub.connect();
 	}
 	const allConfig = Object.assign(policyConfig, opts);
-	return incrementUpgrade(channel, richPeers, eventHubs, allConfig, orderer);
+	const proposalTimeOut = process.env.cicd ? 60000 * richPeers.length : undefined;
+	return incrementUpgrade(channel, richPeers, eventHubs, allConfig, orderer, proposalTimeOut);
 };
 exports.invoke = async (channel, peers, {chaincodeId, fcn, args, transientMap}, nonAdminUser, eventHubs) => {
 	if (!eventHubs) {
