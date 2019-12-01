@@ -2,7 +2,7 @@ const task = async () => {
 	require('./channelInitTest');
 	require('./serviceDiscoveryTest');
 	require('./offlineSigningTest');
-	await require('./fabric-network/index');
+	await require('./fabric-network/diagnose');
 };
 task().catch(err => {
 	console.error(err);
