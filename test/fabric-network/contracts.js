@@ -3,7 +3,7 @@ const logger = require('khala-logger/dev').devLogger('test:fabric-network:node:c
 const {getContract} = require('./index');
 const task = async () => {
 	const {contract, gateway} = await getContract(chaincodeId);
-	await contract.submitTransaction('invoke');
+	await contract.submitTransaction('stress:init');
 	gateway.disconnect();
 };
 module.exports = task();
