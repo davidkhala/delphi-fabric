@@ -53,9 +53,6 @@ updateChaincode() {
 	cd -
 }
 
-PM2CLI() {
-	sudo npm install pm2@latest -g
-}
 sync() {
 	gitSync
 	$CURRENT/common/install.sh sync
