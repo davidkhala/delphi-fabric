@@ -6,7 +6,7 @@ const Eventhub = require('../common/nodejs/eventHub');
 const {create, join, getGenesisBlock} = ChannelUtil;
 const BinManager = require('../common/nodejs/binManager');
 const globalConfig = require('../config/orgs');
-const {sleep} = require('../common/nodejs');
+const {sleep} = require('khala-nodeutils/helper');
 /**
  *
  * @param {Channel} channel

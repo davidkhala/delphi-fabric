@@ -14,7 +14,6 @@ const projectResolve = (...args) => path.resolve(projectRoot, ...args);
 const UserUtil = require('../common/nodejs/user');
 const OrdererUtil = require('../common/nodejs/orderer');
 const channelUtil = require('../common/nodejs/channel');
-const {OrdererType} = require('../common/nodejs/constants');
 const {homeResolve} = require('khala-nodeutils/helper');
 const {randomKeyOf} = require('khala-nodeutils/random');
 const CRYPTO_CONFIG_DIR = homeResolve(globalConfig.docker.volumes.MSPROOT);
