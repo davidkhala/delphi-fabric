@@ -1,6 +1,6 @@
-const {devLogger} = require('khala-logger/dev');
+const {consoleLogger} = require('khala-logger/log4js');
 const {sleep} = require('khala-nodeutils/helper');
-const logger = devLogger('test:peer HA');
+const logger = consoleLogger('test:peer HA');
 const helper = require('../../app/helper');
 const {installs} = require('../../app/installHelper');
 const {join} = require('../../common/nodejs/channel');

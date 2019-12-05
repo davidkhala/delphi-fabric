@@ -1,7 +1,7 @@
 const helper = require('../app/helper');
 const IDService = require('../common/nodejs/identityService');
 const CAUtil = require('../common/nodejs/ca');
-const logger = require('khala-logger/dev').devLogger('test:ca');
+const logger = require('khala-logger/log4js').consoleLogger('test:ca');
 
 const identitySericeTask = async (caService, admin) => {
 	const idService = IDService.new(caService);

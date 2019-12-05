@@ -7,7 +7,7 @@ const Client = require('../common/nodejs/client');
 const EventHub = require('../common/nodejs/eventHub');
 const {emptyChannel} = require('../common/nodejs/offline/channel');
 const {serializeProposal, deserializeProposal, serializeToHex, deserializeFromHex, serializeProposalResponse, deserializeProposalResponse} = require('../common/nodejs/offline/serialize');
-const logger = require('khala-logger/dev').devLogger('test:offline sign');
+const logger = require('khala-logger/log4js').consoleLogger('test:offline sign');
 const task = async () => {
 
 	// Environment section

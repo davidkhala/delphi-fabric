@@ -4,7 +4,7 @@ const {fsExtra} = require('../common/nodejs');
 const {getCaService} = require('../config/caCryptoGen');
 const helper = require('../app/helper');
 const path = require('path');
-const logger = require('khala-logger/dev').devLogger('test:caCryptoGen');
+const logger = require('khala-logger/log4js').consoleLogger('test:caCryptoGen');
 const task = async (taskID) => {
 	const domain = 'icdd';
 	const caService = await getCaService(8054, domain);

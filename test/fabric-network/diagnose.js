@@ -1,5 +1,5 @@
 const chaincodeId = 'diagnose';
-const logger = require('khala-logger/dev').devLogger('test:fabric-network:golang:diagnose');
+const logger = require('khala-logger/log4js').consoleLogger('test:fabric-network:golang:diagnose');
 const {getContract} = require('./index');
 const task = async () => {
 	const {contract, gateway} = await getContract(chaincodeId);
