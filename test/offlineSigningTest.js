@@ -153,4 +153,6 @@ const task = async () => {
 	logger.info(serverInterface);
 
 };
-task();
+task().then(() => {
+	process.exit(0);
+});
