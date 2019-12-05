@@ -27,6 +27,7 @@ const task = async () => {
 
 	let serverInterface;
 
+	// TODO decode proposal_bytes into grpc proposal
 	let proposal, transactionID; // stored in client side
 	{
 		const {proposal, transactionID} = offlineCC.unsignedTransactionProposal(channelName, {fcn, args, chaincodeId}, mspId, certificate);
@@ -147,9 +148,9 @@ const task = async () => {
 				reject(err);
 			});
 		});
+		eventHub.disconnect();
 	}
 	logger.info(serverInterface);
-
 
 };
 task();

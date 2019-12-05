@@ -15,5 +15,6 @@ matrix:
         - ./docker.sh
         - node cc/golang/diagnose/test/
         - node test
+        - node test/offlineSigningTest.js
         - ./test/hsm.sh
 
