@@ -151,8 +151,6 @@ const task = async () => {
 		eventHub.disconnect();
 	}
 	logger.info(serverInterface);
-
+	process.exit(0);//FIXME why this is hanging
 };
-task().then(() => {
-	process.exit(0);
-});
+task();
