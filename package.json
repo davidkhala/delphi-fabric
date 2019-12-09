@@ -2,6 +2,9 @@
   "name": "delphi-fabric",
   "version": "1.4.4",
   "description": "node program to use Hyperledger Fabric nodejs SDK ",
+  "scripts": {
+    "install": "cd common/nodejs; npm install"
+  },
   "keywords": [
     "v1.x fabric node-sdk sample"
   ],
