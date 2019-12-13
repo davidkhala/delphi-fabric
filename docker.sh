@@ -3,7 +3,7 @@ set -e
 CURRENT=$(cd $(dirname ${BASH_SOURCE}) && pwd)
 export binPath=$CURRENT/common/bin/
 down() {
-	node -e "require('./dockerode-bootstrap').down()"
+	action=down node ./dockerode-bootstrap.js
 	sudo rm -rf $CURRENT/stateVolumes/*
 }
 up() {
@@ -13,7 +13,7 @@ up() {
 }
 
 prepareNetwork() {
-	node -e "require('./dockerode-bootstrap').up()"
+	action=up node ./dockerode-bootstrap.js
 }
 restart() {
 	down

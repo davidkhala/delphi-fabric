@@ -1,6 +1,7 @@
+const log = require('why-is-node-running');
 const globalConfig = require('./config/orgs.json');
 const path = require('path');
-const logger = require('./common/nodejs/logger').new('dockerode-bootstrap');
+const logger = require('./common/nodejs/logger').new('dockerode-bootstrap', true);
 const peerUtil = require('./common/nodejs/peer');
 const {OrdererType} = require('./common/nodejs/constants');
 const {
@@ -11,7 +12,7 @@ const {
 	chaincodeClean, fabricImagePull
 } = require('./common/nodejs/fabric-dockerode');
 const {CryptoPath} = require('./common/nodejs/path');
-
+const configConfigtx = require('./config/configtx.js');
 const caCrypoGenUtil = require('./config/caCryptoGen');
 const {
 	containerDelete, volumeCreateIfNotExist, networkCreateIfNotExist,
@@ -237,85 +238,84 @@ exports.runKafkas = async (toStop) => {
 
 	}
 };
-exports.down = async () => {
+const down = async () => {
 	const {orderer: {type}} = globalConfig;
 
 	const toStop = true;
+	await exports.runCAs(toStop);
+
+	await exports.runPeers(undefined, toStop);
+	await exports.runOrderers(undefined, toStop);
+	if (type === OrdererType.kafka) {
+		await exports.runKafkas(toStop);
+		await exports.runZookeepers(toStop);
+	}
+
+	await pruneLocalSystem();
+	await chaincodeClean(true);
+	await exports.volumesAction(toStop);
+
+	fsExtra.emptyDirSync(MSPROOT);
+	logger.info(`[done] clear MSPROOT ${MSPROOT}`);
+	fsExtra.emptyDirSync(CONFIGTX);
+	logger.info(`[done] clear CONFIGTX ${CONFIGTX}`);
+};
+
+const up = async () => {
+
+	await fabricImagePull({fabricTag, thirdPartyTag});
+
+	const binManager = new BinManager();
+
+	await networkCreateIfNotExist({Name: network});
+
+	const {orderer: {type}} = globalConfig;
+	await exports.volumesAction();
+	await exports.runCAs();
+
+	if (type === OrdererType.kafka) {
+		await exports.runZookeepers();
+		await exports.runKafkas();
+	}
+	await caCrypoGenUtil.genAll();
+
+	const PROFILE_BLOCK = globalConfig.orderer.genesis_block.profile;
+	const configtxFile = path.resolve(__dirname, 'config', 'configtx.yaml');
+	configConfigtx.gen({MSPROOT, PROFILE_BLOCK, configtxFile});
+
+
+	const BLOCK_FILE = globalConfig.orderer.genesis_block.file;
+	fsExtra.ensureDirSync(CONFIGTX);
+	await binManager.configtxgen(PROFILE_BLOCK, configtxFile).genBlock(path.resolve(CONFIGTX, BLOCK_FILE));
+
+	const channelsConfig = globalConfig.channels;
+	for (const [channelName, channelConfig] of Object.entries(channelsConfig)) {
+		const channelFile = path.resolve(CONFIGTX, channelConfig.file);
+		await binManager.configtxgen(channelName, configtxFile, channelName).genChannel(channelFile);
+	}
+
+
+	await exports.runOrderers();
+	await exports.runPeers();
+};
+const task = async () => {
+	const {action} = process.env;
 	try {
-		await exports.runCAs(toStop);
-
-		await exports.runPeers(undefined, toStop);
-		await exports.runOrderers(undefined, toStop);
-		if (type === OrdererType.kafka) {
-			await exports.runKafkas(toStop);
-			await exports.runZookeepers(toStop);
+		switch (action) {
+			case 'down':
+				await down();
+				logger.debug('[done] down');
+				break;
+			case 'up':
+				await up();
+				logger.debug('[done] up');
+				break;
+			default:
 		}
-
-		await pruneLocalSystem();
-		await chaincodeClean(true);
-		await exports.volumesAction(toStop);
-
-		fsExtra.emptyDirSync(MSPROOT);
-		logger.info(`[done] clear MSPROOT ${MSPROOT}`);
-		fsExtra.emptyDirSync(CONFIGTX);
-		logger.info(`[done] clear CONFIGTX ${CONFIGTX}`);
-
-
-		const binManager = new BinManager();
-
-		await binManager.configtxlatorRESTServer('down');
 	} catch (err) {
 		logger.error(err);
 		process.exit(1);
 	}
-	logger.debug('[done] down');
-};
-
-exports.up = async () => {
-	try {
-
-		await fabricImagePull({fabricTag, thirdPartyTag});
-
-		const binManager = new BinManager();
-		await binManager.configtxlatorRESTServer('start');
-
-		await networkCreateIfNotExist({Name: network});
-
-		const {orderer: {type}} = globalConfig;
-		await exports.volumesAction();
-		await exports.runCAs();
-
-		if (type === OrdererType.kafka) {
-			await exports.runZookeepers();
-			await exports.runKafkas();
-		}
-		await caCrypoGenUtil.genAll();
-
-		const PROFILE_BLOCK = globalConfig.orderer.genesis_block.profile;
-		const configtxFile = path.resolve(__dirname, 'config', 'configtx.yaml');
-		require('./config/configtx.js').gen({MSPROOT, PROFILE_BLOCK, configtxFile});
-
-
-		const BLOCK_FILE = globalConfig.orderer.genesis_block.file;
-		fsExtra.ensureDirSync(CONFIGTX);
-		await binManager.configtxgen(PROFILE_BLOCK, configtxFile).genBlock(path.resolve(CONFIGTX, BLOCK_FILE));
-
-		const channelsConfig = globalConfig.channels;
-		for (const [channelName, channelConfig] of Object.entries(channelsConfig)) {
-			const channelFile = path.resolve(CONFIGTX, channelConfig.file);
-			await binManager.configtxgen(channelName, configtxFile, channelName).genChannel(channelFile);
-		}
-
-
-		await exports.runOrderers();
-
-		await exports.runPeers();
-
-	} catch (err) {
-		logger.error(err);
-		process.exit(1);
-	}
-
-	logger.debug('[done] up');
 
 };
+task();

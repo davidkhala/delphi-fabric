@@ -96,8 +96,14 @@ Finished
 - system upgrade: how to migrate to 1.4. from 1.1
 - 开发模式:--peer-chaincodedev: try to set via core.yaml
 - feature: implement configtx in node-sdk??
+- use command line to call `node scripts.js` will hang?
 
-
+## Notes
+- configtxlator Rest server is deprecated but kept. Refer to following when reuse 
+    ```js
+      const binManager = new BinManager();
+      await binManager.configtxlatorRESTServer('down|start');
+    ```
 ## New feature, patch required for node-sdk
  
 
