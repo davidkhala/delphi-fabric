@@ -24,10 +24,10 @@ const hackCACert = async (domain) => {
 	await dockerCmd.copy(container_name, from, to);
 	return fs.readFileSync(to).toString();
 };
-const getCaService = async (port, domain) => {
+const getCaService = async (port, domain, useHack) => {
 	const caUrl = `${protocol}://localhost:${port}`;
 	const trustedRoots = [];
-	if (TLS) {
+	if (TLS && useHack) {
 		const pem = await hackCACert(domain);
 		trustedRoots.push(pem);
 	}

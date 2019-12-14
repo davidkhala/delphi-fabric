@@ -1,4 +1,3 @@
-const log = require('why-is-node-running');
 const globalConfig = require('./config/orgs.json');
 const path = require('path');
 const logger = require('./common/nodejs/logger').new('dockerode-bootstrap', true);

@@ -16,19 +16,19 @@ const path = require('path');
 const chaincodeConfig = require('../config/chaincode.json');
 
 exports.prepareInstall = async ({chaincodeId}) => {
-	const chaincodeRelPath = chaincodeConfig[chaincodeId].path;
+	const chaincodeRelativePath = chaincodeConfig[chaincodeId].path;
 	let metadataPath;
 	let chaincodePath;
 	const chaincodeType = chaincodeConfig[chaincodeId].type;
 	const gopath = await golangUtil.getGOPATH();
 	if (chaincodeType === ChaincodeType.node) {
-		chaincodePath = path.resolve(gopath, 'src', chaincodeRelPath);
+		chaincodePath = path.resolve(gopath, 'src', chaincodeRelativePath);
 		metadataPath = path.resolve(chaincodePath, 'META-INF');// the name is arbitrary
 	}
 	if (!chaincodeType || chaincodeType === ChaincodeType.golang) {
 		await golangUtil.setGOPATH();
-		chaincodePath = chaincodeRelPath;
-		metadataPath = path.resolve(gopath, 'src', chaincodeRelPath, 'META-INF');// the name is arbitrary
+		chaincodePath = chaincodeRelativePath;
+		metadataPath = path.resolve(gopath, 'src', chaincodeRelativePath, 'META-INF');// the name is arbitrary
 	}
 	if (Array.isArray(chaincodeConfig[chaincodeId].couchDBIndexes)) {
 		couchDBIndex(metadataPath, undefined, ...chaincodeConfig[chaincodeId].couchDBIndexes);
