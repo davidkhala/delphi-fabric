@@ -24,7 +24,8 @@ const task = async () => {
 			logger.debug('CID', cid);
 			break;
 		case 3:
-			await transient(peers, org1, {a: 'c'});
+			const resp = await transient(peers, org1, {a: 'c'}, 'a');
+			logger.debug(resp);
 			break;
 		default:
 			await install.task(0);

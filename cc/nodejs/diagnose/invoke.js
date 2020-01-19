@@ -14,7 +14,7 @@ exports.whoami = async (peers, clientPeerOrg) => {
 	const fcn = 'whoami';
 	return query(peers, clientPeerOrg, chaincodeId, fcn, []);
 };
-exports.transient = async (peers, clientPeerOrg, transientMap) => {
-	const fcn = '-';
-	return query(peers, clientPeerOrg, chaincodeId, fcn, [], transientMap);
+exports.transient = async (peers, clientPeerOrg, transientMap, key) => {
+	const fcn = 'transient';
+	return query(peers, clientPeerOrg, chaincodeId, fcn, [key], transientMap);
 };
