@@ -31,9 +31,11 @@ pullKafka() {
 updateChaincode() {
 	export GO111MODULE=on
 
-	goCmd="curl --silent --show-error https://raw.githubusercontent.com/davidkhala/goutils/master/scripts/goCmd.sh"
-	$goCmd | bash -s get https://github.com/davidkhala/chaincode.git
-
+	GOPATH=$(go env GOPATH)
+	cd $GOPATH/src/github.com/davidkhala/
+	set +e
+	git clone "https://github.com/davidkhala/chaincode.git"
+	set -e
 	cd $GOPATH/src/github.com/davidkhala/chaincode/golang/master
 	go mod vendor
 	cd -
@@ -46,8 +48,10 @@ updateChaincode() {
 	go mod vendor
 	cd -
 
-	$goCmd | bash -s get https://github.com/davidkhala/stupid.git
-
+	cd $GOPATH/src/github.com/davidkhala/
+	set +e
+	git clone https://github.com/davidkhala/stupid.git
+	set -e
 	cd $GOPATH/src/github.com/davidkhala/stupid
 	go mod vendor
 	cd -
