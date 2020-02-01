@@ -18,3 +18,11 @@ exports.transient = async (peers, clientPeerOrg, transientMap, key) => {
 	const fcn = 'transient';
 	return query(peers, clientPeerOrg, chaincodeId, fcn, [key], transientMap);
 };
+exports.worldStates = async (peers, clientPeerOrg) => {
+	const fcn = 'worldStates';
+	return query(peers, clientPeerOrg, chaincodeId, fcn, []);
+};
+exports.putBatch = async (peers, clientPeerOrg, batch) => {
+	const fcn = 'putBatch';
+	return invoke(peers, clientPeerOrg, chaincodeId, fcn, [JSON.stringify(batch)]);
+};
