@@ -26,3 +26,7 @@ exports.putBatch = async (peers, clientPeerOrg, batch) => {
 	const fcn = 'putBatch';
 	return invoke(peers, clientPeerOrg, chaincodeId, fcn, [JSON.stringify(batch)]);
 };
+exports.history = async (peers, clientPeerOrg, key) => {
+	const fcn = 'history';
+	return query(peers, clientPeerOrg, chaincodeId, fcn, [key]);
+};
