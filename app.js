@@ -15,16 +15,36 @@ const Query = require('./common/nodejs/query');
 const {app} = require('khala-nodeutils/baseApp').run(port);
 
 
-app.use('/config', require('./express/configExpose'));
-
 app.get('/', (req, res) => {
 	res.send('pong from davids server');
 });
 
-const invalid = require('./express/formValid').invalid();
-const errorCodeMap = require('./express/errorCodeMap.js');
 const errorSyntaxHandle = (err, res) => {
-	const status = errorCodeMap.get(err);
+	const map = {
+		'invalid': 400,
+		'BAD_REQUEST': 400,
+		'FORBIDDEN': 403,
+		'Failed to deserialize creator identity': 401,
+		'NOT_FOUND': 404,
+		'could not find': 404,
+		'no such file or directory': 404,
+		'not found': 404,
+		'Connect Failed': 503,
+		'Service Unavailable': 503,
+		'JSON.parse': 400
+	};
+	const get = (err) => {
+		let status = 500;
+		for (const [errorMessage, code] of Object.entries(map)) {
+			if (err.toString().includes(errorMessage)) {
+				status = code;
+				break;
+			}
+		}
+		return status;
+	};
+
+	const status = get(err);
 	res.status(status);
 	res.send(err.toString());
 };
@@ -36,8 +56,6 @@ app.post('/channel/create/:channelName', async (req, res) => {
 	const {orgName} = req.body;
 
 	try {
-		invalid.channelName({channelName});
-		invalid.orgName({orgName});
 
 		const channelFileName = channelsConfig[channelName].file;
 		const channelConfigFile = path.resolve(CONFIGTXDir, channelFileName);
@@ -59,11 +77,9 @@ app.post('/channel/create/:channelName', async (req, res) => {
 app.post('/channel/join/:channelName', async (req, res) => {
 	const {channelName} = req.params;
 	try {
-		invalid.channelName({channelName});
 		const {orgName, peerIndex} = req.body;
 		logger.debug('joinChannel', {channelName, orgName, peerIndex});
 
-		invalid.peer({orgName, peerIndex});
 
 		const peer = helper.newPeer(peerIndex, orgName);
 		const client = await helper.getOrgAdmin(orgName, 'peer');
@@ -82,7 +98,6 @@ app.post('/query/block/height/:blockNumber', async (req, res) => {
 	const {peerIndex, orgName, channelName} = req.body;
 
 	try {
-		invalid.peer({orgName, peerIndex});
 		logger.debug('GET BLOCK BY NUMBER ', {blockNumber, peerIndex, orgName, channelName});
 
 		const client = helper.getOrgAdmin(orgName);
@@ -101,7 +116,6 @@ app.post('/query/block/hash', async (req, res) => {
 	const {hashHex, peerIndex, orgName, channelName} = req.body;
 	logger.debug('GET BLOCK BY HASH', {hashHex, peerIndex, orgName, channelName});
 	try {
-		invalid.peer({orgName, peerIndex});
 		const peer = helper.newPeer(peerIndex, orgName);
 		const client = helper.getOrgAdmin(orgName);
 		const channel = helper.prepareChannel(channelName, client);
@@ -117,7 +131,6 @@ app.post('/query/tx', async (req, res) => {
 	const {txId, orgName, peerIndex, channelName} = req.body;
 	logger.debug('GET TRANSACTION BY TRANSACTION_ID', {txId, orgName, peerIndex, channelName});
 	try {
-		invalid.peer({orgName, peerIndex});
 		const client = helper.getOrgAdmin(orgName);
 		const channel = helper.prepareChannel(channelName, client);
 		const peer = helper.newPeer(peerIndex, orgName);
@@ -135,7 +148,6 @@ app.post('/query/chain', async (req, res) => {
 	logger.debug('GET blockchain INFORMATION', {orgName, peerIndex, channelName});
 
 	try {
-		invalid.peer({orgName, peerIndex});
 		const client = await helper.getOrgAdmin(orgName);
 		const channel = helper.prepareChannel(channelName, client);
 		const peer = helper.newPeer(peerIndex, orgName);
@@ -151,7 +163,6 @@ app.post('/query/chaincodes/installed', async (req, res) => {
 	const {orgName, peerIndex} = req.body;
 	logger.debug('query installed CHAINCODE', {orgName, peerIndex});
 	try {
-		invalid.peer({orgName, peerIndex});
 		const peer = helper.newPeer(peerIndex, orgName);
 		const client = await helper.getOrgAdmin(orgName);
 		const message = await Query.chaincodesInstalled(peer, client);
@@ -164,7 +175,6 @@ app.post('/query/chaincodes/instantiated', async (req, res) => {
 	const {orgName, peerIndex, channelName} = req.body;
 	logger.debug('query instantiated CHAINCODE', {orgName, peerIndex, channelName});
 	try {
-		invalid.peer({orgName, peerIndex});
 		const peer = helper.newPeer(peerIndex, orgName);
 		const client = helper.getOrgAdmin(orgName);
 		const channel = helper.prepareChannel(channelName, client);
@@ -179,7 +189,6 @@ app.post('/query/channelJoined', async (req, res) => {
 	const {orgName, peerIndex} = req.body;
 	logger.debug('query joined CHANNELS', {orgName, peerIndex});
 	try {
-		invalid.peer({orgName, peerIndex});
 		const peer = helper.newPeer(peerIndex, orgName);
 		const client = await helper.getOrgAdmin(orgName);
 		const message = await Query.channelJoined(peer, client);

@@ -6,21 +6,19 @@
     "install": "cd common/nodejs; npm install"
   },
   "keywords": [
-    "v1.x fabric node-sdk sample"
+    "Hyperledger",
+    "fabric",
+    "nodejs",
+    "composer"
   ],
   "engines": {
-    "node": ">=10",
-    "npm": ">=6"
+    "node": ">=10"
   },
   "license": "Apache-2.0",
   "dependencies": {
     "khala-dockerode": "^0.1.1",
-    "khala-kvdb": "^0.0.0",
-    "khala-level": "^0.0.1",
     "khala-logger": "^0.2.0",
-    "khala-nodeutils": "^0.7.9",
-    "multer": "^1.3.0",
-    "ws": "^3.3.2"
+    "khala-nodeutils": "^0.7.9"
   },
   "devDependencies": {
     "why-is-node-running": "^2.1.0"
