@@ -36,6 +36,7 @@ updateChaincode() {
 	set +e
 	git clone "https://github.com/davidkhala/chaincode.git"
 	set -e
+	git checkout release-1.4
 	cd $GOPATH/src/github.com/davidkhala/chaincode/golang/master
 	go mod vendor
 	cd -

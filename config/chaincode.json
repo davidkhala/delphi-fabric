@@ -35,8 +35,8 @@
     "endorsingConfigs": {
       "n": 2,
       "mspId": {
-        "ASTRIMSP": 0,
-        "icddMSP": 0
+        "ASTRIMSP": "member",
+        "icddMSP": "member"
       }
     }
   },
@@ -49,8 +49,8 @@
     "endorsingConfigs": {
       "n": 1,
       "mspId": {
-        "ASTRIMSP": 0,
-        "icddMSP": 0
+        "ASTRIMSP": "member",
+        "icddMSP": "member"
       }
     }
   },
