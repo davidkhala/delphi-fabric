@@ -1,6 +1,6 @@
 const caCryptoGen = require('../common/nodejs/ca-crypto-gen');
 const {pkcs11_key} = require('../common/nodejs/ca');
-const {fsExtra} = require('../common/nodejs');
+const {fsExtra} = require('khala-nodeutils/helper');
 const {getCaService} = require('../config/caCryptoGen');
 const helper = require('../app/helper');
 const path = require('path');

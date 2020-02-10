@@ -1,4 +1,4 @@
-const {sleep} = require('../../common/nodejs');
+const {sleep} = require('khala-nodeutils/helper');
 const {stopOrderer, resumeOrderer} = require('../../operations/backup');
 const org = 'icdd.astri.org';
 

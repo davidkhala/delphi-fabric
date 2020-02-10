@@ -1,35 +1,33 @@
 /*
 outputChannelJson has been moved to test/configtxlatorReadTest.js
  */
-const {create, joinAll, setupAnchorPeersFromFile, setAnchorPeersByOrg} = require('./channelHelper');
+const {create, joinAll, setAnchorPeersByOrg} = require('./channelHelper');
 const ChannelUtil = require('../common/nodejs/channel');
 const helper = require('./helper');
-const {sleep, homeResolve} = require('khala-nodeutils/helper');
-const path = require('path');
+const {homeResolve} = require('khala-nodeutils/helper');
 
 const globalConfig = require('../config/orgs.json');
 
 
-const anchorPeerTask = async (channelName, channelConfig, byFile) => {
+const anchorPeerTask = async (channelName) => {
+	const channelConfig = globalConfig.channels[channelName];
 	for (const org in channelConfig.orgs) {
-		if (byFile) {
-			await setupAnchorPeersFromFile(path.resolve(__dirname, '../config/configtx.yaml'), channelName, org);
-		} else {
-			await setAnchorPeersByOrg(channelName, org);
-		}
-		await sleep(1000);// TODO not to use block waiter, validate config fetch from orderer
+		await setAnchorPeersByOrg(channelName, org);
 	}
 };
 const taskViewChannelBlock = async (channelName) => {
-	const client = helper.getOrgAdmin(undefined, 'peer');
+	let client;
+	if (channelName === ChannelUtil.genesis) {
+		client = helper.getOrgAdmin(undefined, 'orderer');
+	} else {
+		client = helper.getOrgAdmin(undefined, 'peer');
+	}
 	const channel = helper.prepareChannel(channelName, client);
-	const orderer = ChannelUtil.getOrderers(channel, false)[0];
+	const orderer = helper.newOrderers()[0];
 	const block = await ChannelUtil.getGenesisBlock(channel, orderer);
-	console.log(block);
+	console.log(block);// TODO apply block decoder
 };
-
-
-const e2eTask = async (channelName) => {
+const createTask = async (channelName) => {
 	const peerOrg = helper.randomOrg('peer');
 	const client = helper.getOrgAdmin(peerOrg);
 	const channel = helper.prepareChannel(channelName, client);
@@ -39,23 +37,32 @@ const e2eTask = async (channelName) => {
 	const channelConfig = globalConfig.channels[channelName];
 	const channelConfigFile = homeResolve(globalConfig.docker.volumes.CONFIGTX, channelConfig.file);
 	await create(channel, channelConfigFile, orderer);
-
-	await joinAll(channelName);
-
-	await sleep(1000);
-	await anchorPeerTask(channelName, channelConfig);
 };
+
 const task = async (taskID = parseInt(process.env.taskID)) => {
 
 	const channelName = process.env.channelName ? process.env.channelName : 'allchannel';
 	switch (taskID) {
+		case 0:
+			await createTask(channelName);
+			break;
 		case 1:
-			await e2eTask(channelName);
+			// taskID=1 channelName=allchannel node app/channelSetup.js
+			// taskID=1 channelName=testchainid node app/channelSetup.js
+			await joinAll(channelName);
 			break;
 		case 2:
+			await anchorPeerTask(channelName);
+			break;
+		case 3:
+			// export binPath=$PWD/common/bin/
+			// taskID=3 channelName=testchainid node app/channelSetup.js
 			await taskViewChannelBlock(channelName);
 			break;
 		default:
+			await createTask(channelName);
+			await joinAll(channelName);
+			await anchorPeerTask(channelName);
 	}
 
 };

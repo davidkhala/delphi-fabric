@@ -13,13 +13,17 @@ const {chain, chaincodesInstantiated, chaincodesInstalled, blockFromHash} = requ
 const helper = require('../app/helper');
 const task = async (taskID) => {
 	const peers = helper.newPeers([0], 'icdd');
-	const clientOrg = 'icdd';
-	const client = helper.getOrgAdmin(clientOrg);
-	const channel = helper.prepareChannel('allchannel', client);
+	const {channelName, org} = process.env;
+
+	const client = helper.getOrgAdmin(org);
+
+	const channel = helper.prepareChannel(channelName, client);
 	const peer = peers[0];
 	let result;
 	switch (taskID) {
 		case 0:
+			// taskID=0 channelName=allchannel org=icdd node test/queryTest.js
+			// taskID=0 channelName=testchainid org=hyperledger node test/queryTest.js
 			result = await chain(peers[0], channel);
 			console.log('chainInfo', result.pretty);
 			result = await blockFromHash(peer, channel, result.pretty.currentBlockHash);

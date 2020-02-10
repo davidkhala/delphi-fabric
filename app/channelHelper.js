@@ -1,15 +1,15 @@
 const helper = require('./helper.js');
 const ChannelUtil = require('../common/nodejs/channel');
-const {setupAnchorPeers, setAnchorPeers, getChannelConfigReadable, ConfigFactory} = require('../common/nodejs/channelConfig');
+const OrdererUtil = require('../common/nodejs/orderer');
+const {setAnchorPeers, getChannelConfigReadable, ConfigFactory} = require('../common/nodejs/channelConfig');
 const Eventhub = require('../common/nodejs/eventHub');
 
 const {create, join, getGenesisBlock} = ChannelUtil;
-const BinManager = require('../common/nodejs/binManager');
 const globalConfig = require('../config/orgs');
 const {sleep} = require('khala-nodeutils/helper');
 /**
  *
- * @param {Channel} channel
+ * @param {Client.Channel} channel
  * @param channelConfigFile
  * @param {Orderer} orderer
  * @param {OrgName[]} extraSignerOrgs orgName array of signer
@@ -27,27 +27,32 @@ exports.create = async (channel, channelConfigFile, orderer, extraSignerOrgs = [
 	return create(channel, orderer, channelConfigFile, clients);
 };
 
-
+// could not join peer to system channel 'testchainid'
 exports.joinAll = async (channelName) => {
 
 	const channelConfig = globalConfig.channels[channelName];
+	const allOrderers = helper.newOrderers();
+	const waitForOrderer = async () => {
+		const orderers = await OrdererUtil.filter(allOrderers, true);
+		if (orderers.length === 0) {
+			await sleep(1000);
+			return waitForOrderer();
+		}
+		return orderers[0];
+	};
+	const orderer = await waitForOrderer();
+	let client;
+	if (channelName === ChannelUtil.genesis) {
+		client = helper.getOrgAdmin(undefined, 'orderer');
+	}
 	for (const orgName in channelConfig.orgs) {
 		const {peerIndexes} = channelConfig.orgs[orgName];
 		const peers = helper.newPeers(peerIndexes, orgName);
 
-		const client = helper.getOrgAdmin(orgName);
+		client = helper.getOrgAdmin(orgName);
 
 		const channel = helper.prepareChannel(channelName, client);
 
-		const waitForOrderer = async () => {
-			const orderers = await ChannelUtil.getOrderers(channel, true);
-			if (orderers.length === 0) {
-				await sleep(1000);
-				return waitForOrderer();
-			}
-			return orderers[0];
-		};
-		const orderer = await waitForOrderer();
 		const block = await getGenesisBlock(channel, orderer);
 		for (const peer of peers) {
 			await join(channel, peer, block);
@@ -82,6 +87,7 @@ exports.setAnchorPeersByOrg = async (channelName, OrgName) => {
 		anchorPeers.push({host: container_name, port: 7051});
 	}
 	await setAnchorPeers(channel, orderer, OrgName, anchorPeers);
+	// TODO setup eventhub block listener here
 	const ordererClient = helper.getOrgAdmin(OrgName, 'orderer');
 	ChannelUtil.setClientContext(channel, ordererClient);
 	const {configJSON} = await getChannelConfigReadable(channel, {orderer});
@@ -91,13 +97,3 @@ exports.setAnchorPeersByOrg = async (channelName, OrgName) => {
 	}
 };
 
-exports.setupAnchorPeersFromFile = async (configtxYaml, channelName, OrgName) => {
-	const anchorTx = helper.projectResolve('config', 'configtx', `${OrgName}Anchors.tx`);
-	const binManager = new BinManager();
-	await binManager.configtxgen('anchorPeers', configtxYaml, channelName).genAnchorPeers(anchorTx, OrgName);
-	const client = helper.getOrgAdmin(OrgName);
-	const channel = helper.prepareChannel(channelName, client);
-	const orderer = channel.getOrderers()[0];
-	await setupAnchorPeers(channel, orderer, anchorTx);
-	// No easy way to validate success
-};

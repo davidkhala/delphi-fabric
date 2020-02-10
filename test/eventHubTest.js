@@ -46,8 +46,8 @@ const task = async () => {
 					for (const [ordererOrg, value] of Object.entries(groups.Orderer.groups)) {
 						logger.debug('channel_group.groups.Orderer.groups', ordererOrg, value);
 						logger.debug('channel_group.groups.Orderer.groups.Admins', ordererOrg, value.policies.Admins.policy, value.policies.Admins.policy.value.identities);
-						logger.debug('channel_group.groups.Orderer.groups.Readers', ordererOrg, value.policies.Readers.policy);
-						logger.debug('channel_group.groups.Orderer.groups.Writers', ordererOrg, value.policies.Writers.policy);
+						logger.debug('channel_group.groups.Orderer.groups.Readers', ordererOrg, value.policies.Readers.policy, value.policies.Readers.policy.value.identities);
+						logger.debug('channel_group.groups.Orderer.groups.Writers', ordererOrg, value.policies.Writers.policy, value.policies.Writers.policy.value.identities);
 					}
 
 					logger.debug('channel_group.groups.Application', groups.Application);

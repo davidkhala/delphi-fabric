@@ -1,4 +1,7 @@
-const {ChannelConfig: {channelUpdate, ConfigFactory}, Channel, Signature: {signChannelConfig}, homeResolve, sleep} = require('../../common/nodejs');
+const {channelUpdate, ConfigFactory} = require('../../common/nodejs/channelConfig');
+const Channel = require('../../common/nodejs/channel');
+const {signChannelConfig} = require('../../common/nodejs/multiSign');
+const {homeResolve, sleep} = require('khala-nodeutils/helper');
 const {OrdererType} = require('../../common/nodejs/constants');
 const helper = require('../../app/helper');
 const logger = helper.getLogger('kafka migrate to etcdraft');
