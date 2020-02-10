@@ -73,7 +73,7 @@ else
 	$CURRENT/common/install.sh golang12
 	$CURRENT/common/install.sh
 
-	./common/bash/pullBIN.sh
+	./common/install.sh fabricInstall
 	npm install
 	updateChaincode
 	curl --silent --show-error https://raw.githubusercontent.com/davidkhala/docker-manager/master/dockerSUDO.sh | bash
