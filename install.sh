@@ -32,6 +32,7 @@ updateChaincode() {
 	export GO111MODULE=on
 
 	GOPATH=$(go env GOPATH)
+	mkdir -p $GOPATH/src/github.com/davidkhala/
 	cd $GOPATH/src/github.com/davidkhala/
 	set +e
 	git clone "https://github.com/davidkhala/chaincode.git"
