@@ -75,7 +75,9 @@ else
 	$CURRENT/common/install.sh golang12
 	$CURRENT/common/install.sh
 
-	./common/install.sh fabricInstall
+	cd common
+	./install.sh fabricInstall
+	cd -
 	npm install
 	updateChaincode
 	curl --silent --show-error https://raw.githubusercontent.com/davidkhala/docker-manager/master/dockerSUDO.sh | bash
