@@ -1,7 +1,8 @@
 const globalConfig = require('./config/orgs.json');
 const path = require('path');
-const logger = require('./common/nodejs/logger').new('dockerode-bootstrap');
+const logger = require('./common/nodejs/logger').new('dockerode-bootstrap', true);
 const peerUtil = require('./common/nodejs/peer');
+const {OrdererType} = require('./common/nodejs/constants');
 const {
 	runCouchDB, runCA, runPeer, runOrderer, chaincodeClean, fabricImagePull
 } = require('./common/nodejs/fabric-dockerode');
@@ -16,7 +17,7 @@ const MSPROOT = homeResolve(globalConfig.docker.volumes.MSPROOT);
 const CONFIGTX = homeResolve(globalConfig.docker.volumes.CONFIGTX);
 const {docker: {fabricTag, caTag, network, thirdPartyTag}, TLS} = globalConfig;
 
-const {configtxlator, genBlock, genChannel} = require('./common/nodejs/binManager');
+const {genBlock, genChannel} = require('./common/nodejs/binManager');
 
 exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'}, toStop) => {
 	const {orderer: {type, genesis_block: {file: BLOCK_FILE}}} = globalConfig;
@@ -186,7 +187,6 @@ exports.down = async () => {
 		fsExtra.emptyDirSync(CONFIGTX);
 		logger.info(`[done] clear CONFIGTX ${CONFIGTX}`);
 
-		await configtxlator('down');
 	} catch (err) {
 		logger.error(err);
 		process.exit(1);
@@ -197,8 +197,6 @@ exports.down = async () => {
 exports.up = async () => {
 	try {
 		await fabricImagePull({fabricTag});
-
-		await configtxlator('up');
 
 		await networkCreateIfNotExist({Name: network});
 
