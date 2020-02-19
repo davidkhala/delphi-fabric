@@ -2,7 +2,6 @@ const globalConfig = require('./config/orgs.json');
 const path = require('path');
 const logger = require('./common/nodejs/logger').new('dockerode-bootstrap', true);
 const peerUtil = require('./common/nodejs/peer');
-const {OrdererType} = require('./common/nodejs/constants');
 const {
 	runCouchDB, runCA, runPeer, runOrderer, chaincodeClean, fabricImagePull
 } = require('./common/nodejs/fabric-dockerode');
@@ -149,18 +148,12 @@ exports.runCAs = async (toStop) => {
 			await runCA({container_name, port, network, imageTag, TLS, Issuer});
 		}
 	};
-	if (type === 'solo') {
-		const {ca: {portHost: port}, orgName} = globalConfig.orderer.solo;
-		const container_name = `ca.${orgName}`;
-		const Issuer = {CN: orgName};
+
+	for (const [ordererOrg, ordererOrgConfig] of Object.entries(globalConfig.orderer[type].orgs)) {
+		const {portHost: port} = ordererOrgConfig.ca;
+		const container_name = `ca.${ordererOrg}`;
+		const Issuer = {CN: ordererOrg};
 		await toggle({container_name, port, Issuer});
-	} else {
-		for (const [ordererOrg, ordererOrgConfig] of Object.entries(globalConfig.orderer[type].orgs)) {
-			const {portHost: port} = ordererOrgConfig.ca;
-			const container_name = `ca.${ordererOrg}`;
-			const Issuer = {CN: ordererOrg};
-			await toggle({container_name, port, Issuer});
-		}
 	}
 
 	for (const [orgName, orgConfig] of Object.entries(peerOrgsConfig)) {
@@ -196,7 +189,7 @@ exports.down = async () => {
 
 exports.up = async () => {
 	try {
-		await fabricImagePull({fabricTag});
+		await fabricImagePull({fabricTag, caTag});
 
 		await networkCreateIfNotExist({Name: network});
 

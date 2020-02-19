@@ -23,7 +23,7 @@ const cryptoPath = new CryptoPath(MSPROOT, {
  * @returns {Promise<void>}
  */
 const flow = async () => {
-	const ordererConfig = globalConfig.orderer.kafka.orgs[org];
+	const ordererConfig = globalConfig.orderer.etcdraft.orgs[org];
 	let {portHost, stateVolume} = ordererConfig.orderers[targetOrderer];
 	stateVolume = homeResolve(stateVolume);
 	const {file} = globalConfig.orderer.genesis_block;

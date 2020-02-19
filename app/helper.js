@@ -42,16 +42,13 @@ const preparePeer = (orgName, peerIndex, peerConfig) => {
 exports.toLocalhostOrderer = (orderer) => {
 	const url = orderer.getUrl();
 	const {type} = ordererConfig;
-	if (type === 'solo') {
-		return newOrderer(ordererConfig.solo.container_name, ordererConfig.solo.orgName, ordererConfig.solo);
-	} else {
-		for (const [ordererOrgName, ordererOrgConfig] of Object.entries(ordererConfig[type].orgs)) {
-			const found = Object.keys(ordererOrgConfig.orderers).find((ordererName) => {
-				return url.includes(ordererName);
-			});
-			if (found) {
-				return newOrderer(found, ordererOrgName, ordererOrgConfig.orderers[found]);
-			}
+
+	for (const [ordererOrgName, ordererOrgConfig] of Object.entries(ordererConfig[type].orgs)) {
+		const found = Object.keys(ordererOrgConfig.orderers).find((ordererName) => {
+			return url.includes(ordererName);
+		});
+		if (found) {
+			return newOrderer(found, ordererOrgName, ordererOrgConfig.orderers[found]);
 		}
 	}
 	return null;
@@ -84,16 +81,11 @@ const newOrderer = (name, org, ordererSingleConfig) => {
 exports.newOrderers = () => {
 	const result = [];
 	const {type} = ordererConfig;
-	if (type === 'solo') {
-		const orderer = newOrderer(ordererConfig.solo.container_name, ordererConfig.solo.orgName, ordererConfig.solo);
-		result.push(orderer);
-	} else {
-		for (const [ordererOrgName, ordererOrgConfig] of Object.entries(ordererConfig[type].orgs)) {
-			for (const ordererName in ordererOrgConfig.orderers) {
-				const ordererSingleConfig = ordererOrgConfig.orderers[ordererName];
-				const orderer = newOrderer(ordererName, ordererOrgName, ordererSingleConfig);
-				result.push(orderer);
-			}
+	for (const [ordererOrgName, ordererOrgConfig] of Object.entries(ordererConfig[type].orgs)) {
+		for (const ordererName in ordererOrgConfig.orderers) {
+			const ordererSingleConfig = ordererOrgConfig.orderers[ordererName];
+			const orderer = newOrderer(ordererName, ordererOrgName, ordererSingleConfig);
+			result.push(orderer);
 		}
 	}
 	return result;
@@ -171,19 +163,12 @@ exports.findOrgConfig = (orgName, ordererName) => {
 	} else {
 		nodeType = 'orderer';
 		const {type} = ordererConfig;
-		if (type === 'solo') {
-			if (ordererConfig.solo.orgName === orgName) {
-				target = ordererConfig.solo;
-				portHost = target.portHost;
+		if (ordererConfig[type].orgs[orgName]) {
+			target = ordererConfig[type].orgs[orgName];
+			if (!ordererName) {
+				ordererName = randomKeyOf(target.orderers);
 			}
-		} else {
-			if (ordererConfig[type].orgs[orgName]) {
-				target = ordererConfig[type].orgs[orgName];
-				if (!ordererName) {
-					ordererName = randomKeyOf(target.orderers);
-				}
-				portHost = target.orderers[ordererName].portHost;
-			}
+			portHost = target.orderers[ordererName].portHost;
 		}
 	}
 	if (!target) {
@@ -231,11 +216,7 @@ exports.randomOrg = (nodeType) => {
 		orgName = randomKeyOf(globalConfig.orgs);
 	} else if (nodeType === 'orderer') {
 		const {type} = globalConfig.orderer;
-		if (type === 'solo') {
-			orgName = globalConfig.orderer.solo.orgName;
-		} else {
-			orgName = randomKeyOf(globalConfig.orderer[type].orgs);
-		}
+		orgName = randomKeyOf(globalConfig.orderer[type].orgs);
 	} else {
 		throw Error(`invalid nodeType ${nodeType}`);
 	}

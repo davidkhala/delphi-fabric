@@ -67,66 +67,37 @@ exports.genAll = async () => {
 	{
 		const nodeType = 'orderer';
 
-		if (type === 'solo') {
-			const ordererConfig = globalConfig.orderer.solo;
+		const ordererOrgs = globalConfig.orderer[type].orgs;
+		for (const domain in ordererOrgs) {
+			const ordererConfig = ordererOrgs[domain];
 			const mspId = ordererConfig.mspid;
 
-			const domain = ordererConfig.orgName;
+			const caUrl = `${protocol}://localhost:${ordererConfig.ca.portHost}`;
+			const caService = await getCaService(caUrl, domain);
 			const adminCryptoPath = new CryptoPath(caCryptoConfig, {
 				orderer: {
 					org: domain
 				},
-				password: userUtil.adminPwd,
 				user: {
 					name: userUtil.adminName
-				}
-			});
-
-			const caUrl = `${protocol}://localhost:${ordererConfig.ca.portHost}`;
-			const caService = await getCaService(caUrl, domain);
-			const admin = await init(caService, adminCryptoPath, nodeType, mspId);
-			const cryptoPath = new CryptoPath(caCryptoConfig, {
-				orderer: {
-					org: domain, name: ordererConfig.container_name
 				},
-				user: {
-					name: userUtil.adminName
-				}
+				password: userUtil.adminPwd
 			});
-			await genOrderer(caService, cryptoPath, admin, {TLS});
-		} else {
-			const ordererOrgs = globalConfig.orderer[type].orgs;
-			for (const domain in ordererOrgs) {
-				const ordererConfig = ordererOrgs[domain];
-				const mspId = ordererConfig.mspid;
+			const admin = await init(caService, adminCryptoPath, nodeType, mspId);
 
-				const caUrl = `${protocol}://localhost:${ordererConfig.ca.portHost}`;
-				const caService = await getCaService(caUrl, domain);
-				const adminCryptoPath = new CryptoPath(caCryptoConfig, {
+			const promises = [];
+			for (const ordererName in ordererConfig.orderers) {
+
+				const cryptoPath = new CryptoPath(caCryptoConfig, {
 					orderer: {
-						org: domain
-					},
-					user: {
-						name: userUtil.adminName
-					},
-					password: userUtil.adminPwd
+						org: domain, name: ordererName
+					}
 				});
-				const admin = await init(caService, adminCryptoPath, nodeType, mspId);
-
-				const promises = [];
-				for (const ordererName in ordererConfig.orderers) {
-
-					const cryptoPath = new CryptoPath(caCryptoConfig, {
-						orderer: {
-							org: domain, name: ordererName
-						}
-					});
-					promises.push(genOrderer(caService, cryptoPath, admin, {TLS}));
-				}
-				await Promise.all(promises);
+				promises.push(genOrderer(caService, cryptoPath, admin, {TLS}));
 			}
-
+			await Promise.all(promises);
 		}
+
 	}
 	// gen peers
 	const peerOrgs = globalConfig.orgs;

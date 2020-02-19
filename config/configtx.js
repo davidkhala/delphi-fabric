@@ -97,12 +97,7 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 			}
 		}
 	};
-	if (globalConfig.orderer.type === 'solo') {
-		OrdererConfig.OrdererType = 'solo';
-		const {container_name, orgName, portHost} = ordererConfig.solo;
-		OrdererConfig.Addresses = [`${container_name}.${orgName}:${portHost}`];
-		OrdererConfig.Organizations = [OrganizationBuilder(orgName, ordererConfig.solo, undefined, undefined, 'orderer')];
-	} else if (globalConfig.orderer.type === 'etcdraft') {
+	if (globalConfig.orderer.type === 'etcdraft') {
 		OrdererConfig.OrdererType = 'etcdraft';
 
 		const Addresses = [];
