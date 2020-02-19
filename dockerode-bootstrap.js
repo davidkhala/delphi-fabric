@@ -8,7 +8,7 @@ const {
 	runCA,
 	runKafka, runZookeeper,
 	runPeer, runOrderer,
-	chaincodeClean, fabricImagePull
+	chaincodeClear, chaincodeImageClear, fabricImagePull
 } = require('./common/nodejs/fabric-dockerode');
 const {CryptoPath} = require('./common/nodejs/path');
 const configConfigtx = require('./config/configtx.js');
@@ -251,7 +251,8 @@ const down = async () => {
 	}
 
 	await pruneLocalSystem();
-	await chaincodeClean(true);
+	await chaincodeClear();
+	await chaincodeImageClear();
 	await exports.volumesAction(toStop);
 
 	fsExtra.emptyDirSync(MSPROOT);
