@@ -25,11 +25,6 @@ updateChaincode() {
 	set +e
 	go get -u -v "github.com/davidkhala/chaincode"
 	set -e
-	if ! dep version; then
-		$CURRENT/common/install.sh golang_dep
-		GOBIN=$GOPATH/bin/
-		export PATH=$PATH:$GOBIN # ephemeral
-	fi
 	cd $GOPATH/src/github.com/davidkhala/chaincode/golang/master
 	dep ensure
 	cd -

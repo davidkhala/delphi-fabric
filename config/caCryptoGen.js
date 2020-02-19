@@ -5,8 +5,6 @@ const {initAdmin, genPeer, init, genOrderer, genUser} = require('../common/nodej
 const pathUtil = require('../common/nodejs/path');
 const {nodeUtil, dockerode} = require('../common/nodejs/helper');
 const dockerCmd = dockerode.cmd;
-const {swarmServiceName} = dockerode.swarmUtil;
-const {inflateContainerName} = dockerode.util;
 const {CryptoPath} = pathUtil;
 const logger = require('../common/nodejs/logger').new('caCryptoGen');
 const globalConfig = require('../config/orgs');
@@ -17,19 +15,10 @@ const {homeResolve} = nodeUtil.helper();
 const caCryptoConfig = homeResolve(globalConfig.docker.volumes.MSPROOT);
 const {TLS} = globalConfig;
 const protocol = TLS ? 'https' : 'http';
-const getCaService = async (url, domain, swarm) => {
+const getCaService = async (url, domain) => {
 	if (TLS) {
 		const caHostName = `ca.${domain}`;
-		let container_name;
-		if (swarm) {
-			const serviceName = swarmServiceName(caHostName);
-			container_name = (await inflateContainerName(serviceName))[0];
-			if (!container_name) {
-				throw Error(`service ${serviceName} not assigned to current node`);
-			}
-		} else {
-			container_name = caHostName;
-		}
+		const container_name = caHostName;
 		const from = caUtil.container.caCert;
 		const to = `${caHostName}-cert.pem`;
 		await dockerCmd.copy(container_name, from, to);
@@ -39,12 +28,12 @@ const getCaService = async (url, domain, swarm) => {
 	}
 	return caUtil.new(url);
 };
-exports.genUser = async ({userName, password}, orgName, swarm) => {
-	logger.debug('genUser', {userName, password, orgName, swarm});
+exports.genUser = async ({userName, password}, orgName) => {
+	logger.debug('genUser', {userName, password, orgName});
 	const {config, nodeType} = helper.findOrgConfig(orgName);
 	const mspId = config.mspid;
 	const caUrl = `${protocol}://localhost:${config.ca.portHost}`;
-	const caService = await getCaService(caUrl, orgName, swarm);
+	const caService = await getCaService(caUrl, orgName);
 
 	const cryptoPath = new CryptoPath(caCryptoConfig, {
 		[nodeType]: {
@@ -70,7 +59,7 @@ exports.genUser = async ({userName, password}, orgName, swarm) => {
 
 };
 
-exports.genAll = async (swarm) => {
+exports.genAll = async () => {
 
 	const {type} = globalConfig.orderer;
 
@@ -94,7 +83,7 @@ exports.genAll = async (swarm) => {
 			});
 
 			const caUrl = `${protocol}://localhost:${ordererConfig.ca.portHost}`;
-			const caService = await getCaService(caUrl, domain, swarm);
+			const caService = await getCaService(caUrl, domain);
 			const admin = await init(caService, adminCryptoPath, nodeType, mspId);
 			const cryptoPath = new CryptoPath(caCryptoConfig, {
 				orderer: {
@@ -112,7 +101,7 @@ exports.genAll = async (swarm) => {
 				const mspId = ordererConfig.mspid;
 
 				const caUrl = `${protocol}://localhost:${ordererConfig.ca.portHost}`;
-				const caService = await getCaService(caUrl, domain, swarm);
+				const caService = await getCaService(caUrl, domain);
 				const adminCryptoPath = new CryptoPath(caCryptoConfig, {
 					orderer: {
 						org: domain
@@ -156,7 +145,7 @@ exports.genAll = async (swarm) => {
 				password: userUtil.adminPwd
 			});
 			const caUrl = `${protocol}://localhost:${peerOrgConfig.ca.portHost}`;
-			const caService = await getCaService(caUrl, domain, swarm);
+			const caService = await getCaService(caUrl, domain);
 			const admin = await init(caService, adminCryptoPath, nodeType, mspId);
 			const promises = [];
 			for (let peerIndex = 0; peerIndex < peerOrgConfig.peers.length; peerIndex++) {

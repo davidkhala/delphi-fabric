@@ -3,37 +3,22 @@ const path = require('path');
 const logger = require('./common/nodejs/logger').new('dockerode-bootstrap');
 const peerUtil = require('./common/nodejs/peer');
 const {
-	runCouchDB,
-	deployCA, runCA,
-	deployPeer, runPeer, runOrderer, deployOrderer,
-	chaincodeClean, tasksWaitUntilLive, fabricImagePull, tasksWaitUntilDead
-	, swarmRenew
+	runCouchDB, runCA, runPeer, runOrderer, chaincodeClean, fabricImagePull
 } = require('./common/nodejs/fabric-dockerode');
-const ClientUtil = require('./common/nodejs/client');
 const {CryptoPath} = require('./common/nodejs/path');
-const {nodeUtil, dockerode} = require('./common/nodejs/helper');
-const {PM2} = require('khala-pm2');
-const {ping} = nodeUtil.request();
 
 const {
 	containerDelete, volumeCreateIfNotExist, networkCreateIfNotExist,
 	volumeRemove, prune: {system: pruneLocalSystem}
-} = dockerode.util;
-const {swarmServiceName, constraintSelf, serviceDelete, prune: {system: pruneSwarmSystem}} = dockerode.swarmUtil;
-const {advertiseAddr, joinToken} = dockerode.cmd;
-const {hostname, homeResolve, fsExtra} = require('./common/nodejs/helper').nodeUtil.helper();
+} = require('khala-dockerode/dockerode-util');
+const {homeResolve, fsExtra} = require('khala-nodeutils/helper');
 const MSPROOT = homeResolve(globalConfig.docker.volumes.MSPROOT);
 const CONFIGTX = homeResolve(globalConfig.docker.volumes.CONFIGTX);
 const {docker: {fabricTag, caTag, network, thirdPartyTag}, TLS} = globalConfig;
 
-const serverClient = require('./swarm/serverClient');
-const nodeServers = {
-	swarmServer: path.resolve(__dirname, 'swarm', 'swarmServerPM2.js'),
-	signServer: path.resolve(__dirname, 'swarm', 'signServerPM2.js')
-};
 const {configtxlator, genBlock, genChannel} = require('./common/nodejs/binManager');
 
-exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'}, toStop, swarm) => {
+exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'}, toStop) => {
 	const {orderer: {type, genesis_block: {file: BLOCK_FILE}}} = globalConfig;
 	const CONFIGTXVolume = volumeName.CONFIGTX;
 	const MSPROOTVolume = volumeName.MSPROOT;
@@ -49,80 +34,35 @@ exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPRO
 
 		const {ordererHostName} = cryptoPath;
 		const container_name = ordererHostName;
-		const serviceName = swarmServiceName(container_name);
 		const configPath = cryptoPath.MSP(cryptoType);
 
 		if (toStop) {
-			if (swarm) {
-				const service = await serviceDelete(serviceName);
-				if (service) {
-					orderers.push(service);
-				}
-			} else {
-				await containerDelete(container_name);
-			}
+			await containerDelete(container_name);
 		} else {
 			const tls = TLS ? cryptoPath.TLSFile(cryptoType) : undefined;
-			if (swarm) {
-				const Constraints = await constraintSelf();
-				const service = await deployOrderer({
-					Name: container_name,
-					imageTag,
-					network,
-					port,
-					msp: {
-						volumeName: MSPROOTVolume,
-						configPath,
-						id: mspid
-					}, CONFIGTXVolume, BLOCK_FILE,
-					OrdererType,
-					tls,
-					Constraints
-				});
-				orderers.push(service);
-			} else {
-				await runOrderer({
-					container_name, imageTag, port, network,
-					BLOCK_FILE, CONFIGTXVolume,
-					msp: {
-						id: mspid,
-						configPath,
-						volumeName: MSPROOTVolume
-					},
-					OrdererType,
-					tls, stateVolume
-				}, operations);
-			}
+			await runOrderer({
+				container_name, imageTag, port, network,
+				BLOCK_FILE, CONFIGTXVolume,
+				msp: {
+					id: mspid,
+					configPath,
+					volumeName: MSPROOTVolume
+				},
+				OrdererType,
+				tls, stateVolume
+			}, operations);
 		}
 	};
-	if (type === 'solo') {
-		const ordererConfig = globalConfig.orderer.solo;
-		const {orgName: domain, mspid, portHost: port, operations} = ordererConfig;
-		const orderer = ordererConfig.container_name;
-		let {stateVolume} = ordererConfig;
-		if (stateVolume) {
-			stateVolume = homeResolve(stateVolume);
-		}
-		await toggle({orderer, domain, port, mspid}, type, stateVolume, operations);
-	} else {
-		const ordererOrgs = globalConfig.orderer[type].orgs;
-		for (const [domain, ordererOrgConfig] of Object.entries(ordererOrgs)) {
-			const {mspid} = ordererOrgConfig;
-			for (const [orderer, ordererConfig] of Object.entries(ordererOrgConfig.orderers)) {
-				let {stateVolume} = ordererConfig;
-				if (stateVolume) {
-					stateVolume = homeResolve(stateVolume);
-				}
-				const {portHost, operations} = ordererConfig;
-				await toggle({orderer, domain, port: portHost, mspid}, type, stateVolume, operations);
+	const ordererOrgs = globalConfig.orderer[type].orgs;
+	for (const [domain, ordererOrgConfig] of Object.entries(ordererOrgs)) {
+		const {mspid} = ordererOrgConfig;
+		for (const [orderer, ordererConfig] of Object.entries(ordererOrgConfig.orderers)) {
+			let {stateVolume} = ordererConfig;
+			if (stateVolume) {
+				stateVolume = homeResolve(stateVolume);
 			}
-		}
-	}
-	if (swarm) {
-		if (toStop) {
-			await tasksWaitUntilDead({services: orderers});
-		} else {
-			await tasksWaitUntilLive(orderers);
+			const {portHost, operations} = ordererConfig;
+			await toggle({orderer, domain, port: portHost, mspid}, type, stateVolume, operations);
 		}
 	}
 };
@@ -137,7 +77,7 @@ exports.volumesAction = async (toStop) => {
 		await volumeCreateIfNotExist({Name, path});
 	}
 };
-exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'}, tostop, swarm) => {
+exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'}, tostop) => {
 	const imageTag = fabricTag;
 	const orgsConfig = globalConfig.orgs;
 	const peers = [];
@@ -156,23 +96,10 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 				stateVolume = homeResolve(stateVolume);
 			}
 			if (tostop) {
-				if (swarm) {
-					const service = await serviceDelete(swarmServiceName(container_name));
-					if (couchDB) {
-						const service = await serviceDelete(swarmServiceName(couchDB.container_name));
-						if (service) {
-							peers.push(service);
-						}
-					}
-					if (service) {
-						peers.push(service);
-					}
-				} else {
-					if (couchDB) {
-						await containerDelete(couchDB.container_name);
-					}
-					await containerDelete(container_name);
+				if (couchDB) {
+					await containerDelete(couchDB.container_name);
 				}
+				await containerDelete(container_name);
 				continue;
 			}
 
@@ -188,79 +115,37 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 
 			const type = 'peer';
 			const configPath = cryptoPath.MSP(type);
-			if (swarm) {
-				const Constraints = await constraintSelf();
-				// if (couchDB) {
-				// 	const {container_name, port} = couchDB;
-				// 	await runCouchDB({imageTag: thirdPartyTag, container_name, port, network});
-				// }
-
-				const peer = await deployPeer({
-					Name: container_name, port, imageTag, network,
-					peerHostName,
-					msp: {
-						id: mspid,
-						volumeName: volumeName.MSPROOT,
-						configPath
-					},
-					tls,
-					Constraints,
-					couchDB
-				});
-				peers.push(peer);
-			} else {
-				if (couchDB) {
-					const {container_name, port} = couchDB;
-					await runCouchDB({imageTag: thirdPartyTag, container_name, port, network});
-				}
-				await runPeer({
-					container_name, port, imageTag, network,
-					peerHostName, tls,
-					msp: {
-						id: mspid,
-						volumeName: volumeName.MSPROOT,
-						configPath
-					}, couchDB, stateVolume
-				}, operations);
+			if (couchDB) {
+				const {container_name, port} = couchDB;
+				await runCouchDB({imageTag: thirdPartyTag, container_name, port, network});
 			}
+			await runPeer({
+				container_name, port, imageTag, network,
+				peerHostName, tls,
+				msp: {
+					id: mspid,
+					volumeName: volumeName.MSPROOT,
+					configPath
+				}, couchDB, stateVolume
+			}, operations);
 
 		}
 
-	}
-	if (swarm) {
-		if (tostop) {
-			await tasksWaitUntilDead({services: peers});
-		} else {
-			await tasksWaitUntilLive(peers);
-		}
 	}
 };
 
-exports.runCAs = async (toStop, swarm) => {
+exports.runCAs = async (toStop) => {
 	const {orderer: {type}, orgs: peerOrgsConfig} = globalConfig;
 
 	const imageTag = caTag;
 
 	const CAs = [];
 	const toggle = async ({container_name, port, Issuer}) => {
-		const serviceName = swarmServiceName(container_name);
 
 		if (toStop) {
-			if (swarm) {
-				const service = await serviceDelete(serviceName);
-				if (service) {
-					CAs.push(service);
-				}
-			} else {
-				await containerDelete(container_name);
-			}
+			await containerDelete(container_name);
 		} else {
-			if (swarm) {
-				const service = await deployCA({Name: container_name, network, imageTag, port, TLS});
-				CAs.push(service);
-			} else {
-				await runCA({container_name, port, network, imageTag, TLS, Issuer});
-			}
+			await runCA({container_name, port, network, imageTag, TLS, Issuer});
 		}
 	};
 	if (type === 'solo') {
@@ -283,30 +168,15 @@ exports.runCAs = async (toStop, swarm) => {
 		const Issuer = {CN: orgName};
 		await toggle({container_name, port, Issuer});
 	}
-	if (swarm) {
-		if (toStop) {
-			await tasksWaitUntilDead({services: CAs});
-		} else {
-			await tasksWaitUntilLive(CAs);
-		}
-	}
 };
 
-exports.down = async (swarm) => {
-	const {orderer: {type}} = globalConfig;
-
+exports.down = async () => {
 	const toStop = true;
 	try {
-		if (swarm) {
-			await swarmRenew();
-		}
-		await exports.runCAs(toStop, swarm);
+		await exports.runCAs(toStop);
 
-		await exports.runPeers(undefined, toStop, swarm);
-		await exports.runOrderers(undefined, toStop, swarm);
-		if (swarm) {
-			await pruneSwarmSystem();
-		}
+		await exports.runPeers(undefined, toStop);
+		await exports.runOrderers(undefined, toStop);
 		await pruneLocalSystem();
 		await chaincodeClean(true);
 		await exports.volumesAction(toStop);
@@ -315,16 +185,8 @@ exports.down = async (swarm) => {
 		logger.info(`[done] clear MSPROOT ${MSPROOT}`);
 		fsExtra.emptyDirSync(CONFIGTX);
 		logger.info(`[done] clear CONFIGTX ${CONFIGTX}`);
-		for (const [name, script] of Object.entries(nodeServers)) {
-			const pm2 = await new PM2().connect();
-			await pm2.delete({name, script});
-			pm2.disconnect();
-		}
-		require('./swarm/swarmServer').clean();
-		require('./swarm/signServer').clean();
 
 		await configtxlator('down');
-		ClientUtil.clean();
 	} catch (err) {
 		logger.error(err);
 		process.exit(1);
@@ -332,35 +194,18 @@ exports.down = async (swarm) => {
 	logger.debug('[done] down');
 };
 
-exports.up = async (swarm) => {
+exports.up = async () => {
 	try {
 		await fabricImagePull({fabricTag});
-		for (const [name, script] of Object.entries(nodeServers)) {
-			const pm2 = await new PM2().connect();
-			await pm2.reRun({name, script});
-			pm2.disconnect();
-		}
-		logger.info('[start]swarm Server init steps');
-		if (swarm) {
-			await swarmRenew();
 
-			const {address: ip} = await advertiseAddr();
-			const managerToken = await joinToken();
-			const workerToken = await joinToken('worker');
-			const {port} = require('./swarm/swarm').swarmServer;
-			const swarmServerUrl = `http://localhost:${port}`;
-			await ping(swarmServerUrl);
-			await serverClient.leader.update(swarmServerUrl, {ip, hostname: hostname(), managerToken, workerToken});
-		}
 		await configtxlator('up');
 
-		await networkCreateIfNotExist({Name: network}, swarm);
+		await networkCreateIfNotExist({Name: network});
 
-		const {orderer: {type}} = globalConfig;
 		await exports.volumesAction();
-		await exports.runCAs(undefined, swarm);
+		await exports.runCAs();
 
-		await require('./config/caCryptoGen').genAll(swarm);
+		await require('./config/caCryptoGen').genAll();
 
 		const PROFILE_BLOCK = globalConfig.orderer.genesis_block.profile;
 		const configtxFile = path.resolve(__dirname, 'config', 'configtx.yaml');
@@ -378,9 +223,9 @@ exports.up = async (swarm) => {
 		}
 
 
-		await exports.runOrderers(undefined, undefined, swarm);
+		await exports.runOrderers();
 
-		await exports.runPeers(undefined, undefined, swarm);
+		await exports.runPeers();
 
 	} catch (err) {
 		logger.error(err);
