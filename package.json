@@ -18,7 +18,7 @@
   "dependencies": {
     "khala-dockerode": "^0.1.2",
     "khala-logger": "^0.2.0",
-    "khala-nodeutils": "^0.7.9"
+    "khala-nodeutils": "^0.8.1"
   },
   "devDependencies": {
     "why-is-node-running": "^2.1.0"

@@ -37,26 +37,26 @@ Profiles:
       OrdererType: etcdraft
       EtcdRaft:
         Consenters:
-          - Host: orderer0.icdd.astri.org
+          - Host: orderer0.hyperledger
             Port: 7050
-            ClientTLSCert: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/icdd.astri.org/orderers/orderer0.icdd.astri.org/tls/server.crt
-            ServerTLSCert: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/icdd.astri.org/orderers/orderer0.icdd.astri.org/tls/server.crt
+            ClientTLSCert: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/hyperledger/orderers/orderer0.hyperledger/tls/server.crt
+            ServerTLSCert: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/hyperledger/orderers/orderer0.hyperledger/tls/server.crt
       Organizations:
-        - Name: icdd.astri.org
-          ID: ICDDMSP
-          MSPDir: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/icdd.astri.org/msp
+        - Name: hyperledger
+          ID: hyperledgerMSP
+          MSPDir: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/hyperledger/msp
           Policies:
             Readers:
               Type: Signature
-              Rule: OR('ICDDMSP.member')
+              Rule: OR('hyperledgerMSP.member')
             Writers:
               Type: Signature
-              Rule: OR('ICDDMSP.member')
+              Rule: OR('hyperledgerMSP.member')
             Admins:
               Type: Signature
-              Rule: OR('ICDDMSP.admin')
+              Rule: OR('hyperledgerMSP.admin')
           OrdererEndpoints:
-            - 'orderer0.icdd.astri.org:7050'
+            - 'orderer0.hyperledger:7050'
     Consortiums:
       SampleConsortium:
         Organizations:
@@ -74,7 +74,7 @@ Profiles:
                 Type: Signature
                 Rule: OR('ASTRIMSP.admin')
             OrdererEndpoints: &ref_0
-              - 'orderer0.icdd.astri.org:7050'
+              - 'orderer0.hyperledger:7050'
           - Name: icdd
             ID: icddMSP
             MSPDir: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp

@@ -64,7 +64,7 @@ _after first time clone this repository, submodule should be initialize_
 ----
  
 **Requirements & dependencies**
-  * fabric: 1.4.4 (for docker image, binary tool and fabric-sdk)
+  * fabric: 1.4.5 (for docker image, binary tool and fabric-sdk)
   * docker-ce 18.x
   * golang 1.12 
   * node 10.17, npm 6.11 : npm install卡死的话，可以考虑添加淘宝的源
@@ -115,7 +115,7 @@ have intercepted the download attempt.
 - configtxlator Rest server is deprecated but kept. Refer to following when reuse 
     ```js
       const binManager = new BinManager();
-      await binManager.configtxlatorRESTServer('down|start');
+      binManager.configtxlatorRESTServer('down|start'); // as async function
     ```
 ## New feature, patch required for node-sdk
  
