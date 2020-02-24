@@ -1,6 +1,5 @@
 const {install, prepareInstall} = require('./chaincodeHelper');
 const helper = require('./helper');
-const {nextVersion} = require('khala-nodeutils/version');
 const {incrementInstall} = require('../common/nodejs/chaincodeVersion');
 
 const globalConfig = require('../config/orgs.json');
@@ -11,7 +10,7 @@ const channelName = 'allchannel';
 exports.installs = async (chaincodeId, orgName, peerIndexes) => {
 	const peers = helper.newPeers(peerIndexes, orgName);
 	const client = helper.getOrgAdmin(orgName);
-	const chaincodeVersion = nextVersion();
+	const chaincodeVersion = '0.0.0';
 	return install(peers, {chaincodeId, chaincodeVersion}, client);
 };
 

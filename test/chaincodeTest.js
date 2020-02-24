@@ -32,6 +32,12 @@ const taskPruneChaincode = async () => {
 	await pruneChaincodeLegacy(peer, channel, chaincodeId);
 };
 const task = async () => {
+
+	const printInstalled = async (peer, client) => {
+		const {getName} = require('../common/nodejs/formatter/peer');
+		const {pretty} = await chaincodesInstalled(peer, client);
+		console.log(getName(peer), pretty);
+	};
 	switch (parseInt(process.env.taskID)) {
 		case 0:
 			await taskPruneChaincode();
@@ -42,19 +48,56 @@ const task = async () => {
 			const index = 0;
 			const peer = helper.newPeer(index, org);
 			const client = helper.getOrgAdmin(org2);
-			const printInstalled = async () => {
-				const {pretty} = await chaincodesInstalled(peer, client);
-				console.log(pretty);
-			};
+
 			logger.info('before uninstall');
-			await printInstalled();
+			await printInstalled(peer, client);
 			const containerName = `peer${index}.${org}`;
 			await uninstallChaincode({container_name: containerName, chaincodeId, chaincodeVersion: '0.0.0', peer, client});
 			logger.info('after uninstall');
-			await printInstalled();
+			await printInstalled(peer, client);
 			await installs(chaincodeId, org, [index]);
 			logger.info('after reinstall');
-			await printInstalled();
+			await printInstalled(peer, client);
+		}
+			break;
+		case 2: {
+			// taskID=2 node test/chaincodeTest
+			// install chaincode via chaincode package
+			const {install} = require('../common/nodejs/chaincode');
+			const globalConfig = require('../config/orgs.json');
+			const {channels} = globalConfig;
+
+			const chaincodePackage = '/home/davidliu/Documents/delphi-fabric/common/bash/test/diagnose-0.0.0.chaincodePack';
+			for (const [peerOrg, config] of Object.entries(channels[channelName].orgs)) {
+				const {peerIndexes} = config;
+				const peers = helper.newPeers(peerIndexes, peerOrg);
+				const client = helper.getOrgAdmin(peerOrg);
+				await install(peers, {chaincodePackage}, client);
+				for (const peer of peers) {
+					await printInstalled(peer, client);
+				}
+			}
+		}
+			break;
+		case 3: {
+			// taskID=3 node test/chaincodeTest
+			// instantiate chaincode only
+			const org2 = 'icdd';
+			const org1 = 'astri.org';
+			const peers = [helper.newPeer(0, org2), helper.newPeer(0, org1)];
+			try {
+				await instantiate(org2, peers, chaincodeId);
+			} catch (e) {
+				const {proposalResponses} = e;
+				if (!proposalResponses) {
+					throw e;
+				}
+
+				if (proposalResponses[0].message.includes('instantiation policy violation: signature set did not satisfy policy')) {
+					logger.info('expected error appear');
+				}
+
+			}
 		}
 			break;
 		default:

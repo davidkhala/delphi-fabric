@@ -96,6 +96,11 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 		for (const peerIndex in peersConfig) {
 			const peerConfig = peersConfig[peerIndex];
 			const {container_name, port, couchDB, operations, metrics} = peerConfig;
+			if (!container_name) {
+				logger.warn(`peer[${peerIndex}].${domain} will not run as docker container`);
+				// this peer will not run in docker container
+				continue;
+			}
 			let {stateVolume} = peerConfig;
 			if (stateVolume) {
 				stateVolume = homeResolve(stateVolume);
