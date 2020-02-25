@@ -67,7 +67,7 @@ const task = async () => {
 			const globalConfig = require('../config/orgs.json');
 			const {channels} = globalConfig;
 
-			const chaincodePackage = '/home/davidliu/Documents/delphi-fabric/common/bash/test/diagnose-0.0.0.chaincodePack';
+			const chaincodePackage = '/home/davidliu/Documents/delphi-fabric/diagnose-0.0.0.chaincodePack';
 			for (const [peerOrg, config] of Object.entries(channels[channelName].orgs)) {
 				const {peerIndexes} = config;
 				const peers = helper.newPeers(peerIndexes, peerOrg);
@@ -85,19 +85,8 @@ const task = async () => {
 			const org2 = 'icdd';
 			const org1 = 'astri.org';
 			const peers = [helper.newPeer(0, org2), helper.newPeer(0, org1)];
-			try {
-				await instantiate(org2, peers, chaincodeId);
-			} catch (e) {
-				const {proposalResponses} = e;
-				if (!proposalResponses) {
-					throw e;
-				}
+			await instantiate(org2, peers, chaincodeId);
 
-				if (proposalResponses[0].message.includes('instantiation policy violation: signature set did not satisfy policy')) {
-					logger.info('expected error appear');
-				}
-
-			}
 		}
 			break;
 		default:
