@@ -96,7 +96,6 @@ Finished
 - system upgrade: how to migrate to 1.4. from 1.1
 - 开发模式:--peer-chaincodedev: try to set via core.yaml
 - feature: implement configtx in node-sdk??
-- go mod vendor for stupid project
 
 ```
 
