@@ -1,5 +1,5 @@
 const {
-	get, put, cross, chaincodeID, putRaw, putBatch, whoami, getEndorsement, putEndorsement, getPage, list, getCertID, readWritePrivate
+	get, put, cross, chaincodeID, putRaw, putBatch, whoami, getEndorsement, putEndorsement, getPage, list, getCertID, readWritePrivate, panic
 } = require('../diagnoseInvoke');
 
 const helper = require('../../../../app/helper');
@@ -132,6 +132,9 @@ const task = async (taskID = parseInt(process.env.taskID)) => {
 			break;
 		case 8:
 			await readWritePrivateTest(helper.newPeers([0], 'astri.org'), 'astri.org');
+			break;
+		case 9:
+			await panic(helper.newPeers([0], 'astri.org'), 'astri.org');
 			break;
 		default:
 			await diagnoseInstall.task(process.env.channelName);
