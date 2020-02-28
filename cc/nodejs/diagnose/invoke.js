@@ -30,3 +30,7 @@ exports.history = async (peers, clientPeerOrg, key) => {
 	const fcn = 'history';
 	return query(peers, clientPeerOrg, chaincodeId, fcn, [key]);
 };
+exports.panic = async (peers, clientPeerOrg) => {
+	const fcn = 'panic';
+	return query(peers, clientPeerOrg, chaincodeId, fcn);
+};

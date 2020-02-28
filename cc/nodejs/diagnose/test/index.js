@@ -1,5 +1,5 @@
 const install = require('../../../nodejs/diagnose/install');
-const {put, get, whoami, transient, worldStates, putBatch, history} = require('../invoke');
+const {put, get, whoami, transient, worldStates, putBatch, history, panic} = require('../invoke');
 const chaincodeId = 'nodeDiagnose';
 const helper = require('../../../../app/helper');
 const logger = helper.getLogger(`test:${chaincodeId}`);
@@ -61,7 +61,10 @@ const task = async () => {
 			logger.debug(historyResult);
 			logger.debug(historyResult.length);
 		}
-
+			break;
+		case 7: {
+			await panic(peers, org1);
+		}
 			break;
 		default:
 			await install.task(0);
