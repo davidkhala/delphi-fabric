@@ -1,6 +1,6 @@
 Delphi-fabric
 ---------------------
-[![Build Status](https://travis-ci.com/davidkhala/delphi-fabric.svg?branch=release-1.4)](https://travis-ci.com/davidkhala/delphi-fabric)
+[![Build Status](https://travis-ci.com/davidkhala/delphi-fabric.svg?branch=master)](https://travis-ci.com/davidkhala/delphi-fabric)
 
 About
 -----------------------
@@ -66,7 +66,8 @@ _after first time clone this repository, submodule should be initialize_
   *  **Compatible OS** 
     - ubuntu xenial/bionic
     - [TODO] MacOS 
-  * fabric: 2.0.0-alpha (for docker image, binary tool and fabric-sdk)
+  * fabric: 2.0.1 (for docker image, binary tool and fabric-sdk)
+  * fabric-ca: 1.4.6
   * docker-ce 18.x
   * golang 1.12 
   * node 10.17, npm 6.11 : npm install卡死的话，可以考虑添加淘宝的源

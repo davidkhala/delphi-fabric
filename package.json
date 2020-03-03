@@ -1,6 +1,6 @@
 {
   "name": "delphi-fabric",
-  "version": "2.0.0-alpha",
+  "version": "2.0.1",
   "description": "node program to use Hyperledger Fabric nodejs SDK ",
   "keywords": [
     "v1.x fabric node-sdk sample"

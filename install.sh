@@ -8,44 +8,35 @@ for ((i = 2; i <= ${#}; i++)); do
 	remain_params="$remain_params $j"
 done
 
-utilsDir=$CURRENT/common/docker/utils/
 gitSync() {
 	git pull
 	git submodule update --init --recursive
 }
 pull() {
-	local IMAGE_TAG=${1:-2.0.0-alpha}
-	docker pull hyperledger/fabric-ccenv:$IMAGE_TAG
-	docker pull hyperledger/fabric-orderer:$IMAGE_TAG
-	docker pull hyperledger/fabric-peer:$IMAGE_TAG
-	docker pull hyperledger/fabric-ca:$IMAGE_TAG
+	local FABRIC_TAG=${1:-2.0.1}
+	local CA_TAG=${2:-1.4.6}
+	docker pull hyperledger/fabric-ccenv:$FABRIC_TAG
+	docker pull hyperledger/fabric-orderer:$FABRIC_TAG
+	docker pull hyperledger/fabric-peer:$FABRIC_TAG
+	docker pull hyperledger/fabric-ca:$CA_TAG
 }
 updateChaincode() {
-	export GOPATH=$(go env GOPATH)
-	set +e
-	go get -u -v "github.com/davidkhala/chaincode"
-	set -e
+	goCmd="curl --silent --show-error https://raw.githubusercontent.com/davidkhala/goutils/master/scripts/goCmd.sh"
+	$goCmd | bash -s setModuleMode on
+	$goCmd | bash -s get "github.com/davidkhala/chaincode"
+
 	cd $GOPATH/src/github.com/davidkhala/chaincode/golang/master
-	dep ensure
+	go mod vendor
 	cd -
 	cd $GOPATH/src/github.com/davidkhala/chaincode/golang/mainChain
-	dep ensure
+	go mod vendor
 	cd -
 
 	cd $GOPATH/src/github.com/davidkhala/chaincode/golang/diagnose
-	dep ensure
+	go mod vendor
 	cd -
 }
 
-PM2CLI() {
-	sudo npm install pm2@latest -g
-}
-sync() {
-	gitSync
-	$CURRENT/common/install.sh sync
-	npm install
-	updateChaincode
-}
 if [[ -n "$fcn" ]]; then
 	$fcn $remain_params
 else
@@ -55,7 +46,10 @@ else
 	$CURRENT/common/install.sh golang
 	$CURRENT/common/install.sh
 
-	./common/bin-manage/pullBIN.sh
+	cd common
+	./install.sh fabricInstall
+	cd -
+
 	npm install
 	updateChaincode
 	curl --silent --show-error https://raw.githubusercontent.com/davidkhala/docker-manager/master/dockerSUDO.sh | bash
