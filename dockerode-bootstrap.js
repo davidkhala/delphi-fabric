@@ -1,7 +1,7 @@
 const globalConfig = require('./config/orgs.json');
 const path = require('path');
 const logger = require('./common/nodejs/logger').new('dockerode-bootstrap', true);
-const peerUtil = require('./common/nodejs/peer');
+const peerAdminUtil = require('./common/nodejs/admin/peer');
 const {
 	runCouchDB, runCA, runPeer, runOrderer, chaincodeClean, fabricImagePull
 } = require('./common/nodejs/fabric-dockerode');
@@ -23,9 +23,8 @@ exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPRO
 	const CONFIGTXVolume = volumeName.CONFIGTX;
 	const MSPROOTVolume = volumeName.MSPROOT;
 	const imageTag = fabricTag;
-	const {MSPROOT} = peerUtil.container;
+	const {MSPROOT} = peerAdminUtil.container;
 	const cryptoType = 'orderer';
-	const orderers = [];
 
 	const toggle = async ({orderer, domain, port, mspid}, OrdererType, stateVolume, operations) => {
 		const cryptoPath = new CryptoPath(MSPROOT, {
@@ -80,7 +79,6 @@ exports.volumesAction = async (toStop) => {
 exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'}, tostop) => {
 	const imageTag = fabricTag;
 	const orgsConfig = globalConfig.orgs;
-	const peers = [];
 
 
 	for (const domain in orgsConfig) {
@@ -103,7 +101,7 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 				continue;
 			}
 
-			const cryptoPath = new CryptoPath(peerUtil.container.MSPROOT, {
+			const cryptoPath = new CryptoPath(peerAdminUtil.container.MSPROOT, {
 				peer: {
 					org: domain, name: `peer${peerIndex}`
 				}
