@@ -1,7 +1,7 @@
 const peerUrl = 'https://localhost:9443';
 const ordererUrl = 'https://localhost:8443';
 const OperationService = require('../common/nodejs/operations');
-const {LoggingLevel} = require('../common/nodejs/remote');
+const {LoggingLevel} = require('../common/nodejs/formatter/remote');
 const logger = require('khala-logger/log4js').consoleLogger('test:operation');
 const helper = require('../app/helper');
 

@@ -6,7 +6,7 @@ const {proposalStringify, proposalFlatten} = require('../common/nodejs/chaincode
 const {invoke, query} = require('./chaincodeHelper');
 const channelName = 'allchannel';
 
-const Eventhub = require('../common/nodejs/eventHub');
+const Eventhub = require('../common/nodejs/builder/eventHub');
 
 const {sleep} = require('khala-nodeutils/helper');
 exports.invoke = async (peers, clientPeerOrg, chaincodeId, fcn, args = [], transientMap, commitPeers = []) => {

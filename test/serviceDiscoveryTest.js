@@ -2,7 +2,7 @@ const helper = require('../app/helper');
 const logger = helper.getLogger('test:serviceDiscovery');
 const {discoveryChaincodeInterestBuilder} = require('../app/chaincodeHelper');
 const {globalPeers, initialize, discover, discoverPretty} = require('../common/nodejs/serviceDiscovery');
-const OrdererUtil = require('../common/nodejs/orderer');
+const OrdererUtil = require('../common/nodejs/builder/orderer');
 const {containerDelete} = require('khala-dockerode/dockerode-util');
 const deletePeer = async () => {
 	const containerName = 'peer0.astri.org';

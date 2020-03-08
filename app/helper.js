@@ -12,7 +12,7 @@ const path = require('path');
 const projectRoot = path.dirname(__dirname);
 const projectResolve = (...args) => path.resolve(projectRoot, ...args);
 const UserUtil = require('../common/nodejs/user');
-const OrdererUtil = require('../common/nodejs/orderer');
+const Orderer = require('../common/nodejs/builder/orderer');
 const channelUtil = require('../common/nodejs/builder/channel');
 const {homeResolve} = require('khala-nodeutils/helper');
 const {randomKeyOf} = require('khala-nodeutils/random');
@@ -63,13 +63,13 @@ const newOrderer = (name, org, ordererSingleConfig) => {
 	if (globalConfig.TLS) {
 		const {ordererHostName} = cryptoPath;
 		const {caCert} = cryptoPath.TLSFile(nodeType);
-		orderer = OrdererUtil.new({
+		orderer = new Orderer({
 			ordererPort,
 			cert: caCert,
 			ordererHostName
-		});
+		}).orderer;
 	} else {
-		orderer = OrdererUtil.new({ordererPort});
+		orderer = new Orderer({ordererPort}).orderer;
 	}
 	orderer.org = org;
 	orderer.name = name;

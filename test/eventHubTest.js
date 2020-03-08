@@ -1,4 +1,4 @@
-const EventHub = require('../common/nodejs/eventHub');
+const EventHub = require('../common/nodejs/builder/eventHub');
 
 const channelName = 'allchannel';
 const helper = require('../app/helper');

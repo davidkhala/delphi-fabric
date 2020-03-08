@@ -2,9 +2,9 @@ const helper = require('./helper.js');
 const ChannelUtil = require('../common/nodejs/channel');
 const {genesis} = require('../common/nodejs/formatter/channel');
 const ChannelManager = require('../common/nodejs/builder/channel');
-const OrdererUtil = require('../common/nodejs/orderer');
+const OrdererUtil = require('../common/nodejs/builder/orderer');
 const {setAnchorPeers, getChannelConfigReadable, ConfigFactory} = require('../common/nodejs/channelConfig');
-const Eventhub = require('../common/nodejs/eventHub');
+const Eventhub = require('../common/nodejs/builder/eventHub');
 
 const {create, join, getGenesisBlock} = ChannelUtil;
 const globalConfig = require('../config/orgs');
@@ -34,8 +34,19 @@ exports.joinAll = async (channelName) => {
 
 	const channelConfig = globalConfig.channels[channelName];
 	const allOrderers = helper.newOrderers();
+	const filter = async (orderers) => {
+		const result = [];
+		for (const orderer of orderers) {
+			const isAlive = await OrdererUtil.ping(orderer);
+			if (!isAlive) {
+				continue;
+			}
+			result.push(orderer);
+		}
+		return result;
+	};
 	const waitForOrderer = async () => {
-		const orderers = await OrdererUtil.filter(allOrderers, true);
+		const orderers = await filter(allOrderers);
 		if (orderers.length === 0) {
 			await sleep(1000);
 			return waitForOrderer();

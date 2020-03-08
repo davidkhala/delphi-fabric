@@ -2,6 +2,8 @@
   "name": "test-docker",
   "version": "0.0.0",
   "dependencies": {
-    "khala-fabric-sdk-node": "^1.4.3-0.1.0"
+    "khala-fabric-sdk-node": "^1.4.5-0.0.0",
+    "khala-fabric-sdk-node-builder": "^0.0.0",
+    "khala-nodeutils": "^0.8.2"
   }
 }

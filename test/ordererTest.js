@@ -1,6 +1,6 @@
 const helper = require('../app/helper');
 const logger = helper.getLogger('test:orderer');
-const OrdererUtil = require('../common/nodejs/orderer');
+const OrdererUtil = require('../common/nodejs/builder/orderer');
 const orderers = helper.newOrderers();
 const task = async () => {
 	const orderer = orderers[1];
