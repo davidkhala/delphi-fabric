@@ -3,6 +3,7 @@ outputChannelJson has been moved to test/configtxlatorReadTest.js
  */
 const {create, joinAll, setAnchorPeersByOrg} = require('./channelHelper');
 const ChannelUtil = require('../common/nodejs/channel');
+const {genesis} = require('../common/nodejs/formatter/channel');
 const helper = require('./helper');
 const {homeResolve} = require('khala-nodeutils/helper');
 
@@ -17,7 +18,7 @@ const anchorPeerTask = async (channelName) => {
 };
 const taskViewChannelBlock = async (channelName) => {
 	let client;
-	if (channelName === ChannelUtil.genesis) {
+	if (channelName === genesis) {
 		client = helper.getOrgAdmin(undefined, 'orderer');
 	} else {
 		client = helper.getOrgAdmin(undefined, 'peer');
@@ -31,7 +32,7 @@ const createTask = async (channelName) => {
 	const peerOrg = helper.randomOrg('peer');
 	const client = helper.getOrgAdmin(peerOrg);
 	const channel = helper.prepareChannel(channelName, client);
-	const orderers = await ChannelUtil.getOrderers(channel, true);
+	const orderers = helper.newOrderers();
 	const orderer = orderers[0];
 
 	const channelConfig = globalConfig.channels[channelName];

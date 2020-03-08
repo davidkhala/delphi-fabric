@@ -1,5 +1,7 @@
 const helper = require('./helper.js');
 const ChannelUtil = require('../common/nodejs/channel');
+const {genesis} = require('../common/nodejs/formatter/channel');
+const ChannelManager = require('../common/nodejs/builder/channel');
 const OrdererUtil = require('../common/nodejs/orderer');
 const {setAnchorPeers, getChannelConfigReadable, ConfigFactory} = require('../common/nodejs/channelConfig');
 const Eventhub = require('../common/nodejs/eventHub');
@@ -42,7 +44,7 @@ exports.joinAll = async (channelName) => {
 	};
 	const orderer = await waitForOrderer();
 	let client;
-	if (channelName === ChannelUtil.genesis) {
+	if (channelName === genesis) {
 		client = helper.getOrgAdmin(undefined, 'orderer');
 	}
 	for (const orgName in channelConfig.orgs) {
@@ -89,7 +91,7 @@ exports.setAnchorPeersByOrg = async (channelName, OrgName) => {
 	await setAnchorPeers(channel, orderer, OrgName, anchorPeers);
 	// TODO setup eventhub block listener here
 	const ordererClient = helper.getOrgAdmin(OrgName, 'orderer');
-	ChannelUtil.setClientContext(channel, ordererClient);
+	ChannelManager.setClientContext(channel, ordererClient);
 	const {configJSON} = await getChannelConfigReadable(channel, {orderer});
 	const updatedAnchorPeers = new ConfigFactory(configJSON).getAnchorPeers(OrgName);
 	if (JSON.stringify(updatedAnchorPeers) === JSON.stringify(anchorPeers)) {

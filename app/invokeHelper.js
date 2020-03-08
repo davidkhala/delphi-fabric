@@ -12,7 +12,9 @@ const {sleep} = require('khala-nodeutils/helper');
 exports.invoke = async (peers, clientPeerOrg, chaincodeId, fcn, args = [], transientMap, commitPeers = []) => {
 	logger.debug('invoke', 'client org', clientPeerOrg);
 	const client = helper.getOrgAdmin(clientPeerOrg);
-	const channel = helper.prepareChannel(channelName, client, true);
+	const channel = helper.prepareChannel(channelName, client);
+	const orderers = helper.newOrderers();
+	const orderer = orderers[0];
 	let eventHubs = undefined;
 	if (commitPeers.length > 0) {
 		eventHubs = commitPeers.map(peer => new Eventhub(channel, peer));
@@ -20,7 +22,7 @@ exports.invoke = async (peers, clientPeerOrg, chaincodeId, fcn, args = [], trans
 			await eventHub.connect();
 		}
 	}
-	const {proposalResponses} = await invoke(channel, peers, {
+	const {proposalResponses} = await invoke(channel, peers, orderer, {
 		chaincodeId,
 		fcn,
 		args,
@@ -33,14 +35,14 @@ exports.invoke = async (peers, clientPeerOrg, chaincodeId, fcn, args = [], trans
 exports.query = async (peers, clientOrg, chaincodeId, fcn, args = [], transientMap, rawPayload) => {
 	logger.debug('query', 'client org', clientOrg);
 	const client = helper.getOrgAdmin(clientOrg);
-	const channel = helper.prepareChannel(channelName, client, true);
+	const channel = helper.prepareChannel(channelName, client);
 	const {proposalResponses} = await query(channel, peers, {chaincodeId, fcn, args, transientMap});
 	return proposalResponses.map((entry) => proposalFlatten(rawPayload ? entry : proposalStringify(entry)));
 };
 exports.listenChaincodeEvent = async (peer, clientPeerOrg, chaincodeId, eventName = /event/i, onSuccess) => {
 	const logger = LogUtil.new('chaincode event', true);
 	const client = helper.getOrgAdmin(clientPeerOrg);
-	const channel = helper.prepareChannel(channelName, client, true);
+	const channel = helper.prepareChannel(channelName, client);
 	const eventHub = new Eventhub(channel, peer);
 	await eventHub.connect();
 	const validator = (data) => {

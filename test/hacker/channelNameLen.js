@@ -1,7 +1,6 @@
 const helper = require('../../app/helper');
 const {create} = require('../../app/channelHelper');
 const {homeResolve} = require('khala-nodeutils/helper');
-const ChannelUtil = require('../../common/nodejs/channel');
 const globalConfig = require('../../config/orgs.json');
 
 const channelName = 'rovecwvknqkqsrdoeycarfapbtxxgbyjoaoeotygqguathbkyjlpeatitobdnqrjitmerwgnozdcwmhdufsdxafztqgjkhbbontuyhmpkhzubcbmkoenyrzpeqqadedpmtuonbbxcqdthsgvnjxwihrtvjanpntioztleegqoholrakxmxssfyfgzrcmedvhnfokagdssrnntjykgjmowhutiitpyexubvrhnevvueuficagtavmpxlkaoumkcjqujrtuclxfspntknepomnxhbjeyykeydokmxqizbjrewzkxyuhqgvhlfpwzwiqkbinpnstoddunpplrmvuxbsbsrpdwksslixvpyetzskzmywdiqreyjztbpnvxxffkljwxnmsoyyfrfrdtqq';
@@ -16,7 +15,7 @@ const task = async () => {
 	const peerOrg = 'astri.org';
 	const client = helper.getOrgAdmin(peerOrg);
 	const channel = helper.prepareChannel(channelName, client);
-	const orderers = await ChannelUtil.getOrderers(channel, true);
+	const orderers = helper.newOrderers();
 	const orderer = orderers[0];
 	await createTask(channel, orderer);
 

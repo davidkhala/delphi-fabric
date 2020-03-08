@@ -1,5 +1,4 @@
 const {channelUpdate, ConfigFactory} = require('../../common/nodejs/channelConfig');
-const Channel = require('../../common/nodejs/channel');
 const {signChannelConfig} = require('../../common/nodejs/multiSign');
 const {homeResolve, sleep} = require('khala-nodeutils/helper');
 const {OrdererType} = require('../../common/nodejs/constants');
@@ -12,7 +11,10 @@ const channelUpdateTest = async (channel, orderer, configChangeCallback, alterna
 	const signatureCollector = async (proto) => {
 		return signChannelConfig(signers, proto);
 	};
-	await channelUpdate(channel, orderer, configChangeCallback, signatureCollector, {viaServer: false, client: alternativeClient});
+	await channelUpdate(channel, orderer, configChangeCallback, signatureCollector, {
+		viaServer: false,
+		client: alternativeClient
+	});
 };
 const maintenanceTest = async (channel, orderer, toMaintenance) => {
 	logger.debug('target orderer', orderer.getName());
@@ -70,7 +72,7 @@ const pruneKafka = async () => {
 const task = async (taskID = parseInt(process.env.taskID)) => {
 	const ordererClient = helper.getOrgAdmin(undefined, 'orderer');
 	const systemChannel = helper.prepareChannel('testchainid', ordererClient);
-	const orderers = await Channel.getOrderers(systemChannel, true);
+	const orderers = helper.newOrderers();
 
 	const appChannel = helper.prepareChannel('allchannel', ordererClient);
 	switch (taskID) {

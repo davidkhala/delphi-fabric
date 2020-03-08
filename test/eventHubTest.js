@@ -4,14 +4,11 @@ const channelName = 'allchannel';
 const helper = require('../app/helper');
 const org = 'astri.org';
 const logger = helper.getLogger('test:eventHub');
-const ChannelUtil = require('../common/nodejs/channel');
 
 const task = async () => {
 	const client = helper.getOrgAdmin(org, 'peer');
-	const channel = helper.prepareChannel(channelName, client, true);
+	const channel = helper.prepareChannel(channelName, client);
 	logger.info(channel.toString());
-	ChannelUtil.clearOrderers(channel);
-	ChannelUtil.clearPeers(channel);
 	const peer = helper.newPeer(0, org);
 	const eventHub = new EventHub(channel, peer);
 

@@ -6,14 +6,14 @@ const orgsConfig = globalConfig.orgs;
 const channelsConfig = globalConfig.channels;
 const ordererConfig = globalConfig.orderer;
 const ClientUtil = require('../common/nodejs/client');
-const peerUtil = require('../common/nodejs/peer');
+const peerUtil = require('../common/nodejs/builder/peer');
 const {CryptoPath} = require('../common/nodejs/path');
 const path = require('path');
 const projectRoot = path.dirname(__dirname);
 const projectResolve = (...args) => path.resolve(projectRoot, ...args);
 const UserUtil = require('../common/nodejs/user');
 const OrdererUtil = require('../common/nodejs/orderer');
-const channelUtil = require('../common/nodejs/channel');
+const channelUtil = require('../common/nodejs/builder/channel');
 const {homeResolve} = require('khala-nodeutils/helper');
 const {randomKeyOf} = require('khala-nodeutils/random');
 const CRYPTO_CONFIG_DIR = homeResolve(globalConfig.docker.volumes.MSPROOT);
@@ -27,9 +27,9 @@ const preparePeer = (orgName, peerIndex, peerConfig) => {
 	const {peerHostName} = cryptoPath;
 	if (globalConfig.TLS) {
 		const {cert} = cryptoPath.TLSFile('peer');
-		peer = peerUtil.new({peerPort, cert, peerHostName});
+		peer = new peerUtil({peerPort, cert, peerHostName}).peer;
 	} else {
-		peer = peerUtil.new({peerPort});
+		peer = new peerUtil({peerPort}).peer;
 	}
 	// NOTE append more info
 	peer.peerConfig = peerConfig;
@@ -93,43 +93,10 @@ exports.newOrderers = () => {
  *
  * @param channelName default to system channel
  * @param client
- * @param isRenew
  * @return {Client.Channel}
  */
-exports.prepareChannel = (channelName, client, isRenew) => {
-
-	if (isRenew) {
-		delete client._channels[channelName];
-	} else {
-		if (client._channels[channelName]) {
-			return client._channels[channelName];
-		}
-	}
-
-	const channel = channelUtil.new(client, channelName);
-
-	const orderers = exports.newOrderers();
-	for (const orderer of orderers) {
-		channel.addOrderer(orderer);
-	}
-
-	if (channelName && channelName !== channelUtil.genesis) {
-		const channelConfig = channelsConfig[channelName];
-
-		for (const orgName in channelConfig.orgs) {
-			const orgConfigInChannel = channelConfig.orgs[orgName];
-			for (const peerIndex of orgConfigInChannel.peerIndexes) {
-				const peerConfig = orgsConfig[orgName].peers[peerIndex];
-
-				const peer = preparePeer(orgName, peerIndex, peerConfig);
-				channel.addPeer(peer);
-
-			}
-		}
-		channel.orgs = channelConfig.orgs;
-	}
-
-	return channel;
+exports.prepareChannel = (channelName, client) => {
+	return new channelUtil({client, channelName}).channel;
 };
 
 exports.newPeer = (peerIndex, orgName) => {

@@ -27,7 +27,7 @@ const taskPruneChaincode = async () => {
 	const org = 'icdd';
 
 	const client = helper.getOrgAdmin(org, 'peer');
-	const channel = helper.prepareChannel(channelName, client, true);
+	const channel = helper.prepareChannel(channelName, client);
 	const peer = helper.newPeer(1, org);
 	await pruneChaincodeLegacy(peer, channel, chaincodeId);
 };

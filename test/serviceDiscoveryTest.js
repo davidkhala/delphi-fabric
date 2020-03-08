@@ -2,7 +2,6 @@ const helper = require('../app/helper');
 const logger = helper.getLogger('test:serviceDiscovery');
 const {discoveryChaincodeInterestBuilder} = require('../app/chaincodeHelper');
 const {globalPeers, initialize, discover, discoverPretty} = require('../common/nodejs/serviceDiscovery');
-const ChannelUtil = require('../common/nodejs/channel');
 const OrdererUtil = require('../common/nodejs/orderer');
 const {containerDelete} = require('khala-dockerode/dockerode-util');
 const deletePeer = async () => {
@@ -24,7 +23,7 @@ const discoverOrderer = async () => {
 	const org = 'icdd';
 	const channelName = 'allchannel';
 	const client = helper.getOrgAdmin(org, 'peer');
-	const channel = ChannelUtil.new(client, channelName);
+	const channel = helper.prepareChannel(channelName, client);
 	const peer = helper.newPeer(0, org);
 	await initialize(channel, peer);
 	const orderers = channel.getOrderers();
@@ -39,7 +38,7 @@ const discoverChannel = async (chaincodeIds) => {
 	const org = 'icdd';
 	const channelName = 'allchannel';
 	const client = helper.getOrgAdmin(org, 'peer');
-	const channel = ChannelUtil.new(client, channelName);
+	const channel = helper.prepareChannel(channelName, client);
 	const peer = helper.newPeer(0, org);
 	const filter = Array.isArray(chaincodeIds) ? (chaincodeid) => chaincodeIds.includes(chaincodeid) : undefined;
 
@@ -48,12 +47,23 @@ const discoverChannel = async (chaincodeIds) => {
 	return discoverPretty(result);
 };
 const task = async () => {
-	// await deletePeer();
-	await peerList();
-	// await deleteOrderer();
-	await discoverOrderer();
-	// const discoverChannelResult = await discoverChannel(['master']);
-	// logger.debug('discoverChannel', discoverChannelResult);
+	switch (parseInt(process.env.taskID)) {
+		case 0:
+			await deletePeer();
+			break;
+		case 1:
+			await deleteOrderer();
+			break;
+		case 2: {
+			const discoverChannelResult = await discoverChannel(['master']);
+			logger.debug('discoverChannel', discoverChannelResult);
+		}
+			break;
+		default:
+			await peerList();
+			await discoverOrderer();
+	}
+
 
 };
 task();

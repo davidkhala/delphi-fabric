@@ -22,7 +22,7 @@ const appChannelByOrderer = async (viaServer) => {
 		const ordererOrg = helper.randomOrg('orderer');
 		const ordererClient = helper.getOrgAdmin(ordererOrg, 'orderer'); // only peer user can read channel
 		const channel = helper.prepareChannel(channelName, ordererClient);
-		const orderer = channel.getOrderers()[0];
+		const orderer = helper.newOrderers()[0];
 		const {configJSON} = await ChannelConfig.getChannelConfigReadable(channel, {orderer}, viaServer);
 
 		testHelper.writeArtifacts(configJSON, `${channelName}-viaOrderer${viaServer ? '-viaServer' : ''}.json`);
@@ -35,7 +35,7 @@ const systemChannel = async (viaServer) => {
 		const ordererOrg = helper.randomOrg('orderer');
 		const ordererClient = helper.getOrgAdmin(ordererOrg, 'orderer');
 		const channel = helper.prepareChannel(undefined, ordererClient);
-		const orderer = channel.getOrderers()[0];
+		const orderer = helper.newOrderers()[0];
 		const {configJSON} = await ChannelConfig.getChannelConfigReadable(channel, {orderer}, viaServer);
 
 		testHelper.writeArtifacts(configJSON, `testchainid${viaServer ? '-viaServer' : ''}.json`);

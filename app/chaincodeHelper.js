@@ -1,10 +1,9 @@
-const {randomKeyOf} = require('khala-nodeutils/random');
 const {install, ChaincodeType} = require('../common/nodejs/chaincode');
 const {invoke} = require('../common/nodejs/chaincodeHelper');
 const {incrementUpgrade} = require('../common/nodejs/chaincodeVersion');
 const {transactionProposal} = require('../common/nodejs/chaincode');
 const ClientUtil = require('../common/nodejs/client');
-const ChannelUtil = require('../common/nodejs/channel');
+const ChannelManager = require('../common/nodejs/builder/channel');
 const Eventhub = require('../common/nodejs/eventHub');
 const golangUtil = require('../common/nodejs/golang');
 const {RoleIdentity, simplePolicyBuilder} = require('../common/nodejs/policy');
@@ -95,19 +94,17 @@ exports.upgrade = async (channel, richPeers, opts, orderer) => {
 	}
 
 };
-exports.invoke = async (channel, peers, {chaincodeId, fcn, args, transientMap}, nonAdminUser, eventHubs) => {
+exports.invoke = async (channel, peers, orderer, {chaincodeId, fcn, args, transientMap}, nonAdminUser, eventHubs) => {
 	if (!eventHubs) {
 		eventHubs = peers.map(peer => new Eventhub(channel, peer));
 		for (const eventHub of eventHubs) {
 			await eventHub.connect();
 		}
 	}
-	const orderers = channel.getOrderers();
-	const orderer = orderers[randomKeyOf(orderers)];
 	const client = channel._clientContext;
 	if (nonAdminUser) {
 		ClientUtil.setUser(client, nonAdminUser);
-		ChannelUtil.setClientContext(channel, client);
+		ChannelManager.setClientContext(channel, client);
 	}
 
 
