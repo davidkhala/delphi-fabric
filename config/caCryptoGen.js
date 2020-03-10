@@ -1,5 +1,5 @@
 const caUtil = require('../common/nodejs/ca');
-
+const CA = require('../common/nodejs/builder/ca');
 const fs = require('fs');
 const dockerCmd = require('khala-dockerode/dockerCmd');
 const {initAdmin, genPeer, init, genOrderer, genUser, genClientKeyPair} = require('../common/nodejs/ca-crypto-gen');
@@ -31,7 +31,7 @@ const getCaService = async (port, domain, useHack) => {
 		const pem = await hackCACert(domain);
 		trustedRoots.push(pem);
 	}
-	return caUtil.new(caUrl, trustedRoots);
+	return new CA(caUrl, trustedRoots).caService;
 };
 exports.getCaService = getCaService;
 exports.genUser = async ({userName, password}, orgName) => {

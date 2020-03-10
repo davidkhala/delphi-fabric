@@ -5,7 +5,7 @@ const globalConfig = require('../config/orgs.json');
 const orgsConfig = globalConfig.orgs;
 const channelsConfig = globalConfig.channels;
 const ordererConfig = globalConfig.orderer;
-const ClientUtil = require('../common/nodejs/client');
+const ClientManager = require('../common/nodejs/builder/client');
 const peerUtil = require('../common/nodejs/builder/peer');
 const {CryptoPath} = require('../common/nodejs/path');
 const path = require('path');
@@ -27,7 +27,7 @@ const preparePeer = (orgName, peerIndex, peerConfig) => {
 	const {peerHostName} = cryptoPath;
 	if (globalConfig.TLS) {
 		const {cert} = cryptoPath.TLSFile('peer');
-		peer = new peerUtil({peerPort, cert, peerHostName}).peer;
+		peer = new peerUtil({host: 'localhost', peerPort, cert, peerHostName}).peer;
 	} else {
 		peer = new peerUtil({peerPort}).peer;
 	}
@@ -64,6 +64,7 @@ const newOrderer = (name, org, ordererSingleConfig) => {
 		const {ordererHostName} = cryptoPath;
 		const {caCert} = cryptoPath.TLSFile(nodeType);
 		orderer = new Orderer({
+			host: 'localhost',
 			ordererPort,
 			cert: caCert,
 			ordererHostName
@@ -143,7 +144,7 @@ exports.findOrgConfig = (orgName, ordererName) => {
 	}
 	return {config: target, portHost, nodeType};
 };
-const getUser = (username, orgName, cryptoSuite) => {
+const getUser = (username, orgName) => {
 	const {config, nodeType} = exports.findOrgConfig(orgName);
 	const mspId = config.mspid;
 	const cryptoPath = new CryptoPath(CRYPTO_CONFIG_DIR, {
@@ -155,13 +156,13 @@ const getUser = (username, orgName, cryptoSuite) => {
 		}
 	});
 	// FIXME this._signingIdentity._signer._key.getSKI is not a function
-	return UserUtil.loadFromLocal(cryptoPath, nodeType, mspId, cryptoSuite);
+	return UserUtil.loadFromLocal(cryptoPath, nodeType, mspId);
 };
 exports.getUser = getUser;
 
 const getUserClient = (username, orgName, client) => {
-	const user = getUser(username, orgName, client.getCryptoSuite());
-	ClientUtil.setUser(client, user);
+	const user = getUser(username, orgName);
+	ClientManager.setUser(client, user);
 	return client;
 };
 
@@ -174,7 +175,7 @@ exports.getOrgAdminUser = (orgName, cryptoSuite) => {
  * @return {Client}
  */
 exports.getOrgAdmin = (orgName, nodeType = 'peer') => {
-	const client = ClientUtil.new();
+	const client = new ClientManager().client;
 	if (!orgName) {
 		orgName = exports.randomOrg(nodeType);
 	}

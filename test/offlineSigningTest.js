@@ -3,7 +3,7 @@ const channelName = 'allchannel';
 
 const offlineCC = require('../common/nodejs/offline/chaincode');
 const User = require('../common/nodejs/user');
-const Client = require('../common/nodejs/client');
+const ClientManager = require('../common/nodejs/builder/client');
 const EventHub = require('../common/nodejs/builder/eventHub');
 const {emptyChannel} = require('../common/nodejs/offline/channel');
 const {serializeProposal, deserializeProposal, serializeToHex, deserializeFromHex, serializeProposalResponse, deserializeProposalResponse} = require('../common/nodejs/offline/serialize');
@@ -20,7 +20,7 @@ const task = async () => {
 	const args = [key, value];
 	const chaincodeId = 'diagnose';
 	const mspId = 'ASTRIMSP';
-	const user = Client.getUser(client);
+	const user = ClientManager.getUser(client);
 	const certificate = User.getCertificate(user);
 	const orderer = helper.newOrderers()[0];
 	// Environment section

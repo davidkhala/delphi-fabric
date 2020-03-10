@@ -1,6 +1,7 @@
 const helper = require('../app/helper');
 const IDService = require('../common/nodejs/identityService');
 const CAUtil = require('../common/nodejs/ca');
+const CA = require('../common/nodejs/builder/ca');
 const logger = require('khala-logger/log4js').consoleLogger('test:ca');
 
 const identitySericeTask = async (caService, admin) => {
@@ -12,7 +13,7 @@ const task = async (taskID) => {
 	const org = 'icdd';
 	const caUrl = 'https://localhost:8054';
 	const admin = helper.getOrgAdminUser(org);
-	const caService = CAUtil.new(caUrl);
+	const caService = new CA(caUrl).caService;
 
 	let result;
 	switch (taskID) {

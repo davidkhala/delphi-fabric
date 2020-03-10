@@ -1,5 +1,5 @@
 const helper = require('../app/helper');
-const {getUser} = require('../common/nodejs/client');
+const {getUser} = require('../common/nodejs/builder/client');
 const {getPrivateKey} = require('../common/nodejs/user');
 const ECDSAPRIV = require('../common/nodejs/key');
 const test = async () => {

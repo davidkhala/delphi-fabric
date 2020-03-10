@@ -2,7 +2,7 @@ const {install, ChaincodeType} = require('../common/nodejs/chaincode');
 const {invoke} = require('../common/nodejs/chaincodeHelper');
 const {incrementUpgrade} = require('../common/nodejs/chaincodeVersion');
 const {transactionProposal} = require('../common/nodejs/chaincode');
-const ClientUtil = require('../common/nodejs/client');
+const ClientManager = require('../common/nodejs/builder/client');
 const ChannelManager = require('../common/nodejs/builder/channel');
 const Eventhub = require('../common/nodejs/builder/eventHub');
 const golangUtil = require('../common/nodejs/golang');
@@ -103,7 +103,7 @@ exports.invoke = async (channel, peers, orderer, {chaincodeId, fcn, args, transi
 	}
 	const client = channel._clientContext;
 	if (nonAdminUser) {
-		ClientUtil.setUser(client, nonAdminUser);
+		ClientManager.setUser(client, nonAdminUser);
 		ChannelManager.setClientContext(channel, client);
 	}
 

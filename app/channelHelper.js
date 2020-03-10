@@ -2,7 +2,7 @@ const helper = require('./helper.js');
 const ChannelUtil = require('../common/nodejs/channel');
 const {genesis} = require('../common/nodejs/formatter/channel');
 const ChannelManager = require('../common/nodejs/builder/channel');
-const OrdererUtil = require('../common/nodejs/builder/orderer');
+const OrdererManager = require('../common/nodejs/builder/orderer');
 const {setAnchorPeers, getChannelConfigReadable, ConfigFactory} = require('../common/nodejs/channelConfig');
 const Eventhub = require('../common/nodejs/builder/eventHub');
 
@@ -37,7 +37,7 @@ exports.joinAll = async (channelName) => {
 	const filter = async (orderers) => {
 		const result = [];
 		for (const orderer of orderers) {
-			const isAlive = await OrdererUtil.ping(orderer);
+			const isAlive = await OrdererManager.ping(orderer);
 			if (!isAlive) {
 				continue;
 			}
