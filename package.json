@@ -3,7 +3,7 @@
   "version": "1.4.4",
   "description": "node program to use Hyperledger Fabric nodejs SDK ",
   "scripts": {
-    "install": "cd common/nodejs; npm install"
+    "install": "cd common/nodejs; npm install; cd builder; npm install; cd -; cd formatter; npm install"
   },
   "keywords": [
     "Hyperledger",
