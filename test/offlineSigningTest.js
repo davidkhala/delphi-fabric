@@ -1,12 +1,12 @@
 const helper = require('../app/helper');
 const channelName = 'allchannel';
+const {unsignedTransactionProposal, sendSignedProposal, unsignedTransaction, sendSignedTransaction} = require('../common/nodejs/builder/transaction');
 
-const offlineCC = require('../common/nodejs/offline/chaincode');
-const User = require('../common/nodejs/user');
+const UserManager = require('../common/nodejs/builder/user');
 const ClientManager = require('../common/nodejs/builder/client');
 const EventHub = require('../common/nodejs/builder/eventHub');
-const {emptyChannel} = require('../common/nodejs/offline/channel');
-const {serializeProposal, deserializeProposal, serializeToHex, deserializeFromHex, serializeProposalResponse, deserializeProposalResponse} = require('../common/nodejs/offline/serialize');
+const {emptyChannel} = require('../common/nodejs/builder/channel');
+const {serializeProposal, deserializeProposal, serializeToHex, deserializeFromHex, serializeProposalResponse, deserializeProposalResponse} = require('../common/nodejs/serialize');
 const logger = require('khala-logger/log4js').consoleLogger('test:offline sign');
 const task = async () => {
 
@@ -21,16 +21,20 @@ const task = async () => {
 	const chaincodeId = 'diagnose';
 	const mspId = 'ASTRIMSP';
 	const user = ClientManager.getUser(client);
-	const certificate = User.getCertificate(user);
+	const userManager = new UserManager(undefined, user);
+	const certificate = userManager.getCertificate();
 	const orderer = helper.newOrderers()[0];
 	// Environment section
 
 	let serverInterface;
 
 	// TODO decode proposal_bytes into grpc proposal
-	let proposal, transactionID; // stored in client side
 	{
-		const {proposal, transactionID} = offlineCC.unsignedTransactionProposal(channelName, {fcn, args, chaincodeId}, mspId, certificate);
+		const {proposal, transactionID} = unsignedTransactionProposal(channelName, {
+			fcn,
+			args,
+			chaincodeId
+		}, mspId, certificate);
 		const {bytes: proposalBytes, proposal: proposalHex} = serializeProposal(proposal);
 
 		serverInterface = {
@@ -39,13 +43,13 @@ const task = async () => {
 			transactionID
 		};
 	}
-	proposal = serverInterface.proposal;
-	transactionID = serverInterface.transactionID;
+	const proposal = serverInterface.proposal;
+	const transactionID = serverInterface.transactionID;
 	logger.info(serverInterface);
 	{
 		const proposalBytes = deserializeFromHex(serverInterface.proposal_bytes);
 		const signedProposal = {
-			signature: User.sign(user, proposalBytes),
+			signature: userManager.sign(proposalBytes),
 			proposal_bytes: proposalBytes
 		};
 		serverInterface = {
@@ -62,7 +66,7 @@ const task = async () => {
 			signature: deserializeFromHex(serverInterface.signature),
 			proposal_bytes: deserializeFromHex(serverInterface.proposal_bytes)
 		};
-		const proposalResponses = await offlineCC.sendSignedProposal(peers, signedProposal);
+		const proposalResponses = await sendSignedProposal(peers, signedProposal);
 		for (const proposalResponse of proposalResponses) {
 			if (proposalResponse instanceof Error) {
 				throw proposalResponse;
@@ -75,18 +79,18 @@ const task = async () => {
 	logger.info(serverInterface);
 	{
 		const proposalResponses = serverInterface.proposalResponses.map(deserializeProposalResponse);
-		const unsignedTransaction = offlineCC.unsignedTransaction(proposalResponses, deserializeProposal(proposal));
+		const unsignedTx = unsignedTransaction(proposalResponses, deserializeProposal(proposal));
 		serverInterface = {
-			unsignedTransaction: serializeToHex(unsignedTransaction.toBuffer())
+			unsignedTransaction: serializeToHex(unsignedTx.toBuffer())
 		};
 	}
 	logger.info(serverInterface);
 	{
 
-		const unsignedTransaction = deserializeFromHex(serverInterface.unsignedTransaction);
+		const unsignedTx = deserializeFromHex(serverInterface.unsignedTransaction);
 		const signedTransaction = {
-			signature: User.sign(user, unsignedTransaction),
-			proposal_bytes: unsignedTransaction
+			signature: userManager.sign(unsignedTx),
+			proposal_bytes: unsignedTx
 		};
 
 		serverInterface = {
@@ -102,7 +106,7 @@ const task = async () => {
 			signature: deserializeFromHex(serverInterface.signature),
 			proposal_bytes: deserializeFromHex(serverInterface.proposal_bytes)
 		};
-		const response = await offlineCC.sendSignedTransaction(signedTransaction, orderer);
+		const response = await sendSignedTransaction(signedTransaction, orderer);
 		serverInterface = {
 			broadcastResponse: response
 		};
@@ -121,7 +125,7 @@ const task = async () => {
 	{
 		const unsignedEvent = deserializeFromHex(serverInterface.unsignedEvent);
 		const signedEvent = {
-			signature: User.sign(user, unsignedEvent),
+			signature: userManager.sign(unsignedEvent),
 			payload: unsignedEvent
 		};
 
@@ -151,6 +155,6 @@ const task = async () => {
 		eventHub.disconnect();
 	}
 	logger.info(serverInterface);
-	process.exit(0);//FIXME why this is hanging
+	process.exit(0);// FIXME why this is hanging
 };
 task();

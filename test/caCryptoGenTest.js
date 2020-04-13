@@ -1,6 +1,6 @@
 const caCryptoGen = require('../common/nodejs/ca-crypto-gen');
-const {pkcs11_key} = require('../common/nodejs/ca');
-const {fsExtra} = require('khala-nodeutils/helper');
+const {ECDSA_Key} = require('../common/nodejs/formatter/key');
+const fsExtra = require('fs-extra');
 const {getCaService} = require('../config/caCryptoGen');
 const helper = require('../app/helper');
 const path = require('path');
@@ -20,7 +20,8 @@ const task = async (taskID) => {
 			const keyFile = path.resolve(__dirname, 'artifacts', 'clientKey');
 			const certFile = path.resolve(__dirname, 'artifacts', 'clientCert');
 			fsExtra.outputFileSync(certFile, certificate);
-			pkcs11_key.save(keyFile, key);
+			const ecdsaKey = new ECDSA_Key(key, fsExtra);
+			ecdsaKey.save(keyFile);
 			break;
 		case 1:
 			const configuredCaCryptoGen = require('../config/caCryptoGen');

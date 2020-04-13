@@ -3,13 +3,14 @@ const CA = require('../common/nodejs/builder/ca');
 const fs = require('fs');
 const dockerCmd = require('khala-dockerode/dockerCmd');
 const {initAdmin, genPeer, init, genOrderer, genUser, genClientKeyPair} = require('../common/nodejs/ca-crypto-gen');
-const {pkcs11_key, intermediateCA} = require('../common/nodejs/ca');
+const {intermediateCA} = require('../common/nodejs/ca');
 const pathUtil = require('../common/nodejs/path');
 const {homeResolve, fsExtra} = require('khala-nodeutils/helper');
 const {CryptoPath} = pathUtil;
 const logger = require('../common/nodejs/logger').new('caCryptoGen');
 const globalConfig = require('../config/orgs');
-const userUtil = require('../common/nodejs/user');
+const {adminName, adminPwd} = require('../common/nodejs/formatter/user');
+const {ECDSA_Key} = require('../common/nodejs/formatter/key');
 const helper = require('../app/helper');
 
 const path = require('path');
@@ -54,9 +55,9 @@ exports.genUser = async ({userName, password}, orgName) => {
 			org: orgName
 		},
 		user: {
-			name: userUtil.adminName
+			name: adminName
 		},
-		password: userUtil.adminPwd
+		password: adminPwd
 	});
 
 	const admin = await initAdmin(caService, adminCryptoPath, nodeType, mspId, TLS);
@@ -72,10 +73,11 @@ const genNSaveClientKeyPair = async (caService, cryptoPath, admin, domain, nodeT
 	const keyFile = path.resolve(rootDir, 'clientKey');
 	const certFile = path.resolve(rootDir, 'clientCert');
 	fsExtra.outputFileSync(certFile, certificate);
-	pkcs11_key.save(keyFile, key);
+	const ecdsaKey = new ECDSA_Key(key, fsExtra);
+	ecdsaKey.save(keyFile);
 };
 /**
- *
+ * TODO
  * @param parentCADomain
  * @param parentCAPort
  * @param nodeType
@@ -89,13 +91,13 @@ exports.genIntermediate = async (parentCADomain, parentCAPort, nodeType) => {
 			org: parentCADomain
 		},
 		user: {
-			name: userUtil.adminName
+			name: adminName
 		},
-		password: userUtil.adminPwd
+		password: adminPwd
 	});
 	const admin = await initAdmin(caService, adminCryptoPath, nodeType, mspId, TLS);
-	const enrollmentID = `${userUtil.adminName}.intermediate`;
-	let enrollmentSecret = userUtil.adminPwd;
+	const enrollmentID = `${adminName}.intermediate`;
+	const enrollmentSecret = adminPwd;
 	const result = await intermediateCA.register(caService, admin, {
 		enrollmentID, enrollmentSecret,
 		affiliation: parentCADomain
@@ -122,9 +124,9 @@ exports.genAll = async () => {
 					org: domain
 				},
 				user: {
-					name: userUtil.adminName
+					name: adminName
 				},
-				password: userUtil.adminPwd
+				password: adminPwd
 			});
 			const admin = await init(caService, adminCryptoPath, nodeType, mspId, TLS);
 			await genNSaveClientKeyPair(caService, adminCryptoPath, admin, domain, nodeType);
@@ -136,7 +138,7 @@ exports.genAll = async () => {
 						org: domain, name: ordererName
 					},
 					user: {
-						name: userUtil.adminName
+						name: adminName
 					}
 				});
 				promises.push(genOrderer(caService, cryptoPath, admin, {TLS}));
@@ -158,9 +160,9 @@ exports.genAll = async () => {
 					org: domain
 				},
 				user: {
-					name: userUtil.adminName
+					name: adminName
 				},
-				password: userUtil.adminPwd
+				password: adminPwd
 			});
 			const caService = await getCaService(peerOrgConfig.ca.portHost, domain);
 			const admin = await init(caService, adminCryptoPath, nodeType, mspId, TLS);
@@ -173,7 +175,7 @@ exports.genAll = async () => {
 						org: domain, name: peerName
 					},
 					user: {
-						name: userUtil.adminName
+						name: adminName
 					}
 				});
 				promises.push(genPeer(caService, cryptoPath, admin, {TLS}));

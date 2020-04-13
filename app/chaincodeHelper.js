@@ -1,7 +1,8 @@
-const {install, ChaincodeType} = require('../common/nodejs/chaincode');
+const {install} = require('../common/nodejs/chaincode');
+const {ChaincodeType} = require('../common/nodejs/formatter/chaincode');
 const {invoke} = require('../common/nodejs/chaincodeHelper');
 const {incrementUpgrade} = require('../common/nodejs/chaincodeVersion');
-const {transactionProposal} = require('../common/nodejs/chaincode');
+const {transactionProposal} = require('../common/nodejs/builder/transaction');
 const ClientManager = require('../common/nodejs/builder/client');
 const ChannelManager = require('../common/nodejs/builder/channel');
 const Eventhub = require('../common/nodejs/builder/eventHub');

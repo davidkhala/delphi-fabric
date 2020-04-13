@@ -2,7 +2,7 @@ const helper = require('./helper');
 
 const LogUtil = require('../common/nodejs/logger');
 const logger = LogUtil.new('invokeHelper', true);
-const {proposalStringify, proposalFlatten} = require('../common/nodejs/chaincode');
+const {proposalStringify, proposalFlatten} = require('../common/nodejs/formatter/txProposal');
 const {invoke, query} = require('./chaincodeHelper');
 const channelName = 'allchannel';
 

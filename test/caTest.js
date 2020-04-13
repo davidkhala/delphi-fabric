@@ -1,13 +1,8 @@
 const helper = require('../app/helper');
-const IDService = require('../common/nodejs/identityService');
+const IdentityService = require('../common/nodejs/builder/identityService');
 const CAUtil = require('../common/nodejs/ca');
 const CA = require('../common/nodejs/builder/ca');
 const logger = require('khala-logger/log4js').consoleLogger('test:ca');
-
-const identitySericeTask = async (caService, admin) => {
-	const idService = IDService.new(caService);
-	return await IDService.getAll(idService, admin);
-};
 
 const task = async (taskID) => {
 	const org = 'icdd';
@@ -17,11 +12,14 @@ const task = async (taskID) => {
 
 	let result;
 	switch (taskID) {
-		case 0:
-			const allIDs = await identitySericeTask(caService, admin);
+		case 0: {
+			const idService = new IdentityService(caService);
+			const allIDs = await idService.getAll(admin);
 			for (const id of allIDs) {
 				logger.debug(id.id, id.attrs);
 			}
+		}
+
 			break;
 		case 1:
 			result = await CAUtil.intermediateCA.register(caService, admin, {

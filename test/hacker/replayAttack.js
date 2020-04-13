@@ -1,5 +1,5 @@
 const helper = require('../../app/helper');
-const {transactionProposal, invokeCommit} = require('../../common/nodejs/chaincode');
+const {commit, transactionProposal} = require('../../common/nodejs/builder/transaction');
 const {txTimerPromise} = require('../../common/nodejs/chaincodeHelper');
 const EventHub = require('../../common/nodejs/builder/eventHub');
 const taskInvoke = async (txId) => {
@@ -41,7 +41,7 @@ const taskInvoke = async (txId) => {
 		for (const eventHub of eventHubs) {
 			promises.push(txTimerPromise(eventHub, {txId}, 30000));
 		}
-		await invokeCommit(client, nextRequest, orderer);
+		await commit(client._userContext._signingIdentity, nextRequest, orderer);
 
 		const txEventResponses = await Promise.all(promises);
 		return {txEventResponses, proposalResponses};

@@ -12,6 +12,7 @@ const path = require('path');
 const projectRoot = path.dirname(__dirname);
 const projectResolve = (...args) => path.resolve(projectRoot, ...args);
 const UserUtil = require('../common/nodejs/user');
+const {adminName:defaultAdminName,adminPwd:defaultAdminPwd} = require('../common/nodejs/formatter/user');
 const Orderer = require('../common/nodejs/builder/orderer');
 const channelUtil = require('../common/nodejs/builder/channel');
 const {homeResolve} = require('khala-nodeutils/helper');
@@ -167,7 +168,7 @@ const getUserClient = (username, orgName, client) => {
 };
 
 exports.getOrgAdminUser = (orgName, cryptoSuite) => {
-	return getUser(UserUtil.adminName, orgName, cryptoSuite);
+	return getUser(defaultAdminName, orgName, cryptoSuite);
 };
 /**
  * @param orgName
@@ -180,7 +181,7 @@ exports.getOrgAdmin = (orgName, nodeType = 'peer') => {
 		orgName = exports.randomOrg(nodeType);
 	}
 	logger.debug(`get ${orgName} Admin`);
-	return getUserClient(UserUtil.adminName, orgName, client);
+	return getUserClient(defaultAdminName, orgName, client);
 };
 exports.randomOrg = (nodeType) => {
 	let orgName;
