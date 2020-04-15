@@ -10,8 +10,9 @@ matrix:
         - ./install.sh
         - npm install
         - sudo apt-get install -y softhsm2
-      script:
+      before_script:
         - ./docker.sh
+      script:
         - cd config; ls ;  cd $TRAVIS_BUILD_DIR
         - node cc/golang/diagnose/test/
         - node test
