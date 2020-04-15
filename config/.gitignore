@@ -1,2 +1,4 @@
-/configtx/*
-/ca-crypto-config/
+*.tx
+*.block
+ordererOrganizations
+peerOrganizations
