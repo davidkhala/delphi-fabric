@@ -13,7 +13,7 @@ matrix:
         - sudo apt-get install -y softhsm2
       script:
         - ./docker.sh
-        - cd ./config/ca-crypto-config/peerOrganizations/astri.org/; ls ;  cd -
+        - cd config/ca-crypto-config/peerOrganizations; ls ;  cd -
         - node cc/golang/diagnose/test/
         - node test
         - ./test/hsm.sh
