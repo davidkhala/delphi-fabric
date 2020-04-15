@@ -8,12 +8,11 @@ matrix:
         - eval "$(gimme 1.12.x)"
       install:
         - ./install.sh
-        - cd common/nodejs; npm install ; cd - ;
-        - cd common/nodejs/fabric-network; npm install ; cd -;
+        - npm install
         - sudo apt-get install -y softhsm2
       script:
         - ./docker.sh
-        - cd config/ca-crypto-config; ls ;  cd $TRAVIS_BUILD_DIR
+        - cd config; ls ;  cd $TRAVIS_BUILD_DIR
         - node cc/golang/diagnose/test/
         - node test
         - ./test/hsm.sh
