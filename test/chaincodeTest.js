@@ -52,7 +52,13 @@ const task = async () => {
 			logger.info('before uninstall');
 			await printInstalled(peer, client);
 			const containerName = `peer${index}.${org}`;
-			await uninstallChaincode({container_name: containerName, chaincodeId, chaincodeVersion: '0.0.0', peer, client});
+			await uninstallChaincode({
+				container_name: containerName,
+				chaincodeId,
+				chaincodeVersion: '0.0.0',
+				peer,
+				client
+			});
 			logger.info('after uninstall');
 			await printInstalled(peer, client);
 			await installs(chaincodeId, org, [index]);
@@ -87,6 +93,19 @@ const task = async () => {
 			const peers = [helper.newPeer(0, org2), helper.newPeer(0, org1)];
 			await instantiate(org2, peers, chaincodeId);
 
+		}
+			break;
+		case 4: {
+			const org2 = 'icdd';
+			const org1 = 'astri.org';
+			const peers = [helper.newPeer(0, org2)];
+			const {install} = require('../app/chaincodeHelper');
+			const opts = {
+				chaincodeId: 'diagnose',
+				chaincodeVersion: '0.0.2',
+			};
+			const client = helper.getOrgAdmin(org2);
+			await install(peers, opts, client);
 		}
 			break;
 		default:
