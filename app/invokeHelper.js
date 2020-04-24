@@ -2,7 +2,7 @@ const helper = require('./helper');
 
 const LogUtil = require('../common/nodejs/logger');
 const logger = LogUtil.new('invokeHelper', true);
-const {proposalStringify, proposalFlatten} = require('../common/nodejs/formatter/txProposal');
+const {proposalFlatten} = require('../common/nodejs/formatter/txProposal');
 const {invoke, query} = require('./chaincodeHelper');
 const channelName = 'allchannel';
 
@@ -28,16 +28,16 @@ exports.invoke = async (peers, clientPeerOrg, chaincodeId, fcn, args = [], trans
 		args,
 		transientMap
 	}, undefined, eventHubs);
-	const result = proposalResponses.map((entry) => proposalFlatten(proposalStringify(entry)));
+	const result = proposalResponses.map((entry) => proposalFlatten(entry));
 	logger.debug('invoke', result);
 	return result;
 };
-exports.query = async (peers, clientOrg, chaincodeId, fcn, args = [], transientMap, rawPayload) => {
+exports.query = async (peers, clientOrg, chaincodeId, fcn, args = [], transientMap) => {
 	logger.debug('query', 'client org', clientOrg);
 	const client = helper.getOrgAdmin(clientOrg);
 	const channel = helper.prepareChannel(channelName, client);
 	const {proposalResponses} = await query(channel, peers, {chaincodeId, fcn, args, transientMap});
-	return proposalResponses.map((entry) => proposalFlatten(rawPayload ? entry : proposalStringify(entry)));
+	return proposalResponses.map((entry) => proposalFlatten(entry));
 };
 exports.listenChaincodeEvent = async (peer, clientPeerOrg, chaincodeId, eventName = /event/i, onSuccess) => {
 	const logger = LogUtil.new('chaincode event', true);
