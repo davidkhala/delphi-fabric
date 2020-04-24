@@ -2,7 +2,7 @@ const globalConfig = require('./config/orgs.json');
 const path = require('path');
 const logger = require('./common/nodejs/logger').new('dockerode-bootstrap', true);
 const peerUtil = require('./common/nodejs/peer');
-const {OrdererType} = require('./common/nodejs/constants');
+const {OrdererType} = require('./common/nodejs/formatter/constants');
 const {
 	runCouchDB,
 	runCA,
@@ -24,11 +24,15 @@ const {docker: {fabricTag, caTag, network, thirdPartyTag}, TLS} = globalConfig;
 
 const BinManager = require('./common/nodejs/binManager');
 
-exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'}, toStop, type = globalConfig.orderer.type) => {
+exports.runOrderers = async (volumeName = {
+	CONFIGTX: 'CONFIGTX',
+	MSPROOT: 'MSPROOT'
+}, toStop, type = globalConfig.orderer.type) => {
 	const {orderer: {genesis_block: {file: BLOCK_FILE}}} = globalConfig;
 	const CONFIGTXVolume = volumeName.CONFIGTX;
 	const MSPROOTVolume = volumeName.MSPROOT;
 	const imageTag = fabricTag;
+	// eslint-disable-next-line no-shadow
 	const {MSPROOT} = peerUtil.container;
 	const nodeType = 'orderer';
 
@@ -79,8 +83,7 @@ exports.volumesAction = async (toStop) => {
 			await volumeRemove(Name);
 			continue;
 		}
-		const path = homeResolve(globalConfig.docker.volumes[Name]);
-		await volumeCreateIfNotExist({Name, path});
+		await volumeCreateIfNotExist({Name, path: homeResolve(globalConfig.docker.volumes[Name])});
 	}
 };
 exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'}, toStop) => {
@@ -126,6 +129,7 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 			const type = 'peer';
 			const configPath = cryptoPath.MSP(type);
 			if (couchDB) {
+				// eslint-disable-next-line no-shadow
 				const {container_name, port} = couchDB;
 				await runCouchDB({imageTag: thirdPartyTag, container_name, port, network});
 			}

@@ -39,7 +39,7 @@ const taskInvoke = async (txId) => {
 		const promises = [];
 
 		for (const eventHub of eventHubs) {
-			promises.push(txTimerPromise(eventHub, {txId}, 30000));
+			promises.push(txTimerPromise(eventHub, txId, 30000));
 		}
 		await commit(client._userContext._signingIdentity, nextRequest, orderer);
 

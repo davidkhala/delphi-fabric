@@ -4,7 +4,7 @@ const yaml = require('khala-nodeutils/yaml');
 const fsExtra = require('fs-extra');
 const {CryptoPath} = require('../common/nodejs/path');
 const implicitPolicies = require('../common/nodejs/policy').configtxPolicies.implicit.Policies;
-const {OrdererType} = require('../common/nodejs/constants');
+const {OrdererType} = require('../common/nodejs/formatter/constants');
 exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, configtxFile, PROFILE_ANCHORPEERS = 'anchorPeers'}) => {
 	const channelsConfig = globalConfig.channels;
 	const ordererConfig = globalConfig.orderer;
