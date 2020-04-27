@@ -12,14 +12,6 @@ gitSync() {
 	git pull
 	git submodule update --init --recursive
 }
-pull() {
-	local FABRIC_TAG=${1:-2.0.1}
-	local CA_TAG=${2:-1.4.6}
-	docker pull hyperledger/fabric-ccenv:$FABRIC_TAG
-	docker pull hyperledger/fabric-orderer:$FABRIC_TAG
-	docker pull hyperledger/fabric-peer:$FABRIC_TAG
-	docker pull hyperledger/fabric-ca:$CA_TAG
-}
 updateChaincode() {
 	goCmd="curl --silent --show-error https://raw.githubusercontent.com/davidkhala/goutils/master/scripts/goCmd.sh"
 	$goCmd | bash -s setModuleMode on

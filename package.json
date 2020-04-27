@@ -1,20 +1,25 @@
 {
   "name": "delphi-fabric",
-  "version": "2.0.1",
+  "version": "2.1.0",
+  "private": true,
   "description": "node program to use Hyperledger Fabric nodejs SDK ",
   "keywords": [
     "v1.x fabric node-sdk sample"
   ],
+  "scripts": {
+    "install": "cd common/nodejs; npm install; cd -"
+  },
   "engines": {
     "node": ">=8.11.2",
     "npm": ">=5.6.0"
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "khala-nodeutils": "^0.7.11",
-    "khala-dockerode": "^0.1.1"
+    "khala-dockerode": "^0.1.2",
+    "khala-nodeutils": "^0.8.2"
   },
   "devDependencies": {
+    "lerna": "^3.20.2",
     "x509": "^0.3.2"
   }
 }

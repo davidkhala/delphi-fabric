@@ -66,7 +66,7 @@ _after first time clone this repository, submodule should be initialize_
   *  **Compatible OS** 
     - ubuntu xenial/bionic
     - [TODO] MacOS 
-  * fabric: 2.0.1 (for docker image, binary tool and fabric-sdk)
+  * fabric: 2.1.0 (for docker image, binary tool and fabric-sdk)
   * fabric-ca: 1.4.6
   * docker-ce 18.x
   * golang 1.12 
@@ -99,7 +99,7 @@ Finished
 - system upgrade: how to migrate to 1.4. from 1.1
 - 开发模式:--peer-chaincodedev: try to set via core.yaml
 - configtxlator Rest server is deprecated but kept. Refer to following when reuse 
-    ```js
+    ```
       const binManager = new BinManager();
       await binManager.configtxlatorRESTServer('down|start');
     ```

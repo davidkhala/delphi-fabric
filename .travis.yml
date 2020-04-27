@@ -8,8 +8,6 @@ matrix:
         - eval "$(gimme 1.12.x)"
       install:
         - ./install.sh
-        - cd common/nodejs; npm install ; cd - ;
-        - cd common/nodejs/fabric-network; npm install ; cd -;
         - sudo apt-get install -y softhsm2
       script:
         - ./docker.sh
