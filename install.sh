@@ -60,12 +60,6 @@ updateChaincode() {
 	cd -
 }
 
-sync() {
-	gitSync
-	$CURRENT/common/install.sh sync
-	npm install
-	updateChaincode
-}
 if [[ -n "$fcn" ]]; then
 	$fcn $remain_params
 else

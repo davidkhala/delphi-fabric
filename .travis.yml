@@ -10,6 +10,8 @@ matrix:
         - ./install.sh
         - npm install
         - sudo apt-get install -y softhsm2
+        - npm install --global lerna
+        - cd common/nodejs; lerna bootstrap; cd -;
       script:
         - ./docker.sh
         - node cc/golang/diagnose/test/
