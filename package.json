@@ -7,11 +7,8 @@
     "v1.x fabric node-sdk sample"
   ],
   "scripts": {
-    "install": "cd common/nodejs; npm install; cd -"
-  },
-  "engines": {
-    "node": ">=8.11.2",
-    "npm": ">=5.6.0"
+    "install": "cd common/nodejs; npm install; cd -",
+    "nuke": "rm -rf node_modules; cd common/nodejs; rm -rf node_modules; lerna clean --yes; cd -"
   },
   "license": "Apache-2.0",
   "dependencies": {
