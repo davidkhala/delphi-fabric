@@ -6,13 +6,13 @@ const orgsConfig = globalConfig.orgs;
 const channelsConfig = globalConfig.channels;
 const ordererConfig = globalConfig.orderer;
 const ClientUtil = require('../common/nodejs/client');
-const peerUtil = require('../common/nodejs/peer');
+const Peer = require('../common/nodejs/admin/peer');
 const {CryptoPath} = require('../common/nodejs/path');
 const path = require('path');
 const projectRoot = path.dirname(__dirname);
 const projectResolve = (...args) => path.resolve(projectRoot, ...args);
 const UserUtil = require('../common/nodejs/user');
-const OrdererUtil = require('../common/nodejs/orderer');
+const Orderer = require('../common/nodejs/admin/orderer');
 const channelUtil = require('../common/nodejs/channel');
 const {nodeUtil} = require('../common/nodejs/helper');
 const {homeResolve} = nodeUtil.helper();
@@ -28,15 +28,11 @@ const preparePeer = (orgName, peerIndex, peerConfig) => {
 	const {peerHostName} = cryptoPath;
 	if (globalConfig.TLS) {
 		const {caCert} = cryptoPath.TLSFile('peer');
-		peer = peerUtil.new({peerPort, cert: caCert, peerHostName});
+		peer = new Peer({peerPort, cert: caCert, peerHostName});
 	} else {
-		peer = peerUtil.new({peerPort});
+		peer = new Peer({peerPort});
 	}
-	// NOTE append more info
-	peer.peerConfig = peerConfig;
 
-	peer.peerConfig.orgName = orgName;
-	peer.peerConfig.peerIndex = peerIndex;
 	return peer;
 };
 exports.toLocalhostOrderer = (orderer) => {
@@ -65,16 +61,14 @@ const newOrderer = (name, org, ordererSingleConfig) => {
 	if (globalConfig.TLS) {
 		const {ordererHostName} = cryptoPath;
 		const {caCert} = cryptoPath.TLSFile(nodeType);
-		orderer = OrdererUtil.new({
+		orderer = new Orderer({
 			ordererPort,
 			cert: caCert,
 			ordererHostName
-		});
+		}).orderer;
 	} else {
-		orderer = OrdererUtil.new({ordererPort});
+		orderer = new Orderer({ordererPort}).orderer;
 	}
-	orderer.org = org;
-	orderer.name = name;
 	return orderer;
 };
 
@@ -94,39 +88,12 @@ exports.newOrderers = () => {
 /**
  * @param client
  * @param channelName default to system channel
- * @param isRenew
  */
-exports.prepareChannel = (channelName, client, isRenew) => {
-
-	if (isRenew) {
-		delete client._channels[channelName];
-	} else {
-		if (client._channels[channelName]) {
-			return client._channels[channelName];
-		}
-	}
-
+exports.prepareChannel = (channelName, client) => {
 	const channel = channelUtil.new(client, channelName);
-
 	const orderers = exports.newOrderers();
 	for (const orderer of orderers) {
-		channel.addOrderer(orderer);
-	}
-
-	if (channelName && channelName !== channelUtil.genesis) {
-		const channelConfig = channelsConfig[channelName];
-
-		for (const orgName in channelConfig.orgs) {
-			const orgConfigInChannel = channelConfig.orgs[orgName];
-			for (const peerIndex of orgConfigInChannel.peerIndexes) {
-				const peerConfig = orgsConfig[orgName].peers[peerIndex];
-
-				const peer = preparePeer(orgName, peerIndex, peerConfig);
-				channel.addPeer(peer);
-
-			}
-		}
-		channel.orgs = channelConfig.orgs;
+		channel.addCommitter(orderer, false);
 	}
 
 	return channel;

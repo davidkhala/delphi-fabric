@@ -7,7 +7,7 @@ down() {
 }
 up() {
 	prepareNetwork
-	node app/testChannel
+#	node app/testChannel
 }
 
 prepareNetwork() {

@@ -1,7 +1,7 @@
 const globalConfig = require('./config/orgs.json');
 const path = require('path');
 const logger = require('./common/nodejs/logger').new('dockerode-bootstrap', true);
-const peerAdminUtil = require('./common/nodejs/admin/peer');
+const peerUtil = require('./common/nodejs/peer');
 const {
 	runCouchDB, runCA, runPeer, runOrderer, chaincodeClean, fabricImagePull
 } = require('./common/nodejs/fabric-dockerode');
@@ -23,7 +23,7 @@ exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPRO
 	const CONFIGTXVolume = volumeName.CONFIGTX;
 	const MSPROOTVolume = volumeName.MSPROOT;
 	const imageTag = fabricTag;
-	const {MSPROOT} = peerAdminUtil.container;
+	const {MSPROOT} = peerUtil.container;
 	const cryptoType = 'orderer';
 
 	const toggle = async ({orderer, domain, port, mspid}, OrdererType, stateVolume, operations) => {
@@ -101,7 +101,7 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 				continue;
 			}
 
-			const cryptoPath = new CryptoPath(peerAdminUtil.container.MSPROOT, {
+			const cryptoPath = new CryptoPath(peerUtil.container.MSPROOT, {
 				peer: {
 					org: domain, name: `peer${peerIndex}`
 				}

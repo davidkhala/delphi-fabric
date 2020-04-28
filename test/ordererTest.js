@@ -1,17 +1,19 @@
 const helper = require('../app/helper');
 const logger = helper.getLogger('test:orderer');
-const OrdererUtil = require('../common/nodejs/orderer');
+const OrdererUtil = require('../common/nodejs/admin/orderer');
 const orderers = helper.newOrderers();
-const task = async () => {
+const task = async (taskID) => {
 	const orderer = orderers[1];
 
-	const result = await OrdererUtil.ping(orderer);
-	logger.debug(orderer.toString(), result);
+	switch (taskID) {
+		default: {
+			const result = await OrdererUtil.ping(orderer);
+			logger.debug(orderer.toString(), result);
+		}
+	}
+
 };
-const composerPing = async () => {
-	const orderer = OrdererUtil.new({ordererPort: 7050});
-	const result = await OrdererUtil.ping(orderer);
-	logger.debug(orderer.toString(), result);
-};
-composerPing();
+task(process.env.taskID);
+
+
 
