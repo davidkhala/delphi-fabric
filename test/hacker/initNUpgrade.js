@@ -3,7 +3,7 @@ const {instantiate, upgrade} = require('../../app/instantiateHelper');
 const {installAll, incrementInstalls} = require('../../app/installHelper');
 const {invoke} = require('../../app/invokeHelper');
 const helper = require('../../app/helper');
-const logger = helper.getLogger('initNUpgrade');
+const logger = require('khala-logger/log4js').consoleLogger('initNUpgrade');
 const initConflict = async () => {
 	const org2 = 'icdd';
 	const org1 = 'astri.org';

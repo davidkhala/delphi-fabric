@@ -3,7 +3,7 @@ const EventHub = require('../common/nodejs/builder/eventHub');
 const channelName = 'allchannel';
 const helper = require('../app/helper');
 const org = 'astri.org';
-const logger = helper.getLogger('test:eventHub');
+const logger = require('khala-logger/log4js').consoleLogger('test:eventHub');
 
 const task = async () => {
 	const client = helper.getOrgAdmin(org, 'peer');
@@ -28,7 +28,7 @@ const task = async () => {
 			// startBlock=0 taskID=0 node test/eventHubTest.js
 
 			onSuccess = (block) => {
-				const logger = helper.getLogger(`block ${block.header.number}`);
+				const logger = require('khala-logger/log4js').consoleLogger(`block ${block.header.number}`);
 				for (const data of block.data.data) {
 					const dataPayload = data.payload.data;
 					if (!dataPayload.config) {
@@ -65,7 +65,7 @@ const task = async () => {
 		case 1:
 			// startBlock=0 taskID=1 node test/eventHubTest.js
 			onSuccess = (block) => {
-				const logger = helper.getLogger(`block ${block.header.number}`);
+				const logger = require('khala-logger/log4js').consoleLogger(`block ${block.header.number}`);
 				for (const data of block.data.data) {
 					const {actions} = data.payload.data;
 					if (!actions) {
@@ -112,7 +112,7 @@ const task = async () => {
 		case 2:
 			// startBlock=0 taskID=2 node test/eventHubTest.js
 			onSuccess = (block) => {
-				const logger = helper.getLogger(`block ${block.header.number}`);
+				const logger = require('khala-logger/log4js').consoleLogger(`block ${block.header.number}`);
 				for (const data of block.data.data) {
 					const {actions} = data.payload.data;
 					if (!actions) {

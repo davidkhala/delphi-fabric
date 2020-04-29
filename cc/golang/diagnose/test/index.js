@@ -3,7 +3,7 @@ const {
 } = require('../diagnoseInvoke');
 
 const helper = require('../../../../app/helper');
-const logger = helper.getLogger('invoke:diagnose');
+const logger = require('khala-logger/log4js').consoleLogger('invoke:diagnose');
 
 const diagnoseInstall = require('../diagnoseInstall');
 const taskKeyEndorsement = async () => {

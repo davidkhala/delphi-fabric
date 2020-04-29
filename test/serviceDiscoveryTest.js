@@ -1,5 +1,5 @@
 const helper = require('../app/helper');
-const logger = helper.getLogger('test:serviceDiscovery');
+const logger = require('khala-logger/log4js').consoleLogger('test:serviceDiscovery');
 const {discoveryChaincodeInterestBuilder} = require('../app/chaincodeHelper');
 const {globalPeers, initialize, discover, discoverPretty} = require('../common/nodejs/serviceDiscovery');
 const OrdererUtil = require('../common/nodejs/builder/orderer');

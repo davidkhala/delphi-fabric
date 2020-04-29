@@ -3,7 +3,7 @@ const {signChannelConfig} = require('../../common/nodejs/multiSign');
 const {homeResolve, sleep} = require('khala-nodeutils/helper');
 const {OrdererType} = require('../../common/nodejs/formatter/constants');
 const helper = require('../../app/helper');
-const logger = helper.getLogger('kafka migrate to etcdraft');
+const logger = require('khala-logger/log4js').consoleLogger('kafka migrate to etcdraft');
 process.env.binPath = helper.projectResolve('common/bin');
 
 // peer is not used since peer could not get latest config during maintenance

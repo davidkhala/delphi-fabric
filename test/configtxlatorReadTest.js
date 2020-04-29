@@ -3,7 +3,7 @@ const testHelper = require('./testHelper');
 process.env.binPath = helper.projectResolve('common/bin');
 const ChannelConfig = require('../common/nodejs/channelConfig');
 const channelName = 'allchannel';
-const logger = helper.getLogger('test:configtxlator');
+const logger = require('khala-logger/log4js').consoleLogger('test:configtxlator');
 const appChannel = async (viaServer) => {
 	try {
 		const peerOrg = helper.randomOrg('peer');

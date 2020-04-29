@@ -1,6 +1,6 @@
 const {putPrivate, getPrivate} = require('../diagnoseInvoke');
 const helper = require('../../../../app/helper');
-const logger = helper.getLogger('test:memberOnlyRead');
+const logger = require('khala-logger/log4js').consoleLogger('test:memberOnlyRead');
 const task = async () => {
 	const org1 = 'astri.org';
 	const org2 = 'icdd';

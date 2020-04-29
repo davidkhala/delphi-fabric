@@ -1,7 +1,7 @@
 const {pruneChaincodeLegacy} = require('../common/nodejs/chaincodeVersion');
 const channelName = 'allchannel';
 const helper = require('../app/helper');
-const logger = helper.getLogger('test:chaincode');
+const logger = require('khala-logger/log4js').consoleLogger('test:chaincode');
 
 const chaincodeId = 'diagnose';
 const {instantiate} = require('../app/instantiateHelper');

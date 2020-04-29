@@ -1,7 +1,7 @@
 const channelName = 'allchannel';
 const helper = require('../app/helper');
 const org = 'astri.org';
-const logger = helper.getLogger('test:channel:initialize');
+const logger = require('khala-logger/log4js').consoleLogger('test:channel:initialize');
 const ServiceDiscoveryUtil = require('../common/nodejs/serviceDiscovery');
 
 const task = async () => {

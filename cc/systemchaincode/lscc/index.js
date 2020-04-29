@@ -1,5 +1,5 @@
 const helper = require('../../../app/helper');
-const logger = helper.getLogger('invoke:lscc');
+const logger = require('khala-logger/log4js').consoleLogger('invoke:lscc');
 
 const {query} = require('../../../app/invokeHelper');
 const {ChaincodeExists, GetChaincodeData, GetDeploymentSpec} = require('../../../common/nodejs/systemChaincode');

@@ -1,5 +1,5 @@
 const helper = require('../../app/helper');
-const logger = helper.getLogger('test:backup: chaincode=master');
+const logger = require('khala-logger/log4js').consoleLogger('test:backup: chaincode=master');
 const {stopPeer, resumePeer} = require('../../operations/backup');
 const {sleep} = require('khala-nodeutils/helper');
 const {putPrivate, getPrivate} = require('../../cc/golang/master/masterInvoke');

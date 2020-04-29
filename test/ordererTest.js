@@ -1,6 +1,6 @@
 const helper = require('../app/helper');
 const {projectResolve} = helper;
-const logger = helper.getLogger('test:orderer');
+const logger = require('khala-logger/log4js').consoleLogger('test:orderer');
 const OrdererUtil = require('../common/nodejs/builder/orderer');
 const orderers = helper.newOrderers();
 const node_modules = projectResolve('common/nodejs/builder/node_modules');

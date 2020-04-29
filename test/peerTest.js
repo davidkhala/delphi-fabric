@@ -1,5 +1,5 @@
 const helper = require('../app/helper');
-const logger = helper.getLogger('test:peer');
+const logger = require('khala-logger/log4js').consoleLogger('test:peer');
 const Peer = require('../common/nodejs/builder/peer');
 const ping2Preconfig = async () => {
 	const peers = helper.allPeers();

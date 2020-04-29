@@ -1,7 +1,7 @@
 const helper = require('./helper');
 
-const LogUtil = require('../common/nodejs/logger');
-const logger = LogUtil.new('invokeHelper', true);
+const Logger = require('khala-logger/log4js');
+const logger = Logger.consoleLogger('invokeHelper');
 const {getPayloads} = require('../common/nodejs/formatter/txProposal');
 const {invoke, query} = require('./chaincodeHelper');
 const channelName = 'allchannel';
@@ -40,7 +40,7 @@ exports.query = async (peers, clientOrg, chaincodeId, fcn, args = [], transientM
 	return getPayloads({proposalResponses});
 };
 exports.listenChaincodeEvent = async (peer, clientPeerOrg, chaincodeId, eventName = /event/i, onSuccess) => {
-	const logger = LogUtil.new('chaincode event', true);
+	const logger = Logger.consoleLogger('chaincode event');
 	const client = helper.getOrgAdmin(clientPeerOrg);
 	const channel = helper.prepareChannel(channelName, client);
 	const eventHub = new Eventhub(channel, peer);

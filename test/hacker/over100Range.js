@@ -1,5 +1,5 @@
 const helper = require('../../app/helper');
-const logger = helper.getLogger('hack: >100 history[range]');
+const logger = require('khala-logger/log4js').consoleLogger('hack: >100 history[range]');
 const {putBatch, GetStateByRange} = require('../../cc/golang/diagnose/diagnoseInvoke');
 const install = require('../../cc/golang/diagnose/diagnoseInstall');
 const putBatchTest = async (size) => {
