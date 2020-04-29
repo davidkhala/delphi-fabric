@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 set -e
 CURRENT=$(cd $(dirname ${BASH_SOURCE}) && pwd)
-
+export binPath=$CURRENT/common/bin/
 down() {
-	node -e "require('./dockerode-bootstrap').down()"
+	action=down node ./bootstrap.js
+	sudo rm -rf $CURRENT/stateVolumes/*
 }
 up() {
 	prepareNetwork
@@ -11,21 +12,7 @@ up() {
 }
 
 prepareNetwork() {
-	node -e "require('./dockerode-bootstrap').up()"
-}
-peerRecoverTest() {
-	down
-	sudo rm -rf $HOME/Documents/backupVolumes/
-	mkdir -p $HOME/Documents/backupVolumes/peer1.icdd.org/
-	up
-	node app/testPeerBackup
-}
-ordererRecoverTest() {
-	down
-	sudo rm -rf $HOME/Documents/backupVolumes/
-	mkdir -p $HOME/Documents/backupVolumes/orderer2/
-	up
-	node app/testOrdererBackup
+	action=up node ./bootstrap.js
 }
 restart() {
 	down
@@ -37,7 +24,7 @@ repeat() {
 		./docker.sh
 	done
 }
-if [ -z "$1" ]; then
+if [[ -z "$1" ]]; then
 	restart
 else
 	$1

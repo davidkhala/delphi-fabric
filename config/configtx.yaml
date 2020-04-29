@@ -33,23 +33,45 @@ Profiles:
         BlockValidation:
           Type: ImplicitMeta
           Rule: ANY Writers
-      OrdererType: solo
+      OrdererType: etcdraft
       Addresses:
-        - 'orderer.Delphi.com:7050'
+        - 'orderer0.icdd.astri.org:7050'
+        - 'orderer1.icdd.astri.org:7050'
+        - 'orderer2.icdd.astri.org:7050'
+      EtcdRaft:
+        Consenters:
+          - Host: orderer0.icdd.astri.org
+            Port: 7050
+            ClientTLSCert: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/icdd.astri.org/orderers/orderer0.icdd.astri.org/tls/server.crt
+            ServerTLSCert: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/icdd.astri.org/orderers/orderer0.icdd.astri.org/tls/server.crt
+          - Host: orderer1.icdd.astri.org
+            Port: 7050
+            ClientTLSCert: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/icdd.astri.org/orderers/orderer1.icdd.astri.org/tls/server.crt
+            ServerTLSCert: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/icdd.astri.org/orderers/orderer1.icdd.astri.org/tls/server.crt
+          - Host: orderer2.icdd.astri.org
+            Port: 7050
+            ClientTLSCert: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/icdd.astri.org/orderers/orderer2.icdd.astri.org/tls/server.crt
+            ServerTLSCert: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/icdd.astri.org/orderers/orderer2.icdd.astri.org/tls/server.crt
+        Options:
+          TickInterval: 500ms
+          ElectionTick: 10
+          HeartbeatTick: 1
+          MaxInflightBlocks: 5
+          SnapshotIntervalSize: 20 MB
       Organizations:
-        - Name: Delphi.com
-          ID: OrdererMSP
-          MSPDir: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/Delphi.com/msp
+        - Name: icdd.astri.org
+          ID: ICDDMSP
+          MSPDir: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/icdd.astri.org/msp
           Policies:
             Readers:
               Type: Signature
-              Rule: OR('OrdererMSP.member')
+              Rule: OR('ICDDMSP.member')
             Writers:
               Type: Signature
-              Rule: OR('OrdererMSP.member')
+              Rule: OR('ICDDMSP.member')
             Admins:
               Type: Signature
-              Rule: OR('OrdererMSP.admin')
+              Rule: OR('ICDDMSP.admin')
     Consortiums:
       SampleConsortium:
         Organizations:

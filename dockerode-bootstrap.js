@@ -2,9 +2,12 @@ const globalConfig = require('./config/orgs.json');
 const path = require('path');
 const logger = require('khala-logger/log4js').consoleLogger('dockerode-bootstrap');
 const peerUtil = require('./common/nodejs/peer');
-const {runCouchDB, runCA, runPeer, runOrderer, fabricImagePull, chaincodeClear} = require('./common/nodejs/fabric-dockerode');
+const {OrdererType} = require('./common/nodejs/formatter/constants');
+const {runCouchDB, runCA, runPeer, runOrderer, fabricImagePull, chaincodeClear, chaincodeImageClear} = require('./common/nodejs/fabric-dockerode');
 const {CryptoPath} = require('./common/nodejs/path');
 
+const configConfigtx = require('./config/configtx.js');
+const caCrypoGenUtil = require('./config/caCryptoGen');
 const {
 	containerDelete, volumeCreateIfNotExist, networkCreateIfNotExist,
 	volumeRemove, prune: {system: pruneLocalSystem}
@@ -14,7 +17,7 @@ const MSPROOT = homeResolve(globalConfig.docker.volumes.MSPROOT);
 const CONFIGTX = homeResolve(globalConfig.docker.volumes.CONFIGTX);
 const {docker: {fabricTag, caTag, network, thirdPartyTag}, TLS} = globalConfig;
 
-const {genBlock, genChannel} = require('./common/nodejs/binManager');
+const BinManager = require('./common/nodejs/binManager');
 
 exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'}, toStop) => {
 	const {orderer: {type, genesis_block: {file: BLOCK_FILE}}} = globalConfig;
@@ -22,21 +25,21 @@ exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPRO
 	const MSPROOTVolume = volumeName.MSPROOT;
 	const imageTag = fabricTag;
 	const {MSPROOT} = peerUtil.container;
-	const cryptoType = 'orderer';
+	const nodeType = 'orderer';
 
-	const toggle = async ({orderer, domain, port, mspid}, OrdererType, stateVolume, operations) => {
+	const toggle = async ({orderer, domain, port, mspid}, ordererType, stateVolume, operations, metrics) => {
 		const cryptoPath = new CryptoPath(MSPROOT, {
 			orderer: {org: domain, name: orderer}
 		});
 
 		const {ordererHostName} = cryptoPath;
 		const container_name = ordererHostName;
-		const configPath = cryptoPath.MSP(cryptoType);
+		const configPath = cryptoPath.MSP(nodeType);
 
 		if (toStop) {
 			await containerDelete(container_name);
 		} else {
-			const tls = TLS ? cryptoPath.TLSFile(cryptoType) : undefined;
+			const tls = TLS ? cryptoPath.TLSFile(nodeType) : undefined;
 			await runOrderer({
 				container_name, imageTag, port, network,
 				BLOCK_FILE, CONFIGTXVolume,
@@ -45,9 +48,9 @@ exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPRO
 					configPath,
 					volumeName: MSPROOTVolume
 				},
-				OrdererType,
+				ordererType,
 				tls, stateVolume
-			}, operations);
+			}, operations, metrics);
 		}
 	};
 	const ordererOrgs = globalConfig.orderer[type].orgs;
@@ -58,8 +61,8 @@ exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPRO
 			if (stateVolume) {
 				stateVolume = homeResolve(stateVolume);
 			}
-			const {portHost, operations} = ordererConfig;
-			await toggle({orderer, domain, port: portHost, mspid}, type, stateVolume, operations);
+			const {portHost, operations, metrics} = ordererConfig;
+			await toggle({orderer, domain, port: portHost, mspid}, type, stateVolume, operations, metrics);
 		}
 	}
 };
@@ -70,8 +73,7 @@ exports.volumesAction = async (toStop) => {
 			await volumeRemove(Name);
 			continue;
 		}
-		const path = homeResolve(globalConfig.docker.volumes[Name]);
-		await volumeCreateIfNotExist({Name, path});
+		await volumeCreateIfNotExist({Name, path: homeResolve(globalConfig.docker.volumes[Name])});
 	}
 };
 exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'}, tostop) => {
@@ -161,63 +163,50 @@ exports.runCAs = async (toStop) => {
 
 exports.down = async () => {
 	const toStop = true;
-	try {
-		await exports.runCAs(toStop);
 
-		await exports.runPeers(undefined, toStop);
-		await exports.runOrderers(undefined, toStop);
-		await pruneLocalSystem();
-		await chaincodeClear();
-		await exports.volumesAction(toStop);
+	await exports.runCAs(toStop);
 
-		fsExtra.emptyDirSync(MSPROOT);
-		logger.info(`[done] clear MSPROOT ${MSPROOT}`);
-		fsExtra.emptyDirSync(CONFIGTX);
-		logger.info(`[done] clear CONFIGTX ${CONFIGTX}`);
+	await exports.runPeers(undefined, toStop);
+	await exports.runOrderers(undefined, toStop);
+	await pruneLocalSystem();
+	await chaincodeClear();
+	await chaincodeImageClear();
+	await exports.volumesAction(toStop);
 
-	} catch (err) {
-		logger.error(err);
-		process.exit(1);
-	}
-	logger.debug('[done] down');
+	fsExtra.emptyDirSync(MSPROOT);
+	logger.info(`[done] clear MSPROOT ${MSPROOT}`);
+	fsExtra.emptyDirSync(CONFIGTX);
+	logger.info(`[done] clear CONFIGTX ${CONFIGTX}`);
 };
 
 exports.up = async () => {
-	try {
-		await fabricImagePull({fabricTag, caTag});
+	await fabricImagePull({fabricTag, caTag});
 
-		await networkCreateIfNotExist({Name: network});
+	const binManager = new BinManager();
 
-		await exports.volumesAction();
-		await exports.runCAs();
+	await networkCreateIfNotExist({Name: network});
 
-		await require('./config/caCryptoGen').genAll();
+	await exports.volumesAction();
+	await exports.runCAs();
 
-		const PROFILE_BLOCK = globalConfig.orderer.genesis_block.profile;
-		const configtxFile = path.resolve(__dirname, 'config', 'configtx.yaml');
-		require('./config/configtx.js').gen({MSPROOT, PROFILE_BLOCK, configtxFile});
+	await caCrypoGenUtil.genAll();
 
-
-		const BLOCK_FILE = globalConfig.orderer.genesis_block.file;
-		fsExtra.ensureDirSync(CONFIGTX);
-		await genBlock(configtxFile, path.resolve(CONFIGTX, BLOCK_FILE), PROFILE_BLOCK);
-
-		const channelsConfig = globalConfig.channels;
-		for (const [channelName, channelConfig] of Object.entries(channelsConfig)) {
-			const channelFile = path.resolve(CONFIGTX, channelConfig.file);
-			await genChannel(configtxFile, channelFile, channelName, channelName);
-		}
+	const PROFILE_BLOCK = globalConfig.orderer.genesis_block.profile;
+	const configtxFile = path.resolve(__dirname, 'config', 'configtx.yaml');
+	configConfigtx.gen({MSPROOT, PROFILE_BLOCK, configtxFile});
 
 
-		await exports.runOrderers();
+	const BLOCK_FILE = globalConfig.orderer.genesis_block.file;
+	fsExtra.ensureDirSync(CONFIGTX);
+	await binManager.configtxgen(PROFILE_BLOCK, configtxFile).genBlock(path.resolve(CONFIGTX, BLOCK_FILE));
 
-		await exports.runPeers();
-
-	} catch (err) {
-		logger.error(err);
-		process.exit(1);
+	const channelsConfig = globalConfig.channels;
+	for (const [channelName, channelConfig] of Object.entries(channelsConfig)) {
+		const channelFile = path.resolve(CONFIGTX, channelConfig.file);
+		await binManager.configtxgen(channelName, configtxFile, channelName).genChannel(channelFile);
 	}
 
-	logger.debug('[done] up');
 
+	await exports.runOrderers();
+	await exports.runPeers();
 };
