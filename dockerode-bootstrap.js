@@ -246,7 +246,7 @@ exports.runKafkas = async (toStop) => {
 
 	}
 };
-const down = async () => {
+exports.down = async () => {
 	const {orderer: {type}} = globalConfig;
 
 	const toStop = true;
@@ -270,7 +270,7 @@ const down = async () => {
 	logger.info(`[done] clear CONFIGTX ${CONFIGTX}`);
 };
 
-const up = async () => {
+exports.up = async () => {
 
 	await fabricImagePull({fabricTag, thirdPartyTag});
 
@@ -307,24 +307,3 @@ const up = async () => {
 	await exports.runOrderers();
 	await exports.runPeers();
 };
-const task = async () => {
-	const {action} = process.env;
-	try {
-		switch (action) {
-			case 'down':
-				await down();
-				logger.debug('[done] down');
-				break;
-			case 'up':
-				await up();
-				logger.debug('[done] up');
-				break;
-			default:
-		}
-	} catch (err) {
-		logger.error(err);
-		process.exit(1);
-	}
-
-};
-task();
