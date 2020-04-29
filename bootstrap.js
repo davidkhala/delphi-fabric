@@ -1,3 +1,4 @@
+const logger = require('khala-logger/log4js').consoleLogger('bootstrap');
 const {down, up} = require('./dockerode-bootstrap');
 const task = async () => {
 	const {action} = process.env;

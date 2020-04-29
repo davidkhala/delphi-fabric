@@ -1,6 +1,6 @@
 const globalConfig = require('./config/orgs.json');
 const path = require('path');
-const logger = require('./common/nodejs/logger').new('dockerode-bootstrap', true);
+const logger = require('khala-logger/log4js').consoleLogger('dockerode-bootstrap');
 const peerUtil = require('./common/nodejs/peer');
 const {OrdererType} = require('./common/nodejs/formatter/constants');
 const {
