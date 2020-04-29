@@ -1,6 +1,6 @@
 const {
 	containerDelete
-} = require('../../common/nodejs/helper').dockerode.util;
+} = require('../../common/nodejs/admin/helper').dockerode.util;
 const {
 	runOrderer
 } = require('../../common/nodejs/fabric-dockerode');
@@ -9,7 +9,7 @@ const {sleep, homeResolve} = require('khala-nodeutils/helper');
 const globalConfig = require('../../config/orgs');
 const {CryptoPath} = require('../../common/nodejs/path');
 const peerUtil = require('../../common/nodejs/peer');
-const org = 'ICDD.ASTRI.org';
+const org = 'icdd.astri.org';
 const {docker: {fabricTag, network}, orderer: {type: OrdererType}} = globalConfig;
 const imageTag = `${fabricTag}`;
 const targetOrderer = 'orderer2';

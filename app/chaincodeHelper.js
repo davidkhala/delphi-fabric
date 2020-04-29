@@ -1,8 +1,7 @@
-const {randomKeyOf} = require('../common/nodejs/helper').nodeUtil.random();
+const {randomKeyOf} = require('../common/nodejs/admin/helper').nodeUtil.random();
 const {install} = require('../common/nodejs/chaincode');
 const {instantiateOrUpgrade, invoke} = require('../common/nodejs/chaincodeHelper');
 const {transactionProposal} = require('../common/nodejs/chaincode');
-const Logger = require('../common/nodejs/logger');
 const ClientUtil = require('../common/nodejs/client');
 const ChannelUtil = require('../common/nodejs/channel');
 const EventHubUtil = require('../common/nodejs/eventHub');

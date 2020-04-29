@@ -1,10 +1,10 @@
 const {
 	containerDelete
-} = require('../../common/nodejs/helper').dockerode.util;
+} = require('../../common/nodejs/admin/helper').dockerode.util;
 const {
 	runPeer
 } = require('../../common/nodejs/fabric-dockerode');
-const {nodeUtil} = require('../../common/nodejs/helper');
+const {nodeUtil} = require('../../common/nodejs/admin/helper');
 const {homeResolve} = nodeUtil.helper();
 const globalConfig = require('../../config/orgs');
 const {TLS} = globalConfig;

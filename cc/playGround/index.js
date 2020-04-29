@@ -7,7 +7,7 @@ const task = async () => {
 	const flow = async () => {
 		await install.task();
 		const org1 = 'icdd';
-		const org2 = 'ASTRI.org';
+		const org2 = 'astri.org';
 		const clientOrg = org2;
 		await put(helper.newPeers([0], org1), clientOrg, 'a', 'b');
 		const result = await get(helper.newPeers([0], org1), clientOrg, 'a');
@@ -18,7 +18,7 @@ const task = async () => {
 	const flow2 = async () => {
 		await install.task();
 		const org1 = 'icdd';
-		const org2 = 'ASTRI.org';
+		const org2 = 'astri.org';
 		const clientOrg = org2;
 		await put(helper.newPeers([0], org1), clientOrg, 'a', 'b');
 		const result = await list(helper.newPeers([0], org1), clientOrg);

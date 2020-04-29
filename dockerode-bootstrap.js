@@ -1,10 +1,8 @@
 const globalConfig = require('./config/orgs.json');
 const path = require('path');
-const logger = require('./common/nodejs/logger').new('dockerode-bootstrap', true);
+const logger = require('khala-logger/log4js').consoleLogger('dockerode-bootstrap');
 const peerUtil = require('./common/nodejs/peer');
-const {
-	runCouchDB, runCA, runPeer, runOrderer, chaincodeClean, fabricImagePull
-} = require('./common/nodejs/fabric-dockerode');
+const {runCouchDB, runCA, runPeer, runOrderer, fabricImagePull, chaincodeClear} = require('./common/nodejs/fabric-dockerode');
 const {CryptoPath} = require('./common/nodejs/path');
 
 const {
@@ -137,13 +135,12 @@ exports.runCAs = async (toStop) => {
 
 	const imageTag = caTag;
 
-	const CAs = [];
 	const toggle = async ({container_name, port, Issuer}) => {
 
 		if (toStop) {
 			await containerDelete(container_name);
 		} else {
-			await runCA({container_name, port, network, imageTag, TLS, Issuer});
+			await runCA({container_name, port, network, imageTag, TLS, issuer: Issuer});
 		}
 	};
 
@@ -170,7 +167,7 @@ exports.down = async () => {
 		await exports.runPeers(undefined, toStop);
 		await exports.runOrderers(undefined, toStop);
 		await pruneLocalSystem();
-		await chaincodeClean(true);
+		await chaincodeClear();
 		await exports.volumesAction(toStop);
 
 		fsExtra.emptyDirSync(MSPROOT);

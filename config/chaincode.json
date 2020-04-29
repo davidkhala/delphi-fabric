@@ -4,7 +4,7 @@
     "collectionsConfig": {
       "private1": {
         "mspIds": [
-          "ASTRIMSP",
+          "astriMSP",
           "icddMSP"
         ],
         "requiredPeerCount": 0,
@@ -26,7 +26,7 @@
     "endorsingConfigs": {
       "n": 2,
       "mspId": {
-        "ASTRIMSP": 0,
+        "astriMSP": 0,
         "icddMSP": 0
       }
     }
@@ -40,7 +40,7 @@
     "endorsingConfigs": {
       "n": 1,
       "mspId": {
-        "ASTRIMSP": 0,
+        "astriMSP": 0,
         "icddMSP": 0
       }
     }

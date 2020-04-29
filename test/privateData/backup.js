@@ -1,17 +1,17 @@
 const helper = require('../../app/helper');
 const logger = helper.getLogger('test:backup: chaincode=master');
 const {stopPeer, resumePeer} = require('../backup');
-const {sleep} = require('../../common/nodejs/helper').nodeUtil.helper();
+const {sleep} = require('../../common/nodejs/admin/helper').nodeUtil.helper();
 const {putPrivate, getPrivate} = require('../../cc/golang/master/masterInvoke');
 const install = require('../../cc/golang/master/masterInstall');
 const flow = async () => {
 	await install.task();
-	const offlineOrg = 'ASTRI.org';
+	const offlineOrg = 'astri.org';
 	const offlineIndex = 0;
 	await stopPeer(offlineOrg, offlineIndex);
 	{
 		const peers = helper.newPeers([0], 'icdd');
-		const clientOrg = 'ASTRI.org';
+		const clientOrg = 'astri.org';
 
 		await putPrivate(peers, clientOrg);
 	}
@@ -19,7 +19,7 @@ const flow = async () => {
 
 	{
 		const peers = helper.newPeers([offlineIndex], offlineOrg);
-		const clientOrg = 'ASTRI.org';
+		const clientOrg = 'astri.org';
 
 		const getPrivateLoop = async (peers, clientOrg) => {
 			const [result] = await getPrivate(peers, clientOrg);

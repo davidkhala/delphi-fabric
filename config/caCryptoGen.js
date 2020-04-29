@@ -3,15 +3,13 @@ const caUtil = require('../common/nodejs/ca');
 const fs = require('fs');
 const {initAdmin, genPeer, init, genOrderer, genUser} = require('../common/nodejs/ca-crypto-gen');
 const pathUtil = require('../common/nodejs/path');
-const {nodeUtil, dockerode} = require('../common/nodejs/helper');
-const dockerCmd = dockerode.cmd;
+const dockerCmd = require('khala-dockerode/dockerCmd');
 const {CryptoPath} = pathUtil;
 const logger = require('../common/nodejs/logger').new('caCryptoGen');
 const globalConfig = require('../config/orgs');
 const userUtil = require('../common/nodejs/user');
 const helper = require('../app/helper');
-
-const {homeResolve} = nodeUtil.helper();
+const {homeResolve} = require('khala-nodeutils/helper');
 const caCryptoConfig = homeResolve(globalConfig.docker.volumes.MSPROOT);
 const {TLS} = globalConfig;
 const protocol = TLS ? 'https' : 'http';

@@ -2,7 +2,7 @@ const {install} = require('../../app/chaincodeHelper');
 const helper = require('../../app/helper');
 const task = async () => {
 	const clientOrg = 'icdd';
-	const peerOrg = 'ASTRI.org';
+	const peerOrg = 'astri.org';
 	const client = await helper.getOrgAdmin(clientOrg);
 	const peers = helper.newPeers([0], peerOrg);
 	try {

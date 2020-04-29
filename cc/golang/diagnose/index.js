@@ -8,7 +8,7 @@ const DRInstall = require('./diagnoseInstall');
 const taskKeyEndorsement = async () => {
 	await DRInstall.task();
 	const org1 = 'icdd';
-	const org2 = 'ASTRI.org';
+	const org2 = 'astri.org';
 	let peers = [helper.newPeer(0, org1), helper.newPeer(0, org2)];
 	const clientOrg = org2;
 	const key = 'a';
@@ -20,7 +20,7 @@ const taskKeyEndorsement = async () => {
 	const cid = await whoami(peers, org1);
 	logger.info({cid});
 	const endorseKey = key;
-	await putEndorsement(peers, org1, endorseKey, ['ASTRIMSP', 'icddMSP']);
+	await putEndorsement(peers, org1, endorseKey, ['astriMSP', 'icddMSP']);
 	let endorsingOrgs = await getEndorsement(peers, clientOrg, endorseKey);
 	logger.info({endorsingOrgs});
 	try {
@@ -36,7 +36,7 @@ const taskKeyEndorsement = async () => {
 const taskPeerHack = async () => {
 	await DRInstall.task();
 	const org1 = 'icdd';
-	const org2 = 'ASTRI.org';
+	const org2 = 'astri.org';
 	let peers = [helper.newPeer(0, org1), helper.newPeer(0, org2)];
 	const clientOrg = org2;
 	const key = 'a';
@@ -46,7 +46,7 @@ const taskPeerHack = async () => {
 const taskAttach = async () => {
 	await DRInstall.taskAttach();
 	const org1 = 'icdd';
-	const org2 = 'ASTRI.org';
+	const org2 = 'astri.org';
 	const peers = helper.newPeers([0], org1);
 	try {
 		await cross(peers, org1, 'mainChain', 'put', ['a', 'avalueFromAttacker']);
@@ -64,7 +64,7 @@ const taskAttach = async () => {
 const flowPagination = async () => {
 	await DRInstall.task();
 	const org1 = 'icdd';
-	const org2 = 'ASTRI.org';
+	const org2 = 'astri.org';
 	const peers = helper.newPeers([0], org1);
 	const map = {
 		a: 'b',

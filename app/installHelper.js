@@ -1,6 +1,6 @@
 const {install, prepareInstall} = require('./chaincodeHelper');
 const helper = require('./helper');
-const {nextVersion} = require('../common/nodejs/helper').nodeUtil.version();
+const {nextVersion} = require('../common/nodejs/admin/helper').nodeUtil.version();
 const {incrementInstall} = require('../common/nodejs/chaincodeVersion');
 
 const globalConfig = require('../config/orgs.json');

@@ -1,5 +1,5 @@
 const Logger = require('../common/nodejs/logger');
-const logger = Logger.new('Helper');
+const logger = require('khala-logger/log4js').consoleLogger('Helper');
 const globalConfig = require('../config/orgs.json');
 
 const orgsConfig = globalConfig.orgs;
@@ -14,10 +14,9 @@ const projectResolve = (...args) => path.resolve(projectRoot, ...args);
 const UserUtil = require('../common/nodejs/user');
 const Orderer = require('../common/nodejs/admin/orderer');
 const channelUtil = require('../common/nodejs/channel');
-const {nodeUtil} = require('../common/nodejs/helper');
-const {homeResolve} = nodeUtil.helper();
+const {homeResolve} = require('khala-nodeutils/helper');
 const CRYPTO_CONFIG_DIR = homeResolve(globalConfig.docker.volumes.MSPROOT);
-const {randomKeyOf} = nodeUtil.random();
+const {randomKeyOf} = require('khala-nodeutils/random');
 
 const preparePeer = (orgName, peerIndex, peerConfig) => {
 	const {port: peerPort} = peerConfig;

@@ -5,7 +5,7 @@ const masterCC = 'diagnose';
 const helper = require('../../../app/helper');
 exports.task = async () => {
 	await installAll(masterCC);
-	const org1 = 'ASTRI.org';
+	const org1 = 'astri.org';
 	const org2 = 'icdd';
 	const p1 = helper.newPeer(0, org1);
 	const p2 = helper.newPeer(0, org2);
@@ -17,7 +17,7 @@ exports.task = async () => {
 exports.taskAttach = async () => {
 	const prone = 'mainChain';
 	await installAll(prone);
-	const org1 = 'ASTRI.org';
+	const org1 = 'astri.org';
 	const org2 = 'icdd';
 	const p1 = helper.newPeer(0, org1);
 	const p2 = helper.newPeer(0, org2);

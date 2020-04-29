@@ -1,6 +1,6 @@
 const helper = require('../../app/helper');
 const {create} = require('../../app/channelHelper');
-const {homeResolve} = require('../../common/nodejs/helper').nodeUtil.helper();
+const {homeResolve} = require('../../common/nodejs/admin/helper').nodeUtil.helper();
 const ChannelUtil = require('../../common/nodejs/channel');
 const globalConfig = require('../../config/orgs.json');
 
@@ -13,7 +13,7 @@ const createTask = async (channel, orderer) => {
 };
 
 const task = async () => {
-	const peerOrg = 'ASTRI.org';
+	const peerOrg = 'astri.org';
 	const client = await helper.getOrgAdmin(peerOrg);
 	const channel = helper.prepareChannel(channelName, client);
 	const orderers = await ChannelUtil.getOrderers(channel, true);

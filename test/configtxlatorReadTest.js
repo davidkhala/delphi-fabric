@@ -1,7 +1,7 @@
 const helper = require('../app/helper');
 const configtxlator = require('../common/nodejs/configtxlator');
 const channelName = 'allchannel';
-const {fsExtra} = require('khala-nodeutils/helper');
+const fsExtra = require('fs-extra');
 const logger = helper.getLogger('test:configtxlator');
 const appChannel = async () => {
 	try {

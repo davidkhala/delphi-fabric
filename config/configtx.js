@@ -1,13 +1,12 @@
 const globalConfig = require('./orgs.json');
 const {TLS} = globalConfig;
 const path = require('path');
-const yaml = require('../common/nodejs/helper').nodeUtil.yaml();
-const {fsExtra} = require('../common/nodejs/helper').nodeUtil.helper();
+const yaml = require('khala-nodeutils/yaml');
+const fsExtra = require('fs-extra');
 const {CryptoPath} = require('../common/nodejs/path');
 const implicitPolicies = require('../common/nodejs/policy').configtxPolicies.implicit.Policies;
 exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, configtxFile, PROFILE_ANCHORPEERS = 'anchorPeers'}) => {
 	const channelsConfig = globalConfig.channels;
-	const ordererConfig = globalConfig.orderer;
 	if (!configtxFile) {
 		configtxFile = path.resolve(__dirname, 'configtx.yaml');
 	}

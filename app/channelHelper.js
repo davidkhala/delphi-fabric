@@ -1,5 +1,4 @@
 const helper = require('./helper.js');
-const logger = require('../common/nodejs/logger').new('channel helper');
 const ChannelUtil = require('../common/nodejs/channel');
 const {newEventHub, blockWaiter} = require('../common/nodejs/eventHub');
 const path = require('path');
@@ -7,7 +6,7 @@ const path = require('path');
 const {create, join, updateAnchorPeers, getGenesisBlock} = ChannelUtil;
 const {genAnchorPeers} = require('../common/nodejs/binManager');
 const globalConfig = require('../config/orgs');
-const {sleep} = require('../common/nodejs/helper').nodeUtil.helper();
+const {sleep} = require('../common/nodejs/admin/helper').nodeUtil.helper();
 /**
  *
  * @param {Channel} channel
