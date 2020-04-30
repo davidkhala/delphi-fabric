@@ -18,10 +18,11 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-  },
-  "devDependencies": {
     "khala-logger": "^0.2.0",
     "khala-dockerode": "^0.1.2",
+    "khala-nodeutils": "^0.8.2"
+  },
+  "devDependencies": {
     "lerna": "^3.20.2",
     "why-is-node-running": "^2.1.0"
   }
