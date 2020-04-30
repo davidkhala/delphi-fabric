@@ -1,7 +1,7 @@
 const install = require('./install');
 const {put, get, whoami} = require('./invoke');
 const chaincodeId = 'nodeDiagnose';
-const logger = require('../../../common/nodejs/logger').new(`test:${chaincodeId}`, true);
+const logger = require('khala-logger/log4js').consoleLogger(`test:${chaincodeId}`);
 const helper = require('../../../app/helper');
 const task = async () => {
 	await install.task();

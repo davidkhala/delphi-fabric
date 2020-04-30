@@ -1,4 +1,3 @@
-const Logger = require('../common/nodejs/logger');
 const logger = require('khala-logger/log4js').consoleLogger('Helper');
 const globalConfig = require('../config/orgs.json');
 
@@ -193,10 +192,3 @@ exports.randomChannelOrg = (channelName) => {
 	return randomKeyOf(channelsConfig[channelName].orgs);
 };
 exports.projectResolve = projectResolve;
-
-/**
- * get a development and testing logger
- * @param {string} moduleName
- * @returns {*}
- */
-exports.getLogger = (moduleName) => Logger.new(moduleName, true);

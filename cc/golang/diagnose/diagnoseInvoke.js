@@ -1,5 +1,4 @@
 const {invoke, query} = require('../../../app/invokeHelper');
-const logger = require('../../../common/nodejs/logger').new('invoke:diagnose', true);
 const {base64} = require('../../../common/nodejs/admin/helper').nodeUtil.format();
 const chaincodeId = 'diagnose';
 exports.put = async (peers, clientOrg, key, value) => {

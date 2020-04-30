@@ -31,9 +31,6 @@
       }
     }
   },
-  "global": {
-    "path": "github.com/davidkhala/chaincode/golang/tokenCommon"
-  },
   "nodeDiagnose": {
     "type": "node",
     "path": "github.com/davidkhala/chaincode/nodejs/diagnose",
@@ -48,8 +45,5 @@
   "nodeStress": {
     "type": "node",
     "path": "github.com/davidkhala/chaincode/nodejs/stress"
-  },
-  "playground": {
-    "path": "github.com/davidkhala/chaincode/golang/playground"
   }
 }

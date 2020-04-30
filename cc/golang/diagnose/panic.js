@@ -1,5 +1,4 @@
 const {panic} = require('./diagnoseInvoke');
-const logger = require('../../../common/nodejs/logger').new('invoke:diagnose', true);
 const helper = require('../../../app/helper');
 
 const flow = async () => {

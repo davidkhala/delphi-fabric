@@ -1,7 +1,6 @@
 const helper = require('./helper');
 
-const LogUtil = require('../common/nodejs/logger');
-const logger = LogUtil.new('invokeHelper', true);
+require('khala-logger/log4js').consoleLogger('invokeHelper');
 const {proposalStringify, proposalFlatten} = require('../common/nodejs/chaincode');
 const {invoke, query} = require('./chaincodeHelper');
 const channelName = 'allchannel';
@@ -27,7 +26,7 @@ exports.query = async (peers, clientOrg, chaincodeId, fcn, args = [], transientM
 	return result;
 };
 exports.listenChaincodeEvent = async (peers, clientPeerOrg, chaincodeId, eventName = /event/i) => {
-	const logger = LogUtil.new('chaincode event', true);
+	const logger = require('khala-logger/log4js').consoleLogger('chaincode event');
 	const client = await helper.getOrgAdmin(clientPeerOrg);
 	const channel = helper.prepareChannel(channelName, client, true);
 	const eventHub = newEventHub(channel, peers[0], true);

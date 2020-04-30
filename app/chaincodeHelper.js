@@ -1,33 +1,34 @@
-const {randomKeyOf} = require('../common/nodejs/admin/helper').nodeUtil.random();
 const {install} = require('../common/nodejs/chaincode');
-const {instantiateOrUpgrade, invoke} = require('../common/nodejs/chaincodeHelper');
-const {transactionProposal} = require('../common/nodejs/chaincode');
-const ClientUtil = require('../common/nodejs/client');
-const ChannelUtil = require('../common/nodejs/channel');
-const EventHubUtil = require('../common/nodejs/eventHub');
+const {ChaincodeType} = require('../common/nodejs/formatter/chaincode');
+const {invoke} = require('../common/nodejs/chaincodeHelper');
+const {incrementUpgrade} = require('../common/nodejs/chaincodeVersion');
+const {transactionProposal} = require('../common/nodejs/builder/transaction'); // TODO
+const ClientManager = require('../common/nodejs/builder/client');// TODO
+const ChannelManager = require('../common/nodejs/builder/channel');// TODO
+const Eventhub = require('../common/nodejs/builder/eventHub');//TODO
 const golangUtil = require('../common/nodejs/golang');
 const {RoleIdentity, simplePolicyBuilder} = require('../common/nodejs/policy');
-const {collectionPolicyBuilder, collectionConfig} = require('../common/nodejs/privateData');
+const {collectionPolicyBuilder, ensureCollectionConfig} = require('../common/nodejs/privateData');
 const {couchDBIndex} = require('../common/nodejs/couchdb');
-const {discoveryChaincodeCallBuilder} = require('../common/nodejs/serviceDiscovery');
+const {endorsementHintsBuilder} = require('../common/nodejs/serviceDiscovery');
 const path = require('path');
 
 const chaincodeConfig = require('../config/chaincode.json');
 
 exports.prepareInstall = async ({chaincodeId}) => {
-	const chaincodeRelPath = chaincodeConfig[chaincodeId].path;
+	const chaincodeRelativePath = chaincodeConfig[chaincodeId].path;
 	let metadataPath;
 	let chaincodePath;
 	const chaincodeType = chaincodeConfig[chaincodeId].type;
 	const gopath = await golangUtil.getGOPATH();
-	if (chaincodeType === 'node') {
-		chaincodePath = path.resolve(gopath, 'src', chaincodeRelPath);
+	if (chaincodeType === ChaincodeType.node) {
+		chaincodePath = path.resolve(gopath, 'src', chaincodeRelativePath);
 		metadataPath = path.resolve(chaincodePath, 'META-INF');// the name is arbitrary
 	}
-	if (!chaincodeType || chaincodeType === 'golang') {
+	if (!chaincodeType || chaincodeType === ChaincodeType.golang) {
 		await golangUtil.setGOPATH();
-		chaincodePath = chaincodeRelPath;
-		metadataPath = path.resolve(gopath, 'src', chaincodeRelPath, 'META-INF');// the name is arbitrary
+		chaincodePath = chaincodeRelativePath;
+		metadataPath = path.resolve(gopath, 'src', chaincodeRelativePath, 'META-INF');// the name is arbitrary
 	}
 	if (Array.isArray(chaincodeConfig[chaincodeId].couchDBIndexes)) {
 		couchDBIndex(metadataPath, undefined, ...chaincodeConfig[chaincodeId].couchDBIndexes);
@@ -65,59 +66,50 @@ const configParser = (configs) => {
 			const policy = collectionPolicyBuilder(config.mspIds);
 			config.name = name;
 			config.policy = policy;
-			collectionSet.push(collectionConfig(config));
+			collectionSet.push(ensureCollectionConfig(config));
 		}
 		result.collectionConfig = collectionSet;
 	}
 	return result;
 
 };
-const defaultProposalTime = 45000;
-exports.instantiate = async (channel, richPeers, opts) => {
+
+exports.upgrade = async (channel, richPeers, opts, orderer) => {
 	const {chaincodeId} = opts;
 	const policyConfig = configParser(chaincodeConfig[chaincodeId]);
 
+	const eventHubs = richPeers.map(peer => new Eventhub(channel, peer));
 
-	const eventHubs = [];
-
-	for (const peer of richPeers) {
-		const eventHub = EventHubUtil.newEventHub(channel, peer, true);
-		eventHubs.push(eventHub);
-	}
-
-	const allConfig = Object.assign(policyConfig, opts);
-	return instantiateOrUpgrade('deploy', channel, richPeers, eventHubs, allConfig);
-};
-
-exports.upgrade = async (channel, richPeers, opts) => {
-	const {chaincodeId} = opts;
-	const policyConfig = configParser(chaincodeConfig[chaincodeId]);
-
-	const eventHubs = [];
-
-	for (const peer of richPeers) {
-		const eventHub = EventHubUtil.newEventHub(channel, peer, true);
-		eventHubs.push(eventHub);
+	for (const eventHub of eventHubs) {
+		await eventHub.connect();
 	}
 	const allConfig = Object.assign(policyConfig, opts);
-	return instantiateOrUpgrade('upgrade', channel, richPeers, eventHubs, allConfig);
-};
-exports.invoke = async (channel, peers, {chaincodeId, fcn, args, transientMap}, nonAdminUser) => {
-	const eventHubs = [];
-	for (const peer of peers) {
-		const eventHub = EventHubUtil.newEventHub(channel, peer, true);
-		eventHubs.push(eventHub);
+	const proposalTimeOut = process.env.cicd ? 60000 * richPeers.length : undefined;
+	try {
+		return await incrementUpgrade(channel, richPeers, eventHubs, allConfig, orderer, proposalTimeOut);
+	} catch (e) {
+		for (const eventHub of eventHubs) {
+			eventHub.disconnect();
+		}
+		throw e;
 	}
-	const orderers = channel.getOrderers();
-	const orderer = orderers[randomKeyOf(orderers)];
+
+};
+exports.invoke = async (channel, peers, orderer, {chaincodeId, fcn, args, transientMap}, nonAdminUser, eventHubs) => {
+	if (!eventHubs) {
+		eventHubs = peers.map(peer => new Eventhub(channel, peer));
+		for (const eventHub of eventHubs) {
+			await eventHub.connect();
+		}
+	}
+	const client = channel._clientContext;
 	if (nonAdminUser) {
-		const client = ClientUtil.new();
-		ClientUtil.setUser(client, nonAdminUser);
-		ChannelUtil.setClientContext(channel, client);
+		ClientManager.setUser(client, nonAdminUser);
+		ChannelManager.setClientContext(channel, client);
 	}
 
 
-	return await invoke(channel, peers, eventHubs, {
+	return await invoke(client, channel.getName(), peers, eventHubs, {
 		chaincodeId,
 		args,
 		fcn,
@@ -127,15 +119,16 @@ exports.invoke = async (channel, peers, {chaincodeId, fcn, args, transientMap}, 
 };
 
 exports.discoveryChaincodeInterestBuilder = (chaincodeIdFilter) => {
-	let chaincodeIDs = Object.keys(chaincodeConfig);
-	if (typeof chaincodeIdFilter === 'function') {
-		chaincodeIDs = chaincodeIDs.filter(chaincodeIdFilter);
-	}
-	const chaincodes = [];
-	for (const chaincodeId of chaincodeIDs) {
-		const {collectionsConfig} = chaincodeConfig[chaincodeId];
-		const ccCall = discoveryChaincodeCallBuilder({chaincodeId, collectionsConfig});
-		chaincodes.push(ccCall);
+	let chaincodes = [];
+	for (const [chaincodeID, config] of Object.entries(chaincodeConfig)) {
+		if (typeof chaincodeIdFilter === 'function' && !chaincodeIdFilter(chaincodeID)) {
+			continue;
+		}
+		const {collectionsConfig} = config;
+		if (collectionsConfig) {
+			const ccCalls = endorsementHintsBuilder({[chaincodeID]: Object.keys(collectionsConfig)});
+			chaincodes = chaincodes.concat(ccCalls);
+		}
 	}
 	return {chaincodes};
 };

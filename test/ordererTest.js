@@ -1,5 +1,5 @@
 const helper = require('../app/helper');
-const logger = helper.getLogger('test:orderer');
+const logger = require('khala-logger').consoleLogger('test:orderer');
 const OrdererUtil = require('../common/nodejs/admin/orderer');
 const orderers = helper.newOrderers();
 const task = async (taskID) => {
