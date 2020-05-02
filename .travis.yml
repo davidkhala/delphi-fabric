@@ -7,7 +7,8 @@ matrix:
       before_install:
         - eval "$(gimme 1.12.x)"
       install:
-        - ./install.sh
+        - curl --silent --show-error https://raw.githubusercontent.com/davidkhala/node-utils/master/install.sh | bash -s nodeGYPDependencies
+        - curl --silent --show-error https://raw.githubusercontent.com/davidkhala/node-utils/master/scripts/npm.sh | bash -s packageLock false
         - npm install
         - sudo apt-get install -y softhsm2
       script:
