@@ -8,9 +8,11 @@ matrix:
         - eval "$(gimme 1.12.x)"
       install:
         - curl --silent --show-error https://raw.githubusercontent.com/davidkhala/node-utils/master/install.sh | bash -s nodeGYPDependencies
-        - curl --silent --show-error https://raw.githubusercontent.com/davidkhala/node-utils/master/scripts/npm.sh | bash -s packageLock false
+        - npm config set package-lock false
         - npm install
         - sudo apt-get install -y softhsm2
+        - cd common; ./install.sh fabricInstall; cd -
+        - updateChaincode
       script:
         - ./docker.sh
         - node cc/golang/diagnose/test/
