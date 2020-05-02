@@ -6,7 +6,7 @@ const ChannelUtil = require('../common/nodejs/channel');
 const {genesis} = require('../common/nodejs/formatter/channel');
 const helper = require('./helper');
 const {homeResolve} = require('khala-nodeutils/helper');
-
+const path = require('path');
 const globalConfig = require('../config/orgs.json');
 const BinManager = require('../common/nodejs/binManager');
 
@@ -34,6 +34,7 @@ const createTask = async (channelName) => {
 	const channelConfig = channelsConfig[channelName];
 	const binManager = new BinManager();
 	const channelFile = path.resolve(CONFIGTX, channelConfig.file);
+	const configtxFile = helper.projectResolve('config', 'configtx.yaml');
 	await binManager.configtxgen(channelName, configtxFile, channelName).genChannel(channelFile);
 	const peerOrg = helper.randomOrg('peer');
 	const client = helper.getOrgAdmin(peerOrg);
