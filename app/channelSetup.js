@@ -8,7 +8,7 @@ const helper = require('./helper');
 const {homeResolve} = require('khala-nodeutils/helper');
 
 const globalConfig = require('../config/orgs.json');
-
+const BinManager = require('../common/nodejs/binManager');
 
 const anchorPeerTask = async (channelName) => {
 	const channelConfig = globalConfig.channels[channelName];
@@ -28,16 +28,20 @@ const taskViewChannelBlock = async (channelName) => {
 	const block = await ChannelUtil.getGenesisBlock(channel, orderer);
 	console.log(block);// TODO apply block decoder
 };
+const CONFIGTX = homeResolve(globalConfig.docker.volumes.CONFIGTX);
 const createTask = async (channelName) => {
+	const channelsConfig = globalConfig.channels;
+	const channelConfig = channelsConfig[channelName];
+	const binManager = new BinManager();
+	const channelFile = path.resolve(CONFIGTX, channelConfig.file);
+	await binManager.configtxgen(channelName, configtxFile, channelName).genChannel(channelFile);
 	const peerOrg = helper.randomOrg('peer');
 	const client = helper.getOrgAdmin(peerOrg);
 	const channel = helper.prepareChannel(channelName, client);
 	const orderers = helper.newOrderers();
 	const orderer = orderers[0];
 
-	const channelConfig = globalConfig.channels[channelName];
-	const channelConfigFile = homeResolve(globalConfig.docker.volumes.CONFIGTX, channelConfig.file);
-	await create(channel, channelConfigFile, orderer);
+	await create(channel, channelFile, orderer);
 };
 
 const task = async (taskID = parseInt(process.env.taskID)) => {
