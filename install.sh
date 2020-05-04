@@ -14,20 +14,6 @@ gitSync() {
 	git submodule update --init --recursive
 }
 
-pull() {
-	local fabricTag=1.4.5
-	local IMAGE_TAG="$fabricTag"
-	docker pull hyperledger/fabric-ccenv:$IMAGE_TAG
-	docker pull hyperledger/fabric-orderer:$IMAGE_TAG
-	docker pull hyperledger/fabric-peer:$IMAGE_TAG
-	docker pull hyperledger/fabric-ca:$IMAGE_TAG
-}
-pullKafka() {
-	local thirdPartyTag=0.4.18
-	local IMAGE_TAG="$thirdPartyTag"
-	docker pull hyperledger/fabric-kafka:$IMAGE_TAG
-	docker pull hyperledger/fabric-zookeeper:$IMAGE_TAG
-}
 updateChaincode() {
 	export GO111MODULE=on
 
