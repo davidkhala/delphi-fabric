@@ -200,13 +200,6 @@ exports.up = async () => {
 	fsExtra.ensureDirSync(CONFIGTX);
 	await binManager.configtxgen(PROFILE_BLOCK, configtxFile).genBlock(path.resolve(CONFIGTX, BLOCK_FILE));
 
-	const channelsConfig = globalConfig.channels;
-	for (const [channelName, channelConfig] of Object.entries(channelsConfig)) {
-		const channelFile = path.resolve(CONFIGTX, channelConfig.file);
-		await binManager.configtxgen(channelName, configtxFile, channelName).genChannel(channelFile);
-	}
-
-
 	await exports.runOrderers();
 	await exports.runPeers();
 };
