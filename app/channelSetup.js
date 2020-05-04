@@ -42,7 +42,7 @@ const createTask = async (channelName) => {
 	const orderers = helper.newOrderers();
 	const orderer = orderers[0];
 
-	await create(channel, channelFile, orderer);
+	await create(channel, channelFile, orderer, undefined, true);
 };
 
 const task = async (taskID = parseInt(process.env.taskID)) => {

@@ -8,25 +8,52 @@ const Eventhub = require('../common/nodejs/builder/eventHub');
 
 const {create, join, getGenesisBlock} = ChannelUtil;
 const globalConfig = require('../config/orgs');
-const {sleep} = require('khala-nodeutils/helper');
+const {sleep, homeResolve} = require('khala-nodeutils/helper');
+const BinManager = require('../common/nodejs/binManager');
+const {CryptoPath} = require('../common/nodejs/path');
+const {adminName} = require('../common/nodejs/formatter/user');
 /**
  *
  * @param {Client.Channel} channel
  * @param channelConfigFile
  * @param {Orderer} orderer
  * @param {OrgName[]} extraSignerOrgs orgName array of signer
+ * @param {boolean} asEnvelop
  * @returns {Promise<Client.BroadcastResponse>}
  */
-exports.create = async (channel, channelConfigFile, orderer, extraSignerOrgs = []) => {
+exports.create = async (channel, channelConfigFile, orderer, extraSignerOrgs = [], asEnvelop) => {
+	let signers = undefined;
+	if (asEnvelop) {
+		const CRYPTO_CONFIG_DIR = homeResolve(globalConfig.docker.volumes.MSPROOT);
 
-	const clients = [channel._clientContext];
-	// extract the channel config bytes from the envelope to be signed
-	for (const orgName of extraSignerOrgs) {
-		const signingClient = helper.getOrgAdmin(orgName);
-		clients.push(signingClient);
+		const binManager = new BinManager();
+		const orgsConfig = globalConfig.orgs;
+		if (extraSignerOrgs.length === 0) {
+			extraSignerOrgs.push(helper.randomOrg('peer'));
+		}
+		for (const orgName of extraSignerOrgs) {
+			const localMspId = orgsConfig[orgName].mspid;
+			const cryptoPath = new CryptoPath(CRYPTO_CONFIG_DIR, {
+				peer: {
+					org: orgName
+				},
+				user: {
+					name: adminName
+				}
+			});
+			const mspConfigPath = cryptoPath.MSP('peerUser');
+			await binManager.peer().signconfigtx(channelConfigFile, localMspId, mspConfigPath);
+		}
+	} else {
+		signers = [channel._clientContext];
+		// extract the channel config bytes from the envelope to be signed
+		for (const orgName of extraSignerOrgs) {
+			const signingClient = helper.getOrgAdmin(orgName);
+			signers.push(signingClient);
+		}
 	}
 
-	return create(channel, orderer, channelConfigFile, clients);
+	return create(channel, orderer, channelConfigFile, signers, asEnvelop);
 };
 
 // could not join peer to system channel 'testchainid'

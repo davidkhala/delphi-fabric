@@ -10,6 +10,7 @@ const {CryptoPath} = pathUtil;
 const logger = require('khala-logger/log4js').consoleLogger('caCryptoGen');
 const globalConfig = require('../config/orgs');
 const {adminName, adminPwd} = require('../common/nodejs/formatter/user');
+const UserUtil = require('../common/nodejs/user');
 const {ECDSA_Key} = require('../common/nodejs/formatter/key');
 const helper = require('../app/helper');
 
@@ -60,7 +61,7 @@ exports.genUser = async ({userName, password}, orgName) => {
 		password: adminPwd
 	});
 
-	const admin = await initAdmin(caService, adminCryptoPath, nodeType, mspId, TLS);
+	const admin = UserUtil.loadFromLocal(adminCryptoPath, nodeType, mspId, true);
 	return await genUser(caService, cryptoPath, nodeType, admin, {TLS, affiliationRoot: orgName});
 
 };
@@ -128,7 +129,7 @@ exports.genAll = async () => {
 				},
 				password: adminPwd
 			});
-			const admin = await init(caService, adminCryptoPath, nodeType, mspId, TLS);
+			const admin = await init(caService, adminCryptoPath, nodeType, mspId, TLS);  // TODO could we move adminCryptoPath into
 			await genNSaveClientKeyPair(caService, adminCryptoPath, admin, domain, nodeType);
 			const promises = [];
 			for (const ordererName in ordererConfig.orderers) {

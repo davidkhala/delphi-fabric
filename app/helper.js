@@ -31,11 +31,6 @@ const preparePeer = (orgName, peerIndex, peerConfig) => {
 	} else {
 		peer = new peerUtil({peerPort}).peer;
 	}
-	// NOTE append more info
-	peer.peerConfig = peerConfig;
-
-	peer.peerConfig.orgName = orgName;
-	peer.peerConfig.peerIndex = peerIndex;
 	return peer;
 };
 exports.toLocalhostOrderer = (orderer) => {
@@ -72,8 +67,6 @@ const newOrderer = (name, org, ordererSingleConfig) => {
 	} else {
 		orderer = new Orderer({ordererPort}).orderer;
 	}
-	orderer.org = org;
-	orderer.name = name;
 	return orderer;
 };
 
