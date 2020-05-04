@@ -15,9 +15,18 @@ const taskChaincodePackage = async () => {
 		mspConfigPath
 	}, outputFile, instantiatePolicy);
 };
+const taskSignconfigtx = async () => {
+	const localMspId = 'ASTRIMSP';
+	const mspConfigPath = homeResolve('Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/astri.org/peers/peer2.astri.org/msp');
+	const configtxUpdateFile = homeResolve('Documents/delphi-fabric/config/configtx/all.tx');
+	await binManager.peer().signconfigtx(configtxUpdateFile, localMspId, mspConfigPath);
+};
 const task = async () => {
 
 	switch (parseInt(process.env.taskID)) {
+		case 0:
+			await taskSignconfigtx();
+			break;
 		default:
 			await taskChaincodePackage();
 	}
