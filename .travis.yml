@@ -12,7 +12,7 @@ matrix:
         - npm install
         - sudo apt-get install -y softhsm2
         - cd common; ./install.sh fabricInstall; cd -
-        - updateChaincode
+        - ./install.sh updateChaincode
       script:
         - ./docker.sh
         - node cc/golang/diagnose/test/
