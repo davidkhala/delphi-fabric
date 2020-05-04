@@ -148,7 +148,6 @@ const getUser = (username, orgName) => {
 			name: username
 		}
 	});
-	// FIXME this._signingIdentity._signer._key.getSKI is not a function
 	return UserUtil.loadFromLocal(cryptoPath, nodeType, mspId);
 };
 exports.getUser = getUser;

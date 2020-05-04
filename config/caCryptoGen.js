@@ -96,7 +96,7 @@ exports.genIntermediate = async (parentCADomain, parentCAPort, nodeType) => {
 		},
 		password: adminPwd
 	});
-	const admin = await initAdmin(caService, adminCryptoPath, nodeType, mspId, TLS);
+	const admin = UserUtil.loadFromLocal(adminCryptoPath, nodeType, mspId, true);
 	const enrollmentID = `${adminName}.intermediate`;
 	const enrollmentSecret = adminPwd;
 	const result = await intermediateCA.register(caService, admin, {
@@ -131,7 +131,6 @@ exports.genAll = async () => {
 			});
 			const admin = await init(caService, adminCryptoPath, nodeType, mspId, TLS);  // TODO could we move adminCryptoPath into
 			await genNSaveClientKeyPair(caService, adminCryptoPath, admin, domain, nodeType);
-			const promises = [];
 			for (const ordererName in ordererConfig.orderers) {
 
 				const cryptoPath = new CryptoPath(caCryptoConfig, {
@@ -142,9 +141,8 @@ exports.genAll = async () => {
 						name: adminName
 					}
 				});
-				promises.push(genOrderer(caService, cryptoPath, admin, {TLS}));
+				await genOrderer(caService, cryptoPath, admin, {TLS});
 			}
-			await Promise.all(promises);
 		}
 
 	}
@@ -167,7 +165,6 @@ exports.genAll = async () => {
 			});
 			const caService = await getCaService(peerOrgConfig.ca.portHost, domain);
 			const admin = await init(caService, adminCryptoPath, nodeType, mspId, TLS);
-			const promises = [];
 			await genNSaveClientKeyPair(caService, adminCryptoPath, admin, domain, nodeType);
 			for (let peerIndex = 0; peerIndex < peerOrgConfig.peers.length; peerIndex++) {
 				const peerName = `peer${peerIndex}`;
@@ -179,9 +176,8 @@ exports.genAll = async () => {
 						name: adminName
 					}
 				});
-				promises.push(genPeer(caService, cryptoPath, admin, {TLS}));
+				await genPeer(caService, cryptoPath, admin, {TLS});
 			}
-			await Promise.all(promises);
 		}
 	}
 };
