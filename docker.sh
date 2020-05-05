@@ -8,7 +8,10 @@ down() {
 }
 up() {
 	prepareNetwork
-#	node app/testChannel
+#	taskID=0 channelName=allchannel node app/channelSetup.js
+#	taskID=1 channelName=allchannel node app/channelSetup.js
+#	taskID=2 channelName=allchannel node app/channelSetup.js
+#	channelName=extrachannel node app/channelSetup.js
 }
 
 prepareNetwork() {
