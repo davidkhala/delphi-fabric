@@ -4,7 +4,6 @@ const {genesis} = require('../common/nodejs/formatter/channel');
 const ChannelManager = require('../common/nodejs/builder/channel');
 const OrdererManager = require('../common/nodejs/builder/orderer');
 const {setAnchorPeers, getChannelConfigReadable, ConfigFactory} = require('../common/nodejs/channelConfig');
-const Eventhub = require('../common/nodejs/builder/eventHub');
 
 const {create, join, getGenesisBlock} = ChannelUtil;
 const globalConfig = require('../config/orgs');
@@ -99,18 +98,6 @@ exports.joinAll = async (channelName) => {
 		}
 	}
 
-};
-exports.newEventHubs = async (channel, peerIndexes, orgName, inlineConnected = true) => {
-	const peers = helper.newPeers(peerIndexes, orgName);
-
-	const eventHubs = peers.map(peer => new Eventhub(channel, peer));
-	if (inlineConnected) {
-		for (const eventHub of eventHubs) {
-			await eventHub.connect();
-		}
-	}
-
-	return eventHubs;
 };
 
 exports.setAnchorPeersByOrg = async (channelName, OrgName) => {

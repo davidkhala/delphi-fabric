@@ -13,5 +13,7 @@ const task = async () => {
 	process.env.taskID = 1;
 	require('./operationTest');
 };
-task();
+task().then(_ => {
+	process.exit(0);
+});
 
