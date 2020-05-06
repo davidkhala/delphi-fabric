@@ -11,7 +11,7 @@ const path = require('path');
 const projectRoot = path.dirname(__dirname);
 const projectResolve = (...args) => path.resolve(projectRoot, ...args);
 const UserUtil = require('../common/nodejs/user');
-const {adminName:defaultAdminName,adminPwd:defaultAdminPwd} = require('../common/nodejs/formatter/user');
+const {adminName: defaultAdminName} = require('../common/nodejs/formatter/user');
 const Orderer = require('../common/nodejs/builder/orderer');
 const channelUtil = require('../common/nodejs/builder/channel');
 const {homeResolve} = require('khala-nodeutils/helper');
