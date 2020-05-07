@@ -108,7 +108,7 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 		OrdererConfig.OrdererType = OrdererType.kafka;
 
 		const Organizations = [];
-		for (const [ordererOrgName, ordererOrgConfig] of Object.entries(ordererConfig.kafka.orgs)) {
+		for (const [ordererOrgName, ordererOrgConfig] of Object.entries(ordererConfig.kafka.organizations)) {
 			const Addresses = Object.keys(ordererOrgConfig.orderers).map(ordererName => `${ordererName}.${ordererOrgName}:7050`);
 			Organizations.push(OrganizationBuilder(ordererOrgName, ordererOrgConfig, undefined, undefined, 'orderer', Addresses));
 			globalOrdererAddresses = globalOrdererAddresses.concat(Addresses);
@@ -124,7 +124,7 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 
 		const Organizations = [];
 		const Consenters = [];
-		for (const [ordererOrgName, ordererOrgConfig] of Object.entries(ordererConfig.etcdraft.orgs)) {
+		for (const [ordererOrgName, ordererOrgConfig] of Object.entries(ordererConfig.etcdraft.organizations)) {
 			const Addresses = [];
 			for (const ordererName in ordererOrgConfig.orderers) {
 				const ordererCryptoPath = new CryptoPath(MSPROOT, {
@@ -149,7 +149,7 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 		OrdererConfig.Organizations = Organizations;
 	}
 	blockProfileConfig.Orderer = OrdererConfig;
-	const orgsConfig = globalConfig.orgs;
+	const orgsConfig = globalConfig.organizations;
 	const Organizations = [];
 
 
@@ -170,7 +170,7 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 		const channelConfig = channelsConfig[channelName];
 		const PROFILE_CHANNEL = channelName;
 		const Organizations = [];
-		for (const orgName in channelConfig.orgs) {
+		for (const orgName in channelConfig.organizations) {
 			Organizations.push(OrganizationBuilder(orgName, orgsConfig[orgName], undefined, true));
 		}
 		Profiles[PROFILE_CHANNEL] = {

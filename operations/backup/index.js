@@ -8,7 +8,7 @@ const {CryptoPath} = require('../../common/nodejs/path');
 const {docker: {network, fabricTag: imageTag}} = globalConfig;
 const CONFIGTXVolume = 'CONFIGTX';
 exports.stopPeer = async (org, peerIndex) => {
-	const peerName = globalConfig.orgs[org].peers[peerIndex].container_name;
+	const peerName = globalConfig.organizations[org].peers[peerIndex].container_name;
 	await containerDelete(peerName);
 };
 const getOrdererContainerName = (org, index) => {
@@ -21,7 +21,7 @@ exports.resumeOrderer = async (org, index) => {
 	const container_name = getOrdererContainerName(org, index);
 	const {type} = globalConfig.orderer;
 
-	const ordererConfig = globalConfig.orderer[type].orgs[org].orderers[`orderer${index}`];
+	const ordererConfig = globalConfig.orderer[type].organizations[org].orderers[`orderer${index}`];
 	const {portHost, mspid: id} = ordererConfig;
 	const stateVolume = homeResolve(ordererConfig.stateVolume);
 	const cryptoPath = new CryptoPath(peerUtil.container.MSPROOT, {
@@ -37,7 +37,7 @@ exports.resumeOrderer = async (org, index) => {
 	});
 };
 exports.resumePeer = async (org, peerIndex) => {
-	const orgsConfig = globalConfig.orgs;
+	const orgsConfig = globalConfig.organizations;
 	const orgConfig = orgsConfig[org];
 	const peersConfig = orgConfig.peers;
 

@@ -12,7 +12,7 @@ const BinManager = require('../common/nodejs/binManager');
 
 const anchorPeerTask = async (channelName) => {
 	const channelConfig = globalConfig.channels[channelName];
-	for (const org in channelConfig.orgs) {
+	for (const org in channelConfig.organizations) {
 		await setAnchorPeersByOrg(channelName, org);
 	}
 };
@@ -42,7 +42,7 @@ const createTask = async (channelName) => {
 	const orderers = helper.newOrderers();
 	const orderer = orderers[0];
 
-	await create(channel, channelFile, orderer, undefined, true);
+	await create(channel, channelFile, orderer, undefined, process.env.useSignconfigtx);
 };
 
 const task = async (taskID = parseInt(process.env.taskID)) => {

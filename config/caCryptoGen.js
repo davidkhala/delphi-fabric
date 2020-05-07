@@ -2,13 +2,13 @@ const caUtil = require('../common/nodejs/ca');
 const CA = require('../common/nodejs/builder/ca');
 const fs = require('fs');
 const dockerCmd = require('khala-dockerode/dockerCmd');
-const {initAdmin, genPeer, init, genOrderer, genUser, genClientKeyPair} = require('../common/nodejs/ca-crypto-gen');
+const {genPeer, init, genOrderer, genUser, genClientKeyPair} = require('../common/nodejs/ca-crypto-gen');
 const {intermediateCA} = require('../common/nodejs/ca');
 const pathUtil = require('../common/nodejs/path');
 const {homeResolve, fsExtra} = require('khala-nodeutils/helper');
 const {CryptoPath} = pathUtil;
 const logger = require('khala-logger/log4js').consoleLogger('caCryptoGen');
-const globalConfig = require('../config/orgs');
+const globalConfig = require('../config/orgs.json');
 const {adminName, adminPwd} = require('../common/nodejs/formatter/user');
 const UserUtil = require('../common/nodejs/user');
 const {ECDSA_Key} = require('../common/nodejs/formatter/key');
@@ -86,7 +86,7 @@ const genNSaveClientKeyPair = async (caService, cryptoPath, admin, domain, nodeT
  */
 exports.genIntermediate = async (parentCADomain, parentCAPort, nodeType) => {
 	const caService = await getCaService(parentCAPort, parentCADomain);
-	const mspId = nodeType === 'orderer' ? globalConfig.orderer.etcdraft.orgs[parentCADomain].mspid : globalConfig.orgs[parentCADomain].mspid;
+	const mspId = nodeType === 'orderer' ? globalConfig.orderer.etcdraft.organizations[parentCADomain].mspid : globalConfig.organizations[parentCADomain].mspid;
 	const adminCryptoPath = new CryptoPath(caCryptoConfig, {
 		[nodeType]: {
 			org: parentCADomain
@@ -114,7 +114,7 @@ exports.genAll = async () => {
 	{
 		const nodeType = 'orderer';
 
-		const ordererOrgs = globalConfig.orderer[type].orgs;
+		const ordererOrgs = globalConfig.orderer[type].organizations;
 		for (const domain in ordererOrgs) {
 			const ordererConfig = ordererOrgs[domain];
 			const mspId = ordererConfig.mspid;
@@ -147,7 +147,7 @@ exports.genAll = async () => {
 
 	}
 	// gen peers
-	const peerOrgs = globalConfig.orgs;
+	const peerOrgs = globalConfig.organizations;
 	{
 		const nodeType = 'peer';
 

@@ -30,11 +30,11 @@ const maintenanceTest = async (channel, orderer, toMaintenance) => {
 const toRaftTest = async (channel, orderer) => {
 
 	const consenters = [];
-	const globalConfig = require('../../config/orgs');
+	const globalConfig = require('../../config/orgs.json');
 	const {CryptoPath} = require('../../common/nodejs/path');
 	const MSPROOT = homeResolve(globalConfig.docker.volumes.MSPROOT);
 
-	for (const [ordererOrgName, ordererOrgConfig] of Object.entries(globalConfig.orderer.etcdraft.orgs)) {
+	for (const [ordererOrgName, ordererOrgConfig] of Object.entries(globalConfig.orderer.etcdraft.organizations)) {
 		for (const ordererName in ordererOrgConfig.orderers) {
 			const ordererCryptoPath = new CryptoPath(MSPROOT, {
 				orderer: {

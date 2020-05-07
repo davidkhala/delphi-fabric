@@ -6,7 +6,7 @@ const OrdererManager = require('../common/nodejs/builder/orderer');
 const {setAnchorPeers, getChannelConfigReadable, ConfigFactory} = require('../common/nodejs/channelConfig');
 
 const {create, join, getGenesisBlock} = ChannelUtil;
-const globalConfig = require('../config/orgs');
+const globalConfig = require('../config/orgs.json');
 const {sleep, homeResolve} = require('khala-nodeutils/helper');
 const BinManager = require('../common/nodejs/binManager');
 const {CryptoPath} = require('../common/nodejs/path');
@@ -26,7 +26,7 @@ exports.create = async (channel, channelConfigFile, orderer, extraSignerOrgs = [
 		const CRYPTO_CONFIG_DIR = homeResolve(globalConfig.docker.volumes.MSPROOT);
 
 		const binManager = new BinManager();
-		const orgsConfig = globalConfig.orgs;
+		const orgsConfig = globalConfig.organizations;
 		if (extraSignerOrgs.length === 0) {
 			extraSignerOrgs.push(helper.randomOrg('peer'));
 		}
@@ -84,8 +84,8 @@ exports.joinAll = async (channelName) => {
 	if (channelName === genesis) {
 		client = helper.getOrgAdmin(undefined, 'orderer');
 	}
-	for (const orgName in channelConfig.orgs) {
-		const {peerIndexes} = channelConfig.orgs[orgName];
+	for (const orgName in channelConfig.organizations) {
+		const {peerIndexes} = channelConfig.organizations[orgName];
 		const peers = helper.newPeers(peerIndexes, orgName);
 
 		client = helper.getOrgAdmin(orgName);
@@ -103,14 +103,14 @@ exports.joinAll = async (channelName) => {
 exports.setAnchorPeersByOrg = async (channelName, OrgName) => {
 	const orderers = helper.newOrderers();
 	const orderer = orderers[0];
-	const orgConfig = globalConfig.channels[channelName].orgs[OrgName];
+	const orgConfig = globalConfig.channels[channelName].organizations[OrgName];
 	const {anchorPeerIndexes} = orgConfig;
 	const client = helper.getOrgAdmin(OrgName);
 	const channel = helper.prepareChannel(channelName, client);
 
 	const anchorPeers = [];
 	for (const peerIndex of anchorPeerIndexes) {
-		const {container_name} = globalConfig.orgs[OrgName].peers[peerIndex];
+		const {container_name} = globalConfig.organizations[OrgName].peers[peerIndex];
 		anchorPeers.push({host: container_name, port: 7051});
 	}
 	await setAnchorPeers(channel, orderer, OrgName, anchorPeers);
