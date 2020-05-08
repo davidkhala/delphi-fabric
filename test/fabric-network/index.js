@@ -49,8 +49,7 @@ const task = async (taskID) => {
 					transaction = contract.createTransaction('getRaw');
 					result = await transaction.evaluate('key');
 					logger.info(result.toString());
-					result = await contract.evaluateTransaction('getRaw', 'key');
-					logger.info(result.toString());
+
 				}
 					break;
 				case 1: {
@@ -59,6 +58,13 @@ const task = async (taskID) => {
 					await transaction.submit();
 				}
 					break;
+				case 2: {
+					// chaincodeId=diagnose taskID=2 node test/fabric-network
+					const network = await gateway.connect(client, channelName, peers, undefined,undefined,undefined );
+					const contract = network.getContract(chaincodeId);
+					const result = await contract.evaluateTransaction('getRaw', 'key');
+					logger.info(result.toString());
+				}
 			}
 			break;
 		case 'nodeContracts':
