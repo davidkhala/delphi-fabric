@@ -99,13 +99,15 @@ exports.newPeer = (peerIndex, orgName) => {
 };
 exports.allPeers = () => {
 	let peers = [];
-	for (const [orgName, orgConfig] of Object.entries(orgsConfig)) {
-		const peerIndexes = Object.keys(orgConfig.peers);
-		peers = peers.concat(exports.newPeers(peerIndexes, orgName));
+	for (const orgName of Object.keys(orgsConfig)) {
+		peers = peers.concat(exports.newPeers(undefined, orgName));
 	}
 	return peers;
 };
 exports.newPeers = (peerIndexes, orgName) => {
+	if (!peerIndexes) {
+		peerIndexes = Object.keys(orgsConfig[orgName].peers);
+	}
 	const targets = [];
 	for (const index of peerIndexes) {
 		targets.push(exports.newPeer(index, orgName));
@@ -148,7 +150,7 @@ const getUser = (username, orgName) => {
 			name: username
 		}
 	});
-	return UserUtil.loadFromLocal(cryptoPath, nodeType, mspId);
+	return UserUtil.loadFromLocal(cryptoPath, nodeType, mspId, true);
 };
 exports.getUser = getUser;
 
