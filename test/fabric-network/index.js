@@ -15,30 +15,22 @@ const task = async (taskID) => {
 
 	const peers = [helper.newPeer(0, org1), helper.newPeer(0, org2)];
 
-	let discoveryOptions, strategy;
-	if (process.env.discovery) {
-		const discoveryOrg = org1; //TODO
-		const globalConfig = require('../../config/orgs.json');
-		const {mspid: mspId} = globalConfig.organizations[discoveryOrg];
-		const networkConfig = globalConfig;
-		const getPeersByOrgNameCallback = (orgName) => {
-			return helper.newPeers(undefined, orgName);
-		};
-		discoveryOptions = {mspId, networkConfig, getPeersByOrgNameCallback};
+	let strategy;
 
-	}
 	if (process.env.eventhub) {
 		//TODO test for customized strategy
 		strategy = true;
 	}
-	const network = await gateway.connect(client, channelName, peers, orderer, discoveryOptions, strategy);
-	const contract = network.getContract(chaincodeId);
+
 
 	switch (chaincodeId) {
 		case 'diagnose':
 			switch (parseInt(taskID)) {
 				case 0: {
-					// discovery=true chaincodeId=diagnose taskID=0 eventHub=true node test/fabric-network
+					// chaincodeId=diagnose taskID=0 eventHub=true node test/fabric-network
+					const network = await gateway.connect(client, channelName, peers, orderer, undefined, strategy);
+					const contract = network.getContract(chaincodeId);
+
 					let transaction = contract.createTransaction('putRaw');
 
 					await transaction.submit('key', 'value');
@@ -54,17 +46,35 @@ const task = async (taskID) => {
 					break;
 				case 1: {
 					// chaincodeId=diagnose taskID=1 node test/fabric-network
+					const network = await gateway.connect(client, channelName, peers, orderer, undefined, strategy);
+					const contract = network.getContract(chaincodeId);
 					let transaction = contract.createTransaction('panic');
 					await transaction.submit();
 				}
 					break;
 				case 2: {
 					// chaincodeId=diagnose taskID=2 node test/fabric-network
-					const network = await gateway.connect(client, channelName, peers, undefined,undefined,undefined );
+					const network = await gateway.connect(client, channelName, peers, undefined, undefined, undefined);
 					const contract = network.getContract(chaincodeId);
 					const result = await contract.evaluateTransaction('getRaw', 'key');
 					logger.info(result.toString());
 				}
+					break;
+				case 3: {
+					// chaincodeId=diagnose taskID=3 eventHub=true node test/fabric-network
+					const discoveryOrg = org1; //TODO
+					const globalConfig = require('../../config/orgs.json');
+					const {mspid: mspId} = globalConfig.organizations[discoveryOrg];
+					const networkConfig = globalConfig;
+					const getPeersByOrgNameCallback = (orgName) => {
+						return helper.newPeers(undefined, orgName);
+					};
+					const discoveryOptions = {mspId, networkConfig, getPeersByOrgNameCallback};
+					const network = await gateway.connect(client, channelName, [], orderer, discoveryOptions, strategy);
+					const contract = network.getContract(chaincodeId);
+					const result = await contract.submitTransaction('getRaw', 'key');
+				}
+					break;
 			}
 			break;
 		case 'nodeContracts':
