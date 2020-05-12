@@ -4,8 +4,7 @@ const {
 const {
 	runOrderer
 } = require('../../common/nodejs/fabric-dockerode');
-const logger = require('khala-nodeutils/logger').new('test orderer HA');
-const {sleep, homeResolve} = require('khala-nodeutils/helper');
+const {sleep, homeResolve} = require('khala-light-util');
 const globalConfig = require('../../config/orgs');
 const {CryptoPath} = require('../../common/nodejs/path');
 const peerUtil = require('../../common/nodejs/peer');

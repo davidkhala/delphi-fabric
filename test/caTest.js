@@ -15,7 +15,7 @@ const identitySericeTask = async (caService, admin) => {
 const task = async () => {
 	const org = 'icdd';
 	const caUrl = 'https://localhost:8054';
-	const admin = await helper.getOrgAdminUser(org);
+	const admin = helper.getOrgAdmin(org);
 	const caService = CAUtil.new(caUrl);
 
 	const allIDs = await identitySericeTask(caService, admin);

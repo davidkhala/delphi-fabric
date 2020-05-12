@@ -2,7 +2,6 @@ const globalConfig = require('./config/orgs.json');
 const path = require('path');
 const logger = require('khala-logger/log4js').consoleLogger('dockerode-bootstrap');
 const peerUtil = require('./common/nodejs/peer');
-const {OrdererType} = require('./common/nodejs/formatter/constants');
 const {runCouchDB, runCA, runPeer, runOrderer, fabricImagePull, chaincodeClear, chaincodeImageClear} = require('./common/nodejs/fabric-dockerode');
 const {CryptoPath} = require('./common/nodejs/path');
 
@@ -12,7 +11,8 @@ const {
 	containerDelete, volumeCreateIfNotExist, networkCreateIfNotExist,
 	volumeRemove, prune: {system: pruneLocalSystem}
 } = require('khala-dockerode/dockerode-util');
-const {homeResolve, fsExtra} = require('khala-nodeutils/helper');
+const fsExtra = require('fs-extra');
+const {homeResolve} = require('khala-light-util');
 const MSPROOT = homeResolve(globalConfig.docker.volumes.MSPROOT);
 const CONFIGTX = homeResolve(globalConfig.docker.volumes.CONFIGTX);
 const {docker: {fabricTag, caTag, network, thirdPartyTag}, TLS} = globalConfig;
@@ -76,7 +76,7 @@ exports.volumesAction = async (toStop) => {
 		await volumeCreateIfNotExist({Name, path: homeResolve(globalConfig.docker.volumes[Name])});
 	}
 };
-exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'}, tostop) => {
+exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'}, toStop) => {
 	const imageTag = fabricTag;
 	const orgsConfig = globalConfig.orgs;
 
@@ -93,7 +93,7 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 			if (stateVolume) {
 				stateVolume = homeResolve(stateVolume);
 			}
-			if (tostop) {
+			if (toStop) {
 				if (couchDB) {
 					await containerDelete(couchDB.container_name);
 				}

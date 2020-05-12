@@ -105,7 +105,6 @@ exports.invoke = async (channel, peers, orderer, {chaincodeId, fcn, args, transi
 	const client = channel._clientContext;
 	if (nonAdminUser) {
 		ClientManager.setUser(client, nonAdminUser);
-		ChannelManager.setClientContext(channel, client);
 	}
 
 

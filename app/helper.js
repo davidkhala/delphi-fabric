@@ -4,16 +4,16 @@ const globalConfig = require('../config/orgs.json');
 const orgsConfig = globalConfig.orgs;
 const channelsConfig = globalConfig.channels;
 const ordererConfig = globalConfig.orderer;
-const ClientUtil = require('../common/nodejs/client');
 const Peer = require('../common/nodejs/admin/peer');
 const {CryptoPath} = require('../common/nodejs/path');
 const path = require('path');
 const projectRoot = path.dirname(__dirname);
 const projectResolve = (...args) => path.resolve(projectRoot, ...args);
+const {adminName} = require('../common/nodejs/formatter/user');
 const UserUtil = require('../common/nodejs/user');
 const Orderer = require('../common/nodejs/admin/orderer');
-const channelUtil = require('../common/nodejs/channel');
-const {homeResolve} = require('khala-nodeutils/helper');
+const ChannelManager = require('../common/nodejs/admin/channel');
+const {homeResolve} = require('khala-light-util');
 const CRYPTO_CONFIG_DIR = homeResolve(globalConfig.docker.volumes.MSPROOT);
 const {randomKeyOf} = require('khala-nodeutils/random');
 
@@ -33,20 +33,7 @@ const preparePeer = (orgName, peerIndex, peerConfig) => {
 
 	return peer;
 };
-exports.toLocalhostOrderer = (orderer) => {
-	const url = orderer.getUrl();
-	const {type} = ordererConfig;
 
-	for (const [ordererOrgName, ordererOrgConfig] of Object.entries(ordererConfig[type].orgs)) {
-		const found = Object.keys(ordererOrgConfig.orderers).find((ordererName) => {
-			return url.includes(ordererName);
-		});
-		if (found) {
-			return newOrderer(found, ordererOrgName, ordererOrgConfig.orderers[found]);
-		}
-	}
-	return null;
-};
 const newOrderer = (name, org, ordererSingleConfig) => {
 	const nodeType = 'orderer';
 	const ordererPort = ordererSingleConfig.portHost;
@@ -55,27 +42,27 @@ const newOrderer = (name, org, ordererSingleConfig) => {
 			org, name
 		}
 	});
-	let orderer;
+	let ordererWrapper;
 	if (globalConfig.TLS) {
 		const {ordererHostName} = cryptoPath;
 		const {caCert} = cryptoPath.TLSFile(nodeType);
-		orderer = new Orderer({
+		ordererWrapper = new Orderer({
+			host: 'localhost',
 			ordererPort,
 			cert: caCert,
-			ordererHostName
-		}).orderer;
+			ordererHostName,
+		});
 	} else {
-		orderer = new Orderer({ordererPort}).orderer;
+		ordererWrapper = new Orderer({ordererPort});
 	}
-	return orderer;
+	return ordererWrapper;
 };
 
 exports.newOrderers = () => {
 	const result = [];
 	const {type} = ordererConfig;
 	for (const [ordererOrgName, ordererOrgConfig] of Object.entries(ordererConfig[type].orgs)) {
-		for (const ordererName in ordererOrgConfig.orderers) {
-			const ordererSingleConfig = ordererOrgConfig.orderers[ordererName];
+		for (const [ordererName, ordererSingleConfig] of Object.entries(ordererOrgConfig.orderers)) {
 			const orderer = newOrderer(ordererName, ordererOrgName, ordererSingleConfig);
 			result.push(orderer);
 		}
@@ -83,18 +70,8 @@ exports.newOrderers = () => {
 	return result;
 };
 
-/**
- * @param client
- * @param channelName default to system channel
- */
-exports.prepareChannel = (channelName, client) => {
-	const channel = channelUtil.new(client, channelName);
-	const orderers = exports.newOrderers();
-	for (const orderer of orderers) {
-		channel.addCommitter(orderer, false);
-	}
-
-	return channel;
+exports.prepareChannel = (channelName) => {
+	return new ChannelManager({channelName}).channel;
 };
 
 exports.newPeer = (peerIndex, orgName) => {
@@ -141,7 +118,7 @@ exports.findOrgConfig = (orgName, ordererName) => {
 	}
 	return {config: target, portHost, nodeType};
 };
-const getUser = async (username, orgName, cryptoSuite) => {
+const getUser = (username, orgName) => {
 	const {config, nodeType} = exports.findOrgConfig(orgName);
 	const mspId = config.mspid;
 	const cryptoPath = new CryptoPath(CRYPTO_CONFIG_DIR, {
@@ -152,28 +129,16 @@ const getUser = async (username, orgName, cryptoSuite) => {
 			name: username
 		}
 	});
-	// FIXME this._signingIdentity._signer._key.getSKI is not a function
-	return UserUtil.loadFromLocal(cryptoPath, nodeType, mspId, cryptoSuite);
+	return UserUtil.loadFromLocal(cryptoPath, nodeType, mspId);
 };
 exports.getUser = getUser;
 
-const getUserClient = async (username, orgName, client) => {
-	const user = await getUser(username, orgName, client.getCryptoSuite());
-	ClientUtil.setUser(client, user);
-	return client;
-};
-
-exports.getOrgAdminUser = async (orgName, cryptoSuite) => {
-	return await getUser(UserUtil.adminName, orgName, cryptoSuite);
-};
-
-exports.getOrgAdmin = async (orgName, nodeType = 'peer') => {
-	const client = ClientUtil.new();
+exports.getOrgAdmin = (orgName, nodeType = 'peer') => {
 	if (!orgName) {
 		orgName = exports.randomOrg(nodeType);
 	}
 	logger.debug(`get ${orgName} Admin`);
-	return getUserClient(UserUtil.adminName, orgName, client);
+	return getUser(adminName, orgName);
 };
 exports.randomOrg = (nodeType) => {
 	let orgName;

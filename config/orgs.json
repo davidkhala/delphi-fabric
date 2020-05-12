@@ -18,8 +18,8 @@
     },
     "etcdraft": {
       "orgs": {
-        "icdd.astri.org": {
-          "mspid": "ICDDMSP",
+        "hyperledger": {
+          "mspid": "hyperledgerMSP",
           "ca": {
             "portHost": 7454
           },

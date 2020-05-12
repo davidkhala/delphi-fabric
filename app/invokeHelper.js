@@ -1,3 +1,4 @@
+// TODO WIP
 const helper = require('./helper');
 
 require('khala-logger/log4js').consoleLogger('invokeHelper');
@@ -5,7 +6,7 @@ const {proposalStringify, proposalFlatten} = require('../common/nodejs/chaincode
 const {invoke, query} = require('./chaincodeHelper');
 const channelName = 'allchannel';
 
-const {chaincodeEvent, newEventHub} = require('../common/nodejs/eventHub');
+const {chaincodeEvent, newEventHub} = require('../common/nodejs/admin/eventHub');
 
 const {sleep} = require('../common/nodejs/admin/helper').nodeUtil.helper();
 exports.invoke = async (peers, clientPeerOrg, chaincodeId, fcn, args = [], transientMap) => {

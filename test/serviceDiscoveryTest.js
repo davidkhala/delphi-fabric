@@ -39,7 +39,7 @@ const discoverOrderer = async () => {
 	const orderers = channel.getOrderers();
 
 	for (const orderer of orderers) {
-		const localhostOrderer = helper.toLocalhostOrderer(orderer);
+		const localhostOrderer = helper.toLocalhostOrderer(orderer);//TODO WIP
 		const connectResult = await OrdererUtil.ping(localhostOrderer);
 		logger.info('connectResult ', connectResult);
 	}

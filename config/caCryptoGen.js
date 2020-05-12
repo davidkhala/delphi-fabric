@@ -2,7 +2,8 @@ const CA = require('../common/nodejs/admin/ca');
 const {initAdmin, genPeer, init, genOrderer, genUser, genClientKeyPair} = require('../common/nodejs/ca-crypto-gen');
 const {intermediateCA} = require('../common/nodejs/ca');
 const pathUtil = require('../common/nodejs/path');
-const {homeResolve, fsExtra} = require('khala-nodeutils/helper');
+const fsExtra = require('fs-extra');
+const {homeResolve} = require('khala-light-util');
 const {CryptoPath} = pathUtil;
 const logger = require('khala-logger/log4js').consoleLogger('caCryptoGen');
 const globalConfig = require('../config/orgs');
@@ -14,7 +15,7 @@ const path = require('path');
 const caCryptoConfig = homeResolve(globalConfig.docker.volumes.MSPROOT);
 const {TLS} = globalConfig;
 const protocol = TLS ? 'https' : 'http';
-const getCaService = async (port, domain, useHack) => {
+const getCaService = async (port) => {
 	const caUrl = `${protocol}://localhost:${port}`;
 	const trustedRoots = [];
 	return new CA(caUrl, trustedRoots).caService;

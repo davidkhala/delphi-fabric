@@ -7,13 +7,14 @@
     "v1.x fabric node-sdk sample"
   ],
   "scripts": {
-    "install": "cd common/nodejs; npm install; cd -",
+    "install": "cd common/nodejs; npm install; lerna bootstrap --no-ci; cd -",
     "nuke": "rm -rf node_modules; cd common/nodejs; rm -rf node_modules; lerna clean --yes; cd -"
   },
   "license": "Apache-2.0",
   "dependencies": {
     "khala-dockerode": "^0.1.2",
-    "khala-nodeutils": "^0.8.2"
+    "khala-nodeutils": "^0.8.2",
+    "khala-light-util": "^0.0.3"
   },
   "devDependencies": {
     "lerna": "^3.20.2"
