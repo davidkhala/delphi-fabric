@@ -26,7 +26,7 @@ const preparePeer = (orgName, peerIndex, peerConfig) => {
 	const {peerHostName} = cryptoPath;
 	if (globalConfig.TLS) {
 		const {caCert} = cryptoPath.TLSFile('peer');
-		peer = new Peer({peerPort, cert: caCert, peerHostName});
+		peer = new Peer({host: 'localhost', peerPort, cert: caCert, peerHostName});
 	} else {
 		peer = new Peer({peerPort});
 	}
