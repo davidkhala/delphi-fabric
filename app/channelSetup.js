@@ -13,6 +13,20 @@ const anchorPeerTask = async (channelName) => {
 		await setAnchorPeersByOrg(channelName, org);
 	}
 };
+const taskViewGenesisBlock = async (channelName) => {
+	let user;
+	if (channelName === genesis) {
+		user = helper.getOrgAdmin(undefined, 'orderer');
+	} else {
+		user = helper.getOrgAdmin(undefined, 'peer');
+	}
+	const channel = helper.prepareChannel(channelName);
+	const orderer = helper.newOrderers()[0];
+	const genesisBlock = await ChannelUtil.getGenesisBlock(channel, user, orderer);
+
+	return genesisBlock;
+
+};
 const taskViewChannelBlock = async (channelName) => {
 	let user;
 	if (channelName === genesis) {
@@ -29,7 +43,6 @@ const taskViewChannelBlock = async (channelName) => {
 
 	console.log(orderer.eventer.isConnectable());
 	console.log(orderer.eventer.connected);
-	orderer.resetEventer();
 	const configBlock = await ChannelUtil.getChannelConfigFromOrderer(channel, user, orderer);
 	console.debug('configBlock', configBlock);
 
@@ -55,10 +68,11 @@ const task = async (taskID = parseInt(process.env.taskID)) => {
 		case 0:
 			await createTask(channelName);
 			break;
-		case 1:
+		case 1: {
 			// taskID=1 channelName=allchannel node app/channelSetup.js
-			// taskID=1 channelName=testchainid node app/channelSetup.js
-			await joinAll(channelName);// TODO WIP
+			const orderer = helper.newOrderers()[0];
+			await joinAll(channelName, undefined, orderer);
+		}
 			break;
 		case 2:
 			await anchorPeerTask(channelName);// TODO WIP

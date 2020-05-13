@@ -1,10 +1,7 @@
 //TODO WIP
 const helper = require('./helper.js');
 const ChannelUtil = require('../common/nodejs/channel');
-const {genesis} = require('../common/nodejs/formatter/channel');
-const {newEventHub, blockWaiter} = require('../common/nodejs/admin/eventHub');
 // const {setAnchorPeers, getChannelConfigReadable, ConfigFactory} = require('../common/nodejs/channelConfig');
-const path = require('path');
 
 const {create, join, updateAnchorPeers, getGenesisBlock} = ChannelUtil;
 
@@ -51,30 +48,15 @@ exports.create = async (channelName, orderer, signerOrgs = [helper.randomOrg('pe
 };
 
 
-exports.joinAll = async (channelName) => {
+exports.joinAll = async (channelName, block, orderer) => {
 
 	const channelConfig = globalConfig.channels[channelName];
 	for (const orgName in channelConfig.orgs) {
 		const {peerIndexes} = channelConfig.orgs[orgName];
 		const peers = helper.newPeers(peerIndexes, orgName);
-
-		const client = await helper.getOrgAdmin(orgName);
-
+		const user = helper.getOrgAdmin(orgName);
 		const channel = helper.prepareChannel(channelName);
-
-		const waitForOrderer = async () => {
-			const orderers = await ChannelUtil.getOrderers(channel, true);
-			if (orderers.length === 0) {
-				await sleep(1000);
-				return waitForOrderer();
-			}
-			return orderers[0];
-		};
-		const orderer = await waitForOrderer();
-		const block = await getGenesisBlock(channel, orderer);
-		for (const peer of peers) {
-			await join(channel, peer, block);
-		}
+		await join(channel, peers, user, block, orderer);
 	}
 
 };

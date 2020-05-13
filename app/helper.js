@@ -70,6 +70,10 @@ exports.newOrderers = () => {
 	return result;
 };
 
+/**
+ * @param channelName
+ * @return {Client.Channel}
+ */
 exports.prepareChannel = (channelName) => {
 	return new ChannelManager({channelName}).channel;
 };
