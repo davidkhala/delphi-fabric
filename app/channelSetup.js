@@ -2,7 +2,7 @@ const {create, joinAll, setAnchorPeersByOrg} = require('./channelHelper');
 const ChannelUtil = require('../common/nodejs/channel');
 const {genesis} = require('../common/nodejs/formatter/channel');
 const helper = require('./helper');
-const {homeResolve, sleep} = require('khala-light-util');
+const {homeResolve} = require('khala-light-util');
 const path = require('path');
 const globalConfig = require('../config/orgs.json');
 const BinManager = require('../common/nodejs/binManager');
@@ -36,13 +36,7 @@ const taskViewChannelBlock = async (channelName) => {
 	}
 	const channel = helper.prepareChannel(channelName);
 	const orderer = helper.newOrderers()[0];
-	console.log(orderer.eventer.isConnectable());
-	const genesisBlock = await ChannelUtil.getGenesisBlock(channel, user, orderer);
-	console.debug('genesis', genesisBlock);
-	await sleep(1000);
 
-	console.log(orderer.eventer.isConnectable());
-	console.log(orderer.eventer.connected);
 	const configBlock = await ChannelUtil.getChannelConfigFromOrderer(channel, user, orderer);
 	console.debug('configBlock', configBlock);
 
@@ -80,7 +74,7 @@ const task = async (taskID = parseInt(process.env.taskID)) => {
 		case 3:
 			// export binPath=$PWD/common/bin/
 			// taskID=3 channelName=testchainid node app/channelSetup.js
-			await taskViewChannelBlock(channelName);// TODO WIP
+			await taskViewChannelBlock(channelName);
 			break;
 		default:
 			await createTask(channelName);
