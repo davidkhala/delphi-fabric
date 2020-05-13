@@ -2,7 +2,7 @@ const {create, joinAll, setAnchorPeersByOrg} = require('./channelHelper');
 const ChannelUtil = require('../common/nodejs/channel');
 const {genesis} = require('../common/nodejs/formatter/channel');
 const helper = require('./helper');
-const {homeResolve} = require('khala-light-util');
+const {homeResolve, sleep} = require('khala-light-util');
 const path = require('path');
 const globalConfig = require('../config/orgs.json');
 const BinManager = require('../common/nodejs/binManager');
@@ -22,8 +22,17 @@ const taskViewChannelBlock = async (channelName) => {
 	}
 	const channel = helper.prepareChannel(channelName);
 	const orderer = helper.newOrderers()[0];
-	const block = await ChannelUtil.getGenesisBlock(channel, user, orderer);
-	console.log(block);// TODO apply block decoder
+	console.log(orderer.eventer.isConnectable());
+	const genesisBlock = await ChannelUtil.getGenesisBlock(channel, user, orderer);
+	console.debug('genesis', genesisBlock);
+	await sleep(1000);
+
+	console.log(orderer.eventer.isConnectable());
+	console.log(orderer.eventer.connected);
+	orderer.resetEventer();
+	const configBlock = await ChannelUtil.getChannelConfigFromOrderer(channel, user, orderer);
+	console.debug('configBlock', configBlock);
+
 };
 const CONFIGTX = homeResolve(globalConfig.docker.volumes.CONFIGTX);
 const createTask = async (channelName) => {
