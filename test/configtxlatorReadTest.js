@@ -1,37 +1,56 @@
 const helper = require('../app/helper');
-const configtxlator = require('../common/nodejs/configtxlator');
+const channelConfig = require('../common/nodejs/channelConfig');
 const channelName = 'allchannel';
 const fsExtra = require('fs-extra');
 const logger = require('khala-logger/log4js').consoleLogger('test:configtxlator');
+const orderers = helper.newOrderers();
+const orderer = orderers[0];
+const BinManager = require('../common/nodejs/binManager');
 const appChannel = async () => {
 	try {
-		const peerClient = await helper.getOrgAdmin(undefined, 'peer'); // only peer user can read channel
-		const channel = helper.prepareChannel(channelName, peerClient);
-		const peer = channel.getPeers()[0];
-		const {original_config} = await configtxlator.getChannelConfigReadable(channel, peer);
+		const user = helper.getOrgAdmin(undefined, 'peer');
 
-		fsExtra.outputFileSync(`${channelName}.json`, original_config);
+		const {json} = await channelConfig.getChannelConfigReadable(channelName, user, orderer, process.env.viaServer);
+
+		fsExtra.outputFileSync(`${channelName}.json`, json);
 	} catch (e) {
 		logger.error(e);
 	}
 };
 const systemChannel = async () => {
 	try {
-		const ordererOrg = helper.randomOrg('orderer');
-		const ordererClient = await helper.getOrgAdmin(ordererOrg, 'orderer');
-		const channel = helper.prepareChannel(undefined, ordererClient);
-		const {original_config} = await configtxlator.getChannelConfigReadable(channel);
+		const user = helper.getOrgAdmin(undefined, 'orderer');
+		const {json} = await channelConfig.getChannelConfigReadable(channelName, user, orderer, process.env.viaServer);
 
-		fsExtra.outputFileSync('testchainid.json', original_config);
+		fsExtra.outputFileSync('testchainid.json', json);
 	} catch (e) {
 		logger.error(e);
 	}
 };
-const flow = async () => {
-	await appChannel();
-	await systemChannel();
+const task = async () => {
+	if (process.env.viaServer) {
+		const path = require('path');
+		const binPath = path.resolve(__dirname, '../common/bin/');
+		const binManager = new BinManager(binPath);
+		await binManager.configtxlatorRESTServer('start');
+	}
+	switch (parseInt(process.env.taskID)) {
+		case 0: {
+			// taskID=0 viaServer=true node test/configtxlatorReadTest.js
+
+			await appChannel();
+		}
+			break;
+		case 1: {
+			// taskID=1 viaServer=true node test/configtxlatorReadTest.js
+			await systemChannel();
+		}
+			break;
+	}
+
+
 };
-flow();
+task();
 
 
 
