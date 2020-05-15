@@ -9,8 +9,9 @@ const BinManager = require('../common/nodejs/binManager');
 
 const anchorPeerTask = async (channelName) => {
 	const channelConfig = globalConfig.channels[channelName];
-	for (const org in channelConfig.orgs) {
-		await setAnchorPeersByOrg(channelName, org);
+
+	for (const org in channelConfig.organizations) {
+		await setAnchorPeersByOrg(channelName, org, process.env.viaServer);
 	}
 };
 const taskViewGenesisBlock = async (channelName) => {
@@ -69,7 +70,7 @@ const task = async (taskID = parseInt(process.env.taskID)) => {
 		}
 			break;
 		case 2:
-			await anchorPeerTask(channelName);// TODO WIP
+			await anchorPeerTask(channelName);
 			break;
 		case 3:
 			// export binPath=$PWD/common/bin/

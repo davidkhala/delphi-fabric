@@ -8,12 +8,13 @@ down() {
 }
 up() {
 	prepareNetwork
-#	taskID=0 useSignconfigtx=true channelName=allchannel node app/channelSetup.js
-	taskID=0 useSignconfigtx=false channelName=allchannel node app/channelSetup.js
+	#	taskID=0 useSignconfigtx=true channelName=allchannel node app/channelSetup.js
+	taskID=0 channelName=allchannel node app/channelSetup.js
 	sleep 1 # TODO wait for ready
 	taskID=1 channelName=allchannel node app/channelSetup.js
-#	taskID=2 channelName=allchannel node app/channelSetup.js
-#	channelName=extrachannel node app/channelSetup.js
+	#	taskID=2 viaServer=true channelName=allchannel node app/channelSetup.js # FIXME
+	taskID=2 channelName=allchannel node app/channelSetup.js
+	#	channelName=extrachannel node app/channelSetup.js
 }
 
 prepareNetwork() {

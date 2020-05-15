@@ -22,7 +22,7 @@ const cryptoPath = new CryptoPath(MSPROOT, {
  * @returns {Promise<void>}
  */
 const flow = async () => {
-	const ordererConfig = globalConfig.orderer.etcdraft.orgs[org];
+	const ordererConfig = globalConfig.orderer.etcdraft.organizations[org];
 	let {portHost, stateVolume} = ordererConfig.orderers[targetOrderer];
 	stateVolume = homeResolve(stateVolume);
 	const {file} = globalConfig.orderer.genesis_block;

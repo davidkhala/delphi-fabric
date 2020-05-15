@@ -17,7 +17,7 @@
       "profile": "delphiGenesis"
     },
     "etcdraft": {
-      "orgs": {
+      "organizations": {
         "hyperledger": {
           "mspid": "hyperledgerMSP",
           "ca": {
@@ -41,23 +41,29 @@
   "channels": {
     "allchannel": {
       "file": "all.tx",
-      "orgs": {
+      "organizations": {
         "astri.org": {
           "peerIndexes": [
             0,
             1
+          ],
+          "anchorPeerIndexes": [
+            0
           ]
         },
         "icdd": {
           "peerIndexes": [
             0,
             1
+          ],
+          "anchorPeerIndexes": [
+            0
           ]
         }
       }
     }
   },
-  "orgs": {
+  "organizations": {
     "astri.org": {
       "peers": [
         {

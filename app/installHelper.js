@@ -16,7 +16,7 @@ exports.installs = async (chaincodeId, orgName, peerIndexes) => {
 };
 
 exports.installAll = async (chaincodeId) => {
-	for (const [peerOrg, config] of Object.entries(channels[channelName].orgs)) {
+	for (const [peerOrg, config] of Object.entries(channels[channelName].organizations)) {
 		const {peerIndexes} = config;
 		await exports.installs(chaincodeId, peerOrg, peerIndexes);
 	}
@@ -36,7 +36,7 @@ exports.incrementInstalls = async (chaincodeId, orgName, peerIndexes) => {
 };
 exports.incrementInstallAll = async (chaincodeId) => {
 	let result = {};
-	const orgsConfig = channels[channelName].orgs;
+	const orgsConfig = channels[channelName].organizations;
 	for (const orgName in orgsConfig) {
 		const {peerIndexes} = orgsConfig[orgName];
 		const temp = await exports.incrementInstalls(chaincodeId, orgName, peerIndexes);

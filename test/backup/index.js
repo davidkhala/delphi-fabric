@@ -11,14 +11,14 @@ const {TLS} = globalConfig;
 const peerUtil = require('../../common/nodejs/peer');
 const {CryptoPath} = require('../../common/nodejs/path');
 exports.stopPeer = async (org, peerIndex) => {
-	const peerName = globalConfig.orgs[org].peers[peerIndex].container_name;
+	const peerName = globalConfig.organizations[org].peers[peerIndex].container_name;
 	await containerDelete(peerName);
 };
 exports.resumePeer = async (org, peerIndex) => {
 
 
 	const {docker: {network, fabricTag: imageTag}} = globalConfig;
-	const orgsConfig = globalConfig.orgs;
+	const orgsConfig = globalConfig.organizations;
 
 	const domain = org;
 	const orgConfig = orgsConfig[domain];

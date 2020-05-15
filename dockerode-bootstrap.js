@@ -53,7 +53,7 @@ exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPRO
 			}, operations, metrics);
 		}
 	};
-	const ordererOrgs = globalConfig.orderer[type].orgs;
+	const ordererOrgs = globalConfig.orderer[type].organizations;
 	for (const [domain, ordererOrgConfig] of Object.entries(ordererOrgs)) {
 		const {mspid} = ordererOrgConfig;
 		for (const [orderer, ordererConfig] of Object.entries(ordererOrgConfig.orderers)) {
@@ -78,7 +78,7 @@ exports.volumesAction = async (toStop) => {
 };
 exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'}, toStop) => {
 	const imageTag = fabricTag;
-	const orgsConfig = globalConfig.orgs;
+	const orgsConfig = globalConfig.organizations;
 
 
 	for (const domain in orgsConfig) {
@@ -133,7 +133,7 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 };
 
 exports.runCAs = async (toStop) => {
-	const {orderer: {type}, orgs: peerOrgsConfig} = globalConfig;
+	const {orderer: {type}, organizations: peerOrgsConfig} = globalConfig;
 
 	const imageTag = caTag;
 
@@ -146,7 +146,7 @@ exports.runCAs = async (toStop) => {
 		}
 	};
 
-	for (const [ordererOrg, ordererOrgConfig] of Object.entries(globalConfig.orderer[type].orgs)) {
+	for (const [ordererOrg, ordererOrgConfig] of Object.entries(globalConfig.orderer[type].organizations)) {
 		const {portHost: port} = ordererOrgConfig.ca;
 		const container_name = `ca.${ordererOrg}`;
 		const Issuer = {CN: ordererOrg};

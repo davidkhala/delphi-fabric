@@ -1,16 +1,16 @@
 //TODO WIP
 const helper = require('./helper.js');
 const ChannelUtil = require('../common/nodejs/channel');
-// const {setAnchorPeers, getChannelConfigReadable, ConfigFactory} = require('../common/nodejs/channelConfig');
-
-const {create, join, updateAnchorPeers, getGenesisBlock} = ChannelUtil;
-
-const {genAnchorPeers} = require('../common/nodejs/binManager');
+const {setAnchorPeers, getChannelConfigReadable} = require('../common/nodejs/channelConfig');
+const ConfigFactory = require('../common/nodejs/formatter/configFactory');
+const {create, join, getGenesisBlock} = ChannelUtil;
+const {channelJoined} = require('../common/nodejs/query');
 const globalConfig = require('../config/orgs');
 const {sleep, homeResolve} = require('khala-light-util');
 const BinManager = require('../common/nodejs/binManager');
 const {CryptoPath} = require('../common/nodejs/path');
 const {adminName} = require('../common/nodejs/formatter/user');
+const {getIdentityContext} = require('../common/nodejs/admin/user');
 const channelsConfig = globalConfig.channels;
 exports.create = async (channelName, orderer, signerOrgs = [helper.randomOrg('peer')], asEnvelop) => {
 
@@ -22,7 +22,7 @@ exports.create = async (channelName, orderer, signerOrgs = [helper.randomOrg('pe
 		const CRYPTO_CONFIG_DIR = homeResolve(globalConfig.docker.volumes.MSPROOT);
 
 		const binManager = new BinManager();
-		const orgsConfig = globalConfig.orgs;
+		const orgsConfig = globalConfig.organizations;
 
 		for (const orgName of signerOrgs) {
 			const localMspId = orgsConfig[orgName].mspid;
@@ -51,36 +51,33 @@ exports.create = async (channelName, orderer, signerOrgs = [helper.randomOrg('pe
 exports.joinAll = async (channelName, block, orderer) => {
 
 	const channelConfig = globalConfig.channels[channelName];
-	for (const orgName in channelConfig.orgs) {
-		const {peerIndexes} = channelConfig.orgs[orgName];
+	for (const orgName in channelConfig.organizations) {
+		const {peerIndexes} = channelConfig.organizations[orgName];
 		const peers = helper.newPeers(peerIndexes, orgName);
 		const user = helper.getOrgAdmin(orgName);
 		const channel = helper.prepareChannel(channelName);
 		await join(channel, peers, user, block, orderer);
+		await channelJoined(peers, getIdentityContext(user));
 	}
 
 };
-//TODO migration
-exports.setAnchorPeersByOrg = async (channelName, OrgName) => {
+exports.setAnchorPeersByOrg = async (channelName, orgName, viaServer) => {
 	const orderers = helper.newOrderers();
 	const orderer = orderers[0];
-	const orgConfig = globalConfig.channels[channelName].orgs[OrgName];
+	const orgConfig = globalConfig.channels[channelName].organizations[orgName];
 	const {anchorPeerIndexes} = orgConfig;
-	const client = helper.getOrgAdmin(OrgName);
-	const channel = helper.prepareChannel(channelName);
+	const user = helper.getOrgAdmin(orgName);
 
 	const anchorPeers = [];
 	for (const peerIndex of anchorPeerIndexes) {
-		const {container_name} = globalConfig.orgs[OrgName].peers[peerIndex];
+		const {container_name} = globalConfig.organizations[orgName].peers[peerIndex];
 		anchorPeers.push({host: container_name, port: 7051});
 	}
-	await setAnchorPeers(channel, orderer, OrgName, anchorPeers);
-	// TODO setup eventhub block listener here
-	const ordererClient = helper.getOrgAdmin(OrgName, 'orderer');
-	ChannelManager.setClientContext(channel, ordererClient);
-	const {configJSON} = await getChannelConfigReadable(channel, {orderer});
-	const updatedAnchorPeers = new ConfigFactory(configJSON).getAnchorPeers(OrgName);
+	await setAnchorPeers(channelName, orderer, user, [], orgName, anchorPeers, viaServer);
+
+	const {json} = await getChannelConfigReadable(channelName, user, orderer, viaServer);
+	const updatedAnchorPeers = new ConfigFactory(json).getAnchorPeers(orgName);
 	if (JSON.stringify(updatedAnchorPeers) === JSON.stringify(anchorPeers)) {
-		throw Error(`{OrgName:${OrgName} anchor peer updated failed: updatedAnchorPeers ${updatedAnchorPeers}`);
+		throw Error(`{OrgName[${orgName}] anchor peer updated failed: updatedAnchorPeers ${updatedAnchorPeers}`);
 	}
 };

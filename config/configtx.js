@@ -102,7 +102,7 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 		const Addresses = [];
 		const Organizations = [];
 		const Consenters = [];
-		for (const [ordererOrgName, ordererOrgConfig] of Object.entries(globalConfig.orderer.etcdraft.orgs)) {
+		for (const [ordererOrgName, ordererOrgConfig] of Object.entries(globalConfig.orderer.etcdraft.organizations)) {
 			for (const ordererName in ordererOrgConfig.orderers) {
 				const ordererCryptoPath = new CryptoPath(MSPROOT, {
 					orderer: {
@@ -138,7 +138,7 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 		OrdererConfig.Organizations = Organizations;
 	}
 	blockProfileConfig.Orderer = OrdererConfig;
-	const orgsConfig = globalConfig.orgs;
+	const orgsConfig = globalConfig.organizations;
 	const Organizations = [];
 
 
@@ -159,7 +159,7 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 		const channelConfig = channelsConfig[channelName];
 		const PROFILE_CHANNEL = channelName;
 		const Organizations = [];
-		for (const orgName in channelConfig.orgs) {
+		for (const orgName in channelConfig.organizations) {
 			Organizations.push(OrganizationBuilder(orgName, orgsConfig[orgName], undefined, true));
 		}
 		Profiles[PROFILE_CHANNEL] = {

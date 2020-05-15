@@ -1,7 +1,7 @@
 const logger = require('khala-logger/log4js').consoleLogger('Helper');
 const globalConfig = require('../config/orgs.json');
 
-const orgsConfig = globalConfig.orgs;
+const orgsConfig = globalConfig.organizations;
 const channelsConfig = globalConfig.channels;
 const ordererConfig = globalConfig.orderer;
 const Peer = require('../common/nodejs/admin/peer');
@@ -61,7 +61,7 @@ const newOrderer = (name, org, ordererSingleConfig) => {
 exports.newOrderers = () => {
 	const result = [];
 	const {type} = ordererConfig;
-	for (const [ordererOrgName, ordererOrgConfig] of Object.entries(ordererConfig[type].orgs)) {
+	for (const [ordererOrgName, ordererOrgConfig] of Object.entries(ordererConfig[type].organizations)) {
 		for (const [ordererName, ordererSingleConfig] of Object.entries(ordererOrgConfig.orderers)) {
 			const orderer = newOrderer(ordererName, ordererOrgName, ordererSingleConfig);
 			result.push(orderer);
@@ -109,8 +109,8 @@ exports.findOrgConfig = (orgName, ordererName) => {
 	} else {
 		nodeType = 'orderer';
 		const {type} = ordererConfig;
-		if (ordererConfig[type].orgs[orgName]) {
-			target = ordererConfig[type].orgs[orgName];
+		if (ordererConfig[type].organizations[orgName]) {
+			target = ordererConfig[type].organizations[orgName];
 			if (!ordererName) {
 				ordererName = randomKeyOf(target.orderers);
 			}
@@ -147,10 +147,10 @@ exports.getOrgAdmin = (orgName, nodeType = 'peer') => {
 exports.randomOrg = (nodeType) => {
 	let orgName;
 	if (nodeType === 'peer') {
-		orgName = randomKeyOf(globalConfig.orgs);
+		orgName = randomKeyOf(globalConfig.organizations);
 	} else if (nodeType === 'orderer') {
 		const {type} = globalConfig.orderer;
-		orgName = randomKeyOf(globalConfig.orderer[type].orgs);
+		orgName = randomKeyOf(globalConfig.orderer[type].organizations);
 	} else {
 		throw Error(`invalid nodeType ${nodeType}`);
 	}
@@ -158,6 +158,6 @@ exports.randomOrg = (nodeType) => {
 	return orgName;
 };
 exports.randomChannelOrg = (channelName) => {
-	return randomKeyOf(channelsConfig[channelName].orgs);
+	return randomKeyOf(channelsConfig[channelName].organizations);
 };
 exports.projectResolve = projectResolve;

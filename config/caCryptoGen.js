@@ -71,7 +71,7 @@ const genNSaveClientKeyPair = async (caService, cryptoPath, admin, domain, nodeT
  */
 exports.genIntermediate = async (parentCADomain, parentCAPort, nodeType) => {
 	const caService = await getCaService(parentCAPort, parentCADomain);
-	const mspId = nodeType === 'orderer' ? globalConfig.orderer.etcdraft.orgs[parentCADomain].mspid : globalConfig.orgs[parentCADomain].mspid;
+	const mspId = nodeType === 'orderer' ? globalConfig.orderer.etcdraft.organizations[parentCADomain].mspid : globalConfig.organizations[parentCADomain].mspid;
 	const adminCryptoPath = new CryptoPath(caCryptoConfig, {
 		[nodeType]: {
 			org: parentCADomain
@@ -99,7 +99,7 @@ exports.genAll = async () => {
 	{
 		const nodeType = 'orderer';
 
-		const ordererOrgs = globalConfig.orderer[type].orgs;
+		const ordererOrgs = globalConfig.orderer[type].organizations;
 		for (const domain in ordererOrgs) {
 			const ordererConfig = ordererOrgs[domain];
 			const mspId = ordererConfig.mspid;
@@ -133,7 +133,7 @@ exports.genAll = async () => {
 
 	}
 	// gen peers
-	const peerOrgs = globalConfig.orgs;
+	const peerOrgs = globalConfig.organizations;
 	{
 		const nodeType = 'peer';
 
