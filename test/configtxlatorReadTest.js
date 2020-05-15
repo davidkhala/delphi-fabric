@@ -12,7 +12,7 @@ const appChannel = async () => {
 
 		const {json} = await channelConfig.getChannelConfigReadable(channelName, user, orderer, process.env.viaServer);
 
-		fsExtra.outputFileSync(`${channelName}.json`, json);
+		fsExtra.outputFileSync(`${channelName}${process.env.viaServer ? '-viaServer' : ''}.json`, json);
 	} catch (e) {
 		logger.error(e);
 	}
@@ -22,7 +22,7 @@ const systemChannel = async () => {
 		const user = helper.getOrgAdmin(undefined, 'orderer');
 		const {json} = await channelConfig.getChannelConfigReadable(channelName, user, orderer, process.env.viaServer);
 
-		fsExtra.outputFileSync('testchainid.json', json);
+		fsExtra.outputFileSync(`testchainid${process.env.viaServer ? '-viaServer' : ''}.json`, json);
 	} catch (e) {
 		logger.error(e);
 	}
