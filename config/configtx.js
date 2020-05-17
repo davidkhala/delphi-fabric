@@ -22,8 +22,8 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 			}
 		});
 		const result = {
-			Name: orgName,//Name is the key by which this org will be referenced in channel configuration transactions.
-			ID: orgConfig.mspid, //ID is the key by which this org's MSP definition will be referenced.
+			Name: orgName, // Name is the key by which this org will be referenced in channel configuration transactions.
+			ID: orgConfig.mspid, // ID is the key by which this org's MSP definition will be referenced.
 			MSPDir: cryptoPath[`${nodeType}OrgMSP`](),
 			Policies: {
 				Readers: {
@@ -37,6 +37,10 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 				Admins: {
 					Type: 'Signature',
 					Rule: `OR('${orgConfig.mspid}.admin')`
+				},
+				Endorsement: {
+					Type: 'Signature',
+					Rule: `OR('${orgConfig.mspid}.member')`
 				}
 			}
 		};
@@ -63,7 +67,7 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 
 	const blockProfileConfig = {
 		Capabilities: {
-			V1_3: true
+			V2_0: true
 		},
 		Policies: implicitPolicies
 	};
@@ -75,7 +79,7 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 			PreferredMaxBytes: '512 KB'
 		},
 		Capabilities: {
-			V1_1: true
+			V2_0: true
 		},
 		Policies: {
 			Readers: {
@@ -165,14 +169,13 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 		Profiles[PROFILE_CHANNEL] = {
 			Policies: implicitPolicies,
 			Capabilities: {
-				V1_3: true
+				V2_0: true
 			},
 			Consortium: consortiumName,
 			Application: {
 				Policies: implicitPolicies,
 				Organizations,
 				Capabilities: {
-					V1_3: true,
 					V2_0: true
 				}
 			}
