@@ -1,15 +1,15 @@
 Profiles:
   delphiGenesis:
     Capabilities:
-      V1_3: true
-    Policies: &ref_0
-      Readers:
+      V2_0: true
+    Policies: &ref_3
+      Readers: &ref_0
         Type: ImplicitMeta
         Rule: ANY Readers
-      Writers:
+      Writers: &ref_1
         Type: ImplicitMeta
         Rule: ANY Writers
-      Admins:
+      Admins: &ref_2
         Type: ImplicitMeta
         Rule: MAJORITY Admins
     Orderer:
@@ -19,20 +19,14 @@ Profiles:
         AbsoluteMaxBytes: 99 MB
         PreferredMaxBytes: 512 KB
       Capabilities:
-        V1_1: true
+        V2_0: true
       Policies:
-        Readers:
-          Type: ImplicitMeta
-          Rule: ANY Readers
-        Writers:
-          Type: ImplicitMeta
-          Rule: ANY Writers
-        Admins:
-          Type: ImplicitMeta
-          Rule: MAJORITY Admins
         BlockValidation:
           Type: ImplicitMeta
           Rule: ANY Writers
+        Readers: *ref_0
+        Writers: *ref_1
+        Admins: *ref_2
       OrdererType: etcdraft
       Addresses:
         - 'orderer0.hyperledger:7050'
@@ -72,6 +66,9 @@ Profiles:
             Admins:
               Type: Signature
               Rule: OR('hyperledgerMSP.admin')
+            Endorsement:
+              Type: Signature
+              Rule: OR('hyperledgerMSP.member')
     Consortiums:
       SampleConsortium:
         Organizations:
@@ -88,6 +85,9 @@ Profiles:
               Admins:
                 Type: Signature
                 Rule: OR('astriMSP.admin')
+              Endorsement:
+                Type: Signature
+                Rule: OR('astriMSP.member')
           - Name: icdd
             ID: icddMSP
             MSPDir: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp
@@ -101,13 +101,25 @@ Profiles:
               Admins:
                 Type: Signature
                 Rule: OR('icddMSP.admin')
+              Endorsement:
+                Type: Signature
+                Rule: OR('icddMSP.member')
   allchannel:
-    Policies: *ref_0
+    Policies: *ref_3
     Capabilities:
-      V1_3: true
+      V2_0: true
     Consortium: SampleConsortium
     Application:
-      Policies: *ref_0
+      Policies:
+        LifecycleEndorsement:
+          Type: ImplicitMeta
+          Rule: MAJORITY Endorsement
+        Endorsement:
+          Type: ImplicitMeta
+          Rule: MAJORITY Endorsement
+        Readers: *ref_0
+        Writers: *ref_1
+        Admins: *ref_2
       Organizations:
         - Name: astri.org
           ID: astriMSP
@@ -122,6 +134,9 @@ Profiles:
             Admins:
               Type: Signature
               Rule: OR('astriMSP.admin')
+            Endorsement:
+              Type: Signature
+              Rule: OR('astriMSP.member')
           AnchorPeers:
             - {}
         - Name: icdd
@@ -137,15 +152,17 @@ Profiles:
             Admins:
               Type: Signature
               Rule: OR('icddMSP.admin')
+            Endorsement:
+              Type: Signature
+              Rule: OR('icddMSP.member')
           AnchorPeers:
             - {}
       Capabilities:
-        V1_3: true
         V2_0: true
   anchorPeers:
-    Policies: *ref_0
+    Policies: *ref_3
     Application:
-      Policies: *ref_0
+      Policies: *ref_3
       Organizations:
         - Name: astri.org
           MSPDir: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/astri.org/msp
@@ -159,6 +176,9 @@ Profiles:
             Admins:
               Type: Signature
               Rule: OR('astriMSP.admin')
+            Endorsement:
+              Type: Signature
+              Rule: OR('astriMSP.member')
           AnchorPeers:
             - Host: peer0.astri.org
               Port: 7051
@@ -176,6 +196,9 @@ Profiles:
             Admins:
               Type: Signature
               Rule: OR('icddMSP.admin')
+            Endorsement:
+              Type: Signature
+              Rule: OR('icddMSP.member')
           AnchorPeers:
             - Host: peer0.icdd
               Port: 7051

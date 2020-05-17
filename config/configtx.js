@@ -81,24 +81,12 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 		Capabilities: {
 			V2_0: true
 		},
-		Policies: {
-			Readers: {
-				Type: 'ImplicitMeta',
-				Rule: 'ANY Readers'
-			},
-			Writers: {
-				Type: 'ImplicitMeta',
-				Rule: 'ANY Writers'
-			},
-			Admins: {
-				Type: 'ImplicitMeta',
-				Rule: 'MAJORITY Admins'
-			},
+		Policies: Object.assign({
 			BlockValidation: {
 				Type: 'ImplicitMeta',
 				Rule: 'ANY Writers'
 			}
-		}
+		}, implicitPolicies)
 	};
 	if (globalConfig.orderer.type === 'etcdraft') {
 		OrdererConfig.OrdererType = 'etcdraft';
@@ -173,7 +161,17 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 			},
 			Consortium: consortiumName,
 			Application: {
-				Policies: implicitPolicies,
+				Policies: Object.assign({
+					LifecycleEndorsement:
+						{
+							Type: 'ImplicitMeta',
+							Rule: 'MAJORITY Endorsement'
+						},
+					Endorsement: {
+						Type: 'ImplicitMeta',
+						Rule: 'MAJORITY Endorsement'
+					}
+				}, implicitPolicies),
 				Organizations,
 				Capabilities: {
 					V2_0: true
