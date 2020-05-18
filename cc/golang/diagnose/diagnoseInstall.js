@@ -1,10 +1,10 @@
 const {installAll} = require('../../../app/installHelper');
 const {instantiate} = require('../../../app/instantiateHelper');
 
-const masterCC = 'diagnose';
+const diagnose = 'diagnose';
 const helper = require('../../../app/helper');
 exports.task = async () => {
-	await installAll(masterCC);
+	await installAll(diagnose);
 	const org1 = 'astri.org';
 	const org2 = 'icdd';
 	const p1 = helper.newPeer(0, org1);
@@ -12,7 +12,7 @@ exports.task = async () => {
 	const transientMap = {
 		key: 'david'
 	};
-	await instantiate(org1, [p1, p2], masterCC, 'init', [], transientMap);
+	await instantiate(org1, [p1, p2], diagnose, 'init', [], transientMap);
 };
 exports.taskAttach = async () => {
 	const prone = 'mainChain';

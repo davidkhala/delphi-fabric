@@ -1,6 +1,5 @@
 const {install, prepareInstall} = require('./chaincodeHelper');
 const helper = require('./helper');
-const {nextVersion} = require('../common/nodejs/admin/helper').nodeUtil.version();
 const {incrementInstall} = require('../common/nodejs/chaincodeVersion');
 
 const globalConfig = require('../config/orgs.json');
@@ -10,9 +9,12 @@ const channelName = 'allchannel';
 // only one time, one org could deploy
 exports.installs = async (chaincodeId, orgName, peerIndexes) => {
 	const peers = helper.newPeers(peerIndexes, orgName);
-	const client = await helper.getOrgAdmin(orgName);
-	const chaincodeVersion = nextVersion();
-	return install(peers, {chaincodeId, chaincodeVersion}, client);
+	for (const peer of peers) {
+		await peer.connect();
+	}
+	const user = helper.getOrgAdmin(orgName);
+	const t1 = await install(peers, {chaincodeId}, user);
+	// t1(); FIXME debug
 };
 
 exports.installAll = async (chaincodeId) => {
