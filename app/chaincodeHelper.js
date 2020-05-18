@@ -18,7 +18,6 @@ exports.prepareInstall = async ({chaincodeId}) => {
 	});
 	const [tmpDir, t1] = tmp.createTmpDir();
 	const ccPack = path.resolve(tmpDir, 'ccPackage.tar.gz');
-	console.debug(ccPack);
 	await chaincodePackage.pack(chaincodePath, ccPack);
 
 
