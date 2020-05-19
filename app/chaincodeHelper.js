@@ -1,16 +1,26 @@
 const {install} = require('../common/nodejs/chaincode');
-const golangUtil = require('../common/nodejs/golang');
 const ChaincodePackage = require('../common/nodejs/chaincodePackage');
 const tmp = require('khala-nodeutils/tmp');
 const path = require('path');
 
 const chaincodeConfig = require('../config/chaincode.json');
 
+const {exec} = require('khala-nodeutils/devOps');
+/**
+ * @returns {Promise<string>}
+ */
+const getGOPATH = async () => {
+	const {stdout, stderr} = await exec('go env GOPATH');
+	if (stderr) {
+		throw Error(stderr);
+	}
+	return stdout.trim();
+};
 exports.prepareInstall = async ({chaincodeId}) => {
 	const chaincodeRelativePath = chaincodeConfig[chaincodeId].path;
 	const chaincodeType = chaincodeConfig[chaincodeId].type;
-	const gopath = await golangUtil.getGOPATH();
-	const chaincodePath = path.resolve(gopath, 'src', chaincodeRelativePath);
+	const goPath = await getGOPATH();
+	const chaincodePath = path.resolve(goPath, 'src', chaincodeRelativePath);
 	const chaincodePackage = new ChaincodePackage({
 		Path: chaincodeRelativePath,
 		Type: chaincodeType,
