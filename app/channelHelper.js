@@ -1,6 +1,7 @@
 //TODO WIP
 const helper = require('./helper.js');
 const ChannelUtil = require('../common/nodejs/channel');
+const logger = require('khala-logger/log4js').consoleLogger('channel helper');
 const {setAnchorPeers, getChannelConfigReadable} = require('../common/nodejs/channelConfig');
 const ConfigFactory = require('../common/nodejs/formatter/configFactory');
 const {create, join, getGenesisBlock} = ChannelUtil;
@@ -51,13 +52,17 @@ exports.create = async (channelName, orderer, signerOrgs = [helper.randomOrg('pe
 exports.joinAll = async (channelName, block, orderer) => {
 
 	const channelConfig = globalConfig.channels[channelName];
-	for (const orgName in channelConfig.organizations) {
-		const {peerIndexes} = channelConfig.organizations[orgName];
+
+	for (const [orgName, {peerIndexes}] of Object.entries(channelConfig.organizations)) {
 		const peers = helper.newPeers(peerIndexes, orgName);
 		const user = helper.getOrgAdmin(orgName);
 		const channel = helper.prepareChannel(channelName);
 		await join(channel, peers, user, block, orderer);
-		await channelJoined(peers, getIdentityContext(user));
+		const JoinedResult = await channelJoined(peers, getIdentityContext(user));
+		for (const joined of JoinedResult.responses) {
+			logger.debug(joined.peer, 'has joined', joined.response.channels);
+		}
+
 	}
 
 };

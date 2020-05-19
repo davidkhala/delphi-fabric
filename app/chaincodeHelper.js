@@ -1,4 +1,4 @@
-const {install} = require('../common/nodejs/chaincode');
+const {install, approve} = require('../common/nodejs/chaincode');
 const ChaincodePackage = require('../common/nodejs/chaincodePackage');
 const tmp = require('khala-nodeutils/tmp');
 const path = require('path');
@@ -26,7 +26,7 @@ exports.prepareInstall = async ({chaincodeId}) => {
 		Type: chaincodeType,
 		Label: chaincodeId
 	});
-	const [tmpDir, t1] = tmp.createTmpDir();
+	const [tmpDir, t1] = tmp.createTmpDir({unsafeCleanup: true});
 	const ccPack = path.resolve(tmpDir, 'ccPackage.tar.gz');
 	await chaincodePackage.pack(chaincodePath, ccPack);
 
@@ -39,10 +39,13 @@ exports.prepareInstall = async ({chaincodeId}) => {
 };
 exports.install = async (peers, {chaincodeId}, user) => {
 	const [ccPack, t1] = await exports.prepareInstall({chaincodeId});
-	await install(peers, ccPack, user);
-	return t1;
+	const result = await install(peers, ccPack, user);
+	return [result, t1];
 };
-
+exports.approve = async (peers, {label, PackageID, channelName}, user, orderer) => {
+	const version = '0.0.0'; // TODO
+	await approve(peers, {name: label, version, PackageID}, channelName, user, orderer);
+};
 // const buildEndorsePolicy = (config) => {
 // 	const {n} = config;
 // 	const identities = [];

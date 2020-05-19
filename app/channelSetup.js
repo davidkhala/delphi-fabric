@@ -56,10 +56,10 @@ const createTask = async (channelName) => {
 	await create(channelName, orderer, undefined, process.env.useSignconfigtx);
 };
 
-const task = async (taskID = parseInt(process.env.taskID)) => {
+const task = async () => {
 
 	const channelName = process.env.channelName ? process.env.channelName : 'allchannel';
-	switch (taskID) {
+	switch (parseInt(process.env.taskID)) {
 		case 0:
 			await createTask(channelName);
 			break;
@@ -77,10 +77,12 @@ const task = async (taskID = parseInt(process.env.taskID)) => {
 			// taskID=3 channelName=testchainid node app/channelSetup.js
 			await taskViewChannelBlock(channelName);
 			break;
-		default:
+		default: {
 			await createTask(channelName);
-			await joinAll(channelName);
+			const orderer = helper.newOrderers()[0];
+			await joinAll(channelName, undefined, orderer);
 			await anchorPeerTask(channelName);
+		}
 	}
 
 };

@@ -1,6 +1,5 @@
-const {install, prepareInstall} = require('./chaincodeHelper');
+const {install, approve} = require('./chaincodeHelper');
 const helper = require('./helper');
-const {incrementInstall} = require('../common/nodejs/chaincodeVersion');
 
 const globalConfig = require('../config/orgs.json');
 const {channels} = globalConfig;
@@ -13,36 +12,33 @@ exports.installs = async (chaincodeId, orgName, peerIndexes) => {
 		await peer.connect();
 	}
 	const user = helper.getOrgAdmin(orgName);
-	const t1 = await install(peers, {chaincodeId}, user);
-	// t1(); FIXME debug
+	const [result, t1] = await install(peers, {chaincodeId}, user);
+	t1();
+	return result;
 };
-
-exports.installAll = async (chaincodeId) => {
-	for (const [peerOrg, config] of Object.entries(channels[channelName].organizations)) {
-		const {peerIndexes} = config;
-		await exports.installs(chaincodeId, peerOrg, peerIndexes);
-	}
-};
-
-
-exports.incrementInstalls = async (chaincodeId, orgName, peerIndexes) => {
-	const result = {};
-	const client = await helper.getOrgAdmin(orgName);
+exports.approves = async (PackageID, orgName, peerIndexes, orderer) => {
 	const peers = helper.newPeers(peerIndexes, orgName);
 	for (const peer of peers) {
-		const opt = await prepareInstall({chaincodeId});
-		const {chaincodeVersion} = await incrementInstall(peer, opt, client);
-		result[peer.getName()] = chaincodeVersion;
+		await peer.connect();
 	}
-	return result;
+	await orderer.connect();
+	const user = helper.getOrgAdmin(orgName);
+	const label = PackageID.split(':')[0];
+	await approve(peers, {label, PackageID, channelName}, user, orderer);
 };
-exports.incrementInstallAll = async (chaincodeId) => {
-	let result = {};
-	const orgsConfig = channels[channelName].organizations;
-	for (const orgName in orgsConfig) {
-		const {peerIndexes} = orgsConfig[orgName];
-		const temp = await exports.incrementInstalls(chaincodeId, orgName, peerIndexes);
-		result = Object.assign(result, temp);
+exports.approveAll = async (PackageID, orderer) => {
+	for (const [peerOrg, config] of Object.entries(channels[channelName].organizations)) {
+		const {peerIndexes} = config;
+		const result = await exports.approves(PackageID, peerOrg, peerIndexes, orderer);
 	}
-	return result;
+};
+exports.installAll = async (chaincodeId) => {
+	let packageID;
+	for (const [peerOrg, config] of Object.entries(channels[channelName].organizations)) {
+		const {peerIndexes} = config;
+		const result = await exports.installs(chaincodeId, peerOrg, peerIndexes);
+		packageID = result.responses[0].response.package_id;
+	}
+
+	return packageID;
 };
