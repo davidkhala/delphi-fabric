@@ -88,6 +88,7 @@ Finished
 - hybrid data storage model: couchdb, leveldb
 
 ## TODO
+- migrate to use `mocha` as test framework
 - java sdk: keep update
 - java chaincode
 - chaincode uninstall

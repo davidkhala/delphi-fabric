@@ -2,7 +2,6 @@
 const helper = require('./helper');
 
 require('khala-logger/log4js').consoleLogger('invokeHelper');
-const {proposalStringify, proposalFlatten} = require('../common/nodejs/chaincode');
 const {invoke, query} = require('./chaincodeHelper');
 const channelName = 'allchannel';
 

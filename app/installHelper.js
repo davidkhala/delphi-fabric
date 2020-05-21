@@ -1,10 +1,16 @@
-const {install, approve} = require('./chaincodeHelper');
+const {install} = require('./chaincodeHelper');
+const ChaincodeAction = require('../common/nodejs/chaincodeAction');
 const helper = require('./helper');
 
 const globalConfig = require('../config/orgs.json');
 const {channels} = globalConfig;
 
 const channelName = 'allchannel';
+const prepare = ({PackageID, sequence}) => {
+	const name = PackageID.split(':')[0];
+	const version = sequence.toString();
+	return {name, version};
+};
 // only one time, one org could deploy
 exports.installs = async (chaincodeId, orgName, peerIndexes) => {
 	const peers = helper.newPeers(peerIndexes, orgName);
@@ -16,22 +22,47 @@ exports.installs = async (chaincodeId, orgName, peerIndexes) => {
 	t1();
 	return result;
 };
-exports.approves = async (PackageID, orgName, peerIndexes, orderer) => {
-	const peers = helper.newPeers(peerIndexes, orgName);
+exports.approves = async ({sequence, PackageID}, orgName, peers, orderer) => {
 	for (const peer of peers) {
 		await peer.connect();
 	}
 	await orderer.connect();
 	const user = helper.getOrgAdmin(orgName);
-	const label = PackageID.split(':')[0];
-	await approve(peers, {label, PackageID, channelName}, user, orderer);
+	const {name, version} = prepare({PackageID, sequence});
+	const chaincodeAction = new ChaincodeAction(peers, user, channelName);
+	await chaincodeAction.approve({name, PackageID, version, sequence}, orderer);
 };
-exports.approveAll = async (PackageID, orderer) => {
-	for (const [peerOrg, config] of Object.entries(channels[channelName].organizations)) {
-		const {peerIndexes} = config;
-		const result = await exports.approves(PackageID, peerOrg, peerIndexes, orderer);
+exports.commitChaincodeDefinition = async ({sequence, PackageID}, orgName, peers, orderer) => {
+	for (const peer of peers) {
+		await peer.connect();
 	}
+	await orderer.connect();
+	const user = helper.getOrgAdmin(orgName);
+	const {name, version} = prepare({PackageID, sequence});
+	const chaincodeAction = new ChaincodeAction(peers, user, channelName);
+	await chaincodeAction.commitChaincodeDefinition({name, version, sequence}, orderer);
 };
+
+exports.checkCommitReadiness = async ({sequence, PackageID}, orgName, peers) => {
+	for (const peer of peers) {
+		await peer.connect();
+	}
+	const user = helper.getOrgAdmin(orgName);
+	const {name, version} = prepare({PackageID, sequence});
+
+	const chaincodeAction = new ChaincodeAction(peers, user, channelName);
+	await chaincodeAction.checkCommitReadiness({name, version, sequence});
+};
+exports.queryDefinition = async (name, orgName, peerIndexes) => {
+	const peers = helper.newPeers(peerIndexes, orgName);
+	for (const peer of peers) {
+		await peer.connect();
+	}
+	const user = helper.getOrgAdmin(orgName);
+	const chaincodeAction = new ChaincodeAction(peers, user, channelName);
+	await chaincodeAction.queryChaincodeDefinition(name);
+};
+
 exports.installAll = async (chaincodeId) => {
 	let packageID;
 	for (const [peerOrg, config] of Object.entries(channels[channelName].organizations)) {
