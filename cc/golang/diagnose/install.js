@@ -7,7 +7,7 @@ const {sleep} = require('khala-light-util');
 const diagnose = 'diagnose';
 const orderers = helper.newOrderers();
 const orderer = orderers[0];
-const sequence = process.env.sequence ? parseInt(process.env.sequence) : 1;
+const sequenceEnv = process.env.sequence ? parseInt(process.env.sequence) : 1;
 const taskApprove = async (PackageID, sequence) => {
 	let peers = [helper.newPeer(0, 'icdd')];
 	await approves({PackageID, sequence}, 'icdd', peers, orderer);
@@ -21,6 +21,11 @@ const taskCheckCommitReadiness = async (PackageID, sequence) => {
 const taskCommitChaincodeDefinition = async (PackageID, sequence) => {
 	const peers = [helper.newPeer(0, 'icdd'), helper.newPeer(0, 'astri.org')];
 	await commitChaincodeDefinition({PackageID, sequence}, 'icdd', peers, orderer);
+};
+const taskQueryDefinition = async () => {
+	await queryDefinition('icdd', [0]);
+	await queryDefinition('icdd', [0], diagnose);
+	await queryDefinition('astri.org', [0]);
 };
 const task = async () => {
 
@@ -38,8 +43,7 @@ const task = async () => {
 		}
 			break;
 		case 2: {
-			//TODO return empty
-			await queryDefinition(undefined, 'icdd', [0]);
+			await taskQueryDefinition();
 		}
 			break;
 		case 3: {
@@ -56,13 +60,13 @@ const task = async () => {
 			break;
 
 		default: {
-
 			const packageID = await installAll(diagnose);
 			console.log({packageID});
-			await taskApprove(packageID, sequence);
-			await sleep(2000);
-			await taskCheckCommitReadiness(packageID, sequence);
-			await taskCommitChaincodeDefinition(packageID, sequence);
+			await taskApprove(packageID, sequenceEnv);
+			await taskCheckCommitReadiness(packageID, sequenceEnv);
+			await taskCommitChaincodeDefinition(packageID, sequenceEnv);
+			await taskQueryDefinition();
+
 
 		}
 	}

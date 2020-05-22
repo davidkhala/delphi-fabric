@@ -11,7 +11,7 @@ const task = async () => {
 	const channel = helper.prepareChannel(channelName);
 	logger.info(channel.toString());
 	const peer = helper.newPeer(0, org);
-	const eventHub = new EventHub(channel, [peer]);
+	const eventHub = new EventHub(channel, [peer.eventer]);
 
 	const identityContext = UserUtil.getIdentityContext(user);
 	const startBlock = OLDEST;

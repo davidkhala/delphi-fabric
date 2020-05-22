@@ -6,10 +6,9 @@ const globalConfig = require('../config/orgs.json');
 const {channels} = globalConfig;
 
 const channelName = 'allchannel';
-const prepare = ({PackageID, sequence}) => {
+const prepare = ({PackageID}) => {
 	const name = PackageID.split(':')[0];
-	const version = sequence.toString();
-	return {name, version};
+	return {name};
 };
 // only one time, one org could deploy
 exports.installs = async (chaincodeId, orgName, peerIndexes) => {
@@ -28,9 +27,9 @@ exports.approves = async ({sequence, PackageID}, orgName, peers, orderer) => {
 	}
 	await orderer.connect();
 	const user = helper.getOrgAdmin(orgName);
-	const {name, version} = prepare({PackageID, sequence});
+	const {name} = prepare({PackageID});
 	const chaincodeAction = new ChaincodeAction(peers, user, channelName);
-	await chaincodeAction.approve({name, PackageID, version, sequence}, orderer);
+	await chaincodeAction.approve({name, PackageID, sequence}, orderer);
 };
 exports.commitChaincodeDefinition = async ({sequence, PackageID}, orgName, peers, orderer) => {
 	for (const peer of peers) {
@@ -38,9 +37,9 @@ exports.commitChaincodeDefinition = async ({sequence, PackageID}, orgName, peers
 	}
 	await orderer.connect();
 	const user = helper.getOrgAdmin(orgName);
-	const {name, version} = prepare({PackageID, sequence});
+	const {name} = prepare({PackageID});
 	const chaincodeAction = new ChaincodeAction(peers, user, channelName);
-	await chaincodeAction.commitChaincodeDefinition({name, version, sequence}, orderer);
+	await chaincodeAction.commitChaincodeDefinition({name, sequence}, orderer);
 };
 
 exports.checkCommitReadiness = async ({sequence, PackageID}, orgName, peers) => {
@@ -48,12 +47,12 @@ exports.checkCommitReadiness = async ({sequence, PackageID}, orgName, peers) => 
 		await peer.connect();
 	}
 	const user = helper.getOrgAdmin(orgName);
-	const {name, version} = prepare({PackageID, sequence});
+	const {name} = prepare({PackageID});
 
 	const chaincodeAction = new ChaincodeAction(peers, user, channelName);
-	await chaincodeAction.checkCommitReadiness({name, version, sequence});
+	await chaincodeAction.checkCommitReadiness({name, sequence});
 };
-exports.queryDefinition = async (name, orgName, peerIndexes) => {
+exports.queryDefinition = async (orgName, peerIndexes, name) => {
 	const peers = helper.newPeers(peerIndexes, orgName);
 	for (const peer of peers) {
 		await peer.connect();
