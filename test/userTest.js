@@ -1,5 +1,5 @@
 const helper = require('../app/helper');
-const {getUser} = require('../common/nodejs/admin/client');//TODO
+const {getUser} = require('../common/nodejs/client');//TODO
 const UserBuilder = require('../common/nodejs/admin/user');
 const {ECDSA_Key} = require('../common/nodejs/formatter/key');
 const task = async (taskID) => {
