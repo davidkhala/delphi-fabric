@@ -7,7 +7,7 @@ const {approves} = require('../app/installHelper');
 const logger = require('khala-logger/log4js').consoleLogger('chaincode:diagnose');
 
 const {sleep} = require('khala-light-util');
-const sequence = process.env.sequence ? parseInt(process.env.sequence) : 1;
+const sequence = process.env.sequence ? parseInt(process.env.sequence) : 2;
 const orderers = helper.newOrderers();
 const orderer = orderers[0];
 describe('install and approve', async function () {

@@ -20,8 +20,15 @@ exports.installs = async (chaincodeId, orgName, peerIndexes) => {
 	}
 	const user = helper.getOrgAdmin(orgName);
 	const [result, t1] = await install(peers, {chaincodeId}, user);
-	const queryResult = await chaincodesInstalled(peers, user);
-	logger.debug('chaincodesInstalled', queryResult);
+	const packageID = result.responses[0].response.package_id;
+	const queryResult = await chaincodesInstalled(peers, user, packageID);
+	if (!packageID) {
+		logger.debug('chaincodesInstalled', queryResult);
+	} else {
+		result.package_id = packageID;
+		logger.debug('chaincodeInstalled', packageID, '->', queryResult);
+	}
+
 	t1();
 	return result;
 };
@@ -68,9 +75,8 @@ exports.installAll = async (chaincodeId) => {
 	const packageIDs = {};
 	for (const [peerOrg, config] of Object.entries(channels[channelName].organizations)) {
 		const {peerIndexes} = config;
-		const result = await exports.installs(chaincodeId, peerOrg, peerIndexes);
-		const packageID = result.responses[0].response.package_id;
-		packageIDs[peerOrg] = packageID;
+		const {package_id} = await exports.installs(chaincodeId, peerOrg, peerIndexes);
+		packageIDs[peerOrg] = package_id;
 	}
 
 	return packageIDs;
