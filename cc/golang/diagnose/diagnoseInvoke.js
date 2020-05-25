@@ -10,12 +10,12 @@ exports.put = async (peers, clientOrg, key, value) => {
 exports.putRaw = async (peers, clientOrg, key, value) => {
 	const fcn = 'putRaw';
 	const args = [key, value];
-	return invoke(peers, clientOrg, chaincodeId, fcn, args);
+	return invoke(peers, clientOrg, chaincodeId, {fcn, args});
 };
 exports.getRaw = async (peers, clientOrg, key) => {
 	const fcn = 'getRaw';
 	const args = [key];
-	return query(peers, clientOrg, chaincodeId, fcn, args, undefined, true);
+	return query(peers, clientOrg, chaincodeId, {fcn, args});
 };
 exports.get = async (peers, clientOrg, key) => {
 	const fcn = 'get';
@@ -103,7 +103,11 @@ const task = async () => {
 
 			const peers = helper.allPeers();
 			const org = 'icdd';
-			await exports.putRaw(peers, org, 'a', 'b');
+			const value = Date.now().toString();
+			const key = 'a';
+			await exports.putRaw(peers, org, key, value);
+			const queryResult = await exports.getRaw(peers, org, key, value);
+			console.debug(queryResult);
 		}
 			break;
 		default: {
@@ -112,7 +116,6 @@ const task = async () => {
 			const org = 'icdd';
 			await invoke(peers, org, chaincodeId, {
 				init: true,
-				fcn: 'init'
 			});
 		}
 

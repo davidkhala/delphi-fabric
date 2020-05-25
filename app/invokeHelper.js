@@ -19,9 +19,7 @@ exports.invoke = async (peers, clientOrg, chaincodeId, {fcn, args, transientMap,
 	const tx = new Transaction(peers, user, channel, logger);
 	tx.build(chaincodeId);
 
-	const result = await tx.submit({fcn, args, transientMap, init}, orderer);
-	logger.debug('invoke', result);
-	return result;
+	return await tx.submit({fcn, args, transientMap, init}, orderer);
 };
 exports.query = async (peers, clientOrg, chaincodeId, {fcn, args, transientMap}) => {
 	logger.debug('query', 'client org', clientOrg);
@@ -33,8 +31,8 @@ exports.query = async (peers, clientOrg, chaincodeId, {fcn, args, transientMap})
 	const tx = new Transaction(peers, user, channel, logger);
 	tx.build(chaincodeId);
 	const result = await tx.evaluate({fcn, args, transientMap});
-	logger.debug('query', result);
-	return result;
+	result.queryResults = result.queryResults.map(entry => entry.toString());
+	return result.queryResults;
 };
 // exports.listenChaincodeEvent = async (peers, clientPeerOrg, chaincodeId, eventName = /event/i) => {
 // 	const logger = require('khala-logger/log4js').consoleLogger('chaincode event');
