@@ -4,7 +4,6 @@ const {
 const logger = require('khala-logger/log4js').consoleLogger('invoke:diagnose');
 const helper = require('../../../app/helper');
 
-const DRInstall = require('./diagnoseInstall');
 const taskKeyEndorsement = async () => {
 	await DRInstall.task();
 	const org1 = 'icdd';

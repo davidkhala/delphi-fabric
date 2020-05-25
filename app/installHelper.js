@@ -1,12 +1,13 @@
 const {install} = require('./chaincodeHelper');
 const ChaincodeAction = require('../common/nodejs/chaincodeOperation');
 const helper = require('./helper');
-const {emptyChannel} = require('../common/nodejs/admin/channel')
+const {emptyChannel} = require('../common/nodejs/admin/channel');
 const globalConfig = require('../config/orgs.json');
 const {channels} = globalConfig;
-
+const logger = require('khala-logger/log4js').consoleLogger('install helper');
+const {chaincodesInstalled} = require('../common/nodejs/query');
 const channelName = 'allchannel';
-const channel = emptyChannel(channelName)
+const channel = emptyChannel(channelName);
 const prepare = ({PackageID}) => {
 	const name = PackageID.split(':')[0];
 	return {name};
@@ -19,6 +20,8 @@ exports.installs = async (chaincodeId, orgName, peerIndexes) => {
 	}
 	const user = helper.getOrgAdmin(orgName);
 	const [result, t1] = await install(peers, {chaincodeId}, user);
+	const queryResult = await chaincodesInstalled(peers, user);
+	logger.debug('chaincodesInstalled', queryResult);
 	t1();
 	return result;
 };
@@ -32,25 +35,23 @@ exports.approves = async ({sequence, PackageID}, orgName, peers, orderer) => {
 	const chaincodeAction = new ChaincodeAction(peers, user, channel);
 	await chaincodeAction.approve({name, PackageID, sequence}, orderer);
 };
-exports.commitChaincodeDefinition = async ({sequence, PackageID}, orgName, peers, orderer) => {
+exports.commitChaincodeDefinition = async ({sequence, name}, orgName, peers, orderer) => {
 	for (const peer of peers) {
 		await peer.connect();
 	}
 	await orderer.connect();
 	const user = helper.getOrgAdmin(orgName);
-	const {name} = prepare({PackageID});
 	const chaincodeAction = new ChaincodeAction(peers, user, channel);
 	await chaincodeAction.commitChaincodeDefinition({name, sequence}, orderer);
 };
 
-exports.checkCommitReadiness = async ({sequence, PackageID}, orgName, peers) => {
+exports.checkCommitReadiness = async ({sequence, name}, orgName, peers) => {
 	for (const peer of peers) {
 		await peer.connect();
 	}
 	const user = helper.getOrgAdmin(orgName);
-	const {name} = prepare({PackageID});
 
-	const chaincodeAction = new ChaincodeAction(peers, user, channel);
+	const chaincodeAction = new ChaincodeAction(peers, user, channel, logger);
 	await chaincodeAction.checkCommitReadiness({name, sequence});
 };
 exports.queryDefinition = async (orgName, peerIndexes, name) => {
@@ -64,12 +65,13 @@ exports.queryDefinition = async (orgName, peerIndexes, name) => {
 };
 
 exports.installAll = async (chaincodeId) => {
-	let packageID;
+	const packageIDs = {};
 	for (const [peerOrg, config] of Object.entries(channels[channelName].organizations)) {
 		const {peerIndexes} = config;
 		const result = await exports.installs(chaincodeId, peerOrg, peerIndexes);
-		packageID = result.responses[0].response.package_id;
+		const packageID = result.responses[0].response.package_id;
+		packageIDs[peerOrg] = packageID;
 	}
 
-	return packageID;
+	return packageIDs;
 };

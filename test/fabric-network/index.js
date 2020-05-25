@@ -40,13 +40,13 @@ const task = async (taskID) => {
 					let transaction = contract.createTransaction('putRaw');
 
 					await transaction.submit('key', 'value');
-
-
-					await contract.submitTransaction('putRaw', 'key', 'value1');
-					let result;
-					transaction = contract.createTransaction('getRaw');
-					result = await transaction.evaluate('key');
-					logger.info(result.toString());
+					//
+					//
+					// await contract.submitTransaction('putRaw', 'key', 'value1');
+					// let result;
+					// transaction = contract.createTransaction('getRaw');
+					// result = await transaction.evaluate('key');
+					// logger.info(result.toString());
 
 				}
 					break;

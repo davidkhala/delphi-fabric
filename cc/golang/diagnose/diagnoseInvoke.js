@@ -1,6 +1,7 @@
 const {invoke, query} = require('../../../app/invokeHelper');
-const {base64} = require('../../../common/nodejs/admin/helper').nodeUtil.format();
+const {base64} = require('khala-nodeutils/format');
 const chaincodeId = 'diagnose';
+const helper = require('../../../app/helper');
 exports.put = async (peers, clientOrg, key, value) => {
 	const fcn = 'put';
 	const args = [key, JSON.stringify(value)];
@@ -93,3 +94,29 @@ exports.getCertID = async (peers, clientOrg) => {
 	const args = [];
 	return query(peers, clientOrg, chaincodeId, fcn, args);
 };
+
+
+const task = async () => {
+	switch (parseInt(process.env.taskID)) {
+		case 0: {
+			// taskID=0 node cc/golang/diagnose/diagnoseInvoke.js
+
+			const peers = helper.allPeers();
+			const org = 'icdd';
+			await exports.putRaw(peers, org, 'a', 'b');
+		}
+			break;
+		default: {
+			// node cc/golang/diagnose/diagnoseInvoke.js
+			const peers = helper.allPeers();
+			const org = 'icdd';
+			await invoke(peers, org, chaincodeId, {
+				init: true,
+				fcn: 'init'
+			});
+		}
+
+	}
+
+};
+task();
