@@ -58,6 +58,7 @@ const task = async () => {
 			break;
 
 		default: {
+			// node cc/golang/diagnose/install.js
 			const packageID = await installAll(diagnose);
 			console.log({packageID});
 			await taskApprove(packageID, sequenceEnv);

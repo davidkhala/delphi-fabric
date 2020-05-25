@@ -1,4 +1,4 @@
-const ChaincodeAction = require('../common/nodejs/chaincodeAction');
+const ChaincodeAction = require('../common/nodejs/chaincodeOperation');
 const ChaincodePackage = require('../common/nodejs/chaincodePackage');
 const tmp = require('khala-nodeutils/tmp');
 const path = require('path');

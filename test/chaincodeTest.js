@@ -1,6 +1,6 @@
 //TODO WIP
 const assert = require('assert');
-const {approve, install} = require('../common/nodejs/chaincodeAction');
+const {approve, install} = require('../common/nodejs/chaincodeOperation');
 const helper = require('../app/helper');
 let orderer, user, peers, PackageID;
 const channelName = 'allchannel';

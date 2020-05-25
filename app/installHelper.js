@@ -1,11 +1,12 @@
 const {install} = require('./chaincodeHelper');
-const ChaincodeAction = require('../common/nodejs/chaincodeAction');
+const ChaincodeAction = require('../common/nodejs/chaincodeOperation');
 const helper = require('./helper');
-
+const {emptyChannel} = require('../common/nodejs/admin/channel')
 const globalConfig = require('../config/orgs.json');
 const {channels} = globalConfig;
 
 const channelName = 'allchannel';
+const channel = emptyChannel(channelName)
 const prepare = ({PackageID}) => {
 	const name = PackageID.split(':')[0];
 	return {name};
@@ -28,7 +29,7 @@ exports.approves = async ({sequence, PackageID}, orgName, peers, orderer) => {
 	await orderer.connect();
 	const user = helper.getOrgAdmin(orgName);
 	const {name} = prepare({PackageID});
-	const chaincodeAction = new ChaincodeAction(peers, user, channelName);
+	const chaincodeAction = new ChaincodeAction(peers, user, channel);
 	await chaincodeAction.approve({name, PackageID, sequence}, orderer);
 };
 exports.commitChaincodeDefinition = async ({sequence, PackageID}, orgName, peers, orderer) => {
@@ -38,7 +39,7 @@ exports.commitChaincodeDefinition = async ({sequence, PackageID}, orgName, peers
 	await orderer.connect();
 	const user = helper.getOrgAdmin(orgName);
 	const {name} = prepare({PackageID});
-	const chaincodeAction = new ChaincodeAction(peers, user, channelName);
+	const chaincodeAction = new ChaincodeAction(peers, user, channel);
 	await chaincodeAction.commitChaincodeDefinition({name, sequence}, orderer);
 };
 
@@ -49,7 +50,7 @@ exports.checkCommitReadiness = async ({sequence, PackageID}, orgName, peers) => 
 	const user = helper.getOrgAdmin(orgName);
 	const {name} = prepare({PackageID});
 
-	const chaincodeAction = new ChaincodeAction(peers, user, channelName);
+	const chaincodeAction = new ChaincodeAction(peers, user, channel);
 	await chaincodeAction.checkCommitReadiness({name, sequence});
 };
 exports.queryDefinition = async (orgName, peerIndexes, name) => {
@@ -58,7 +59,7 @@ exports.queryDefinition = async (orgName, peerIndexes, name) => {
 		await peer.connect();
 	}
 	const user = helper.getOrgAdmin(orgName);
-	const chaincodeAction = new ChaincodeAction(peers, user, channelName);
+	const chaincodeAction = new ChaincodeAction(peers, user, channel);
 	await chaincodeAction.queryChaincodeDefinition(name);
 };
 
