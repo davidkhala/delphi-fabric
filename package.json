@@ -8,7 +8,8 @@
   ],
   "scripts": {
     "install": "cd common/nodejs; npm install; lerna bootstrap --no-ci; cd -",
-    "nuke": "rm -rf node_modules; cd common/nodejs; rm -rf node_modules; lerna clean --yes; cd -"
+    "nuke": "rm -rf node_modules; cd common/nodejs; rm -rf node_modules; lerna clean --yes; cd -",
+    "mochaTest": "mocha"
   },
   "license": "Apache-2.0",
   "dependencies": {

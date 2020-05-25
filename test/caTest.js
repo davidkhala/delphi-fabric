@@ -1,5 +1,5 @@
 const helper = require('../app/helper');
-const IDService = require('../common/nodejs/identityService');
+const IDService = require('../common/nodejs/admin/identityService');
 const CAUtil = require('../common/nodejs/ca');
 
 const nameLengthTask = async (org) => {
@@ -8,8 +8,8 @@ const nameLengthTask = async (org) => {
 	caCryptoGen.genUser({userName: 'david'.repeat(5)}, org);
 };
 const identitySericeTask = async (caService, admin) => {
-	const idService = IDService.new(caService);
-	return await IDService.getAll(idService, admin);
+	const idService = new IDService(caService);
+	return await idService.getAll(admin);
 };
 
 const task = async () => {
