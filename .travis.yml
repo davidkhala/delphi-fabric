@@ -11,7 +11,7 @@ matrix:
         - sudo apt-get install -y softhsm2
       script:
         - ./docker.sh
-        - node cc/golang/diagnose/install.js
+        - mocha cc/golang/diagnose/test
         - node cc/golang/diagnose/diagnoseInvoke.js
         - node test
         - ./test/hsm.sh

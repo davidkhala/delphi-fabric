@@ -1,4 +1,4 @@
-const {install} = require('./chaincodeHelper');
+const {install, buildEndorsePolicy} = require('./chaincodeHelper');
 const ChaincodeAction = require('../common/nodejs/chaincodeOperation');
 const helper = require('./helper');
 const {emptyChannel} = require('../common/nodejs/admin/channel');
@@ -40,7 +40,8 @@ exports.approves = async ({sequence, PackageID}, orgName, peers, orderer) => {
 	const user = helper.getOrgAdmin(orgName);
 	const {name} = prepare({PackageID});
 	const chaincodeAction = new ChaincodeAction(peers, user, channel);
-	await chaincodeAction.approve({name, PackageID, sequence}, orderer);
+	const endorsementPolicy = buildEndorsePolicy(name);
+	await chaincodeAction.approve({name, PackageID, sequence}, orderer, endorsementPolicy);
 };
 exports.commitChaincodeDefinition = async ({sequence, name}, orgName, peers, orderer) => {
 	for (const peer of peers) {
@@ -49,7 +50,8 @@ exports.commitChaincodeDefinition = async ({sequence, name}, orgName, peers, ord
 	await orderer.connect();
 	const user = helper.getOrgAdmin(orgName);
 	const chaincodeAction = new ChaincodeAction(peers, user, channel);
-	await chaincodeAction.commitChaincodeDefinition({name, sequence}, orderer);
+	const endorsementPolicy = buildEndorsePolicy(name);
+	await chaincodeAction.commitChaincodeDefinition({name, sequence}, orderer, endorsementPolicy);
 };
 
 exports.checkCommitReadiness = async ({sequence, name}, orgName, peers) => {

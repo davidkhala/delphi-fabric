@@ -19,13 +19,20 @@
     "path": "github.com/davidkhala/chaincode/golang/diagnose",
     "couchDBIndexes": [
       "Time"
-    ]
+    ],
+    "endorsingConfigs": {
+      "n": 2,
+      "mspid": {
+        "astriMSP": 0,
+        "icddMSP": 0
+      }
+    }
   },
   "mainChain": {
     "path": "github.com/davidkhala/chaincode/golang/mainChain",
     "endorsingConfigs": {
       "n": 2,
-      "mspId": {
+      "mspid": {
         "astriMSP": 0,
         "icddMSP": 0
       }
@@ -36,7 +43,7 @@
     "path": "github.com/davidkhala/chaincode/nodejs/diagnose",
     "endorsingConfigs": {
       "n": 1,
-      "mspId": {
+      "mspid": {
         "astriMSP": 0,
         "icddMSP": 0
       }

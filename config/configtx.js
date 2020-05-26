@@ -4,7 +4,20 @@ const path = require('path');
 const yaml = require('khala-nodeutils/yaml');
 const fsExtra = require('fs-extra');
 const {CryptoPath} = require('../common/nodejs/path');
-const implicitPolicies = require('../common/nodejs/policy').configtxPolicies.implicit.Policies;
+const implicitPolicies = {
+	Readers: {
+		Type: 'ImplicitMeta',
+		Rule: 'ANY Readers'
+	},
+	Writers: {
+		Type: 'ImplicitMeta',
+		Rule: 'ANY Writers'
+	},
+	Admins: {
+		Type: 'ImplicitMeta',
+		Rule: 'MAJORITY Admins'
+	}
+};
 exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, configtxFile, PROFILE_ANCHORPEERS = 'anchorPeers'}) => {
 	const channelsConfig = globalConfig.channels;
 	if (!configtxFile) {

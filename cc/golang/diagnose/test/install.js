@@ -1,13 +1,13 @@
-const helper = require('../app/helper');
+const helper = require('../../../../app/helper');
 
 const chaincodeID = 'diagnose';
 
-const {installAll, queryDefinition, checkCommitReadiness, commitChaincodeDefinition} = require('../app/installHelper');
-const {approves} = require('../app/installHelper');
+const {installAll, queryDefinition, checkCommitReadiness, commitChaincodeDefinition} = require('../../../../app/installHelper');
+const {approves} = require('../../../../app/installHelper');
 const logger = require('khala-logger/log4js').consoleLogger('chaincode:diagnose');
-
+const {chaincodesInstalled} = require('../../../../common/nodejs/query');
 const {sleep} = require('khala-light-util');
-const sequence = process.env.sequence ? parseInt(process.env.sequence) : 2;
+const sequence = process.env.sequence ? parseInt(process.env.sequence) : 1;
 const orderers = helper.newOrderers();
 const orderer = orderers[0];
 describe('install and approve', async function () {
@@ -17,10 +17,26 @@ describe('install and approve', async function () {
 		PackageIDs = await installAll(chaincodeID);
 		logger.debug('package id map', PackageIDs);
 	});
-	it('approve', async () => {
+	it('query installed & approve', async () => {
 		for (const org of ['icdd', 'astri.org']) {
 			const peers = helper.newPeers([0, 1], org);
-			await approves({PackageID: PackageIDs[org], sequence}, org, peers, orderer);
+			const user = helper.getOrgAdmin(org);
+			const queryResult = await chaincodesInstalled(peers, user);
+			for (const entry of queryResult) {
+				const PackageIDs = Object.keys(entry);
+				for (const [key, reference] of Object.entries(entry)) {
+					for (const [channelName, {chaincodes}] of Object.entries(reference)) {
+						logger.debug(channelName, chaincodes);
+					}
+				}
+				if (PackageIDs.length > 1) {
+					logger.error('found multiple installed packageID');
+					logger.info(queryResult);
+				} else {
+					const PackageID = PackageIDs[0];
+					await approves({PackageID, sequence}, org, peers, orderer);
+				}
+			}
 		}
 	});
 });
