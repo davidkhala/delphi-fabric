@@ -22,6 +22,7 @@ describe('install and approve', async function () {
 			const peers = helper.newPeers([0, 1], org);
 			const user = helper.getOrgAdmin(org);
 			const queryResult = await chaincodesInstalled(peers, user);
+			let PackageID;
 			for (const entry of queryResult) {
 				const PackageIDs = Object.keys(entry);
 				for (const [key, reference] of Object.entries(entry)) {
@@ -33,10 +34,13 @@ describe('install and approve', async function () {
 					logger.error('found multiple installed packageID');
 					logger.info(queryResult);
 				} else {
-					const PackageID = PackageIDs[0];
-					await approves({PackageID, sequence}, org, peers, orderer);
+					PackageID = PackageIDs[0];
 				}
 			}
+			if (PackageID) {
+				await approves({PackageID, sequence}, org, peers, orderer);
+			}
+
 		}
 	});
 });

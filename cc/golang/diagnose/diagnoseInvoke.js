@@ -1,7 +1,6 @@
 const {invoke, query} = require('../../../app/invokeHelper');
 const {base64} = require('khala-nodeutils/format');
 const chaincodeId = 'diagnose';
-const helper = require('../../../app/helper');
 exports.put = async (peers, clientOrg, key, value) => {
 	const fcn = 'put';
 	const args = [key, JSON.stringify(value)];
@@ -23,7 +22,11 @@ exports.get = async (peers, clientOrg, key) => {
 	return query(peers, clientOrg, chaincodeId, {fcn, args});
 };
 exports.whoami = async (peers, clientOrg) => {
-	return query(peers, clientOrg, chaincodeId, {fcn: 'whoami'});
+	const queryResult = await query(peers, clientOrg, chaincodeId, {fcn: 'whoami'});
+	return queryResult.map(json => {
+		const {MspID, CertificatePem} = JSON.parse(json);
+		return {MspID, CertificatePem: base64.decode(CertificatePem)};
+	});
 };
 exports.history = async (peers, clientOrg, key) => {
 	const results = await query(peers, clientOrg, chaincodeId, {
@@ -59,9 +62,16 @@ exports.richQuery = async (peers, clientOrg, selector) => {
 	});
 };
 exports.putEndorsement = async (peers, clientOrg, key, mspids) => {
-	const fcn = 'putEndorsement';
-	const args = [key, ...mspids];
-	return invoke(peers, clientOrg, chaincodeId, {fcn, args});
+	if (mspids) {
+		const fcn = 'putEndorsement';
+		const args = [key, ...mspids];
+		return invoke(peers, clientOrg, chaincodeId, {fcn, args});
+	} else {
+		const fcn = 'deleteEndorsement';
+		const args = [key];
+		return invoke(peers, clientOrg, chaincodeId, {fcn, args});
+	}
+
 };
 exports.getEndorsement = async (peers, clientOrg, key) => {
 	const fcn = 'getEndorsement';
@@ -95,32 +105,3 @@ exports.getCertID = async (peers, clientOrg) => {
 	const fcn = 'getCertID';
 	return query(peers, clientOrg, chaincodeId, {fcn});
 };
-
-
-const task = async () => {
-	switch (parseInt(process.env.taskID)) {
-		case 0: {
-			// taskID=0 node cc/golang/diagnose/diagnoseInvoke.js
-
-			const peers = helper.allPeers();
-			const org = 'icdd';
-			const value = Date.now().toString();
-			const key = 'a';
-			await exports.putRaw(peers, org, key, value);
-			const queryResult = await exports.getRaw(peers, org, key, value);
-			console.debug(queryResult);
-		}
-			break;
-		default: {
-			// node cc/golang/diagnose/diagnoseInvoke.js
-			const peers = helper.allPeers();
-			const org = 'icdd';
-			await invoke(peers, org, chaincodeId, {
-				init: true,
-			});
-		}
-
-	}
-
-};
-task();
