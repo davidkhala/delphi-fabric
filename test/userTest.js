@@ -1,36 +1,30 @@
 const helper = require('../app/helper');
-const {getUser} = require('../common/nodejs/client');//TODO
 const UserBuilder = require('../common/nodejs/admin/user');
 const {ECDSA_Key} = require('../common/nodejs/formatter/key');
-const task = async (taskID) => {
-	const client = helper.getOrgAdmin();
-	const user = getUser(client);
+const {getPrivateKey, getCertificate, getPublicKey, getMSPID} = require('../common/nodejs/formatter/signingIdentity');
+const logger = require('khala-logger/log4js').consoleLogger('user');
+describe('user', () => {
+	const user = helper.getOrgAdmin();
 	const userBuilder = new UserBuilder(undefined, user);
-	switch (parseInt(taskID)) {
-		case 0: {
-			const privateKey = userBuilder.getPrivateKey();
-			const ecdsaKey = new ECDSA_Key(privateKey);
-			console.log(ecdsaKey.pem());
-		}
-			break;
-		case 1: {
-			const certificate = userBuilder.getCertificate();
-			console.log(certificate);// TODO check equality with input
-		}
-			break;
-		case 2: {
-			const pubkey = userBuilder.getPublicKey();
-			const ecdsaKey = new ECDSA_Key(pubkey);
-			console.log(ecdsaKey.pem());
-		}
-			break;
-		case 3: {
-			const mspId = userBuilder.getMSPID();
-			console.log(mspId);
-		}
-			break;
+	const signingIdentity = userBuilder.getSigningIdentity();
+	it('private key pem', () => {
+		const privateKey = getPrivateKey(signingIdentity);
+		const ecdsaKey = new ECDSA_Key(privateKey);
+		logger.debug(ecdsaKey.pem());
+	});
+	it('certificate', () => {
+		const certificate = getCertificate(signingIdentity);
+		logger.debug(certificate);// TODO check equality with input
+	});
 
-	}
+	it('public key', () => {
+		const pubkey = getPublicKey(signingIdentity);
+		const ecdsaKey = new ECDSA_Key(pubkey);
+		logger.debug(ecdsaKey.pem());
+	});
+	it('mspid', () => {
+		const mspId = getMSPID(signingIdentity);
+		logger.debug(mspId);
+	});
 
-};
-task(process.env.taskID);
+});

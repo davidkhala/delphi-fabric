@@ -32,7 +32,7 @@ exports.installs = async (chaincodeId, orgName, peerIndexes) => {
 	t1();
 	return result;
 };
-exports.approves = async ({sequence, PackageID}, orgName, peers, orderer) => {
+exports.approves = async ({sequence, PackageID}, orgName, peers, orderer, gate) => {
 	for (const peer of peers) {
 		await peer.connect();
 	}
@@ -40,28 +40,38 @@ exports.approves = async ({sequence, PackageID}, orgName, peers, orderer) => {
 	const user = helper.getOrgAdmin(orgName);
 	const {name} = prepare({PackageID});
 	const chaincodeAction = new ChaincodeAction(peers, user, channel);
-	const endorsementPolicy = buildEndorsePolicy(name);
-	await chaincodeAction.approve({name, PackageID, sequence}, orderer, endorsementPolicy);
+	let json;
+	if (!gate) {
+		json = buildEndorsePolicy(name);
+	}
+	await chaincodeAction.approve({name, PackageID, sequence}, orderer, {json, gate});
 };
-exports.commitChaincodeDefinition = async ({sequence, name}, orgName, peers, orderer) => {
+exports.commitChaincodeDefinition = async ({sequence, name}, orgName, peers, orderer, gate) => {
 	for (const peer of peers) {
 		await peer.connect();
 	}
 	await orderer.connect();
 	const user = helper.getOrgAdmin(orgName);
 	const chaincodeAction = new ChaincodeAction(peers, user, channel);
-	const endorsementPolicy = buildEndorsePolicy(name);
-	await chaincodeAction.commitChaincodeDefinition({name, sequence}, orderer, endorsementPolicy);
+	let json;
+	if (!gate) {
+		json = buildEndorsePolicy(name);
+	}
+	await chaincodeAction.commitChaincodeDefinition({name, sequence}, orderer, {json, gate});
 };
 
-exports.checkCommitReadiness = async ({sequence, name}, orgName, peers) => {
+exports.checkCommitReadiness = async ({sequence, name}, orgName, peers, gate) => {
 	for (const peer of peers) {
 		await peer.connect();
 	}
 	const user = helper.getOrgAdmin(orgName);
 
 	const chaincodeAction = new ChaincodeAction(peers, user, channel, logger);
-	await chaincodeAction.checkCommitReadiness({name, sequence});
+	let json;
+	if (!gate) {
+		json = buildEndorsePolicy(name);
+	}
+	await chaincodeAction.checkCommitReadiness({name, sequence}, {json, gate});
 };
 exports.queryDefinition = async (orgName, peerIndexes, name) => {
 	const peers = helper.newPeers(peerIndexes, orgName);
