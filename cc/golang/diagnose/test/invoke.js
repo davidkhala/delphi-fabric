@@ -2,7 +2,7 @@ const {assert} = require('chai');
 
 const helper = require('../../../../app/helper');
 const {invoke} = require('../../../../app/invokeHelper');
-const {putRaw, getRaw, whoami, putBatch, list, get, put, cross, chaincodeID, getEndorsement, putEndorsement, getPage, getCertID} = require('../diagnoseInvoke');
+const {putRaw, getRaw, whoami, putBatch, list, get, put, chaincodeID, getEndorsement, putEndorsement, getPage, getCertID, getPrivate, putPrivate} = require('../diagnoseInvoke');
 const chaincodeId = 'diagnose';
 const logger = require('khala-logger/log4js').consoleLogger('chaincode:diagnose');
 const org1 = 'icdd';
@@ -113,8 +113,9 @@ describe('chaincode invoke', () => {
 		await singleEndorseShouldFail(endorseKey);
 		await multiEndorseShouldSuccess(endorseKey);
 	});
+});
+describe('cross chaincode', () => {
 
-	it('cross chaincode call');
 });
 describe('chaincode query after content filled', () => {
 	it('worldStates', async () => {
@@ -155,4 +156,28 @@ describe('chaincode query after content filled', () => {
 		logger.debug('overPagination: 1 of responses', result[0]);
 	});
 
+});
+const {readWritePrivate} = require('../diagnoseInvoke');
+describe('private data ', () => {
+	const collectionPeers = [helper.newPeer(0, org1), helper.newPeer(0, org2)];
+
+	it('readWritePrivate ', async () => {
+		const transientMap = {
+			a: 'b'
+		};
+		await readWritePrivate(collectionPeers, org1, transientMap);
+	});
+	it('putPrivate', async () => {
+		const transientMap = {
+			a: 'b'
+		};
+		await putPrivate(collectionPeers, org1, transientMap);
+	});
+	it('getPrivate', async () => {
+		const transientMap = {
+			a: ''
+		};
+		const result = await getPrivate(collectionPeers, org2, transientMap);
+		console.info(result);
+	});
 });

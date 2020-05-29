@@ -1,4 +1,4 @@
-const {install, buildEndorsePolicy} = require('./chaincodeHelper');
+const {install, buildEndorsePolicy, getCollectionConfig} = require('./chaincodeHelper');
 const ChaincodeAction = require('../common/nodejs/chaincodeOperation');
 const helper = require('./helper');
 const {emptyChannel} = require('../common/nodejs/admin/channel');
@@ -44,7 +44,9 @@ exports.approves = async ({sequence, PackageID}, orgName, peers, orderer, gate) 
 	if (!gate) {
 		json = buildEndorsePolicy(name);
 	}
-	await chaincodeAction.approve({name, PackageID, sequence}, orderer, {json, gate});
+	chaincodeAction.setEndorsementPolicy({json, gate});
+	chaincodeAction.setCollectionsConfig(getCollectionConfig(name));
+	await chaincodeAction.approve({name, PackageID, sequence}, orderer);
 };
 exports.commitChaincodeDefinition = async ({sequence, name}, orgName, peers, orderer, gate) => {
 	for (const peer of peers) {
@@ -57,7 +59,9 @@ exports.commitChaincodeDefinition = async ({sequence, name}, orgName, peers, ord
 	if (!gate) {
 		json = buildEndorsePolicy(name);
 	}
-	await chaincodeAction.commitChaincodeDefinition({name, sequence}, orderer, {json, gate});
+	chaincodeAction.setEndorsementPolicy({json, gate});
+	chaincodeAction.setCollectionsConfig(getCollectionConfig(name));
+	await chaincodeAction.commitChaincodeDefinition({name, sequence}, orderer);
 };
 
 exports.checkCommitReadiness = async ({sequence, name}, orgName, peers, gate) => {
@@ -71,7 +75,9 @@ exports.checkCommitReadiness = async ({sequence, name}, orgName, peers, gate) =>
 	if (!gate) {
 		json = buildEndorsePolicy(name);
 	}
-	await chaincodeAction.checkCommitReadiness({name, sequence}, {json, gate});
+	chaincodeAction.setEndorsementPolicy({json, gate});
+	chaincodeAction.setCollectionsConfig(getCollectionConfig(name));
+	await chaincodeAction.checkCommitReadiness({name, sequence});
 };
 exports.queryDefinition = async (orgName, peerIndexes, name) => {
 	const peers = helper.newPeers(peerIndexes, orgName);

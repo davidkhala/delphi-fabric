@@ -105,3 +105,16 @@ exports.getCertID = async (peers, clientOrg) => {
 	const fcn = 'getCertID';
 	return query(peers, clientOrg, chaincodeId, {fcn});
 };
+exports.readWritePrivate = async (peers, clientOrg, transientMap) => {
+	const fcn = 'readWritePrivate';
+	return invoke(peers, clientOrg, chaincodeId, {fcn, transientMap});
+};
+exports.getPrivate = async (peers, clientOrg, transientMap) => {
+	const fcn = 'getPrivate';
+	return query(peers, clientOrg, chaincodeId, {fcn, transientMap});
+};
+
+exports.putPrivate = async (peers, clientOrg, transientMap) => {
+	const fcn = 'putPrivate';
+	return invoke(peers, clientOrg, chaincodeId, {fcn, transientMap});
+};

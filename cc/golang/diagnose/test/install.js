@@ -16,7 +16,7 @@ describe('install and approve', async function () {
 		PackageIDs = await installAll(chaincodeID);
 		logger.debug('package id map', PackageIDs);
 	});
-	const queryInstalledAndApprove = async (sequence, gate) => {
+	const queryInstalledAndApprove = async (sequence, _gate) => {
 		for (const org of ['icdd', 'astri.org']) {
 			const peers = helper.newPeers([0, 1], org);
 			const user = helper.getOrgAdmin(org);
@@ -37,7 +37,7 @@ describe('install and approve', async function () {
 				}
 			}
 			if (PackageID) {
-				await approves({PackageID, sequence}, org, peers, orderer, gate);
+				await approves({PackageID, sequence}, org, peers, orderer, _gate);
 			}
 
 		}

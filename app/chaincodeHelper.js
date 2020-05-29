@@ -64,28 +64,10 @@ const buildEndorsePolicy = (chaincodeId) => {
 	}
 };
 
-// /**
-//  * this should apply to both instantiate and upgrade
-//  */
-// const configParser = (configs) => {
-// 	const {endorsingConfigs, collectionsConfig} = configs;
-// 	const result = {};
-// 	if (endorsingConfigs) {
-// 		result.endorsementPolicy = buildEndorsePolicy(endorsingConfigs);
-// 	}
-// 	if (collectionsConfig) {
-// 		const collectionSet = [];
-// 		for (const [name, config] of Object.entries(collectionsConfig)) {
-// 			const policy = collectionPolicyBuilder(config.mspIds);
-// 			config.name = name;
-// 			config.policy = policy;
-// 			collectionSet.push(ensureCollectionConfig(config));
-// 		}
-// 		result.collectionConfig = collectionSet;
-// 	}
-// 	return result;
-//
-// };
+const getCollectionConfig = (chaincodeId) => {
+	return chaincodeConfig[chaincodeId].collectionsConfig;
+};
+
 
 //
 // exports.discoveryChaincodeInterestBuilder = (chaincodeIdFilter) => {
@@ -115,5 +97,6 @@ const buildEndorsePolicy = (chaincodeId) => {
 
 module.exports = {
 	buildEndorsePolicy,
+	getCollectionConfig,
 	install,
 };
