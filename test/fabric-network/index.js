@@ -12,65 +12,64 @@ const gateway = new Gateway(user);
 const ContractManager = require('../../common/nodejs/fabric-network/contract');
 
 const putRaw = async (contractManager) => {
-	const result = contractManager.submitTransaction('putRaw', undefined, 'key', 'value');
-	logger.info(result);
+	const result = await contractManager.submitTransaction('putRaw', undefined, 'key', 'value');
+	logger.info('putRaw', result);
 };
 
 const getContractManager = (network, chaincodeId) => {
 	const contract = network.getContract(chaincodeId);
 	return new ContractManager(contract);
 };
-describe('diagnose', async () => {
-	const chaincodeId = 'diagnose';
 
-	const peers = [helper.newPeer(0, org1), helper.newPeer(0, org2)];
+describe('fabric-network', () => {
 
-	for (const peer of peers) {
-		await peer.connect();
-	}
-	await orderer.connect();
-
-	const network = await gateway.connect(channelName, peers, orderer); // FIXME webstorm: No tests were found
-	const contractManager = getContractManager(network, chaincodeId);
-	it('putRaw', async () => {
-		await putRaw(contractManager);
-	});
-	it('getRaw', async () => {
-		const result = contractManager.evaluateTransaction('getRaw');
-		logger.info(result);
-	});
-	it('panic', async () => {
-		await contractManager.evaluateTransaction('panic');
-	});
-});
-describe('diagnose:eventHub', async () => {
 	const chaincodeId = 'diagnose';
 	const peers = [helper.newPeer(0, org1), helper.newPeer(0, org2)];
-	for (const peer of peers) {
-		await peer.connect();
-	}
-	await orderer.connect();
-	const network = await gateway.connect(channelName, peers, orderer, undefined, true);
-	const contractManager = getContractManager(network, chaincodeId);
-	it('putRaw', async () => {
-		await putRaw(contractManager);
+	let contractManager;
+	describe('diagnose', () => {
+
+		before(async () => {
+			const network = await gateway.connect(channelName, peers, orderer);
+			contractManager = getContractManager(network, chaincodeId);
+		});
+		it('putRaw', async () => {
+			await putRaw(contractManager);
+		});
+		it('getRaw', async () => {
+			const result = await contractManager.evaluateTransaction('getRaw');
+			logger.info(result);
+			//	FIXME sdk: Illegal buffer
+		});
+		it('panic', async () => {
+			await contractManager.evaluateTransaction('panic');
+		});
 	});
-});
-describe('diagnose:discovery:eventHub', async () => {
-	const discoveryOrg = org1; //TODO
-	const globalConfig = require('../../config/orgs.json');
-	const {mspid: mspId} = globalConfig.organizations[discoveryOrg];
-	const networkConfig = globalConfig;
-	const chaincodeId = 'diagnose';
-	it('getRaw', async () => {
-		const getPeersByOrgNameCallback = (orgName) => {
-			return helper.newPeers(undefined, orgName);
-		};
-		const discoveryOptions = {mspId, networkConfig, getPeersByOrgNameCallback};
-		const network = await gateway.connect(channelName, undefined, orderer, discoveryOptions, true);
-		const contractManager = getContractManager(network, chaincodeId);
-		const result = await contractManager.evaluateTransaction('getRaw', 'key');
-		logger.info(result);
+	describe('diagnose:eventHub', async () => {
+		before(async () => {
+			logger.debug('before');
+			const network = await gateway.connect(channelName, peers, orderer, undefined, true);
+			contractManager = getContractManager(network, chaincodeId);
+		});
+
+		it('putRaw', async () => {
+			await putRaw(contractManager);
+		});
+	});
+	describe('diagnose:discovery:eventHub', async () => {
+		const discoveryOrg = org1; // TODO
+		const globalConfig = require('../../config/orgs.json');
+		const {mspid: mspId} = globalConfig.organizations[discoveryOrg];
+		const networkConfig = globalConfig;
+		it('getRaw', async () => {
+			const getPeersByOrgNameCallback = (orgName) => {
+				return helper.newPeers(undefined, orgName);
+			};
+			const discoveryOptions = {mspId, networkConfig, getPeersByOrgNameCallback};
+			const network = await gateway.connect(channelName, undefined, orderer, discoveryOptions, true);
+			const contractManager = getContractManager(network, chaincodeId);
+			const result = await contractManager.evaluateTransaction('getRaw', 'key');
+			logger.info(result);
+		});
 	});
 });
 describe('nodeContracts:eventHub', async () => {
@@ -93,3 +92,4 @@ describe('nodeContracts:eventHub', async () => {
 		await contractManager.submitTransaction('shimError');
 	});
 });
+
