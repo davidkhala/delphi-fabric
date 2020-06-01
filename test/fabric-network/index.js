@@ -7,12 +7,21 @@ const orderer = helper.newOrderers()[0];
 const channelName = 'allchannel';
 
 const Gateway = require('../../common/nodejs/fabric-network/gateway');
+const user = helper.getOrgAdmin();
+const gateway = new Gateway(user);
+const ContractManager = require('../../common/nodejs/fabric-network/contract');
 
+const putRaw = async (contractManager) => {
+	const result = contractManager.submitTransaction('putRaw', undefined, 'key', 'value');
+	logger.info(result);
+};
 
-const task = async (taskID) => {
-	const user = helper.getOrgAdmin();
-	const gateway = new Gateway(user);
-	const {chaincodeId} = process.env;
+const getContractManager = (network, chaincodeId) => {
+	const contract = network.getContract(chaincodeId);
+	return new ContractManager(contract);
+};
+describe('diagnose', async () => {
+	const chaincodeId = 'diagnose';
 
 	const peers = [helper.newPeer(0, org1), helper.newPeer(0, org2)];
 
@@ -21,93 +30,66 @@ const task = async (taskID) => {
 	}
 	await orderer.connect();
 
-	let strategy;
-
-	if (process.env.eventhub) {
-		//TODO test for customized strategy
-		strategy = true;
+	const network = await gateway.connect(channelName, peers, orderer); // FIXME webstorm: No tests were found
+	const contractManager = getContractManager(network, chaincodeId);
+	it('putRaw', async () => {
+		await putRaw(contractManager);
+	});
+	it('getRaw', async () => {
+		const result = contractManager.evaluateTransaction('getRaw');
+		logger.info(result);
+	});
+	it('panic', async () => {
+		await contractManager.evaluateTransaction('panic');
+	});
+});
+describe('diagnose:eventHub', async () => {
+	const chaincodeId = 'diagnose';
+	const peers = [helper.newPeer(0, org1), helper.newPeer(0, org2)];
+	for (const peer of peers) {
+		await peer.connect();
 	}
+	await orderer.connect();
+	const network = await gateway.connect(channelName, peers, orderer, undefined, true);
+	const contractManager = getContractManager(network, chaincodeId);
+	it('putRaw', async () => {
+		await putRaw(contractManager);
+	});
+});
+describe('diagnose:discovery:eventHub', async () => {
+	const discoveryOrg = org1; //TODO
+	const globalConfig = require('../../config/orgs.json');
+	const {mspid: mspId} = globalConfig.organizations[discoveryOrg];
+	const networkConfig = globalConfig;
+	const chaincodeId = 'diagnose';
+	it('getRaw', async () => {
+		const getPeersByOrgNameCallback = (orgName) => {
+			return helper.newPeers(undefined, orgName);
+		};
+		const discoveryOptions = {mspId, networkConfig, getPeersByOrgNameCallback};
+		const network = await gateway.connect(channelName, undefined, orderer, discoveryOptions, true);
+		const contractManager = getContractManager(network, chaincodeId);
+		const result = await contractManager.evaluateTransaction('getRaw', 'key');
+		logger.info(result);
+	});
+});
+describe('nodeContracts:eventHub', async () => {
+	const chaincodeId = 'nodeContracts';
+	const peers = [helper.newPeer(0, org1), helper.newPeer(0, org2)];
 
+	const network = await gateway.connect(channelName, peers, orderer, undefined, true);
+	const contractManager = getContractManager(network, chaincodeId);
 
-	switch (chaincodeId) {
-		case 'diagnose':
-			switch (parseInt(taskID)) {
-				case 0: {
-					// chaincodeId=diagnose taskID=0 eventHub=true node test/fabric-network
-					const network = await gateway.connect(channelName, peers, orderer, undefined, strategy);
-					const contract = network.getContract(chaincodeId);
-
-					let transaction = contract.createTransaction('putRaw');
-
-					await transaction.submit('key', 'value');
-					//
-					//
-					// await contract.submitTransaction('putRaw', 'key', 'value1');
-					// let result;
-					// transaction = contract.createTransaction('getRaw');
-					// result = await transaction.evaluate('key');
-					// logger.info(result.toString());
-
-				}
-					break;
-				case 1: {
-					// chaincodeId=diagnose taskID=1 node test/fabric-network
-					const network = await gateway.connect(channelName, peers, orderer, undefined, strategy);
-					const contract = network.getContract(chaincodeId);
-					let transaction = contract.createTransaction('panic');
-					await transaction.submit();
-				}
-					break;
-				case 2: {
-					// chaincodeId=diagnose taskID=2 node test/fabric-network
-					const network = await gateway.connect(channelName, peers, undefined, undefined, undefined);
-					const contract = network.getContract(chaincodeId);
-					const result = await contract.evaluateTransaction('getRaw', 'key');
-					logger.info(result.toString());
-				}
-					break;
-				case 3: {
-					// chaincodeId=diagnose taskID=3 eventHub=true node test/fabric-network
-					const discoveryOrg = org1; //TODO
-					const globalConfig = require('../../config/orgs.json');
-					const {mspid: mspId} = globalConfig.organizations[discoveryOrg];
-					const networkConfig = globalConfig;
-					const getPeersByOrgNameCallback = (orgName) => {
-						return helper.newPeers(undefined, orgName);
-					};
-					const discoveryOptions = {mspId, networkConfig, getPeersByOrgNameCallback};
-					const network = await gateway.connect(channelName, [], orderer, discoveryOptions, strategy);
-					const contract = network.getContract(chaincodeId);
-					const result = await contract.submitTransaction('getRaw', 'key');
-				}
-					break;
-			}
-			break;
-		case 'nodeContracts':
-			let result;
-			switch (parseInt(taskID)) {
-				case 0:
-					await contract.submitTransaction('stress:init');
-					break;
-				case 1:
-					result = await contract.submitTransaction('stress:panic');
-					break;
-				case 2:
-					result = await contract.submitTransaction('panic');
-					break;
-				case 3:
-					result = await contract.submitTransaction('any');
-					break;
-				case 4:
-					result = await contract.submitTransaction('shimError');
-					break;
-			}
-			logger.info(result);
-			break;
-	}
-	gateway.disconnect();
-
-};
-module.exports = task(process.env.taskID);
-
-
+	it('stress:init', async () => {
+		await contractManager.submitTransaction('stress:init');
+	});
+	it('stress:panic', async () => {
+		await contractManager.submitTransaction('stress:panic');
+	});
+	it('unknown fcn ', async () => {
+		await contractManager.submitTransaction('any');
+	});
+	it('shimError', async () => {
+		await contractManager.submitTransaction('shimError');
+	});
+});
