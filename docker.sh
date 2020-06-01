@@ -9,9 +9,7 @@ down() {
 up() {
 	prepareNetwork
 	#	taskID=0 useSignconfigtx=true channelName=allchannel node app/channelSetup.js
-	taskID=0 channelName=allchannel node app/channelSetup.js
-	taskID=1 channelName=allchannel node app/channelSetup.js
-	taskID=2 channelName=allchannel node app/channelSetup.js
+	channelName=allchannel mocha app/channelSetup.js
 	#	taskID=2 viaServer=true channelName=allchannel node app/channelSetup.js #
 	#	channelName=extrachannel node app/channelSetup.js
 }

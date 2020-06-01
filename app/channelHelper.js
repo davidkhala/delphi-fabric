@@ -53,9 +53,6 @@ exports.joinAll = async (channelName, block, orderer) => {
 
 	const channelConfig = globalConfig.channels[channelName];
 
-	if (orderer) {
-		await orderer.connect();
-	}
 	for (const [orgName, {peerIndexes}] of Object.entries(channelConfig.organizations)) {
 		const peers = helper.newPeers(peerIndexes, orgName);
 		const user = helper.getOrgAdmin(orgName);
@@ -69,10 +66,7 @@ exports.joinAll = async (channelName, block, orderer) => {
 	}
 
 };
-exports.setAnchorPeersByOrg = async (channelName, orgName, viaServer) => {
-	const orderers = helper.newOrderers();
-	const orderer = orderers[0];
-	await orderer.connect();
+exports.setAnchorPeersByOrg = async (channelName, orgName,orderer, viaServer) => {
 	const orgConfig = globalConfig.channels[channelName].organizations[orgName];
 	const {anchorPeerIndexes} = orgConfig;
 	const user = helper.getOrgAdmin(orgName);

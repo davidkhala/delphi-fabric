@@ -10,8 +10,11 @@ const BinManager = require('../common/nodejs/binManager');
 const anchorPeerTask = async (channelName) => {
 	const channelConfig = globalConfig.channels[channelName];
 
+	const orderers = helper.newOrderers();
+	const orderer = orderers[0];
+	await orderer.connect();
 	for (const org in channelConfig.organizations) {
-		await setAnchorPeersByOrg(channelName, org, process.env.viaServer);
+		await setAnchorPeersByOrg(channelName, org, orderer, process.env.viaServer);
 	}
 };
 const taskViewGenesisBlock = async (channelName) => {
@@ -23,6 +26,7 @@ const taskViewGenesisBlock = async (channelName) => {
 	}
 	const channel = helper.prepareChannel(channelName);
 	const orderer = helper.newOrderers()[0];
+	await orderer.connect();
 	const genesisBlock = await ChannelUtil.getGenesisBlock(channel, user, orderer);
 
 	return genesisBlock;
@@ -57,41 +61,28 @@ const createTask = async (channelName) => {
 	await create(channelName, orderer, undefined, process.env.useSignconfigtx);
 };
 
-const task = async () => {
-
+describe('channelSetup', () => {
 	const channelName = process.env.channelName ? process.env.channelName : 'allchannel';
-	switch (parseInt(process.env.taskID)) {
-		case 0:
-			await createTask(channelName);
-			break;
-		case 1: {
-			// taskID=1 channelName=allchannel node app/channelSetup.js
-			const orderer = helper.newOrderers()[0];
-			await joinAll(channelName, undefined, orderer);
-		}
-			break;
-		case 2:
-			await anchorPeerTask(channelName);
-			break;
-		case 3:
-			// export binPath=$PWD/common/bin/
-			// taskID=3 channelName=testchainid node app/channelSetup.js
-			await taskViewChannelBlock(channelName);
-			break;
-		default: {
-			await createTask(channelName);
-			const orderer = helper.newOrderers()[0];
-			await joinAll(channelName, undefined, orderer);
-			await anchorPeerTask(channelName);
-		}
-	}
+	it('create', async () => {
+		await createTask(channelName);
+	});
+	it('join', async function () {
+		this.timeout(30000);
+		const orderer = helper.newOrderers()[0];
+		await orderer.connect();
+		await joinAll(channelName, undefined, orderer);
+	});
+	it('setup anchor peer', async () => {
+		await anchorPeerTask(channelName);
+	});
+	it('view current channel config', async () => {
+		// process.env.binPath = path.resolve(__dirname, '../common/bin/');
+		await taskViewChannelBlock(channelName);
+	});
+	it('view genesis block', async () => {
+		await taskViewGenesisBlock(channelName);
+	});
 
-};
-
-
-task().catch(err => {
-	console.error(err);
-	process.exit(1);
 });
 
 
