@@ -38,6 +38,7 @@ const taskViewChannelBlock = async (channelName) => {
 	const channel = helper.prepareChannel(channelName);
 	const orderer = helper.newOrderers()[0];
 
+	await orderer.connect();
 	const configBlock = await ChannelUtil.getChannelConfigFromOrderer(channel.name, user, orderer);
 	console.debug('configBlock', configBlock);
 

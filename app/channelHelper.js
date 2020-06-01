@@ -14,7 +14,7 @@ const {adminName} = require('../common/nodejs/formatter/user');
 const {getIdentityContext} = require('../common/nodejs/admin/user');
 const channelsConfig = globalConfig.channels;
 exports.create = async (channelName, orderer, signerOrgs = [helper.randomOrg('peer')], asEnvelop) => {
-
+	await orderer.connect();
 	const channelConfig = channelsConfig[channelName];
 	const channelFile = homeResolve(globalConfig.docker.volumes.CONFIGTX, channelConfig.file);
 	const user = helper.getOrgAdmin(signerOrgs[0]);
@@ -53,6 +53,9 @@ exports.joinAll = async (channelName, block, orderer) => {
 
 	const channelConfig = globalConfig.channels[channelName];
 
+	if (orderer) {
+		await orderer.connect();
+	}
 	for (const [orgName, {peerIndexes}] of Object.entries(channelConfig.organizations)) {
 		const peers = helper.newPeers(peerIndexes, orgName);
 		const user = helper.getOrgAdmin(orgName);
@@ -69,6 +72,7 @@ exports.joinAll = async (channelName, block, orderer) => {
 exports.setAnchorPeersByOrg = async (channelName, orgName, viaServer) => {
 	const orderers = helper.newOrderers();
 	const orderer = orderers[0];
+	await orderer.connect();
 	const orgConfig = globalConfig.channels[channelName].organizations[orgName];
 	const {anchorPeerIndexes} = orgConfig;
 	const user = helper.getOrgAdmin(orgName);
