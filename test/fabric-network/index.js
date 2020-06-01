@@ -56,7 +56,7 @@ describe('fabric-network', () => {
 		});
 	});
 	describe('diagnose:discovery:eventHub', async () => {
-		const discoveryOrg = org1; // TODO
+		const discoveryOrg = org1;
 		const globalConfig = require('../../config/orgs.json');
 		const {mspid: mspId} = globalConfig.organizations[discoveryOrg];
 		const networkConfig = globalConfig;
