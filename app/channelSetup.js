@@ -64,6 +64,7 @@ const createTask = async (channelName) => {
 describe('channelSetup', () => {
 	const channelName = process.env.channelName ? process.env.channelName : 'allchannel';
 	it('create', async () => {
+		process.env.binPath = path.resolve(__dirname, '../common/bin/');
 		await createTask(channelName);
 	});
 	it('join', async function () {
@@ -73,10 +74,10 @@ describe('channelSetup', () => {
 		await joinAll(channelName, undefined, orderer);
 	});
 	it('setup anchor peer', async () => {
+		process.env.binPath = path.resolve(__dirname, '../common/bin/');
 		await anchorPeerTask(channelName);
 	});
 	it('view current channel config', async () => {
-		// process.env.binPath = path.resolve(__dirname, '../common/bin/');
 		await taskViewChannelBlock(channelName);
 	});
 	it('view genesis block', async () => {

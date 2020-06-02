@@ -5,13 +5,12 @@ const logger = require('khala-logger/log4js').consoleLogger('channel helper');
 const {setAnchorPeers, getChannelConfigReadable} = require('../common/nodejs/channelConfig');
 const ConfigFactory = require('../common/nodejs/formatter/configFactory');
 const {create, join, getGenesisBlock} = ChannelUtil;
-const {channelJoined} = require('../common/nodejs/query');
+const QueryHub = require('../common/nodejs/query');
 const globalConfig = require('../config/orgs');
 const {sleep, homeResolve} = require('khala-light-util');
 const BinManager = require('../common/nodejs/binManager');
 const {CryptoPath} = require('../common/nodejs/path');
 const {adminName} = require('../common/nodejs/formatter/user');
-const {getIdentityContext} = require('../common/nodejs/admin/user');
 const channelsConfig = globalConfig.channels;
 exports.create = async (channelName, orderer, signerOrgs = [helper.randomOrg('peer')], asEnvelop) => {
 	await orderer.connect();
@@ -58,15 +57,16 @@ exports.joinAll = async (channelName, block, orderer) => {
 		const user = helper.getOrgAdmin(orgName);
 		const channel = helper.prepareChannel(channelName);
 		await join(channel, peers, user, block, orderer);
-		const JoinedResult = await channelJoined(peers, getIdentityContext(user));
-		for (const joined of JoinedResult.responses) {
-			logger.debug(joined.peer, 'has joined', joined.response.channels);
+		const queryHub = new QueryHub(peers, user);
+		const JoinedResult = await queryHub.channelJoined();
+		for (const [index, peer] of Object.entries(peers)) {
+			logger.debug(peer, 'has joined', JoinedResult[index]);
 		}
 
 	}
 
 };
-exports.setAnchorPeersByOrg = async (channelName, orgName,orderer, viaServer) => {
+exports.setAnchorPeersByOrg = async (channelName, orgName, orderer, viaServer) => {
 	const orgConfig = globalConfig.channels[channelName].organizations[orgName];
 	const {anchorPeerIndexes} = orgConfig;
 	const user = helper.getOrgAdmin(orgName);

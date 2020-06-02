@@ -5,7 +5,7 @@ const {emptyChannel} = require('../common/nodejs/admin/channel');
 const globalConfig = require('../config/orgs.json');
 const {channels} = globalConfig;
 const logger = require('khala-logger/log4js').consoleLogger('install helper');
-const {chaincodesInstalled} = require('../common/nodejs/query');
+const QueryHub = require('../common/nodejs/query');
 const channelName = 'allchannel';
 const channel = emptyChannel(channelName);
 const prepare = ({PackageID}) => {
@@ -21,7 +21,8 @@ exports.installs = async (chaincodeId, orgName, peerIndexes) => {
 	const user = helper.getOrgAdmin(orgName);
 	const [result, t1] = await install(peers, {chaincodeId}, user);
 	const packageID = result.responses[0].response.package_id;
-	const queryResult = await chaincodesInstalled(peers, user, packageID);
+	const queryHub = new QueryHub(peers, user);
+	const queryResult = await queryHub.chaincodesInstalled(packageID);
 	if (!packageID) {
 		logger.debug('chaincodesInstalled', queryResult);
 	} else {

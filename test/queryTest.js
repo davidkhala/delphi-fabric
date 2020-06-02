@@ -1,27 +1,52 @@
-const {chain} = require('../common/nodejs/query');
-// const {touch} = require('../cc/golang/stress/stressInvoke');
+const QueryHub = require('../common/nodejs/query');
 const helper = require('../app/helper');
-const {getIdentityContext} = require('../common/nodejs/admin/user');
-const task = async () => {
+const logger = require('khala-logger/log4js').consoleLogger('test:queryTest');
+
+describe('query', () => {
 	const peers = [helper.newPeer(0, 'icdd'), helper.newPeer(0, 'astri.org')];
 	const org = 'icdd';
-	switch (parseInt(process.env.taskID)) {
-		case 0: {
-			await touch(peers, org);
+	let sampleBlockHashHex;
+	const user = helper.getOrgAdmin(org);
+	const channelName = 'allchannel';
+	const queryHub = new QueryHub(peers, user);
+	beforeEach(async () => {
+		for (const peer of peers) {
+			await peer.connect();
 		}
-			break;
-		case 1: {
-			const user = helper.getOrgAdmin(org);
-			const channelName = 'allchannel';
-			for (const peer of peers) {
-				await peer.connect();
-			}
-			const endorsers = peers.map(({endorser}) => endorser);
+	});
+	it('chain info', async () => {
+		const result = await queryHub.chain(channelName);
+		logger.info(result);
+		sampleBlockHashHex = result[0].currentBlockHash;
+	});
+	it('blockFromHash', async () => {
+		const result = await queryHub.blockFromHash(channelName, sampleBlockHashHex);
+		logger.info(result);
+	});
+	it('blockFromHeight', async () => {
+		const result = await queryHub.blockFromHeight(channelName, 2);
+		logger.info(result);
+	});
 
-			await chain(endorsers, getIdentityContext(user), channelName);
+	it('channelJoined', async () => {
+		const result = await queryHub.channelJoined();
+		logger.info(result);
+	});
+});
+
+describe('queryTransaction', () => {
+	const {txID} = process.env;
+	const peers = [helper.newPeer(0, 'icdd'), helper.newPeer(0, 'astri.org')];
+	const org = 'icdd';
+	const user = helper.getOrgAdmin(org);
+	const queryHub = new QueryHub(peers, user);
+	const channelName = 'allchannel';
+	it('by txID', async () => {
+		if (!txID) {
+			logger.warn('tx id not found, skipped');
+			return;
 		}
-			break;
-
-	}
-};
-task();
+		const result = await queryHub.tx(channelName, txID);
+		logger.info(result);
+	});
+});
