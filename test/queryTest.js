@@ -33,20 +33,27 @@ describe('query', () => {
 		logger.info(result);
 	});
 });
-
+const EventHub = require('../common/nodejs/admin/eventHub');
+const {emptyChannel} = require('../common/nodejs/admin/channel');
+const {replayTx} = require('../common/nodejs/eventHub');
 describe('queryTransaction', () => {
-	const {txID} = process.env;
 	const peers = [helper.newPeer(0, 'icdd'), helper.newPeer(0, 'astri.org')];
 	const org = 'icdd';
 	const user = helper.getOrgAdmin(org);
+	const eventers = peers.map(({eventer}) => eventer);
 	const queryHub = new QueryHub(peers, user);
 	const channelName = 'allchannel';
-	it('by txID', async () => {
-		if (!txID) {
-			logger.warn('tx id not found, skipped');
-			return;
+	const channel = emptyChannel(channelName);
+	const eventHub = new EventHub(channel, eventers);
+	it('by txID', async function () {
+		this.timeout(30000);
+		const txs = await replayTx(eventHub, queryHub.identityContext, 3);
+		logger.info(txs);
+		const {transactionId} = txs[0];
+		for (const peer of peers) {
+			await peer.connect();
 		}
-		const result = await queryHub.tx(channelName, txID);
+		const result = await queryHub.tx(channelName, transactionId);
 		logger.info(result);
 	});
 });

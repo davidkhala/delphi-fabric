@@ -78,7 +78,7 @@ exports.checkCommitReadiness = async ({sequence, name}, orgName, peers, gate) =>
 	}
 	chaincodeAction.setEndorsementPolicy({json, gate});
 	chaincodeAction.setCollectionsConfig(getCollectionConfig(name));
-	await chaincodeAction.checkCommitReadiness({name, sequence});
+	return await chaincodeAction.checkCommitReadiness({name, sequence});
 };
 exports.queryDefinition = async (orgName, peerIndexes, name) => {
 	const peers = helper.newPeers(peerIndexes, orgName);

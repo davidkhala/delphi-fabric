@@ -7,7 +7,6 @@ const orderers = helper.newOrderers();
 const orderer = orderers[0];
 const Transaction = require('../common/nodejs/transaction');
 
-const {sleep} = require('khala-light-util');
 exports.invoke = async (peers, clientOrg, chaincodeId, {fcn, args, transientMap, init}) => {
 	logger.debug('invoke', 'client org', clientOrg);
 	const user = helper.getOrgAdmin(clientOrg);
@@ -49,18 +48,3 @@ exports.query = async (peers, clientOrg, chaincodeId, {fcn, args, transientMap})
 // 	});
 // };
 
-const looper = async (opts = {interval: 1000}, task, ...taskParams) => {
-	const {times, interval} = opts;
-
-	if (Number.isInteger(times)) {
-		for (let i = 0; i < times; i++) {
-			await task(...taskParams);
-			await sleep(interval);
-		}
-	} else {
-		await task(...taskParams);
-		await sleep(interval);
-		await looper(opts, task, ...taskParams);
-	}
-};
-exports.looper = looper;

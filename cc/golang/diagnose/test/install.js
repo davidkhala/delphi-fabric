@@ -5,7 +5,7 @@ const chaincodeID = 'diagnose';
 const {installAll, queryDefinition, checkCommitReadiness, commitChaincodeDefinition} = require('../../../../app/installHelper');
 const {approves} = require('../../../../app/installHelper');
 const logger = require('khala-logger/log4js').consoleLogger('chaincode:diagnose');
-const {chaincodesInstalled} = require('../../../../common/nodejs/query');
+const QueryHub = require('../../../../common/nodejs/query');
 const orderers = helper.newOrderers();
 const orderer = orderers[0];
 const gate = `AND('icddMSP.member', 'astriMSP.member')`;
@@ -19,8 +19,12 @@ describe('install and approve', async function () {
 	const queryInstalledAndApprove = async (sequence, _gate) => {
 		for (const org of ['icdd', 'astri.org']) {
 			const peers = helper.newPeers([0, 1], org);
+			for (const peer of peers) {
+				await peer.connect();
+			}
 			const user = helper.getOrgAdmin(org);
-			const queryResult = await chaincodesInstalled(peers, user);
+			const queryHub = new QueryHub(peers, user);
+			const queryResult = await queryHub.chaincodesInstalled();
 			let PackageID;
 			for (const entry of queryResult) {
 				const PackageIDs = Object.keys(entry);
@@ -57,7 +61,8 @@ describe('commit', () => {
 	const queryCommitReadiness = async (sequence, _gate) => {
 		for (const org of ['icdd', 'astri.org']) {
 			const peers = helper.newPeers([0, 1], org);
-			await checkCommitReadiness({name: chaincodeID, sequence}, org, peers, _gate);
+			const readyState = await checkCommitReadiness({name: chaincodeID, sequence}, org, peers, _gate);
+			logger.info(org, readyState);
 		}
 	};
 	it('query commit Readiness', async () => {

@@ -1,13 +1,12 @@
-//TODO WIP
 const helper = require('./helper.js');
 const ChannelUtil = require('../common/nodejs/channel');
 const logger = require('khala-logger/log4js').consoleLogger('channel helper');
 const {setAnchorPeers, getChannelConfigReadable} = require('../common/nodejs/channelConfig');
 const ConfigFactory = require('../common/nodejs/formatter/configFactory');
-const {create, join, getGenesisBlock} = ChannelUtil;
+const {create, join} = ChannelUtil;
 const QueryHub = require('../common/nodejs/query');
 const globalConfig = require('../config/orgs');
-const {sleep, homeResolve} = require('khala-light-util');
+const {homeResolve} = require('khala-light-util');
 const BinManager = require('../common/nodejs/binManager');
 const {CryptoPath} = require('../common/nodejs/path');
 const {adminName} = require('../common/nodejs/formatter/user');
