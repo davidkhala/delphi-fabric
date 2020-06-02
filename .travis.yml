@@ -5,7 +5,7 @@ matrix:
         - "10"
       dist: bionic
       before_install:
-        - eval "$(gimme 1.12.x)"
+        - eval "$(gimme 1.14.x)"
       install:
         - ./install.sh
         - sudo apt-get install -y softhsm2

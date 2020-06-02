@@ -14,9 +14,10 @@ gitSync() {
 }
 updateChaincode() {
 	goCmd="curl --silent --show-error https://raw.githubusercontent.com/davidkhala/goutils/master/scripts/goCmd.sh"
-	$goCmd | bash -s setModuleMode on
+	export GO111MODULE=on
 	$goCmd | bash -s get "github.com/davidkhala/chaincode"
 
+	echo "==source download complete=="
 	cd $GOPATH/src/github.com/davidkhala/chaincode/golang/master
 	go mod vendor
 	cd -
