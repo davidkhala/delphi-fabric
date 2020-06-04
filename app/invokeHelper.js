@@ -16,7 +16,7 @@ exports.invoke = async (peers, clientOrg, chaincodeId, {fcn, args, transientMap,
 	}
 	await orderer.connect();
 	const tx = new Transaction(peers, user, channel, logger);
-	tx.build(chaincodeId);
+	tx.build(chaincodeId, Transaction.EndorseALL);
 
 	return await tx.submit({fcn, args, transientMap, init}, orderer);
 };
@@ -28,8 +28,9 @@ exports.query = async (peers, clientOrg, chaincodeId, {fcn, args, transientMap})
 		await peer.connect();
 	}
 	const tx = new Transaction(peers, user, channel, logger);
-	tx.build(chaincodeId);
+	tx.build(chaincodeId, Transaction.EndorseALL);
 	const result = await tx.evaluate({fcn, args, transientMap});
+
 	result.queryResults = result.queryResults.map(entry => entry.toString());
 	return result.queryResults;
 };

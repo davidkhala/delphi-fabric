@@ -12,6 +12,7 @@ up() {
 	channelName=allchannel mocha app/channelSetup.js
 	#	taskID=2 viaServer=true channelName=allchannel node app/channelSetup.js #
 	#	channelName=extrachannel node app/channelSetup.js
+	cc
 }
 
 prepareNetwork() {
@@ -21,11 +22,8 @@ restart() {
 	down
 	up
 }
-repeat() {
-	local times=5
-	for ((i = 1; i <= times; i++)); do
-		./docker.sh
-	done
+cc() {
+	./cc/golang/diagnose/test/e2e.sh
 }
 if [[ -z "$1" ]]; then
 	restart

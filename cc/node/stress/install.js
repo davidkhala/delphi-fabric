@@ -1,5 +1,4 @@
 const {installAll} = require('../../../app/installHelper');
-const {instantiate} = require('../../../app/instantiateHelper');
 
 const chaincodeId = 'nodeStress';
 const helper = require('../../../app/helper');

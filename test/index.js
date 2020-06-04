@@ -1,2 +1,0 @@
-require('./channelInitTest');
-require('./serviceDiscoveryTest');

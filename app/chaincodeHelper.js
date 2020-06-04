@@ -84,15 +84,7 @@ const getCollectionConfig = (chaincodeId) => {
 // 	}
 // 	return {chaincodes};
 // };
-// exports.query = async (channel, peers, {chaincodeId, fcn, args, transientMap}, proposalTimeout = 30000) => {
-// 	const client = channel._clientContext;
-// 	return transactionProposal(client, peers, channel.getName(), {
-// 		chaincodeId,
-// 		fcn,
-// 		args,
-// 		transientMap
-// 	}, proposalTimeout);
-// };
+
 
 
 module.exports = {
