@@ -6,21 +6,20 @@ const helper = require('../app/helper');
 const org = 'astri.org';
 const logger = require('khala-logger/log4js').consoleLogger('test:eventHub');
 
-const task = async () => {
+describe('eventhub', () => {
+
 	const user = helper.getOrgAdmin(org, 'peer');
 	const channel = helper.prepareChannel(channelName);
 	logger.info(channel.toString());
 	const peer = helper.newPeer(0, org);
-	const eventHub = new EventHub(channel, [peer.eventer]);
 
-	const identityContext = UserUtil.getIdentityContext(user);
-	const startBlock = OLDEST;
-	const endBlock = NEWEST;
-	eventHub.build(identityContext, {startBlock, endBlock});
-	await eventHub.connect();
+	it('connect', async () => {
+		const eventHub = new EventHub(channel, peer.eventer);
+		const identityContext = UserUtil.getIdentityContext(user);
+		const startBlock = OLDEST;
+		const endBlock = NEWEST;
+		eventHub.build(identityContext, {startBlock, endBlock});
+		await eventHub.connect();
+	});
+});
 
-	logger.debug('after connect');
-
-
-};
-task();

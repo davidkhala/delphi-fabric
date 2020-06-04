@@ -13,8 +13,6 @@ describe('rich query', () => {
 			err.errors[0].response.message.should.match(/^GET_QUERY_RESULT failed: transaction ID: \w+: ExecuteQuery not supported for leveldb$/);
 			err.message.should.equal('ENDORSE_ERROR');
 		}
-
-
 	});
 
 
