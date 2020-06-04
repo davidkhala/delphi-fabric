@@ -10,7 +10,8 @@ const orderers = helper.newOrderers();
 const orderer = orderers[0];
 const gate = `AND('icddMSP.member', 'astriMSP.member')`;
 describe('install and approve', async function () {
-	this.timeout(30000);
+	const allPeers = helper.allPeers();
+	this.timeout(30000 * allPeers.length);
 	let PackageIDs;
 	it('install', async () => {
 		PackageIDs = await installAll(chaincodeID);

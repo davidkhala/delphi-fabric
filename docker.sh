@@ -12,7 +12,6 @@ up() {
 	channelName=allchannel mocha app/channelSetup.js
 	#	taskID=2 viaServer=true channelName=allchannel node app/channelSetup.js #
 	#	channelName=extrachannel node app/channelSetup.js
-	cc
 }
 
 prepareNetwork() {
@@ -27,6 +26,7 @@ cc() {
 }
 if [[ -z "$1" ]]; then
 	restart
+	cc
 else
 	$1
 fi
