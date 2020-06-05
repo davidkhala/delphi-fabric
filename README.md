@@ -49,7 +49,7 @@ Major configuration
  - we cluster network and channel config in ``config/orgs.json``, enjoy!
  - chaincodes configurations: ``config/chaincode.json``
  
- [sample chaincode source](github.com/davidkhala/chaincode)
+ [sample chaincode source](https://github.com/davidkhala/chaincode)
 
 Installation
 -----------------------
