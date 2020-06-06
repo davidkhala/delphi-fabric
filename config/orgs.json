@@ -25,7 +25,10 @@
           },
           "orderers": {
             "orderer0": {
-              "portHost": 7050
+              "portHost": 7050,
+              "operations": {
+                "port": 8443
+              }
             },
             "orderer1": {
               "portHost": 8050

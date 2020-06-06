@@ -1,9 +1,8 @@
 const helper = require('./helper.js');
-const ChannelUtil = require('../common/nodejs/channel');
+const {create, join} = require('../common/nodejs/channel');
 const logger = require('khala-logger/log4js').consoleLogger('channel helper');
 const {setAnchorPeers, getChannelConfigReadable} = require('../common/nodejs/channelConfig');
 const ConfigFactory = require('../common/nodejs/formatter/configFactory');
-const {create, join} = ChannelUtil;
 const QueryHub = require('../common/nodejs/query');
 const globalConfig = require('../config/orgs');
 const {homeResolve} = require('khala-light-util');

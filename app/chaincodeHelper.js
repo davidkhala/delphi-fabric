@@ -69,21 +69,21 @@ const getCollectionConfig = (chaincodeId) => {
 };
 
 
-//
-// exports.discoveryChaincodeInterestBuilder = (chaincodeIdFilter) => {
-// 	let chaincodes = [];
-// 	for (const [chaincodeID, config] of Object.entries(chaincodeConfig)) {
-// 		if (typeof chaincodeIdFilter === 'function' && !chaincodeIdFilter(chaincodeID)) {
-// 			continue;
-// 		}
-// 		const {collectionsConfig} = config;
-// 		if (collectionsConfig) {
-// 			const ccCalls = endorsementHintsBuilder({[chaincodeID]: Object.keys(collectionsConfig)});
-// 			chaincodes = chaincodes.concat(ccCalls);
-// 		}
-// 	}
-// 	return {chaincodes};
-// };
+
+exports.discoveryChaincodeInterestBuilder = (chaincodeIdFilter) => {
+	let chaincodes = [];
+	for (const [chaincodeID, config] of Object.entries(chaincodeConfig)) {
+		if (typeof chaincodeIdFilter === 'function' && !chaincodeIdFilter(chaincodeID)) {
+			continue;
+		}
+		const {collectionsConfig} = config;
+		if (collectionsConfig) {
+			const ccCalls = endorsementHintsBuilder({[chaincodeID]: Object.keys(collectionsConfig)});
+			chaincodes = chaincodes.concat(ccCalls);
+		}
+	}
+	return {chaincodes};
+};
 
 
 
