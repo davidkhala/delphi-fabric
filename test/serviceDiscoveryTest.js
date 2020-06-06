@@ -39,16 +39,24 @@ describe('discovery', () => {
 		const discoveries = await slimDiscoveryService.send();
 		const trimmedResult = resultParser(discoveries);
 		logger.debug(trimmedResult);
-		// peersReader(trimmedResult.members);
 	});
 	it('local: return peers only', async () => {
 		slimDiscoveryService.build(identityContext, {local: true});
 		const discoveries = await slimDiscoveryService.send();
-		logger.debug(resultParser(discoveries));
+		const trimmedResult = resultParser(discoveries);
+		peersReader(trimmedResult.members);
 	});
 	it('local & config', async () => {
 		slimDiscoveryService.build(identityContext, {local: true, config: true});
 		const discoveries = await slimDiscoveryService.send();
+		logger.debug(resultParser(discoveries));
+	});
+	it('interest', async () => {
+		const {discoveryChaincodeInterestTranslator} = require('../app/chaincodeHelper');
+		const interest = discoveryChaincodeInterestTranslator(['diagnose']);
+		slimDiscoveryService.build(identityContext, {interest});
+		const discoveries = await slimDiscoveryService.send();
+		logger.debug(discoveries);
 		logger.debug(resultParser(discoveries));
 	});
 

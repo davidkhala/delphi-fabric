@@ -2,6 +2,7 @@ const ChaincodeAction = require('../common/nodejs/chaincodeOperation');
 const ChaincodePackage = require('../common/nodejs/chaincodePackage');
 const tmp = require('khala-nodeutils/tmp');
 const path = require('path');
+const {discoveryChaincodeInterestBuilder} = require('../common/nodejs/serviceDiscovery');
 
 const chaincodeConfig = require('../config/chaincode.json');
 const {exec} = require('khala-nodeutils/devOps');
@@ -69,26 +70,24 @@ const getCollectionConfig = (chaincodeId) => {
 };
 
 
+const discoveryChaincodeInterestTranslator = (chaincodeIDs) => {
+	const translatedConfig = {};
+	for (const chaincodeID of chaincodeIDs) {
+		const {collectionsConfig} = chaincodeConfig[chaincodeID];
 
-exports.discoveryChaincodeInterestBuilder = (chaincodeIdFilter) => {
-	let chaincodes = [];
-	for (const [chaincodeID, config] of Object.entries(chaincodeConfig)) {
-		if (typeof chaincodeIdFilter === 'function' && !chaincodeIdFilter(chaincodeID)) {
-			continue;
-		}
-		const {collectionsConfig} = config;
 		if (collectionsConfig) {
-			const ccCalls = endorsementHintsBuilder({[chaincodeID]: Object.keys(collectionsConfig)});
-			chaincodes = chaincodes.concat(ccCalls);
+			translatedConfig[chaincodeID] = Object.keys(collectionsConfig);
+		} else {
+			translatedConfig[chaincodeID] = null;
 		}
 	}
-	return {chaincodes};
+	return discoveryChaincodeInterestBuilder(translatedConfig);
 };
-
 
 
 module.exports = {
 	buildEndorsePolicy,
 	getCollectionConfig,
 	install,
+	discoveryChaincodeInterestTranslator,
 };
