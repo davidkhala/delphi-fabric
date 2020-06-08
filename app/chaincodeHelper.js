@@ -53,20 +53,35 @@ const simplePolicyBuilder = (identities, n) => {
 	};
 };
 
-const buildEndorsePolicy = (chaincodeId) => {
-	const config = chaincodeConfig[chaincodeId].endorsingConfigs;
-	if (config) {
-		const {n} = config;
+const buildEndorsePolicy = (endorsingConfig) => { // TODO to support reference
+	const {n, reference} = endorsingConfig;
+	if (reference) {
+		return {reference};
+	}
+	if (n) {
 		const identities = [];
-		for (const [mspid, type] of Object.entries(config.mspid)) {
+		for (const [mspid, type] of Object.entries(endorsingConfig.mspid)) {
 			identities.push({role: {type, mspid}});
 		}
-		return simplePolicyBuilder(identities, n);
+		return {json: simplePolicyBuilder(identities, n)};
+	}
+};
+const getEndorsePolicy = (chaincodeId) => {
+	const {endorsingConfigs} = chaincodeConfig[chaincodeId];
+	if (endorsingConfigs) {
+		return buildEndorsePolicy(endorsingConfigs);
 	}
 };
 
 const getCollectionConfig = (chaincodeId) => {
-	return chaincodeConfig[chaincodeId].collectionsConfig;
+	const {collectionsConfig} = chaincodeConfig[chaincodeId];
+	Object.values(collectionsConfig).forEach((config) => {
+		const {endorsingConfigs} = config;
+		if (endorsingConfigs) {
+			config.endorsementPolicy = buildEndorsePolicy(endorsingConfigs);
+		}
+	});
+	return collectionsConfig;
 };
 
 
@@ -86,7 +101,7 @@ const discoveryChaincodeInterestTranslator = (chaincodeIDs) => {
 
 
 module.exports = {
-	buildEndorsePolicy,
+	getEndorsePolicy,
 	getCollectionConfig,
 	install,
 	discoveryChaincodeInterestTranslator,

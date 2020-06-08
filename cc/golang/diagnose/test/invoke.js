@@ -5,6 +5,7 @@ const {invoke} = require('../../../../app/invokeHelper');
 const {putRaw, getRaw, whoami, putBatch, list, get, put, chaincodeID, getEndorsement, putEndorsement, getPage, getCertID, getPrivate, putPrivate} = require('../diagnoseInvoke');
 const chaincodeId = 'diagnose';
 const logger = require('khala-logger/log4js').consoleLogger('chaincode:diagnose');
+const {TxValidationCode} = require('../../../../common/nodejs/formatter/constants');
 const org1 = 'icdd';
 const org2 = 'astri.org';
 const peers = helper.allPeers();
@@ -172,6 +173,23 @@ describe('private data ', () => {
 			a: 'b'
 		};
 		await putPrivate(collectionPeers, org1, transientMap);
+	});
+	it('putPrivate: partial endorse', async () => {
+		const peers1 = [helper.newPeer(0, org1)];
+		const transientMap = {
+			a: 'b'
+		};
+		let noErr;
+		try {
+			await putPrivate(peers1, org1, transientMap);
+			noErr = true;
+		} catch (e) {
+			logger.info(e);
+			assert.equal(e.status, TxValidationCode['10'], 'expect endorsing error');
+		}
+		if (noErr) {
+			assert.fail('expect endorsing error');
+		}
 	});
 	it('getPrivate', async () => {
 		const transientMap = {

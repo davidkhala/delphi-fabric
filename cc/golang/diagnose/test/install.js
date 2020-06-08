@@ -86,8 +86,11 @@ describe('commit', () => {
 
 
 	it('query definition', async () => {
-		await queryDefinition('icdd', [0, 1]);
-		await queryDefinition('astri.org', [0, 1]);
+		const r1 = await queryDefinition('icdd', [0, 1], chaincodeID);
+		logger.debug(r1);
+		logger.debug(r1[0].collections.config[0].static_collection_config);
+		logger.debug(r1[0].collections.config[0].static_collection_config.endorsement_policy);
+		const r2 = await queryDefinition('astri.org', [0, 1], chaincodeID);
 	});
 
 
