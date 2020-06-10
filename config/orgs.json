@@ -94,8 +94,7 @@
       "peers": [
         {
           "container_name": "peer0.icdd",
-          "port": 8051,
-          "stateVolume":"backupVolumes/peer0.icdd"
+          "port": 8051
         },
         {
           "container_name": "peer1.icdd",
