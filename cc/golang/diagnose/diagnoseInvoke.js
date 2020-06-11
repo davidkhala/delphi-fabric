@@ -118,3 +118,23 @@ exports.putPrivate = async (peers, clientOrg, transientMap) => {
 	const fcn = 'putPrivate';
 	return invoke(peers, clientOrg, chaincodeId, {fcn, transientMap});
 };
+exports.putImplicit = async (peers, clientOrg, transientMap, mspid) => {
+	const fcn = 'putImplicit';
+	if (!mspid) {
+		const {organizations} = require('../../../config/orgs.json');
+		mspid = organizations[clientOrg].mspid;
+	}
+	return invoke(peers, clientOrg, chaincodeId, {fcn, args: [mspid], transientMap});
+};
+exports.getImplicit = async (peers, clientOrg, transientMap, mspid) => {
+	const fcn = 'getImplicit';
+	if (!mspid) {
+		const {organizations} = require('../../../config/orgs.json');
+		mspid = organizations[clientOrg].mspid;
+	}
+	return query(peers, clientOrg, chaincodeId, {fcn, args: [mspid], transientMap});
+};
+exports.peerMSPID = async (peers, clientOrg) => {
+	const fcn = 'peerMSPID';
+	return query(peers, clientOrg, chaincodeId, {fcn});
+};

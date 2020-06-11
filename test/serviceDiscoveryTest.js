@@ -56,46 +56,7 @@ describe('discovery', () => {
 		const interest = discoveryChaincodeInterestTranslator(['diagnose']);
 		slimDiscoveryService.build(identityContext, {interest});
 		const discoveries = await slimDiscoveryService.send();
-		logger.debug(discoveries);
 		logger.debug(resultParser(discoveries));
 	});
 
 });
-
-// const discoverOrderer = async () => {
-// 	const org = 'icdd';
-// 	const channelName = 'allchannel';
-// 	const client = await helper.getOrgAdmin(org, 'peer');
-// 	const channel = ChannelUtil.new(client, channelName);
-// 	const peer = helper.newPeer(0, org);
-// 	await initialize(channel, peer);
-// 	const orderers = channel.getOrderers();
-//
-// 	for (const orderer of orderers) {
-// 		const localhostOrderer = helper.toLocalhostOrderer(orderer);//TODO WIP
-// 		const connectResult = await OrdererUtil.ping(localhostOrderer);
-// 		logger.info('connectResult ', connectResult);
-// 	}
-// };
-// const discoverChannel = async (chaincodeIds) => {
-// 	const org = 'icdd';
-// 	const channelName = 'allchannel';
-// 	const client = await helper.getOrgAdmin(org, 'peer');
-// 	const channel = ChannelUtil.new(client, channelName);
-// 	const peer = helper.newPeer(0, org);
-// 	const filter = Array.isArray(chaincodeIds) ? (chaincodeid) => chaincodeIds.includes(chaincodeid) : undefined;
-//
-// 	const interest = discoveryChaincodeInterestBuilder(filter);
-// 	const result = await discover(channel, peer, interest);
-// 	return discoverPretty(result);
-// };
-// const task = async () => {
-// 	// await deletePeer();
-// 	await peerList();
-// 	// await deleteOrderer();
-// 	await discoverOrderer();
-// 	// const discoverChannelResult = await discoverChannel(['master']);
-// 	// logger.debug('discoverChannel', discoverChannelResult);
-//
-// };
-// // task();

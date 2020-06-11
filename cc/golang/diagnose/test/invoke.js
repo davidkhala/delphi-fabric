@@ -2,7 +2,11 @@ const {assert} = require('chai');
 
 const helper = require('../../../../app/helper');
 const {invoke} = require('../../../../app/invokeHelper');
-const {putRaw, getRaw, whoami, putBatch, list, get, put, chaincodeID, getEndorsement, putEndorsement, getPage, getCertID, getPrivate, putPrivate} = require('../diagnoseInvoke');
+const {
+	putRaw, getRaw, whoami, putBatch, list, get, put, chaincodeID, getEndorsement, putEndorsement, getPage, getCertID, peerMSPID,
+	getPrivate, putPrivate, putImplicit, getImplicit,
+} = require('../diagnoseInvoke');
+const {getResponses} = require('../../../../common/nodejs/formatter/proposalResponse');
 const chaincodeId = 'diagnose';
 const logger = require('khala-logger/log4js').consoleLogger('chaincode:diagnose');
 const {TxValidationCode} = require('../../../../common/nodejs/formatter/constants');
@@ -28,6 +32,10 @@ describe('chaincode query', () => {
 	it('getCertID', async () => {
 		const result = await getCertID(peers, org1);
 		logger.info('certID', result);
+	});
+	it('peerMSPID', async () => {
+		const result = await peerMSPID(peers, org1);
+		logger.info(result);
 	});
 });
 describe('chaincode invoke', () => {
@@ -161,24 +169,22 @@ describe('chaincode query after content filled', () => {
 const {readWritePrivate} = require('../diagnoseInvoke');
 describe('private data ', () => {
 	const collectionPeers = [helper.newPeer(0, org1), helper.newPeer(0, org2)];
-
+	const transientMap = {
+		a: 'b'
+	};
+	const transientMap4Query = {
+		a: ''
+	};
 	it('readWritePrivate ', async () => {
-		const transientMap = {
-			a: 'b'
-		};
 		await readWritePrivate(collectionPeers, org1, transientMap);
 	});
 	it('putPrivate', async () => {
-		const transientMap = {
-			a: 'b'
-		};
+
 		await putPrivate(collectionPeers, org1, transientMap);
 	});
 	it('putPrivate: partial endorse', async () => {
 		const peers1 = [helper.newPeer(0, org1)];
-		const transientMap = {
-			a: 'b'
-		};
+
 		let noErr;
 		try {
 			await putPrivate(peers1, org1, transientMap);
@@ -192,10 +198,53 @@ describe('private data ', () => {
 		}
 	});
 	it('getPrivate', async () => {
-		const transientMap = {
-			a: ''
-		};
-		const result = await getPrivate(collectionPeers, org2, transientMap);
-		console.info(result);
+
+		const result = await getPrivate(collectionPeers, org2, transientMap4Query);
+		logger.info(result);
 	});
+	it('putImplicit, OK to have more endorsers than require', async () => {
+		const result = await putImplicit(collectionPeers, org1, transientMap);
+		logger.info(getResponses(result));
+	});
+
+	it('putImplicit: not OK: org1 creator| org2 endorser | org1 implicit', async () => {
+		const org2Peers = helper.newPeers([0], org2);
+		let isSuccess;
+		try {
+			await putImplicit(org2Peers, org1, transientMap);
+			isSuccess = true;
+		} catch (e) {
+			logger.info(e);
+			assert.equal(e.status, 'ENDORSEMENT_POLICY_FAILURE');
+		}
+		if (isSuccess) {
+			assert.fail('expect endorsing error');
+		}
+
+
+	});
+	it('putImplicit: OK, org1 creator| org2 endorser | org2 implicit', async () => {
+		const org2Peers = helper.newPeers([0], org2);
+		const result = await putImplicit(org2Peers, org1, transientMap, 'astriMSP');
+		logger.info(getResponses(result));
+	});
+
+	it('getImplicit: Not OK: org1 implicit not found for org2 peer', async () => {
+		let isSuccess;
+		try {
+			await getImplicit(collectionPeers, org1, transientMap4Query);
+			isSuccess = true;
+		} catch (e) {
+			logger.info(e.errors[0]);
+		}
+		if (isSuccess) {
+			assert.fail('expect endorsing error');
+		}
+	});
+	it('getImplicit: OK: org1 creator| org2 endorser | org2 implicit', async () => {
+		const org2Peers = helper.newPeers([0], org2);
+		const result = await getImplicit(org2Peers, org1, transientMap, 'astriMSP');
+		logger.info(result);
+	});
+
 });

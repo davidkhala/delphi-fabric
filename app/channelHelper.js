@@ -58,7 +58,7 @@ exports.joinAll = async (channelName, block, orderer) => {
 		const queryHub = new QueryHub(peers, user);
 		const JoinedResult = await queryHub.channelJoined();
 		for (const [index, peer] of Object.entries(peers)) {
-			logger.debug(peer, 'has joined', JoinedResult[index]);
+			logger.debug(peer.toString(), 'has joined', JoinedResult[index]);
 		}
 
 	}
