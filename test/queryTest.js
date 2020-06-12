@@ -40,11 +40,11 @@ describe('queryTransaction', () => {
 	const peers = [helper.newPeer(0, 'icdd'), helper.newPeer(0, 'astri.org')];
 	const org = 'icdd';
 	const user = helper.getOrgAdmin(org);
-	const eventers = peers.map(({eventer}) => eventer);
+	const eventer = peers[0].eventer;
 	const queryHub = new QueryHub(peers, user);
 	const channelName = 'allchannel';
 	const channel = emptyChannel(channelName);
-	const eventHub = new EventHub(channel, eventers);
+	const eventHub = new EventHub(channel, eventer);
 	it('by txID', async function () {
 		this.timeout(30000);
 		const txs = await replayTx(eventHub, queryHub.identityContext, 3);
