@@ -11,4 +11,5 @@ matrix:
         - sudo apt-get install -y softhsm2
       script:
         - ./docker.sh
+        - npm test
         - ./test/hsm.sh
