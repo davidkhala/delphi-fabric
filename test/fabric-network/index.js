@@ -11,9 +11,15 @@ const user = helper.getOrgAdmin();
 const gateway = new Gateway(user);
 const ContractManager = require('../../common/nodejs/fabric-network/contract');
 
+
 const putRaw = async (contractManager) => {
 	const result = await contractManager.submitTransaction('putRaw', undefined, 'key', 'value');
 	logger.info('putRaw', result);
+};
+const getRaw = async (contractManager) => {
+	const result = await contractManager.evaluateTransaction('getRaw', undefined, 'key');
+	logger.info('getRaw', result);
+	return result;
 };
 
 const getContractManager = (network, chaincodeId) => {
@@ -36,9 +42,7 @@ describe('fabric-network', () => {
 			await putRaw(contractManager);
 		});
 		it('getRaw', async () => {
-			const result = await contractManager.evaluateTransaction('getRaw');
-			logger.info(result);
-			//	FIXME sdk: Illegal buffer
+			await getRaw(contractManager);
 		});
 		it('panic', async () => {
 			await contractManager.evaluateTransaction('panic');
@@ -46,7 +50,6 @@ describe('fabric-network', () => {
 	});
 	describe('diagnose:eventHub', async () => {
 		before(async () => {
-			logger.debug('before');
 			const network = await gateway.connect(channelName, peers, orderer, undefined, true);
 			contractManager = getContractManager(network, chaincodeId);
 		});
@@ -55,20 +58,21 @@ describe('fabric-network', () => {
 			await putRaw(contractManager);
 		});
 	});
-	describe('diagnose:discovery:eventHub', async () => {
+	describe('diagnose:discovery:eventHub', () => {
 		const discoveryOrg = org1;
 		const globalConfig = require('../../config/orgs.json');
 		const {mspid: mspId} = globalConfig.organizations[discoveryOrg];
 		const networkConfig = globalConfig;
-		it('getRaw', async () => {
+		before(async () => {
 			const getPeersByOrgNameCallback = (orgName) => {
 				return helper.newPeers(undefined, orgName);
 			};
 			const discoveryOptions = {mspId, networkConfig, getPeersByOrgNameCallback};
 			const network = await gateway.connect(channelName, undefined, orderer, discoveryOptions, true);
-			const contractManager = getContractManager(network, chaincodeId);
-			const result = await contractManager.evaluateTransaction('getRaw', 'key');
-			logger.info(result);
+			contractManager = getContractManager(network, chaincodeId);
+		});
+		it('getRaw', async () => {
+			await getRaw(contractManager);
 		});
 	});
 });
