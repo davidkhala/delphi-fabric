@@ -22,17 +22,8 @@ exports.installs = async (chaincodeId, orgName, peerIndexes) => {
 	const user = helper.getOrgAdmin(orgName);
 	const [result, t1] = await install(peers, {chaincodeId}, user);
 	const packageID = result.responses[0].response.package_id;
-	const queryHub = new QueryHub(peers, user);
-	const queryResult = await queryHub.chaincodesInstalled(packageID);
-	if (!packageID) {
-		logger.debug('chaincodesInstalled', queryResult);
-	} else {
-		result.package_id = packageID;
-		logger.debug('chaincodeInstalled', packageID, '->', queryResult);
-	}
-
 	t1();
-	return result;
+	return packageID;
 };
 exports.approves = async ({sequence, PackageID}, orgName, peers, orderer, gate) => {
 	for (const peer of peers) {
@@ -71,7 +62,7 @@ exports.checkCommitReadiness = async ({sequence, name}, orgName, peers, gate) =>
 	}
 	const user = helper.getOrgAdmin(orgName);
 
-	const chaincodeAction = new ChaincodeAction(peers, user, channel,EndorseALL, logger);
+	const chaincodeAction = new ChaincodeAction(peers, user, channel, EndorseALL, logger);
 	const endorsementPolicy = {gate};
 	Object.assign(endorsementPolicy, getEndorsePolicy(name));
 	chaincodeAction.setEndorsementPolicy(endorsementPolicy);
@@ -92,7 +83,7 @@ exports.installAll = async (chaincodeId) => {
 	const packageIDs = {};
 	for (const [peerOrg, config] of Object.entries(channels[channelName].organizations)) {
 		const {peerIndexes} = config;
-		const {package_id} = await exports.installs(chaincodeId, peerOrg, peerIndexes);
+		const package_id = await exports.installs(chaincodeId, peerOrg, peerIndexes);
 		packageIDs[peerOrg] = package_id;
 	}
 
