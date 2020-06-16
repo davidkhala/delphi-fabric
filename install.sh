@@ -18,6 +18,10 @@ updateChaincode() {
 	$goCmd | bash -s get "github.com/davidkhala/chaincode"
 
 	echo "==source download complete=="
+
+	if [[ -z "$GOPATH" ]]; then
+		export GOPATH=$(go env GOPATH)
+	fi
 	cd $GOPATH/src/github.com/davidkhala/chaincode/golang/master
 	go mod vendor
 	cd -
