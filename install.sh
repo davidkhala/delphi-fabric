@@ -49,5 +49,6 @@ else
 	cd -
 
 	npm install
+	sudo npm install --global mocha
 	updateChaincode
 fi
