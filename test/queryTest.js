@@ -37,7 +37,7 @@ const EventHub = require('../common/nodejs/admin/eventHub');
 const {emptyChannel} = require('../common/nodejs/admin/channel');
 const {replayTx} = require('../common/nodejs/eventHub');
 describe('queryTransaction', () => {
-	const peers = [helper.newPeer(0, 'icdd'), helper.newPeer(0, 'astri.org')];
+	const peers = [helper.newPeer(1, 'icdd'), helper.newPeer(1, 'astri.org')];
 	const org = 'icdd';
 	const user = helper.getOrgAdmin(org);
 	const eventer = peers[0].eventer;
@@ -49,7 +49,8 @@ describe('queryTransaction', () => {
 		this.timeout(30000);
 		const txs = await replayTx(eventHub, queryHub.identityContext, 3);
 		logger.info(txs);
-		const {transactionId} = txs[0];
+		const {transactionId} = txs.find(tx => tx.transactionId);
+		logger.info('query on txID', transactionId);
 		for (const peer of peers) {
 			await peer.connect();
 		}

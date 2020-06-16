@@ -6,7 +6,6 @@ const globalConfig = require('../config/orgs.json');
 const {channels} = globalConfig;
 const logger = require('khala-logger/log4js').consoleLogger('install helper');
 const {EndorseALL} = require('../common/nodejs/endorseResultInterceptor');
-const QueryHub = require('../common/nodejs/query');
 const channelName = 'allchannel';
 const channel = emptyChannel(channelName);
 const prepare = ({PackageID}) => {
@@ -33,6 +32,7 @@ exports.approves = async ({sequence, PackageID}, orgName, peers, orderer, gate) 
 	const user = helper.getOrgAdmin(orgName);
 	const {name} = prepare({PackageID});
 	const chaincodeAction = new ChaincodeAction(peers, user, channel, EndorseALL);
+	chaincodeAction.setInitRequired(true);
 	const endorsementPolicy = {
 		gate
 	};
@@ -49,6 +49,7 @@ exports.commitChaincodeDefinition = async ({sequence, name}, orgName, peers, ord
 	await orderer.connect();
 	const user = helper.getOrgAdmin(orgName);
 	const chaincodeAction = new ChaincodeAction(peers, user, channel, EndorseALL);
+	chaincodeAction.setInitRequired(true);
 	const endorsementPolicy = {gate};
 	Object.assign(endorsementPolicy, getEndorsePolicy(name));
 	chaincodeAction.setEndorsementPolicy(endorsementPolicy);

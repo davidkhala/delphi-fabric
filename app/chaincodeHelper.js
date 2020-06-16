@@ -40,6 +40,7 @@ const prepareInstall = async ({chaincodeId}) => {
 const install = async (peers, {chaincodeId}, user) => {
 	const [ccPack, t1] = await prepareInstall({chaincodeId});
 	const chaincodeAction = new ChaincodeAction(peers, user, undefined, EndorseALL);
+	chaincodeAction.setInitRequired(true);
 	const result = await chaincodeAction.install(ccPack, true);
 	return [result, t1];
 };
