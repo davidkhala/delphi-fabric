@@ -39,11 +39,11 @@ else
 	$CURRENT/common/install.sh golang
 	$CURRENT/common/install.sh
 
+	curl --silent --show-error https://raw.githubusercontent.com/davidkhala/docker-manager/master/dockerSUDO.sh | bash
 	cd common
 	./install.sh fabricInstall
 	cd -
 
 	npm install
 	updateChaincode
-	curl --silent --show-error https://raw.githubusercontent.com/davidkhala/docker-manager/master/dockerSUDO.sh | bash
 fi
