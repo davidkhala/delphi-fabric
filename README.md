@@ -2,9 +2,7 @@ Delphi-fabric
 ---------------------
 [![Build Status](https://travis-ci.com/davidkhala/delphi-fabric.svg?branch=master)](https://travis-ci.com/davidkhala/delphi-fabric)
 
-About
------------------------
-**This project is not related to delphi program language**
+**This project is not relevant to delphi program language**
 
 This project aims to provide a user-friendly fabric application development toolset including
 - fabric network simulation (alternative of **Build your first network**)
