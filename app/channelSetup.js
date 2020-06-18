@@ -2,11 +2,11 @@ const {create, joinAll, setAnchorPeersByOrg} = require('./channelHelper');
 const ChannelUtil = require('../common/nodejs/channel');
 const {genesis} = require('../common/nodejs/formatter/channel');
 const helper = require('./helper');
-const {homeResolve} = require('khala-light-util');
+const {homeResolve, sleep} = require('khala-light-util');
 const path = require('path');
 const globalConfig = require('../config/orgs.json');
 const BinManager = require('../common/nodejs/binManager');
-
+const logger = require('khala-logger/log4js').consoleLogger('channel setup');
 const anchorPeerTask = async (channelName) => {
 	const channelConfig = globalConfig.channels[channelName];
 
@@ -44,7 +44,7 @@ const taskViewChannelBlock = async (channelName) => {
 
 	await orderer.connect();
 	const configBlock = await ChannelUtil.getChannelConfigFromOrderer(channel.name, user, orderer);
-	console.debug('configBlock', configBlock);
+	logger.debug('configBlock', configBlock);
 
 };
 const CONFIGTX = homeResolve(globalConfig.docker.volumes.CONFIGTX);
@@ -63,9 +63,11 @@ const createTask = async (channelName) => {
 
 describe('channelSetup', () => {
 	const channelName = process.env.channelName ? process.env.channelName : 'allchannel';
-	it('create', async () => {
+	it('create', async function () {
+		this.timeout(30000);
 		process.env.binPath = path.resolve(__dirname, '../common/bin/');
 		await createTask(channelName);
+		await sleep(3000);
 	});
 	it('join', async function () {
 		this.timeout(30000);
