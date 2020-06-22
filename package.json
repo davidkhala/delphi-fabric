@@ -7,7 +7,7 @@
     "v1.x fabric node-sdk sample"
   ],
   "scripts": {
-    "install": "cd common/nodejs; npm install; lerna bootstrap --no-ci; cd -",
+    "install": "npm run nuke; cd common/nodejs; npm install; lerna bootstrap --no-ci; cd -",
     "nuke": "rm -rf node_modules; cd common/nodejs; rm -rf node_modules; lerna clean --yes; cd -",
     "test": "mocha"
   },
