@@ -4,6 +4,8 @@ Delphi-fabric
 
 **This project is not relevant to delphi program language**
 
+![](./delphi-fabric.png)
+
 This project aims to provide a user-friendly fabric application development toolset including
 - fabric network simulation (alternative of **Build your first network**)
 - chaincode lifecycle tools

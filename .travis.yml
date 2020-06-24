@@ -3,7 +3,7 @@ matrix:
     - language: node_js
       node_js:
         - "10"
-        - 12
+        - "12"
       dist: bionic
       before_install:
         - eval "$(gimme 1.14.x)"
