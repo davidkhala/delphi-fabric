@@ -1,13 +1,10 @@
-const HSM = require('../hsm');
+const HSM = require('../common/nodejs/hsm');
 const logger = require('khala-logger/log4js').consoleLogger('test:hsm');
-logger.info('libs', HSM.availablePKCSLibs);
-
 
 describe('HSM', () => {
-	const slot = 0;
-	const pin = 'fabric';
-
 	it('generate ephemeral ECDSA key pair, sign, and verify', async () => {
+		const slot = 0;
+		const pin = 'fabric';
 		const cryptoSuite = HSM.newHSMCryptoSuite({slot, pin});
 		const message = Buffer.from('hello');
 		const key = cryptoSuite.generateEphemeralKey({algorithm: 'ECDSA'});
