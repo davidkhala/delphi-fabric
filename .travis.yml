@@ -10,7 +10,7 @@ matrix:
         - ./install.sh
         - sudo apt-get install -y softhsm2
         - npm install --global mocha
+        - ./test/hsm.sh
       script:
         - ./docker.sh
         - npm test
-        - ./test/hsm.sh
