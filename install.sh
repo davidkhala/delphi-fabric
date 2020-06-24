@@ -51,8 +51,6 @@ else
 	npm install
 	if [[ -z "$CI" ]]; then
 		sudo npm install --global mocha
-	else
-		npm install --global mocha
 	fi
 	updateChaincode
 fi
