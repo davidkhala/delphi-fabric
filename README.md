@@ -67,8 +67,6 @@ _after first time clone this repository, submodule should be initialize_
     - ubuntu xenial/bionic
     - [TODO] MacOS 
   * [Fabric](./common/README.md#Prerequisite)
-  * java 1.8.0_151 (optional for java-sdk)
-  * jq 1.5：a command line tool for parsing json format https://github.com/mikefarah/yq
 
 Test on single host
 -----------------------
