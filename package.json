@@ -4,13 +4,16 @@
   "private": true,
   "description": "node program to use Hyperledger Fabric nodejs SDK ",
   "keywords": [
-    "v1.x fabric node-sdk sample"
+    "fabric-sdk-node",
+    "sample"
   ],
   "scripts": {
     "install": "cd common/nodejs; npm install; lerna bootstrap --no-ci; cd -",
     "preinstall": "npm run nuke",
     "nuke": "rm -rf node_modules; cd common/nodejs; rm -rf node_modules; lerna clean --yes; cd -",
-    "test": "mocha"
+    "test": "mocha test",
+    "start": "./docker.sh",
+    "stop": "./docker.sh down"
   },
   "license": "Apache-2.0",
   "dependencies": {

@@ -12,5 +12,5 @@ matrix:
         - npm install --global mocha
         - ./test/hsm.sh
       script:
-        - ./docker.sh
+        - npm start
         - npm test
