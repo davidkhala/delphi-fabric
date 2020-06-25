@@ -3,7 +3,7 @@ const IDService = require('../common/nodejs/admin/identityService');
 const CAService = require('../common/nodejs/admin/ca');
 const logger = require('khala-logger/log4js').consoleLogger('ca service');
 const caCryptoGen = require('../config/caCryptoGen');
-const should = require('chai').should();
+require('chai').should();
 describe('caCryptoGen', () => {
 	const org = 'icdd';
 	it('genUser green', async () => {

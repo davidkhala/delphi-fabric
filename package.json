@@ -12,7 +12,8 @@
     "preinstall": "npm run nuke",
     "nuke": "rm -rf node_modules; cd common/nodejs; rm -rf node_modules; lerna clean --yes; cd -",
     "test": "mocha test",
-    "start": "./docker.sh",
+    "restart": "./docker.sh",
+    "start": "./docker.sh up; ./docker.sh cc",
     "stop": "./docker.sh down"
   },
   "license": "Apache-2.0",
