@@ -26,7 +26,7 @@ const prepareInstall = async ({chaincodeId}) => {
 		Type: chaincodeType,
 		Label: chaincodeId
 	});
-	const [tmpDir, t1] = tmp.createTmpDir({unsafeCleanup: true});
+	const [tmpDir, t1] = tmp.createTmpDir();
 	const ccPack = path.resolve(tmpDir, 'ccPackage.tar.gz');
 	await chaincodePackage.pack(chaincodePath, ccPack);
 
