@@ -18,8 +18,9 @@ describe('uninstall lifecycle chaincode', () => {
 		const containerName = 'peer0.icdd';
 		const installed = await queryHub.chaincodesInstalled();
 		const packageId = Object.keys(installed[0])[0];
+		logger.info('before uninstall', installed[0]);
 		await uninstallChaincode(containerName, packageId);
-		await sleep(2000);
+		await sleep(1000);
 		const updatedInstalled = await queryHub.chaincodesInstalled();
 		logger.info(updatedInstalled[0]);
 	});

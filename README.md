@@ -81,10 +81,8 @@ Finished
 - hybrid data storage model: couchdb, leveldb
 
 ## TODO
-- migrate to use `mocha` as test framework
 - java sdk: keep update
 - java chaincode
-- chaincode uninstall
 - 1.3: idemixgen
 - migrate to use make file instead of ./install.sh (https://www.gnu.org/software/make/manual/make.html#Introduction)
 - Suggestion from Paul: Question: are your repos more to do with Fabric itself, rather than pure Fabric developer resources (ie go/js/java/typescript chaincode/sdk work)? (I'm only concentrating on Fabric Developer resources in particular) If so - I would suggest to contact someone like Silona Bonewald to find a suitable home/new page on Confluence for that? I'm just asking where its 'natural' home is 🙂 Also I would suggest the README explains 1) what it is 2) what it does (as a goal of 'studying Fabric' resources) 3) what the consumer would get from trying it out or hope to achieve?
