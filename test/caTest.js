@@ -10,8 +10,7 @@ describe('caCryptoGen', () => {
 		await caCryptoGen.genUser({userName: 'david'}, org);
 	});
 	it('name length exceed', async () => {
-		// TODO ca error: why this length illegal identity will go into CA
-		// [[{"code":0,"message":"The CN 'david.repeat(20)@Merchant' exceeds the maximum character limit of 64"}]]
+		// TODO fabric-ca bug: why this length illegal identity will go into CA
 		const userName = `${'david'.repeat(25)}@orgMSP`;
 		try {
 			await caCryptoGen.genUser({userName}, org);
