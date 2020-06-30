@@ -10,15 +10,15 @@ describe('caCryptoGen', () => {
 		await caCryptoGen.genUser({userName: 'david'}, org);
 	});
 	it('name length exceed', async () => {
+		// TODO ca error: why this length illegal identity will go into CA
 		// [[{"code":0,"message":"The CN 'david.repeat(20)@Merchant' exceeds the maximum character limit of 64"}]]
-		const userName = `${'david'.repeat(20)}@orgMSP`;
+		const userName = `${'david'.repeat(25)}@orgMSP`;
 		try {
 			await caCryptoGen.genUser({userName}, org);
 		} catch (e) {
-			const regExp = /\[\[{"code":0,"message":"The CN '\S+' exceeds the maximum character limit of 64"}]]$/;
-			e.message.should.match(regExp);
+			e.errors[0].code.should.equal(0);
+			e.errors[0].message.should.match(/The CN '\S+' exceeds the maximum character limit of 64/);
 
-			logger.error(e);
 		}
 
 	});
