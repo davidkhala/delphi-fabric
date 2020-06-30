@@ -9,5 +9,5 @@ echo "cleaning up hsm"
 rm -rf /tmp/softHSM2/*
 export HSM_SO_PIN="fabric"
 export HSM_PIN="fabric"
-$projectRoot/common/bash/softHSM.sh initToken $label
+$projectRoot/common/bash/softHSM.sh initToken $label 0
 
