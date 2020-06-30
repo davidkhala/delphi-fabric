@@ -1,19 +1,18 @@
-// TODO migration
 const helper = require('../app/helper');
 const logger = require('khala-logger/log4js').consoleLogger('test:serviceDiscovery');
-// const {globalPeers, initialize, discover, discoverPretty} = require('../common/nodejs/serviceDiscovery');
 const SlimDiscoveryService = require('../common/nodejs/admin/discovery');
 const {getIdentityContext} = require('../common/nodejs/admin/user');
-const {containerDelete} = require('khala-dockerode/dockerode-util');
+const DockerManager = require('khala-dockerode/docker');
+const dockerManager = new DockerManager();
 const {resultParser} = require('../common/nodejs/formatter/discovery');
 describe('change container', () => {
 	it('deletePeer', async () => {
 		const containerName = 'peer0.astri.org';
-		await containerDelete(containerName);
+		await dockerManager.containerDelete(containerName);
 	});
 	it('deleteOrderer', async () => {
 		const ordererContainer = 'orderer0.icdd.astri.org';
-		await containerDelete(ordererContainer);
+		await dockerManager.containerDelete(ordererContainer);
 	});
 });
 describe('discovery', () => {
