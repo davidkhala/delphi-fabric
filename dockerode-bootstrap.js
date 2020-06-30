@@ -7,18 +7,15 @@ const {CryptoPath} = require('./common/nodejs/path');
 
 const configConfigtx = require('./config/configtx.js');
 const caCrypoGenUtil = require('./config/caCryptoGen');
-const {
-	containerDelete, volumeCreateIfNotExist, networkCreateIfNotExist,
-	volumeRemove, prune: {system: pruneLocalSystem}
-} = require('khala-dockerode/dockerode-util');
+const DockerManager = require('khala-dockerode/docker');
 const fsExtra = require('fs-extra');
 const {homeResolve} = require('khala-light-util');
-const MSPROOT = homeResolve(globalConfig.docker.volumes.MSPROOT);
+const MSPROOTPath = homeResolve(globalConfig.docker.volumes.MSPROOT);
 const CONFIGTX = homeResolve(globalConfig.docker.volumes.CONFIGTX);
 const {docker: {fabricTag, caTag, network, thirdPartyTag}, TLS} = globalConfig;
 
 const BinManager = require('./common/nodejs/binManager');
-
+const dockerManager = new DockerManager();
 exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'}, toStop) => {
 	const {orderer: {type, genesis_block: {file: BLOCK_FILE}}} = globalConfig;
 	const CONFIGTXVolume = volumeName.CONFIGTX;
@@ -37,7 +34,7 @@ exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPRO
 		const configPath = cryptoPath.MSP(nodeType);
 
 		if (toStop) {
-			await containerDelete(container_name);
+			await dockerManager.containerDelete(container_name);
 		} else {
 			const tls = TLS ? cryptoPath.TLSFile(nodeType) : undefined;
 			await runOrderer({
@@ -70,10 +67,10 @@ exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPRO
 exports.volumesAction = async (toStop) => {
 	for (const Name in globalConfig.docker.volumes) {
 		if (toStop) {
-			await volumeRemove(Name);
+			await dockerManager.volumeRemove(Name);
 			continue;
 		}
-		await volumeCreateIfNotExist({Name, path: homeResolve(globalConfig.docker.volumes[Name])});
+		await dockerManager.volumeCreateIfNotExist({Name, path: homeResolve(globalConfig.docker.volumes[Name])});
 	}
 };
 exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'}, toStop) => {
@@ -95,9 +92,9 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 			}
 			if (toStop) {
 				if (couchDB) {
-					await containerDelete(couchDB.container_name);
+					await dockerManager.containerDelete(couchDB.container_name);
 				}
-				await containerDelete(container_name);
+				await dockerManager.containerDelete(container_name);
 				continue;
 			}
 
@@ -114,6 +111,7 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 			const type = 'peer';
 			const configPath = cryptoPath.MSP(type);
 			if (couchDB) {
+				// eslint-disable-next-line no-shadow
 				const {container_name, port} = couchDB;
 				await runCouchDB({imageTag: thirdPartyTag, container_name, port, network});
 			}
@@ -140,7 +138,7 @@ exports.runCAs = async (toStop) => {
 	const toggle = async ({container_name, port, Issuer}) => {
 
 		if (toStop) {
-			await containerDelete(container_name);
+			await dockerManager.containerDelete(container_name);
 		} else {
 			await runCA({container_name, port, network, imageTag, TLS, issuer: Issuer});
 		}
@@ -168,13 +166,13 @@ exports.down = async () => {
 
 	await exports.runPeers(undefined, toStop);
 	await exports.runOrderers(undefined, toStop);
-	await pruneLocalSystem();
+	await dockerManager.prune.system();
 	await chaincodeClear();
 	await chaincodeImageClear();
 	await exports.volumesAction(toStop);
 
-	fsExtra.emptyDirSync(MSPROOT);
-	logger.info(`[done] clear MSPROOT ${MSPROOT}`);
+	fsExtra.emptyDirSync(MSPROOTPath);
+	logger.info(`[done] clear MSPROOT ${MSPROOTPath}`);
 	fsExtra.emptyDirSync(CONFIGTX);
 	logger.info(`[done] clear CONFIGTX ${CONFIGTX}`);
 };
@@ -184,7 +182,7 @@ exports.up = async () => {
 
 	const binManager = new BinManager();
 
-	await networkCreateIfNotExist({Name: network});
+	await dockerManager.networkCreateIfNotExist({Name: network});
 
 	await exports.volumesAction();
 	await exports.runCAs();
@@ -193,7 +191,7 @@ exports.up = async () => {
 
 	const PROFILE_BLOCK = globalConfig.orderer.genesis_block.profile;
 	const configtxFile = path.resolve(__dirname, 'config', 'configtx.yaml');
-	configConfigtx.gen({MSPROOT, PROFILE_BLOCK, configtxFile});
+	configConfigtx.gen({MSPROOT: MSPROOTPath, PROFILE_BLOCK, configtxFile});
 
 
 	const BLOCK_FILE = globalConfig.orderer.genesis_block.file;
