@@ -1,9 +1,9 @@
+dist: bionic
 matrix:
   include:
     - language: node_js
       node_js:
         - lts/*
-      dist: bionic
       before_install:
         - eval "$(gimme 1.14.x)"
       install:
