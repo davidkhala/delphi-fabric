@@ -10,7 +10,6 @@ describe('HSM', () => {
 		const message = Buffer.from('hello');
 		const key = cryptoSuite.generateEphemeralKey({algorithm: 'ECDSA'});
 		const sig = cryptoSuite.sign(key, message, null);
-		// TODO (node:6461) [DEP0079] DeprecationWarning: Custom inspection function on Objects via .inspect() is deprecated
 		const verifyResult = cryptoSuite.verify(key, sig, message);
 		logger.info('ECDSATask:verifyResult', verifyResult);
 	});
