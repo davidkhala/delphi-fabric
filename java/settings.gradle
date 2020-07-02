@@ -1,4 +1,1 @@
-rootProject.name = 'com.s1coder.davidliu'
-include ':common-java'
-
-project(':common-java').projectDir = new File(rootDir.getParentFile(),'common/java/')
+// TODO use github packages as dependencies

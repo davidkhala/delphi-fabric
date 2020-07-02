@@ -57,6 +57,11 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 				}
 			}
 		};
+		if (orgConfig.msptype === 'idemix') {
+			result.msptype = 'idemix';
+			result.MSPDir = cryptoPath[`${nodeType}Org`]();
+			// TODO fabric doc: why not suffix with msp
+		}
 		if (Array.isArray(anchorIndexes)) {
 
 			result.AnchorPeers = anchorIndexes.map((anchorIndex) => {

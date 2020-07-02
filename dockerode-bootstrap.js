@@ -4,10 +4,11 @@ const logger = require('khala-logger/log4js').consoleLogger('dockerode-bootstrap
 const peerUtil = require('./common/nodejs/peer');
 const {runCouchDB, runCA, runPeer, runOrderer, fabricImagePull, chaincodeClear, chaincodeImageClear} = require('./common/nodejs/fabric-dockerode');
 const {CryptoPath} = require('./common/nodejs/path');
-
+const {container: {FABRIC_CA_HOME}} = require('./common/nodejs/ca');
 const configConfigtx = require('./config/configtx.js');
 const caCrypoGenUtil = require('./config/caCryptoGen');
 const DockerManager = require('khala-dockerode/docker');
+const {copy: dockerCP} = require('khala-dockerode/dockerCmd');
 const fsExtra = require('fs-extra');
 const {homeResolve} = require('khala-light-util');
 const MSPROOTPath = homeResolve(globalConfig.docker.volumes.MSPROOT);
@@ -188,6 +189,23 @@ exports.up = async () => {
 	await exports.runCAs();
 
 	await caCrypoGenUtil.genAll();
+
+	// TODO idemix
+	{
+		// TODO orderer org idemix
+		for (const orgName of Object.keys(globalConfig.organizations)) {
+			const container_name = `ca.${orgName}`;
+			const cryptoPath = new CryptoPath(MSPROOTPath, {
+				peer: {
+					org: orgName
+				}
+			});
+
+			const {msp: {IssuerPublicKey, IssuerRevocationPublicKey}} = cryptoPath.OrgFile('peer');
+			await dockerCP(container_name, `${FABRIC_CA_HOME}/IssuerPublicKey`, IssuerPublicKey);
+			await dockerCP(container_name, `${FABRIC_CA_HOME}/IssuerRevocationPublicKey`, IssuerRevocationPublicKey);
+		}
+	}
 
 	const PROFILE_BLOCK = globalConfig.orderer.genesis_block.profile;
 	const configtxFile = path.resolve(__dirname, 'config', 'configtx.yaml');
