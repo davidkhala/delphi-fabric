@@ -1,7 +1,7 @@
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import model.AdminUser;
-import model.ChannelUtil;
+import org.hyperledger.fabric.fabricCommon.AdminUser;
+import org.hyperledger.fabric.fabricCommon.ChannelUtil;
 import org.hyperledger.fabric.protos.peer.Query;
 import org.hyperledger.fabric.sdk.BlockchainInfo;
 import org.hyperledger.fabric.sdk.Channel;
@@ -15,6 +15,7 @@ import org.hyperledger.fabric.sdk.security.CryptoSuite;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.spec.InvalidKeySpecException;
@@ -22,7 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class testQuery {
+public class TestQuery {
 
     public static void main(String[] args) {
         try {
@@ -45,7 +46,7 @@ public class testQuery {
         }
     }
 
-    public static Channel testPrepareChannel(String orgName,String channelFilename) throws TransactionException, IOException, InvalidArgumentException, InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException, CryptoException {
+    public static Channel testPrepareChannel(String orgName,String channelFilename) throws TransactionException, IOException, InvalidArgumentException, InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException, CryptoException, ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
         String channelName = "allchannel";
         HFClient client = HFClient.createNewInstance();
 
