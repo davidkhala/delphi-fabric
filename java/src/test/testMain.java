@@ -1,8 +1,7 @@
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import model.AdminUser;
-import model.Chaincode;
-import model.ChannelUtil;
+import org.hyperledger.fabric.fabricCommon.AdminUser;
+import org.hyperledger.fabric.fabricCommon.ChannelUtil;
 import org.hyperledger.fabric.sdk.*;
 import org.hyperledger.fabric.sdk.security.CryptoSuite;
 
@@ -14,7 +13,6 @@ import java.util.Map;
 import java.util.Set;
 
 public class testMain {
-
 
 
     public static void main(String[] args) {
@@ -58,9 +56,9 @@ public class testMain {
             System.out.println("channel created");
 
             ChannelUtil.joinPeer(channel, peer0BU);
-            channel.addEventHub(client.newEventHub("peer0BU","grpc://localhost:7053"));
+            channel.addEventHub(client.newEventHub("peer0BU", "grpc://localhost:7053"));
             ChannelUtil.joinPeer(channel, peer1BU);
-            channel.addEventHub(client.newEventHub("peer1BU","grpc://localhost:7063"));
+            channel.addEventHub(client.newEventHub("peer1BU", "grpc://localhost:7063"));
 
             channel.initialize();// TODO double initialize to connect eventhub
             File pmAdminMSPRoot = new File(cryptoRoot, "peerOrganizations/PM.Delphi.com/users/Admin@PM.Delphi.com/msp");
@@ -69,7 +67,7 @@ public class testMain {
             client.setUserContext(pmAdmin);
 
             ChannelUtil.joinPeer(channel, peer0PM);
-            channel.addEventHub(client.newEventHub("peer0PM","grpc://localhost:9053"));
+            channel.addEventHub(client.newEventHub("peer0PM", "grpc://localhost:9053"));
 
             channel.initialize();// TODO double initialize to connect eventhub
             {
@@ -93,7 +91,6 @@ public class testMain {
 //                FIXME: blockListener not working
 
 
-
 //                channel.registerBlockListener(blockEvent -> {
 //                    System.out.println("blockEvent Come");
 //                    blockEvent.getTransactionEvents().forEach(
@@ -108,21 +105,21 @@ public class testMain {
 //                    );
 //                });
                 Chaincode.ProposalResultWrapper instantiateResult = Chaincode.instantiate(channel, targets, chaincodeMetaData, new String[]{});
-                if(instantiateResult.hasError()){
+                if (instantiateResult.hasError()) {
                     return;
                 }
-                System.out.println("init proposal" );
+                System.out.println("init proposal");
                 BlockEvent.TransactionEvent instantiateEvent = channel.sendTransaction(instantiateResult.successResponses).get();
-                System.out.println("["+instantiateEvent.getTransactionActionInfoCount()+"]"+instantiateEvent.getTransactionID()+instantiateEvent.getTimestamp());
+                System.out.println("[" + instantiateEvent.getTransactionActionInfoCount() + "]" + instantiateEvent.getTransactionID() + instantiateEvent.getTimestamp());
 
 //
                 Chaincode.ProposalResultWrapper invokeResult = Chaincode.invoke(channel, targets, chaincodeMetaData, new String[]{});
-                if(invokeResult.hasError()){
+                if (invokeResult.hasError()) {
                     return;
                 }
                 System.out.println("invoke proposal");
                 BlockEvent.TransactionEvent invokeEvent = channel.sendTransaction(invokeResult.successResponses).get();
-                System.out.println("["+invokeEvent.getTransactionActionInfoCount()+"]"+invokeEvent.getTransactionID()+invokeEvent.getTimestamp());
+                System.out.println("[" + invokeEvent.getTransactionActionInfoCount() + "]" + invokeEvent.getTransactionID() + invokeEvent.getTimestamp());
 
             }
 
