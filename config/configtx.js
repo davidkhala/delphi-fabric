@@ -18,7 +18,7 @@ const implicitPolicies = {
 		Rule: 'MAJORITY Admins'
 	}
 };
-exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, configtxFile, PROFILE_ANCHORPEERS = 'anchorPeers'}) => {
+exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, configtxFile}) => {
 	const channelsConfig = globalConfig.channels;
 	if (!configtxFile) {
 		configtxFile = path.resolve(__dirname, 'configtx.yaml');
@@ -28,7 +28,7 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 		fsExtra.removeSync(configtxFile);
 	}
 
-	const OrganizationBuilder = (orgName, orgConfig, anchorIndexes, forChannel, nodeType = 'peer') => {
+	const OrganizationBuilder = (orgName, orgConfig, forChannel, nodeType = 'peer') => {
 		const cryptoPath = new CryptoPath(MSPROOT, {
 			[nodeType]: {
 				org: orgName
@@ -59,26 +59,7 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 		};
 		if (orgConfig.msptype === 'idemix') {
 			result.msptype = 'idemix';
-			result.MSPDir = cryptoPath[`${nodeType}Org`]();
-			// TODO fabric doc: why not suffix with msp
-		}
-		if (Array.isArray(anchorIndexes)) {
-
-			result.AnchorPeers = anchorIndexes.map((anchorIndex) => {
-				const anchorPeerCryptoPath = new CryptoPath(MSPROOT, {
-					peer: {
-						org: orgName, name: `peer${anchorIndex}`
-					}
-				});
-				return {
-					Host: anchorPeerCryptoPath.peerHostName,
-					Port: 7051
-				};
-			});
-			delete result.ID;
-		}
-		if (forChannel) {
-			result.AnchorPeers = [{}];
+			result.MSPDir = cryptoPath[`${nodeType}Org`]();// TODO fabric bad design, it have to be upper dir of msp
 		}
 		return result;
 	};
@@ -130,7 +111,7 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 				}
 				Consenters.push(consenter);
 			}
-			Organizations.push(OrganizationBuilder(ordererOrgName, ordererOrgConfig, undefined, undefined, 'orderer'));
+			Organizations.push(OrganizationBuilder(ordererOrgName, ordererOrgConfig, undefined, 'orderer'));
 		}
 		OrdererConfig.Addresses = Addresses;
 
@@ -168,10 +149,6 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 	for (const channelName in channelsConfig) {
 		const channelConfig = channelsConfig[channelName];
 		const PROFILE_CHANNEL = channelName;
-		const Organizations = [];
-		for (const orgName in channelConfig.organizations) {
-			Organizations.push(OrganizationBuilder(orgName, orgsConfig[orgName], undefined, true));
-		}
 		Profiles[PROFILE_CHANNEL] = {
 			Policies: implicitPolicies,
 			Capabilities: {
@@ -190,7 +167,7 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 						Rule: 'MAJORITY Endorsement'
 					}
 				}, implicitPolicies),
-				Organizations,
+				Organizations: Object.keys(channelConfig.organizations).map(orgName => OrganizationBuilder(orgName, orgsConfig[orgName], true)),
 				Capabilities: {
 					V2_0: true
 				}
@@ -198,18 +175,5 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 		};
 
 	}
-	// setAnchorPeers profile
-	const OrganizationsForAnchorProfile = [];
-	for (const [orgName, orgConfig] of Object.entries(orgsConfig)) {
-		OrganizationsForAnchorProfile.push(OrganizationBuilder(orgName, orgConfig, [0, 1]));// TODO anchorIndexes as parameters?
-	}
-	const setAnchorPeersProfile = {
-		Policies: implicitPolicies,
-		Application: {
-			Policies: implicitPolicies,
-			Organizations: OrganizationsForAnchorProfile
-		}
-	};
-	Profiles[PROFILE_ANCHORPEERS] = setAnchorPeersProfile;
 	yaml.write({Profiles}, configtxFile);
 };

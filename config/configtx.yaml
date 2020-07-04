@@ -137,8 +137,6 @@ Profiles:
             Endorsement:
               Type: Signature
               Rule: OR('astriMSP.member')
-          AnchorPeers:
-            - {}
         - Name: icdd
           ID: icddMSP
           MSPDir: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp
@@ -155,52 +153,5 @@ Profiles:
             Endorsement:
               Type: Signature
               Rule: OR('icddMSP.member')
-          AnchorPeers:
-            - {}
       Capabilities:
         V2_0: true
-  anchorPeers:
-    Policies: *ref_3
-    Application:
-      Policies: *ref_3
-      Organizations:
-        - Name: astri.org
-          MSPDir: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/astri.org/msp
-          Policies:
-            Readers:
-              Type: Signature
-              Rule: OR('astriMSP.member')
-            Writers:
-              Type: Signature
-              Rule: OR('astriMSP.member')
-            Admins:
-              Type: Signature
-              Rule: OR('astriMSP.admin')
-            Endorsement:
-              Type: Signature
-              Rule: OR('astriMSP.member')
-          AnchorPeers:
-            - Host: peer0.astri.org
-              Port: 7051
-            - Host: peer1.astri.org
-              Port: 7051
-        - Name: icdd
-          MSPDir: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp
-          Policies:
-            Readers:
-              Type: Signature
-              Rule: OR('icddMSP.member')
-            Writers:
-              Type: Signature
-              Rule: OR('icddMSP.member')
-            Admins:
-              Type: Signature
-              Rule: OR('icddMSP.admin')
-            Endorsement:
-              Type: Signature
-              Rule: OR('icddMSP.member')
-          AnchorPeers:
-            - Host: peer0.icdd
-              Port: 7051
-            - Host: peer1.icdd
-              Port: 7051
