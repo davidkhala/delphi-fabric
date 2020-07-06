@@ -1,6 +1,6 @@
 {
   "name": "delphi-fabric",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "private": true,
   "description": "node program to use Hyperledger Fabric nodejs SDK ",
   "keywords": [
@@ -12,7 +12,6 @@
     "preinstall": "npm run nuke",
     "nuke": "rm -rf node_modules; cd common/nodejs; rm -rf node_modules; lerna clean --yes; cd -",
     "test": "mocha test",
-    "restart": "./docker.sh",
     "start": "./docker.sh up; ./docker.sh cc",
     "stop": "./docker.sh down"
   },
@@ -23,9 +22,9 @@
     "khala-light-util": "latest"
   },
   "devDependencies": {
-    "lerna": "^3.20.2",
-    "mocha": "^7.2.0",
-    "chai": "^4.2.0",
+    "lerna": "latest",
+    "mocha": "latest",
+    "chai": "latest",
     "khala-logger": "latest"
   }
 }
