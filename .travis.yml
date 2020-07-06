@@ -1,16 +1,18 @@
 dist: bionic
-matrix:
+before_install:
+  - eval "$(gimme 1.14.x)"
+  - ./install.sh
+  - sudo apt-get install -y softhsm2
+before_script:
+  - ./test/hsm.sh
+jobs:
+  fast_finish: true
   include:
     - language: node_js
       node_js:
         - lts/*
-      before_install:
-        - eval "$(gimme 1.14.x)"
       install:
-        - ./install.sh
-        - sudo apt-get install -y softhsm2
         - npm install --global mocha
-        - ./test/hsm.sh
       script:
         - npm start
         - npm test
