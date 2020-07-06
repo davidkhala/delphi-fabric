@@ -13,7 +13,7 @@ const fsExtra = require('fs-extra');
 const {homeResolve} = require('khala-light-util');
 const MSPROOTPath = homeResolve(globalConfig.docker.volumes.MSPROOT);
 const CONFIGTX = homeResolve(globalConfig.docker.volumes.CONFIGTX);
-const {docker: {fabricTag, caTag, network, thirdPartyTag}, TLS} = globalConfig;
+const {docker: {fabricTag, caTag, network}, TLS} = globalConfig;
 
 const BinManager = require('./common/nodejs/binManager');
 const dockerManager = new DockerManager();
@@ -114,7 +114,7 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 			if (couchDB) {
 				// eslint-disable-next-line no-shadow
 				const {container_name, port} = couchDB;
-				await runCouchDB({imageTag: thirdPartyTag, container_name, port, network});
+				await runCouchDB({container_name, port, network});
 			}
 			await runPeer({
 				container_name, port, imageTag, network,
