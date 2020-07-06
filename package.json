@@ -9,7 +9,6 @@
   ],
   "scripts": {
     "install": "cd common/nodejs; npm install; lerna bootstrap --no-ci; cd -",
-    "preinstall": "npm run nuke",
     "nuke": "rm -rf node_modules; cd common/nodejs; rm -rf node_modules; lerna clean --yes; cd -",
     "test": "mocha test",
     "start": "./docker.sh up; ./docker.sh cc",
