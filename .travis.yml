@@ -1,4 +1,7 @@
 dist: bionic
+os:
+  - linux
+  - osx
 before_install:
   - eval "$(gimme 1.14.x)"
   - ./install.sh
