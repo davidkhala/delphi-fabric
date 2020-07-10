@@ -5,7 +5,7 @@ os:
 before_install:
   - eval "$(gimme 1.14.x)"
   - ./install.sh
-  - sudo apt-get install -y softhsm2
+  - ./common/install.sh softHSM
 before_script:
   - ./test/hsm.sh
 jobs:
