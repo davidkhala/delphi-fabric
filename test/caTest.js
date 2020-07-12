@@ -34,7 +34,7 @@ describe('caService', async () => {
 		const allIDs = await idService.getAll(admin);
 		logger.info(allIDs);
 	});
-	it.skip('ideMix', async () => {
+	it('idemix', async () => {
 		const result = await caService.idemixEnroll(admin);
 		logger.info(result);
 	});
