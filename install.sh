@@ -8,7 +8,6 @@ for ((i = 2; i <= ${#}; i++)); do
 	remain_params="$remain_params $j"
 done
 
-utilsDir=$CURRENT/common/docker/utils/
 gitSync() {
 	git pull
 	git submodule update --init --recursive
