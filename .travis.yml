@@ -1,27 +1,31 @@
-language: go
 dist: bionic
-os:
-  - osx
-  - linux
-go:
-  - "1.14"
-install:
-  - ./common/install.sh softHSMInstall
-#_shared_bash_job: &_shared_bash_job
-#  language: bash
-#  install:
-#    - ./common/install.sh softHSM
-#  script:
-#    - ./test/hsm.sh
-#_shared_nodejs_job: &_shared_nodejs_job
-#  language: node_js
-#  node_js:
-#    - lts/*
-
-#  install:
-#    - ./install.sh
-#    - ./common/install.sh softHSM
-#    - npm install --global mocha
-#  script:
-#    - npm start
-#    - npm test
+_bash_job: &_bash_job
+  language: bash
+  install:
+    - ./common/install.sh softHSMInstall
+  script:
+    - ./test/hsm.sh
+_nodejs_job: &_nodejs_job
+  language: node_js
+  node_js:
+    - lts/*
+  before_install:
+    - eval "$(gimme 1.14.x)"
+  install:
+    - ./common/install.sh softHSMInstall
+    - ./install.sh
+    - npm install --global mocha
+  script:
+    - npm start
+    - npm test
+jobs:
+  fast_finish: true
+  include:
+    - os: linux
+      <<: *_nodejs_job
+    - os: osx
+      <<: *_nodejs_job
+    - os: osx
+      <<: *_bash_job
+    - os: linux
+      <<: *_bash_job
