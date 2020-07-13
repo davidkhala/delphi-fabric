@@ -42,8 +42,5 @@ else
 	cd -
 
 	npm install
-	if [[ -z "$CI" ]]; then
-		sudo npm install --global mocha
-	fi
 	updateChaincode
 fi
