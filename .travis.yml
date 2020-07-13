@@ -1,9 +1,10 @@
+language: go
 dist: bionic
 os:
   - osx
   - linux
-before_install:
-  - eval "$(gimme 1.14.x)"
+go:
+  - "1.14"
 install:
   - ./common/install.sh softHSM
 #_shared_bash_job: &_shared_bash_job
