@@ -7,25 +7,24 @@ gitSync() {
 	git submodule update --init --recursive
 }
 updateChaincode() {
-	goCmd="curl --silent --show-error https://raw.githubusercontent.com/davidkhala/goutils/master/scripts/goCmd.sh"
-	export GO111MODULE=on
-	$goCmd | bash -s get "github.com/davidkhala/chaincode"
 
+  mkdir -p ~/Documents
+  cd ~/Documents
+  git clone https://github.com/davidkhala/chaincode.git
 	echo "==source download complete=="
 
+  # go env setup
 	if [[ -z "$GOPATH" ]]; then
 		export GOPATH=$(go env GOPATH)
 	fi
-	cd $GOPATH/src/github.com/davidkhala/chaincode/golang/master
-	go mod vendor
-	cd -
-	cd $GOPATH/src/github.com/davidkhala/chaincode/golang/mainChain
-	go mod vendor
-	cd -
+	export GO111MODULE=on
+  # go env setup
 
-	cd $GOPATH/src/github.com/davidkhala/chaincode/golang/diagnose
+
+	cd ~/Documents/chaincode/golang/diagnose
 	go mod vendor
-	cd -
+
+	cd $CURRENT
 }
 
 if [[ -n "$1" ]]; then

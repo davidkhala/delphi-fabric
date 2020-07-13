@@ -1,6 +1,6 @@
 {
   "master": {
-    "path": "github.com/davidkhala/chaincode/golang/master",
+    "path": "Documents/chaincode/golang/master",
     "collectionsConfig": {
       "private1": {
         "identities": [
@@ -13,10 +13,10 @@
     }
   },
   "stress": {
-    "path": "github.com/davidkhala/chaincode/golang/stress"
+    "path": "Documents/chaincode/golang/stress"
   },
   "diagnose": {
-    "path": "github.com/davidkhala/chaincode/golang/diagnose",
+    "path": "Documents/chaincode/golang/diagnose",
     "couchDBIndexes": [
       "Time"
     ],
@@ -43,7 +43,7 @@
     }
   },
   "mainChain": {
-    "path": "github.com/davidkhala/chaincode/golang/mainChain",
+    "path": "Documents/chaincode/golang/mainChain",
     "endorsingConfigs": {
       "n": 2,
       "mspid": {
@@ -54,7 +54,7 @@
   },
   "nodeDiagnose": {
     "type": "node",
-    "path": "github.com/davidkhala/chaincode/nodejs/diagnose",
+    "path": "Documents/chaincode/nodejs/diagnose",
     "endorsingConfigs": {
       "n": 1,
       "mspid": {
@@ -65,6 +65,6 @@
   },
   "nodeStress": {
     "type": "node",
-    "path": "github.com/davidkhala/chaincode/nodejs/stress"
+    "path": "Documents/chaincode/nodejs/stress"
   }
 }
