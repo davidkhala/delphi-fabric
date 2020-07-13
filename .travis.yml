@@ -13,7 +13,6 @@ _nodejs_job: &_nodejs_job
     - eval "$(gimme 1.14.x)"
     - ./common/install.sh softHSMInstall
     - ./install.sh
-    - npm install --global mocha
   script:
     - npm start
     - npm test
