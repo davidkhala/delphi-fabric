@@ -6,7 +6,7 @@ os:
 go:
   - "1.14"
 install:
-  - ./common/install.sh softHSM
+  - ./common/install.sh softHSMInstall
 #_shared_bash_job: &_shared_bash_job
 #  language: bash
 #  install:
