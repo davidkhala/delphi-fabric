@@ -2,6 +2,7 @@ dist: bionic
 _shared_bash_job: &_shared_bash_job
   language: bash
   install:
+    - sudo apt install softhsm2
     - ./common/install.sh softHSM
   script:
     - ./test/hsm.sh
@@ -11,9 +12,9 @@ _shared_nodejs_job: &_shared_nodejs_job
     - lts/*
   before_install:
     - eval "$(gimme 1.14.x)"
+  install:
     - ./install.sh
     - ./common/install.sh softHSM
-  install:
     - npm install --global mocha
   script:
     - npm start
