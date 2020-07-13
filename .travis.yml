@@ -1,35 +1,26 @@
 dist: bionic
-_shared_bash_job: &_shared_bash_job
-  language: bash
-  install:
-    - ./common/install.sh softHSM
-  script:
-    - ./test/hsm.sh
-_shared_nodejs_job: &_shared_nodejs_job
-  language: node_js
-  node_js:
-    - lts/*
-  before_install:
-    - eval "$(gimme 1.14.x)"
-  install:
-    - ./install.sh
-    - ./common/install.sh softHSM
-    - npm install --global mocha
-  script:
-    - npm start
-    - npm test
-jobs:
-  fast_finish: true
-  include:
-    - name: linux nodejs
-      os: linux
-      <<: *_shared_nodejs_job
-    - name: osx nodejs
-      os: osx
-      <<: *_shared_nodejs_job
-    - name: osx bash
-      os: osx
-      <<: *_shared_bash_job
-    - name: linux bash
-      os: linux
-      <<: *_shared_bash_job
+os:
+  - osx
+  - linux
+before_install:
+  - eval "$(gimme 1.14.x)"
+install:
+  - ./common/install.sh softHSM
+#_shared_bash_job: &_shared_bash_job
+#  language: bash
+#  install:
+#    - ./common/install.sh softHSM
+#  script:
+#    - ./test/hsm.sh
+#_shared_nodejs_job: &_shared_nodejs_job
+#  language: node_js
+#  node_js:
+#    - lts/*
+
+#  install:
+#    - ./install.sh
+#    - ./common/install.sh softHSM
+#    - npm install --global mocha
+#  script:
+#    - npm start
+#    - npm test
