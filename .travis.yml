@@ -2,7 +2,6 @@ dist: bionic
 _shared_bash_job: &_shared_bash_job
   language: bash
   install:
-    - sudo apt install softhsm2
     - ./common/install.sh softHSM
   script:
     - ./test/hsm.sh
