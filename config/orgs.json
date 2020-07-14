@@ -103,8 +103,7 @@
       "ca": {
         "portHost": 8054
       },
-      "mspid": "icddMSP",
-      "msptype": "idemix"
+      "mspid": "icddMSP"
     }
   }
 }
