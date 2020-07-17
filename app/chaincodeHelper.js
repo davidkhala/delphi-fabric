@@ -43,10 +43,14 @@ const simplePolicyBuilder = (identities, n) => {
 	};
 };
 
-const buildEndorsePolicy = (endorsingConfig) => { // TODO to support reference
+const buildEndorsePolicy = (endorsingConfig) => {
 	const {n, reference} = endorsingConfig;
 	if (reference) {
-		return {reference};
+		if (reference === true) {
+			return {reference: '/Channel/Application/Endorsement'}
+		} else {
+			return {reference};
+		}
 	}
 	if (n) {
 		const identities = [];

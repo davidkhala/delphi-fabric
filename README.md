@@ -81,8 +81,6 @@ Finished
 - hybrid data storage model: couchdb, leveldb
 
 ## TODO
-- `$@ is all of the parameters passed to the script.`
-    - For instance, if you call ./someScript.sh foo bar then $@ will be equal to foo bar.
 - java sdk: keep update
 - java chaincode
 - 1.3: idemixgen
@@ -99,8 +97,6 @@ Finished
  
 ## Abandoned tasks
 - docker volume plugin
-- endorsement policy config: too flexible to build template
 - docker swarm deployment
 - cooperate with official network_config.json
-- adding kafka/zookeeper online: use etcdRaft
 - [grafana](https://github.com/grafana/grafana)
