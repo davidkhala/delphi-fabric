@@ -13,10 +13,8 @@ const {
 const {CryptoPath} = require('./common/nodejs/path');
 const configConfigtx = require('./config/configtx.js');
 const caCrypoGenUtil = require('./config/caCryptoGen');
-const {
-	containerDelete, volumeCreateIfNotExist, networkCreateIfNotExist,
-	volumeRemove, prune: {system: pruneLocalSystem}
-} = require('khala-dockerode/dockerode-util');
+const DockerManager = require('khala-dockerode/docker')
+const docker = new DockerManager(undefined, logger)
 const {homeResolve, fsExtra} = require('khala-nodeutils/helper');
 const MSPROOT = homeResolve(globalConfig.docker.volumes.MSPROOT);
 const CONFIGTX = homeResolve(globalConfig.docker.volumes.CONFIGTX);
@@ -46,7 +44,7 @@ exports.runOrderers = async (volumeName = {
 		const configPath = cryptoPath.MSP(nodeType);
 
 		if (toStop) {
-			await containerDelete(container_name);
+			await docker.containerDelete(container_name);
 		} else {
 			const tls = TLS ? cryptoPath.TLSFile(nodeType) : undefined;
 
@@ -80,10 +78,10 @@ exports.runOrderers = async (volumeName = {
 exports.volumesAction = async (toStop) => {
 	for (const Name in globalConfig.docker.volumes) {
 		if (toStop) {
-			await volumeRemove(Name);
+			await docker.volumeRemove(Name);
 			continue;
 		}
-		await volumeCreateIfNotExist({Name, path: homeResolve(globalConfig.docker.volumes[Name])});
+		await docker.volumeCreateIfNotExist({Name, path: homeResolve(globalConfig.docker.volumes[Name])});
 	}
 };
 exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'}, toStop) => {
@@ -110,9 +108,9 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 			}
 			if (toStop) {
 				if (couchDB) {
-					await containerDelete(couchDB.container_name);
+					await docker.containerDelete(couchDB.container_name);
 				}
-				await containerDelete(container_name);
+				await docker.containerDelete(container_name);
 				continue;
 			}
 
@@ -131,7 +129,7 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 			if (couchDB) {
 				// eslint-disable-next-line no-shadow
 				const {container_name, port} = couchDB;
-				await runCouchDB({imageTag: thirdPartyTag, container_name, port, network});
+				await runCouchDB({container_name, port, network});
 			}
 			await runPeer({
 				container_name, port, imageTag, network,
@@ -156,7 +154,7 @@ exports.runCAs = async (toStop) => {
 	const toggle = async ({container_name, port, issuer}) => {
 
 		if (toStop) {
-			await containerDelete(container_name);
+			await docker.containerDelete(container_name);
 		} else {
 			await runCA({container_name, port, network, imageTag, TLS, issuer});
 		}
@@ -193,7 +191,7 @@ exports.runIntermediateCAs = async (toStop) => {
 		const issuer = {CN: `intermediate.${org}`};
 
 		if (toStop) {
-			await containerDelete(container_name);
+			await docker.containerDelete(container_name);
 		} else {
 			const {enrollmentID, enrollmentSecret} = await caCrypoGenUtil.genIntermediate(org, parentPort, nodeType);
 			const intermediate = {host: parentHost, port: parentPort, enrollmentID, enrollmentSecret};
@@ -218,7 +216,7 @@ exports.runZookeepers = async (toStop) => {
 		const zkConfig = zkConfigs[zookeeper];
 		const {MY_ID} = zkConfig;
 		if (toStop) {
-			await containerDelete(zookeeper);
+			await docker.containerDelete(zookeeper);
 		} else {
 			await runZookeeper({
 				container_name: zookeeper, MY_ID, imageTag, network
@@ -237,7 +235,7 @@ exports.runKafkas = async (toStop) => {
 		const kafkaConfig = kafkaConfigs[kafka];
 		const {BROKER_ID} = kafkaConfig;
 		if (toStop) {
-			await containerDelete(kafka);
+			await docker.containerDelete(kafka);
 		} else {
 			await runKafka({
 				container_name: kafka, network, imageTag, BROKER_ID
@@ -259,7 +257,7 @@ exports.down = async () => {
 		await exports.runZookeepers(toStop);
 	}
 
-	await pruneLocalSystem();
+	await docker.prune.system();
 	await chaincodeClear();
 	await chaincodeImageClear();
 	await exports.volumesAction(toStop);
@@ -272,11 +270,9 @@ exports.down = async () => {
 
 exports.up = async () => {
 
-	await fabricImagePull({fabricTag, thirdPartyTag});
-
 	const binManager = new BinManager();
 
-	await networkCreateIfNotExist({Name: network});
+	await docker.networkCreateIfNotExist({Name: network});
 
 	const {orderer: {type}} = globalConfig;
 	await exports.volumesAction();

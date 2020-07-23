@@ -1,9 +1,9 @@
 {
   "TLS": true,
   "docker": {
-    "fabricTag": "1.4.7",
+    "fabricTag": "1.4.8",
     "caTag": "1.4.7",
-    "thirdPartyTag": "0.4.20",
+    "thirdPartyTag": "0.4.21",
     "network": "delphiNetwork",
     "volumes": {
       "CONFIGTX": "Documents/delphi-fabric/config/configtx",
@@ -15,54 +15,6 @@
     "genesis_block": {
       "file": "delphi.block",
       "profile": "delphiGenesis"
-    },
-    "kafka": {
-      "M": 2,
-      "N": 3,
-      "zookeepers": {
-        "zookeeper0": {
-          "MY_ID": 0
-        },
-        "zookeeper1": {
-          "MY_ID": 1
-        },
-        "zookeeper2": {
-          "MY_ID": 2
-        }
-      },
-      "kafkas": {
-        "kafka0": {
-          "BROKER_ID": 0
-        },
-        "kafka1": {
-          "BROKER_ID": 1
-        },
-        "kafka2": {
-          "BROKER_ID": 2
-        },
-        "kafka3": {
-          "BROKER_ID": 3
-        }
-      },
-      "organizations": {
-        "hyperledger": {
-          "mspid": "hyperledgerMSP",
-          "ca": {
-            "portHost": 7454
-          },
-          "orderers": {
-            "orderer0": {
-              "portHost": 7050
-            },
-            "orderer1": {
-              "portHost": 8050
-            },
-            "orderer2": {
-              "portHost": 9050
-            }
-          }
-        }
-      }
     },
     "etcdraft": {
       "organizations": {

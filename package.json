@@ -1,6 +1,6 @@
 {
   "name": "delphi-fabric",
-  "version": "1.4.4",
+  "version": "1.4.8",
   "description": "node program to use Hyperledger Fabric nodejs SDK ",
   "private": true,
   "scripts": {
@@ -19,11 +19,10 @@
   "license": "Apache-2.0",
   "dependencies": {
     "khala-logger": "^0.2.0",
-    "khala-dockerode": "^0.1.2",
-    "khala-nodeutils": "^0.8.2"
+    "khala-dockerode": "^1.0.1",
+    "khala-nodeutils": "^0.8.3"
   },
   "devDependencies": {
-    "lerna": "^3.20.2",
-    "why-is-node-running": "^2.1.0"
+    "lerna": "latest"
   }
 }
