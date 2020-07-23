@@ -5,7 +5,7 @@ matrix:
         - "10"
       dist: bionic
       before_install:
-        - eval "$(gimme 1.12.x)"
+        - eval "$(gimme 1.13.x)"
       install:
         - curl --silent --show-error https://raw.githubusercontent.com/davidkhala/node-utils/master/install.sh | bash -s nodeGYPDependencies
         - npm config set package-lock false

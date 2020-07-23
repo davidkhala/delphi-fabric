@@ -64,7 +64,7 @@ _after first time clone this repository, submodule should be initialize_
 ----
  
 **Requirements & dependencies**
-  * fabric: 1.4.7 (for docker image, binary tool and fabric-sdk)
+  * fabric: 1.4.8 (for docker image, binary tool and fabric-sdk)
   * docker-ce 18.x
   * golang 1.13 
   * node 10.17, npm 6.11 : npm install卡死的话，可以考虑添加淘宝的源
@@ -96,19 +96,6 @@ Finished
 - system upgrade: how to migrate to 1.4. from 1.1
 - 开发模式:--peer-chaincodedev: try to set via core.yaml
 - feature: implement configtx in node-sdk??
-
-```
-
-go: downloading github.com/hyperledger/fabric v1.4.4
-verifying github.com/hyperledger/fabric@v1.4.4: checksum mismatch
-        downloaded: h1:Joa6eO9HEGnzcuZF5RD+dZBPeYqxGF+ehYb7OSs3glY=
-        go.sum:     h1:2m+tDXB5QWyZL1UTyYs3fxUhkgvKD88yVE6sIwYf1KM=
-
-SECURITY ERROR
-This download does NOT match an earlier download recorded in go.sum.
-The bits may have been replaced on the origin server, or an attacker may
-have intercepted the download attempt.
-```
 
 ## Notes
 - configtxlator Rest server is deprecated but kept. Refer to following when reuse 

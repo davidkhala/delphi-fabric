@@ -2,13 +2,11 @@ const globalConfig = require('./config/orgs.json');
 const path = require('path');
 const logger = require('khala-logger/log4js').consoleLogger('dockerode-bootstrap');
 const peerUtil = require('./common/nodejs/peer');
-const {OrdererType} = require('./common/nodejs/formatter/constants');
 const {
 	runCouchDB,
 	runCA,
-	runKafka, runZookeeper,
 	runPeer, runOrderer,
-	chaincodeClear, chaincodeImageClear, fabricImagePull
+	chaincodeClear, chaincodeImageClear
 } = require('./common/nodejs/fabric-dockerode');
 const {CryptoPath} = require('./common/nodejs/path');
 const configConfigtx = require('./config/configtx.js');
@@ -128,8 +126,8 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 			const configPath = cryptoPath.MSP(type);
 			if (couchDB) {
 				// eslint-disable-next-line no-shadow
-				const {container_name, port} = couchDB;
-				await runCouchDB({container_name, port, network});
+				const {container_name, port, user, password} = couchDB;
+				await runCouchDB({container_name, port, network, user, password});
 			}
 			await runPeer({
 				container_name, port, imageTag, network,
@@ -209,41 +207,8 @@ exports.runIntermediateCAs = async (toStop) => {
 };
 
 
-exports.runZookeepers = async (toStop) => {
-	const zkConfigs = globalConfig.orderer.kafka.zookeepers;
-	const imageTag = thirdPartyTag;
-	for (const zookeeper in zkConfigs) {
-		const zkConfig = zkConfigs[zookeeper];
-		const {MY_ID} = zkConfig;
-		if (toStop) {
-			await docker.containerDelete(zookeeper);
-		} else {
-			await runZookeeper({
-				container_name: zookeeper, MY_ID, imageTag, network
-			}, zkConfigs);
-		}
-	}
-};
-exports.runKafkas = async (toStop) => {
-	const kafkaConfigs = globalConfig.orderer.kafka.kafkas;
-	const zkConfigs = globalConfig.orderer.kafka.zookeepers;
-	const zookeepers = Object.keys(zkConfigs);
-	const {N, M} = globalConfig.orderer.kafka;
-	const imageTag = thirdPartyTag;
 
-	for (const kafka in kafkaConfigs) {
-		const kafkaConfig = kafkaConfigs[kafka];
-		const {BROKER_ID} = kafkaConfig;
-		if (toStop) {
-			await docker.containerDelete(kafka);
-		} else {
-			await runKafka({
-				container_name: kafka, network, imageTag, BROKER_ID
-			}, zookeepers, {N, M});
-		}
 
-	}
-};
 exports.down = async () => {
 	const {orderer: {type}} = globalConfig;
 
@@ -252,10 +217,6 @@ exports.down = async () => {
 
 	await exports.runPeers(undefined, toStop);
 	await exports.runOrderers(undefined, toStop);
-	if (type === OrdererType.kafka) {
-		await exports.runKafkas(toStop);
-		await exports.runZookeepers(toStop);
-	}
 
 	await docker.prune.system();
 	await chaincodeClear();
@@ -278,10 +239,6 @@ exports.up = async () => {
 	await exports.volumesAction();
 	await exports.runCAs();
 
-	if (type === OrdererType.kafka) {
-		await exports.runZookeepers();
-		await exports.runKafkas();
-	}
 	await caCrypoGenUtil.genAll();
 
 	const PROFILE_BLOCK = globalConfig.orderer.genesis_block.profile;

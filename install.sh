@@ -51,7 +51,7 @@ else
 	if [[ ! -f "$CURRENT/common/install.sh" ]]; then
 		gitSync
 	fi
-	$CURRENT/common/install.sh golang12
+	$CURRENT/common/install.sh golang13
 	$CURRENT/common/install.sh
 
 	cd common
