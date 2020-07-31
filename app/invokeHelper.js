@@ -6,7 +6,7 @@ const channelName = 'allchannel';
 const orderers = helper.newOrderers();
 const orderer = orderers[0];
 const Transaction = require('../common/nodejs/transaction');
-const {EndorseALL} = require('../common/nodejs/endorseResultInterceptor')
+const {EndorseALL} = require('../common/nodejs/endorseResultInterceptor');
 
 exports.invoke = async (peers, clientOrg, chaincodeId, {fcn, args, transientMap, init}) => {
 	logger.debug('invoke', 'client org', clientOrg);
