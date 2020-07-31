@@ -42,16 +42,6 @@
       }
     }
   },
-  "mainChain": {
-    "path": "Documents/chaincode/golang/mainChain",
-    "endorsingConfigs": {
-      "n": 2,
-      "mspid": {
-        "astriMSP": 0,
-        "icddMSP": 0
-      }
-    }
-  },
   "nodeDiagnose": {
     "type": "node",
     "path": "Documents/chaincode/nodejs/diagnose",

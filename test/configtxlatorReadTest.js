@@ -1,7 +1,7 @@
 const helper = require('../app/helper');
 const channelConfig = require('../common/nodejs/channelConfig');
 const channelName = 'allchannel';
-const fsExtra = require('fs-extra');
+const fs = require('fs');
 const logger = require('khala-logger/log4js').consoleLogger('test:configtxlator');
 const orderers = helper.newOrderers();
 const orderer = orderers[0];
@@ -36,6 +36,7 @@ describe('configtxlator', async () => {
 		it('read', async () => {
 			const {json} = await channelConfig.getChannelConfigReadable(channelName, user, orderer, viaServer);
 			logger.info(JSON.parse(json));
+			fs.writeFileSync('systemChannel.json', json);
 		});
 	});
 });
