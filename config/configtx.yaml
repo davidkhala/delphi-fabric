@@ -13,6 +13,7 @@ Profiles:
         Type: ImplicitMeta
         Rule: MAJORITY Admins
     Orderer:
+      OrdererType: solo
       BatchTimeout: 1s
       BatchSize:
         MaxMessageCount: 1
@@ -27,31 +28,8 @@ Profiles:
         Readers: *ref_0
         Writers: *ref_1
         Admins: *ref_2
-      OrdererType: etcdraft
       Addresses:
         - 'orderer0.hyperledger:7050'
-        - 'orderer1.hyperledger:7050'
-        - 'orderer2.hyperledger:7050'
-      EtcdRaft:
-        Consenters:
-          - Host: orderer0.hyperledger
-            Port: 7050
-            ClientTLSCert: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/hyperledger/orderers/orderer0.hyperledger/tls/server.crt
-            ServerTLSCert: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/hyperledger/orderers/orderer0.hyperledger/tls/server.crt
-          - Host: orderer1.hyperledger
-            Port: 7050
-            ClientTLSCert: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/hyperledger/orderers/orderer1.hyperledger/tls/server.crt
-            ServerTLSCert: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/hyperledger/orderers/orderer1.hyperledger/tls/server.crt
-          - Host: orderer2.hyperledger
-            Port: 7050
-            ClientTLSCert: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/hyperledger/orderers/orderer2.hyperledger/tls/server.crt
-            ServerTLSCert: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/hyperledger/orderers/orderer2.hyperledger/tls/server.crt
-        Options:
-          TickInterval: 500ms
-          ElectionTick: 10
-          HeartbeatTick: 1
-          MaxInflightBlocks: 5
-          SnapshotIntervalSize: 20 MB
       Organizations:
         - Name: hyperledger
           ID: hyperledgerMSP
