@@ -1,37 +1,27 @@
 dist: bionic
-_bash_job: &_bash_job
-  language: bash
-  install:
-    - ./common/install.sh softHSMInstall
-  script:
-    - ./test/hsm.sh
-_nodejs_job: &_nodejs_job
-  language: node_js
-  node_js:
-    - lts/*
-  install:
-    - eval "$(gimme 1.14.x)"
-    - ./common/install.sh softHSMInstall
-    - ./install.sh
-  script:
-    - npm start
-    - npm test
-jobs:
-  fast_finish: true
-  include:
-    - os: linux
-      before_install:
-        - sudo apt update
-      <<: *_nodejs_job
-    - os: osx
-      before_install:
-        - brew update
-      <<: *_nodejs_job
-    - os: osx
-      before_install:
-        - brew update
-      <<: *_bash_job
-    - os: linux
-      before_install:
-        - sudo apt update
-      <<: *_bash_job
+osx_image: xcode11
+os:
+  - linux
+  - osx
+services:
+  - docker
+language: node_js
+node_js:
+  - lts/*
+before_install:
+  - |
+    if [[ $(uname) == "Darwin" ]]; then
+      brew update;
+      brew cask install docker
+      open -a Docker
+    else
+      sudo apt update;
+    fi
+install:
+  - eval "$(gimme 1.14.x)"
+  - ./common/install.sh softHSMInstall
+  - ./install.sh
+script:
+  - ./test/hsm.sh
+  - npm start
+  - npm test

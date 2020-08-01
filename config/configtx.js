@@ -71,6 +71,7 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 		Policies: implicitPolicies
 	};
 	const OrdererConfig = {
+		OrdererType: globalConfig.orderer.type,
 		BatchTimeout: '1s',
 		BatchSize: {
 			MaxMessageCount: 1,
@@ -88,7 +89,6 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 		}, implicitPolicies)
 	};
 	if (globalConfig.orderer.type === 'etcdraft') {
-		OrdererConfig.OrdererType = 'etcdraft';
 
 		const Addresses = [];
 		const Organizations = [];
@@ -126,6 +126,18 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 				SnapshotIntervalSize: '20 MB' // TODO number of bytes per which a snapshot is taken
 			}
 		};
+		OrdererConfig.Organizations = Organizations;
+	} else if (globalConfig.orderer.type === 'solo') {
+		const Addresses = [];
+		const Organizations = [];
+		for (const [ordererOrgName, ordererOrgConfig] of Object.entries(globalConfig.orderer.solo.organizations)) {
+			for (const ordererName in ordererOrgConfig.orderers) {
+				const Host = `${ordererName}.${ordererOrgName}`;
+				Addresses.push(`${Host}:7050`);
+			}
+			Organizations.push(OrganizationBuilder(ordererOrgName, ordererOrgConfig, undefined, 'orderer'));
+		}
+		OrdererConfig.Addresses = Addresses;
 		OrdererConfig.Organizations = Organizations;
 	}
 	blockProfileConfig.Orderer = OrdererConfig;

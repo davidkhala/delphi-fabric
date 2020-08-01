@@ -4,6 +4,7 @@ const CAService = require('../common/nodejs/admin/ca');
 const logger = require('khala-logger/log4js').consoleLogger('ca service');
 const caCryptoGen = require('../config/caCryptoGen');
 require('chai').should();
+const {TLS} = require('../config/orgs.json');
 describe('caCryptoGen', () => {
 	const org = 'icdd';
 	it('genUser green', async () => {
@@ -26,7 +27,7 @@ describe('caCryptoGen', () => {
 
 describe('caService', async () => {
 	const org = 'icdd';
-	const caUrl = 'https://localhost:8054';
+	const caUrl = `http${TLS ? 's' : ''}://localhost:8054`;
 	const admin = helper.getOrgAdmin(org);
 	const caService = new CAService(caUrl);
 	it('identity service', async () => {
@@ -34,7 +35,7 @@ describe('caService', async () => {
 		const allIDs = await idService.getAll(admin);
 		logger.info(allIDs);
 	});
-	it('idemix', async () => {
+	it.skip('idemix', async () => {
 		const result = await caService.idemixEnroll(admin);
 		logger.info(result);
 	});

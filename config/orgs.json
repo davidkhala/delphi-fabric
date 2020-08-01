@@ -1,5 +1,5 @@
 {
-  "TLS": true,
+  "TLS": false,
   "docker": {
     "fabricTag": "2.2.0",
     "caTag": "1.4.7",
@@ -10,10 +10,28 @@
     }
   },
   "orderer": {
-    "type": "etcdraft",
+    "type": "solo",
     "genesis_block": {
       "file": "delphi.block",
       "profile": "delphiGenesis"
+    },
+    "solo": {
+      "organizations": {
+        "hyperledger": {
+          "mspid": "hyperledgerMSP",
+          "ca": {
+            "portHost": 7454
+          },
+          "orderers": {
+            "orderer0": {
+              "portHost": 7050,
+              "operations": {
+                "port": 8443
+              }
+            }
+          }
+        }
+      }
     },
     "etcdraft": {
       "organizations": {

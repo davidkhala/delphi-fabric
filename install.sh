@@ -33,11 +33,10 @@ else
 	if [[ ! -f "$CURRENT/common/install.sh" ]]; then
 		gitSync
 	fi
-	$CURRENT/common/install.sh golang
-	$CURRENT/common/install.sh
 
-	curl --silent --show-error https://raw.githubusercontent.com/davidkhala/docker-manager/master/dockerSUDO.sh | bash
 	cd common
+	./install.sh golang
+	./install.sh
 	./install.sh fabricInstall
 	cd -
 
