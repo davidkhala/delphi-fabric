@@ -3,7 +3,6 @@
   "docker": {
     "fabricTag": "1.4.8",
     "caTag": "1.4.7",
-    "thirdPartyTag": "0.4.21",
     "network": "delphiNetwork",
     "volumes": {
       "CONFIGTX": "Documents/delphi-fabric/config/configtx",

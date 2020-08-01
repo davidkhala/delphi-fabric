@@ -11,12 +11,12 @@ const {
 const {CryptoPath} = require('./common/nodejs/path');
 const configConfigtx = require('./config/configtx.js');
 const caCrypoGenUtil = require('./config/caCryptoGen');
-const DockerManager = require('khala-dockerode/docker')
-const docker = new DockerManager(undefined, logger)
+const DockerManager = require('khala-dockerode/docker');
+const docker = new DockerManager(undefined, logger);
 const {homeResolve, fsExtra} = require('khala-nodeutils/helper');
 const MSPROOT = homeResolve(globalConfig.docker.volumes.MSPROOT);
 const CONFIGTX = homeResolve(globalConfig.docker.volumes.CONFIGTX);
-const {docker: {fabricTag, caTag, network, thirdPartyTag}, TLS} = globalConfig;
+const {docker: {fabricTag, caTag, network}, TLS} = globalConfig;
 
 const BinManager = require('./common/nodejs/binManager');
 
@@ -207,10 +207,7 @@ exports.runIntermediateCAs = async (toStop) => {
 };
 
 
-
-
 exports.down = async () => {
-	const {orderer: {type}} = globalConfig;
 
 	const toStop = true;
 	await exports.runCAs(toStop);
@@ -235,7 +232,6 @@ exports.up = async () => {
 
 	await docker.networkCreateIfNotExist({Name: network});
 
-	const {orderer: {type}} = globalConfig;
 	await exports.volumesAction();
 	await exports.runCAs();
 
