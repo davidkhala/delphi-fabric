@@ -6,14 +6,10 @@ const globalConfig = require('./config/orgs.json');
 const channelHelper = new ChannelHelper(globalConfig);
 const ChannelUtil = require('./common/nodejs/channel');
 const Context = require('./nodePkg');
-const helper = new Context(globalConfig);
-const {homeResolve} = require('khala-nodeutils/helper');
+const context = new Context(globalConfig);
 const path = require('path');
 const BinManager = require('./common/nodejs/binManager');
 const channelName = process.env.channelName ? process.env.channelName : 'allchannel';
-
-const CONFIGTX = homeResolve(globalConfig.docker.volumes.CONFIGTX);
-
 
 describe('channel setup', () => {
 
@@ -22,13 +18,13 @@ describe('channel setup', () => {
 		const channelsConfig = globalConfig.channels;
 		const channelConfig = channelsConfig[channelName];
 		const binManager = new BinManager();
-		const channelFile = path.resolve(CONFIGTX, channelConfig.file);
-		const configtxFile = Context.projectResolve('config', 'configtx.yaml');
-		await binManager.configtxgen(channelName, configtxFile, channelName).genChannel(channelFile);
-		const peerOrg = helper.randomOrg('peer');
-		const client = helper.getOrgAdmin(peerOrg);
-		const channel = helper.prepareChannel(channelName, client);
-		const orderers = helper.newOrderers();
+		const channelFile = path.resolve(context.CONFIGTX_DIR, channelConfig.file);
+		const configtxYaml = path.resolve(__dirname, 'config', 'configtx.yaml');
+		await binManager.configtxgen(channelName, configtxYaml, channelName).genChannel(channelFile);
+		const peerOrg = context.randomOrg('peer');
+		const client = context.getOrgAdmin(peerOrg);
+		const channel = context.prepareChannel(channelName, client);
+		const orderers = context.newOrderers();
 		const orderer = orderers[0];
 
 		await channelHelper.create(channel, channelFile, orderer, undefined, process.env.useSignconfigtx);
@@ -46,10 +42,10 @@ describe('channel setup', () => {
 });
 describe('view channel', () => {
 	it('view channel block', async () => {
-		const client = helper.getOrgAdmin(undefined, 'orderer');
+		const client = context.getOrgAdmin(undefined, 'orderer');
 
-		const channel = helper.prepareChannel(channelName, client);
-		const orderer = helper.newOrderers()[0];
+		const channel = context.prepareChannel(channelName, client);
+		const orderer = context.newOrderers()[0];
 		const block = await ChannelUtil.getGenesisBlock(channel, orderer);
 		console.log(block);// TODO apply block decoder
 	});

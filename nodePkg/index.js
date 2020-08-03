@@ -15,17 +15,13 @@ const {randomKeyOf} = require('khala-nodeutils/random');
 
 class Context {
 
-	static projectResolve(...args) {
-		const projectRoot = path.dirname(__dirname);
-		return path.resolve(projectRoot, ...args);
-	}
-
 	constructor(globalConfig) {
 		this.globalConfig = globalConfig;
 		this.orgsConfig = globalConfig.organizations;
 		this.channelsConfig = globalConfig.channels;
 		this.ordererConfig = globalConfig.orderer;
 		this.CRYPTO_CONFIG_DIR = homeResolve(globalConfig.docker.volumes.MSPROOT);
+		this.CONFIGTX_DIR = homeResolve(this.globalConfig.docker.volumes.CONFIGTX);
 	}
 
 

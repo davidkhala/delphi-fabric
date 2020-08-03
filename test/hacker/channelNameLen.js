@@ -6,7 +6,7 @@ const globalConfig = require('../../config/orgs.json');
 const channelHelper = new ChannelHelper(globalConfig);
 const channelName = 'rovecwvknqkqsrdoeycarfapbtxxgbyjoaoeotygqguathbkyjlpeatitobdnqrjitmerwgnozdcwmhdufsdxafztqgjkhbbontuyhmpkhzubcbmkoenyrzpeqqadedpmtuonbbxcqdthsgvnjxwihrtvjanpntioztleegqoholrakxmxssfyfgzrcmedvhnfokagdssrnntjykgjmowhutiitpyexubvrhnevvueuficagtavmpxlkaoumkcjqujrtuclxfspntknepomnxhbjeyykeydokmxqizbjrewzkxyuhqgvhlfpwzwiqkbinpnstoddunpplrmvuxbsbsrpdwksslixvpyetzskzmywdiqreyjztbpnvxxffkljwxnmsoyyfrfrdtqq';
 const channelConfig = globalConfig.channels[channelName];
-const channelConfigFile = homeResolve(globalConfig.docker.volumes.CONFIGTX, channelConfig.file);
+const channelFile = homeResolve(globalConfig.docker.volumes.CONFIGTX, channelConfig.file);
 
 describe('hack: channel', () => {
 	it('channel  name overflow', async () => {
@@ -15,7 +15,7 @@ describe('hack: channel', () => {
 		const channel = helper.prepareChannel(channelName, client);
 		const orderers = helper.newOrderers();
 		const orderer = orderers[0];
-		await channelHelper.create(channel, channelConfigFile, orderer);
+		await channelHelper.create(channel, channelFile, orderer);
 	});
 });
 

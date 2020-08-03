@@ -184,7 +184,6 @@ class Configtx {
 			};
 
 		}
-		// setAnchorPeers profile
 
 		yaml.write({Profiles}, this.configtxFile);
 	}
