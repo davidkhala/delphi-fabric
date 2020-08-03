@@ -2,9 +2,9 @@
   "name": "delphi-fabric-tool",
   "version": "0.0.0",
   "dependencies": {
-    "khala-fabric-sdk-node-builder": "^0.2.4",
-    "khala-fabric-sdk-node": "^1.4.6-0.0.2",
-    "khala-fabric-formatter": "1.4.6-0.0.2",
+    "khala-fabric-sdk-node-builder": "latest-1.4",
+    "khala-fabric-sdk-node": "latest-1.4",
+    "khala-fabric-formatter": "latest-1.4",
     "khala-light-util": "^0.0.3"
   }
 }
