@@ -60,8 +60,7 @@ const newOrderer = (name, org, ordererSingleConfig) => {
 
 exports.newOrderers = () => {
 	const result = [];
-	const {type} = ordererConfig;
-	for (const [ordererOrgName, ordererOrgConfig] of Object.entries(ordererConfig[type].organizations)) {
+	for (const [ordererOrgName, ordererOrgConfig] of Object.entries(ordererConfig.organizations)) {
 		for (const [ordererName, ordererSingleConfig] of Object.entries(ordererOrgConfig.orderers)) {
 			const orderer = newOrderer(ordererName, ordererOrgName, ordererSingleConfig);
 			result.push(orderer);

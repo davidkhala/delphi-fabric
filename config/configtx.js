@@ -88,12 +88,13 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 			}
 		}, implicitPolicies)
 	};
+	const {raftPort} = globalConfig.orderer;
 	if (globalConfig.orderer.type === 'etcdraft') {
 
 		const Addresses = [];
 		const Organizations = [];
 		const Consenters = [];
-		for (const [ordererOrgName, ordererOrgConfig] of Object.entries(globalConfig.orderer.etcdraft.organizations)) {
+		for (const [ordererOrgName, ordererOrgConfig] of Object.entries(globalConfig.orderer.organizations)) {
 			for (const ordererName in ordererOrgConfig.orderers) {
 				const ordererCryptoPath = new CryptoPath(MSPROOT, {
 					orderer: {
@@ -104,33 +105,25 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 				const {cert} = ordererCryptoPath.TLSFile('orderer');
 				const Host = `${ordererName}.${ordererOrgName}`;
 				Addresses.push(`${Host}:7050`);
-				const consenter = {Host, Port: 7050};
-				if (TLS) {
-					consenter.ClientTLSCert = cert;
-					consenter.ServerTLSCert = cert;
-				}
+				const consenter = {Host, Port: raftPort || 7050};
+
+				consenter.ClientTLSCert = cert;
+				consenter.ServerTLSCert = cert;
+
 				Consenters.push(consenter);
 			}
 			Organizations.push(OrganizationBuilder(ordererOrgName, ordererOrgConfig, undefined, 'orderer'));
 		}
 		OrdererConfig.Addresses = Addresses;
 
-		const HeartbeatTick = 1;
 		OrdererConfig.EtcdRaft = {
 			Consenters,
-			Options: {
-				TickInterval: '500ms', // the time interval between two Node.Tick invocations.
-				ElectionTick: Math.max(10, HeartbeatTick + 1),
-				HeartbeatTick,     // a leader sends heartbeat messages to maintain its leadership every HeartbeatTick ticks.
-				MaxInflightBlocks: 5, // TODO limits the max number of in-flight append messages during optimistic replication phase.
-				SnapshotIntervalSize: '20 MB' // TODO number of bytes per which a snapshot is taken
-			}
 		};
 		OrdererConfig.Organizations = Organizations;
 	} else if (globalConfig.orderer.type === 'solo') {
 		const Addresses = [];
 		const Organizations = [];
-		for (const [ordererOrgName, ordererOrgConfig] of Object.entries(globalConfig.orderer.solo.organizations)) {
+		for (const [ordererOrgName, ordererOrgConfig] of Object.entries(globalConfig.orderer.organizations)) {
 			for (const ordererName in ordererOrgConfig.orderers) {
 				const Host = `${ordererName}.${ordererOrgName}`;
 				Addresses.push(`${Host}:7050`);

@@ -17,10 +17,10 @@ const {docker: {fabricTag, caTag, network}, TLS} = globalConfig;
 
 const BinManager = require('./common/nodejs/binManager');
 const dockerManager = new DockerManager();
-exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'}, toStop) => {
-	const {orderer: {type, genesis_block: {file: BLOCK_FILE}}} = globalConfig;
-	const CONFIGTXVolume = volumeName.CONFIGTX;
-	const MSPROOTVolume = volumeName.MSPROOT;
+exports.runOrderers = async (toStop) => {
+	const {orderer: {type, raftPort, genesis_block: {file: BLOCK_FILE}}} = globalConfig;
+	const CONFIGTXVolume = 'CONFIGTX';
+	const MSPROOTVolume = 'MSPROOT';
 	const imageTag = fabricTag;
 	const {MSPROOT} = peerUtil.container;
 	const nodeType = 'orderer';
@@ -38,6 +38,8 @@ exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPRO
 			await dockerManager.containerDelete(container_name);
 		} else {
 			const tls = TLS ? cryptoPath.TLSFile(nodeType) : undefined;
+			const raft_tls = cryptoPath.TLSFile(nodeType);
+			raft_tls.port = raftPort;
 			await runOrderer({
 				container_name, imageTag, port, network,
 				BLOCK_FILE, CONFIGTXVolume,
@@ -47,11 +49,11 @@ exports.runOrderers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPRO
 					volumeName: MSPROOTVolume
 				},
 				ordererType,
-				tls, stateVolume
+				tls, stateVolume, raft_tls,
 			}, operations, metrics);
 		}
 	};
-	const ordererOrgs = globalConfig.orderer[type].organizations;
+	const ordererOrgs = globalConfig.orderer.organizations;
 	for (const [domain, ordererOrgConfig] of Object.entries(ordererOrgs)) {
 		const {mspid} = ordererOrgConfig;
 		for (const [orderer, ordererConfig] of Object.entries(ordererOrgConfig.orderers)) {
@@ -74,7 +76,7 @@ exports.volumesAction = async (toStop) => {
 		await dockerManager.volumeCreateIfNotExist({Name, path: homeResolve(globalConfig.docker.volumes[Name])});
 	}
 };
-exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'}, toStop) => {
+exports.runPeers = async (toStop) => {
 	const imageTag = fabricTag;
 	const orgsConfig = globalConfig.organizations;
 
@@ -121,7 +123,7 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 				peerHostName, tls,
 				msp: {
 					id: mspid,
-					volumeName: volumeName.MSPROOT,
+					volumeName: 'MSPROOT',
 					configPath
 				}, couchDB, stateVolume
 			}, operations);
@@ -145,7 +147,7 @@ exports.runCAs = async (toStop) => {
 		}
 	};
 
-	for (const [ordererOrg, ordererOrgConfig] of Object.entries(globalConfig.orderer[type].organizations)) {
+	for (const [ordererOrg, ordererOrgConfig] of Object.entries(globalConfig.orderer.organizations)) {
 		const {portHost: port} = ordererOrgConfig.ca;
 		const container_name = `ca.${ordererOrg}`;
 		const Issuer = {CN: ordererOrg};
@@ -165,8 +167,8 @@ exports.down = async () => {
 
 	await exports.runCAs(toStop);
 
-	await exports.runPeers(undefined, toStop);
-	await exports.runOrderers(undefined, toStop);
+	await exports.runPeers(toStop);
+	await exports.runOrderers(toStop);
 	await dockerManager.prune.system();
 	await chaincodeClear();
 	await chaincodeImageClear();

@@ -10,49 +10,30 @@
     }
   },
   "orderer": {
-    "type": "solo",
+    "type": "etcdraft",
+    "raftPort": 6050,
     "genesis_block": {
       "file": "delphi.block",
       "profile": "delphiGenesis"
     },
-    "solo": {
-      "organizations": {
-        "hyperledger": {
-          "mspid": "hyperledgerMSP",
-          "ca": {
-            "portHost": 7454
-          },
-          "orderers": {
-            "orderer0": {
-              "portHost": 7050,
-              "operations": {
-                "port": 8443
-              }
+    "organizations": {
+      "hyperledger": {
+        "mspid": "hyperledgerMSP",
+        "ca": {
+          "portHost": 7454
+        },
+        "orderers": {
+          "orderer0": {
+            "portHost": 7050,
+            "operations": {
+              "port": 8443
             }
-          }
-        }
-      }
-    },
-    "etcdraft": {
-      "organizations": {
-        "hyperledger": {
-          "mspid": "hyperledgerMSP",
-          "ca": {
-            "portHost": 7454
           },
-          "orderers": {
-            "orderer0": {
-              "portHost": 7050,
-              "operations": {
-                "port": 8443
-              }
-            },
-            "orderer1": {
-              "portHost": 8050
-            },
-            "orderer2": {
-              "portHost": 9050
-            }
+          "orderer1": {
+            "portHost": 8050
+          },
+          "orderer2": {
+            "portHost": 9050
           }
         }
       }
