@@ -23,6 +23,8 @@
     "khala-nodeutils": "^0.8.3"
   },
   "devDependencies": {
-    "lerna": "latest"
+    "lerna": "latest",
+    "mocha": "latest-6",
+    "chai": "latest"
   }
 }

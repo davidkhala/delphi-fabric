@@ -1,3 +1,6 @@
+/**
+ * @deprecated
+ */
 const {upgrade} = require('./chaincodeHelper');
 const helper = require('./helper');
 exports.upgrade = async (clientPeerOrg, peers, chaincodeId, fcn, args = [], transientMap, channelName = 'allchannel') => {

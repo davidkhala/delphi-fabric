@@ -26,7 +26,6 @@ class Context {
 		this.channelsConfig = globalConfig.channels;
 		this.ordererConfig = globalConfig.orderer;
 		this.CRYPTO_CONFIG_DIR = homeResolve(globalConfig.docker.volumes.MSPROOT);
-		this.ordererType = this.ordererConfig.type;
 	}
 
 
@@ -77,7 +76,7 @@ class Context {
 
 	toLocalhostOrderer(orderer) {
 		const url = orderer.getUrl();
-		for (const [ordererOrgName, ordererOrgConfig] of Object.entries(this.ordererConfig[this.ordererType].organizations)) {
+		for (const [ordererOrgName, ordererOrgConfig] of Object.entries(this.ordererConfig.organizations)) {
 			const found = Object.keys(ordererOrgConfig.orderers).find((ordererName) => {
 				return url.includes(ordererName);
 			});
@@ -90,7 +89,7 @@ class Context {
 
 	newOrderers() {
 		const result = [];
-		for (const [ordererOrgName, ordererOrgConfig] of Object.entries(this.ordererConfig[this.ordererType].organizations)) {
+		for (const [ordererOrgName, ordererOrgConfig] of Object.entries(this.ordererConfig.organizations)) {
 			for (const ordererName in ordererOrgConfig.orderers) {
 				const ordererSingleConfig = ordererOrgConfig.orderers[ordererName];
 				const orderer = this.newOrderer(ordererName, ordererOrgName, ordererSingleConfig);
@@ -130,7 +129,7 @@ class Context {
 	}
 
 	getUser(username, orgName) {
-		const {config, nodeType} = exports.findOrgConfig(orgName);
+		const {config, nodeType} = this.findOrgConfig(orgName);
 		const mspId = config.mspid;
 		const cryptoPath = new CryptoPath(this.CRYPTO_CONFIG_DIR, {
 			[nodeType]: {
@@ -152,7 +151,7 @@ class Context {
 			nodeType = 'peer';
 		} else {
 			nodeType = 'orderer';
-			target = this.ordererConfig[this.ordererType].organizations[orgName];
+			target = this.ordererConfig.organizations[orgName];
 			if (target) {
 				if (!ordererName) {
 					ordererName = randomKeyOf(target.orderers);
@@ -196,7 +195,7 @@ class Context {
 		if (nodeType === 'peer') {
 			orgName = randomKeyOf(this.orgsConfig);
 		} else if (nodeType === 'orderer') {
-			orgName = randomKeyOf(this.ordererConfig[this.ordererType].organizations);
+			orgName = randomKeyOf(this.ordererConfig.organizations);
 		} else {
 			throw Error(`invalid nodeType ${nodeType}`);
 		}

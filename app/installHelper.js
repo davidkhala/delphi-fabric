@@ -1,3 +1,6 @@
+/**
+ * @deprecated
+ */
 const {install, prepareInstall} = require('./chaincodeHelper');
 const helper = require('./helper');
 const {incrementInstall} = require('../common/nodejs/chaincodeVersion');

@@ -1,3 +1,7 @@
+/**
+ * @deprecated
+ */
+
 const {install} = require('../common/nodejs/chaincode');
 const {ChaincodeType} = require('../common/nodejs/formatter/chaincode');
 const {invoke} = require('../common/nodejs/chaincodeHelper');

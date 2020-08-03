@@ -1,3 +1,6 @@
+/**
+ * @deprecated
+ */
 const logger = require('khala-logger/log4js').consoleLogger('Helper');
 const globalConfig = require('../config/orgs.json');
 

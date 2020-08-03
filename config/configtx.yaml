@@ -169,18 +169,3 @@ Profiles:
             - {}
       Capabilities:
         V1_4_2: true
-  anchorPeers:
-    Application:
-      Organizations:
-        - Name: astri.org
-          AnchorPeers:
-            - Host: peer0.astri.org
-              Port: 7051
-            - Host: peer1.astri.org
-              Port: 7051
-        - Name: icdd
-          AnchorPeers:
-            - Host: peer0.icdd
-              Port: 7051
-            - Host: peer1.icdd
-              Port: 7051

@@ -9,8 +9,9 @@ const {
 	chaincodeClear, chaincodeImageClear
 } = require('./common/nodejs/fabric-dockerode');
 const {CryptoPath} = require('./common/nodejs/path');
-const configConfigtx = require('./config/configtx.js');
-const caCrypoGenUtil = require('./config/caCryptoGen');
+const Configtx = require('./nodePkg/configtx.js');
+const CaCryptoGenUtil = require('./nodePkg/caCryptoGen');
+const caCryptoGenUtil = new CaCryptoGenUtil(globalConfig);
 const DockerManager = require('khala-dockerode/docker');
 const docker = new DockerManager(undefined, logger);
 const {homeResolve, fsExtra} = require('khala-nodeutils/helper');
@@ -59,7 +60,7 @@ exports.runOrderers = async (volumeName = {
 			}, operations, metrics);
 		}
 	};
-	const ordererOrgs = globalConfig.orderer[type].organizations;
+	const ordererOrgs = globalConfig.orderer.organizations;
 	for (const [domain, ordererOrgConfig] of Object.entries(ordererOrgs)) {
 		const {mspid} = ordererOrgConfig;
 		for (const [orderer, ordererConfig] of Object.entries(ordererOrgConfig.orderers)) {
@@ -145,7 +146,7 @@ exports.runPeers = async (volumeName = {CONFIGTX: 'CONFIGTX', MSPROOT: 'MSPROOT'
 };
 
 exports.runCAs = async (toStop) => {
-	const {orderer: {type}, organizations: peerOrgsConfig} = globalConfig;
+	const {organizations: peerOrgsConfig} = globalConfig;
 
 	const imageTag = caTag;
 
@@ -157,7 +158,7 @@ exports.runCAs = async (toStop) => {
 			await runCA({container_name, port, network, imageTag, TLS, issuer});
 		}
 	};
-	for (const [ordererOrg, ordererOrgConfig] of Object.entries(globalConfig.orderer[type].organizations)) {
+	for (const [ordererOrg, ordererOrgConfig] of Object.entries(globalConfig.orderer.organizations)) {
 		const {portHost: port} = ordererOrgConfig.ca;
 		const container_name = `ca.${ordererOrg}`;
 		const issuer = {CN: ordererOrg};
@@ -173,7 +174,7 @@ exports.runCAs = async (toStop) => {
 };
 
 exports.runIntermediateCAs = async (toStop) => {
-	const {orderer: {type}, organizations: peerOrgsConfig} = globalConfig;
+	const {organizations: peerOrgsConfig} = globalConfig;
 
 	const toggle = async (org, orgConfig, nodeType) => {
 		if (!orgConfig.intermediateCA) {
@@ -191,13 +192,13 @@ exports.runIntermediateCAs = async (toStop) => {
 		if (toStop) {
 			await docker.containerDelete(container_name);
 		} else {
-			const {enrollmentID, enrollmentSecret} = await caCrypoGenUtil.genIntermediate(org, parentPort, nodeType);
+			const {enrollmentID, enrollmentSecret} = await caCryptoGenUtil.genIntermediate(org, parentPort, nodeType);
 			const intermediate = {host: parentHost, port: parentPort, enrollmentID, enrollmentSecret};
 			await runCA({container_name, port, network, imageTag: caTag, TLS, issuer}, intermediate);
 		}
 	};
 
-	for (const [ordererOrg, ordererOrgConfig] of Object.entries(globalConfig.orderer[type].organizations)) {
+	for (const [ordererOrg, ordererOrgConfig] of Object.entries(globalConfig.orderer.organizations)) {
 		await toggle(ordererOrg, ordererOrgConfig, 'orderer');
 	}
 
@@ -235,11 +236,13 @@ exports.up = async () => {
 	await exports.volumesAction();
 	await exports.runCAs();
 
-	await caCrypoGenUtil.genAll();
+	await caCryptoGenUtil.genAll();
 
 	const PROFILE_BLOCK = globalConfig.orderer.genesis_block.profile;
 	const configtxFile = path.resolve(__dirname, 'config', 'configtx.yaml');
-	configConfigtx.gen({MSPROOT, PROFILE_BLOCK, configtxFile});
+	const configtx = new Configtx(globalConfig, configtxFile);
+
+	configtx.gen(PROFILE_BLOCK);
 
 
 	const BLOCK_FILE = globalConfig.orderer.genesis_block.file;

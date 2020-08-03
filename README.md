@@ -90,6 +90,8 @@ Finished
 - java sdk: keep update
 - java chaincode
 - 1.3: idemixgen
+- intermediate CA
+- flatten orderer organizations
 - migrate to use make file instead of ./install.sh (https://www.gnu.org/software/make/manual/make.html#Introduction)
 - chaincode "Indy": a fabric chaincode implementation of all claimed features of Hyperledger/indy
 - CRl: https://hyperledger-fabric.readthedocs.io/en/release-1.4/msp.html?highlight=CRL#msp-setup-on-the-peer-orderer-side

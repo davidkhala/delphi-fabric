@@ -3,14 +3,16 @@ const logger = require('khala-logger/log4js').consoleLogger('test:serviceDiscove
 const {discoveryChaincodeInterestBuilder} = require('../app/chaincodeHelper');
 const {globalPeers, initialize, discover, discoverPretty} = require('../common/nodejs/serviceDiscovery');
 const OrdererUtil = require('../common/nodejs/builder/orderer');
-const {containerDelete} = require('khala-dockerode/dockerode-util');
+
+const Docker = require('khala-dockerode/docker');
+const docker = new Docker(undefined, logger);
 const deletePeer = async () => {
 	const containerName = 'peer0.astri.org';
-	await containerDelete(containerName);
+	await docker.containerDelete(containerName);
 };
 const deleteOrderer = async () => {
 	const ordererContainer = 'orderer0.icdd.astri.org';
-	await containerDelete(ordererContainer);
+	await docker.containerDelete(ordererContainer);
 };
 const peerList = async () => {
 	const org = 'icdd';

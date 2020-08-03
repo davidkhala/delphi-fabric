@@ -15,22 +15,20 @@
       "file": "delphi.block",
       "profile": "delphiGenesis"
     },
-    "etcdraft": {
-      "organizations": {
-        "hyperledger": {
-          "mspid": "hyperledgerMSP",
-          "ca": {
-            "portHost": 7454
-          },
-          "intermediateCA": {
-            "portHost": 7455
-          },
-          "orderers": {
-            "orderer0": {
-              "portHost": 7050,
-              "operations": {
-                "port": 8443
-              }
+    "organizations": {
+      "hyperledger": {
+        "mspid": "hyperledgerMSP",
+        "ca": {
+          "portHost": 7454
+        },
+        "intermediateCA": {
+          "portHost": 7455
+        },
+        "orderers": {
+          "orderer0": {
+            "portHost": 7050,
+            "operations": {
+              "port": 8443
             }
           }
         }

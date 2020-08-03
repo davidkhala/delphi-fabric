@@ -1,3 +1,6 @@
+/**
+ * @deprecated
+ */
 const helper = require('./helper');
 
 const Logger = require('khala-logger/log4js');

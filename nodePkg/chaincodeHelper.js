@@ -5,6 +5,7 @@ const {incrementUpgrade} = require('khala-fabric-sdk-node/chaincodeVersion');
 const {transactionProposal} = require('khala-fabric-sdk-node-builder/transaction');
 const Eventhub = require('khala-fabric-sdk-node-builder/eventHub');
 const golangUtil = require('khala-fabric-sdk-node/golang');
+const Context = require('./index');
 const {RoleIdentity, simplePolicyBuilder} = require('khala-fabric-sdk-node/policy');
 const {collectionPolicyBuilder, ensureCollectionConfig} = require('khala-fabric-sdk-node/privateData');
 const {couchDBIndex} = require('khala-fabric-sdk-node/couchdb');
