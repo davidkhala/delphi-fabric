@@ -13,7 +13,7 @@ before_install:
     if [[ $(uname) == "Darwin" ]]; then
       brew update;
       brew cask install docker
-      open -a Docker
+      open /Applications/Docker.app
     else
       sudo apt update;
     fi
