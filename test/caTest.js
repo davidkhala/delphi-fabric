@@ -1,5 +1,6 @@
 const helper = require('../app/helper');
 const IDService = require('../common/nodejs/admin/identityService');
+const AffiliationService = require('../common/nodejs/admin/affiliationService');
 const CAService = require('../common/nodejs/admin/ca');
 const logger = require('khala-logger/log4js').consoleLogger('ca service');
 const caCryptoGen = require('../config/caCryptoGen');
@@ -25,15 +26,26 @@ describe('caCryptoGen', () => {
 });
 
 
-describe('caService', async () => {
+describe('caService', () => {
 	const org = 'icdd';
 	const caUrl = `http${TLS ? 's' : ''}://localhost:8054`;
 	const admin = helper.getOrgAdmin(org);
-	const caService = new CAService(caUrl);
+	const {caService} = new CAService(caUrl);
+	const idService = new IDService(caService, admin);
+
 	it('identity service', async () => {
-		const idService = new IDService(caService.caService);
 		const allIDs = await idService.getAll(admin);
 		logger.info(allIDs);
+	});
+	const affiliationService = new AffiliationService(caService, admin);
+	it('AffiliationService GetAll', async () => {
+		const [allDepartments] = await affiliationService.getAll();
+		logger.info(allDepartments);
+	});
+	it('AffiliationService create, delete dummy', async () => {
+		const name = 'dummy';
+		await affiliationService.createIfNotExist(name);
+		await affiliationService.delete(name);
 	});
 	it.skip('idemix', async () => {
 		const result = await caService.idemixEnroll(admin);

@@ -134,7 +134,7 @@ exports.runPeers = async (toStop) => {
 };
 
 exports.runCAs = async (toStop) => {
-	const {orderer: {type}, organizations: peerOrgsConfig} = globalConfig;
+	const {organizations: peerOrgsConfig} = globalConfig;
 
 	const imageTag = caTag;
 
