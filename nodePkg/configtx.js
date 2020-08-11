@@ -16,7 +16,7 @@ class Configtx {
 		const channelsConfig = this.globalConfig.channels;
 		const ordererConfig = this.globalConfig.orderer;
 
-		const OrganizationBuilder = (orgName, orgConfig, anchorIndexes, forChannel, nodeType = 'peer', Addresses) => {
+		const OrganizationBuilder = (orgName, orgConfig, anchorIndexes, nodeType = 'peer', OrdererEndpoints) => {
 			const cryptoPath = new CryptoPath(this.CRYPTO_CONFIG_DIR, {
 				[nodeType]: {
 					org: orgName
@@ -58,11 +58,8 @@ class Configtx {
 				delete result.MSPDir;
 				delete result.Policies;
 			}
-			if (forChannel) {
-				result.AnchorPeers = [{}];
-			}
-			if (Array.isArray(Addresses)) {
-				result.OrdererEndpoints = Addresses;
+			if (Array.isArray(OrdererEndpoints)) {
+				result.OrdererEndpoints = OrdererEndpoints;
 			}
 			return result;
 		};
@@ -103,15 +100,13 @@ class Configtx {
 				}
 			}
 		};
-		let globalOrdererAddresses = [];
 		OrdererConfig.OrdererType = ordererConfig.type;
 		if (ordererConfig.type === OrdererType.kafka) {
 
 			const Organizations = [];
 			for (const [ordererOrgName, ordererOrgConfig] of Object.entries(ordererConfig.organizations)) {
 				const Addresses = Object.keys(ordererOrgConfig.orderers).map(ordererName => `${ordererName}.${ordererOrgName}:7050`);
-				Organizations.push(OrganizationBuilder(ordererOrgName, ordererOrgConfig, undefined, undefined, 'orderer', Addresses));
-				globalOrdererAddresses = globalOrdererAddresses.concat(Addresses);
+				Organizations.push(OrganizationBuilder(ordererOrgName, ordererOrgConfig, undefined, 'orderer', Addresses));
 			}
 
 			OrdererConfig.Kafka = {
@@ -137,8 +132,7 @@ class Configtx {
 					const consenter = {Host, Port: 7050, ClientTLSCert: cert, ServerTLSCert: cert}; // only accept TLS cert
 					Consenters.push(consenter);
 				}
-				Organizations.push(OrganizationBuilder(ordererOrgName, ordererOrgConfig, undefined, undefined, 'orderer', Addresses));
-				globalOrdererAddresses = globalOrdererAddresses.concat(Addresses);
+				Organizations.push(OrganizationBuilder(ordererOrgName, ordererOrgConfig, undefined, 'orderer', Addresses));
 			}
 
 			OrdererConfig.EtcdRaft = {
@@ -152,7 +146,7 @@ class Configtx {
 
 		blockProfileConfig.Consortiums = {
 			[this.consortiumName]: {
-				Organizations: Object.entries(orgsConfig).map(([orgName, orgConfig]) => OrganizationBuilder(orgName, orgConfig, undefined, undefined, 'peer', globalOrdererAddresses)
+				Organizations: Object.entries(orgsConfig).map(([orgName, orgConfig]) => OrganizationBuilder(orgName, orgConfig, undefined, 'peer', undefined)
 				)
 			}
 		};
@@ -166,7 +160,7 @@ class Configtx {
 			const PROFILE_CHANNEL = channelName;
 			const Organizations = [];
 			for (const orgName in channelConfig.organizations) {
-				Organizations.push(OrganizationBuilder(orgName, orgsConfig[orgName], undefined, true));
+				Organizations.push(OrganizationBuilder(orgName, orgsConfig[orgName], undefined));
 			}
 			Profiles[PROFILE_CHANNEL] = {
 				Policies: implicitPolicies,
