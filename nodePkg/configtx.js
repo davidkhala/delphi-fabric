@@ -16,7 +16,7 @@ class Configtx {
 		const channelsConfig = this.globalConfig.channels;
 		const ordererConfig = this.globalConfig.orderer;
 
-		const OrganizationBuilder = (orgName, orgConfig, nodeType = 'peer', OrdererEndpoints) => {
+		const OrganizationBuilder = (orgName, orgConfig, nodeType = 'peer') => {
 			const cryptoPath = new CryptoPath(this.CRYPTO_CONFIG_DIR, {
 				[nodeType]: {
 					org: orgName
@@ -41,28 +41,25 @@ class Configtx {
 					}
 				}
 			};
-			if (Array.isArray(OrdererEndpoints)) {
-				result.OrdererEndpoints = OrdererEndpoints;
-			}
 			return result;
 		};
 
 		const blockProfileConfig = {
 			Capabilities: {
-				V1_4_3: true
+				V1_3: true
 			},
 			Policies: implicitPolicies
 		};
 		const OrdererConfig = {
 			BatchTimeout: '1s',
-			Addresses: {}, // empty to overwrite default ['127.0.0.1:7050']
+			Addresses: [], // empty to overwrite default ['127.0.0.1:7050']
 			BatchSize: {
 				MaxMessageCount: 1,
 				AbsoluteMaxBytes: '99 MB',
 				PreferredMaxBytes: '512 KB'
 			},
 			Capabilities: {
-				V1_4_2: true
+				V1_1: true
 			},
 			Policies: {
 				Readers: {
@@ -89,38 +86,27 @@ class Configtx {
 			const Organizations = [];
 			for (const [ordererOrgName, ordererOrgConfig] of Object.entries(ordererConfig.organizations)) {
 				const OrdererEndpoints = Object.keys(ordererOrgConfig.orderers).map(ordererName => `${ordererName}.${ordererOrgName}:7050`);
-				Organizations.push(OrganizationBuilder(ordererOrgName, ordererOrgConfig, 'orderer', OrdererEndpoints));
+				OrdererConfig.Addresses = OrdererConfig.Addresses.concat(OrdererEndpoints);
+				Organizations.push(OrganizationBuilder(ordererOrgName, ordererOrgConfig, 'orderer'));
 			}
 
 			OrdererConfig.Kafka = {
 				Brokers: Object.keys(ordererConfig.kafka.kafkas).map((kafka) => `${kafka}:9092`)
 			};
 			OrdererConfig.Organizations = Organizations;
-		} else if (ordererConfig.type === OrdererType.etcdraft) {
+		} else if (ordererConfig.type === OrdererType.solo) {
 
 			const Organizations = [];
-			const Consenters = [];
 			for (const [ordererOrgName, ordererOrgConfig] of Object.entries(ordererConfig.organizations)) {
 				const OrdererEndpoints = [];
 				for (const ordererName in ordererOrgConfig.orderers) {
-					const ordererCryptoPath = new CryptoPath(this.CRYPTO_CONFIG_DIR, {
-						orderer: {
-							org: ordererOrgName, name: ordererName
-						}
-					});
-
-					const {cert} = ordererCryptoPath.TLSFile('orderer');
 					const Host = `${ordererName}.${ordererOrgName}`;
 					OrdererEndpoints.push(`${Host}:7050`);
-					const consenter = {Host, Port: 7050, ClientTLSCert: cert, ServerTLSCert: cert}; // only accept TLS cert
-					Consenters.push(consenter);
 				}
-				Organizations.push(OrganizationBuilder(ordererOrgName, ordererOrgConfig, 'orderer', OrdererEndpoints));
+				OrdererConfig.Addresses = OrdererConfig.Addresses.concat(OrdererEndpoints);
+				Organizations.push(OrganizationBuilder(ordererOrgName, ordererOrgConfig, 'orderer'));
 			}
 
-			OrdererConfig.EtcdRaft = {
-				Consenters
-			};
 			OrdererConfig.Organizations = Organizations;
 		}
 		blockProfileConfig.Orderer = OrdererConfig;
@@ -148,14 +134,14 @@ class Configtx {
 			Profiles[PROFILE_CHANNEL] = {
 				Policies: implicitPolicies,
 				Capabilities: {
-					V1_4_3: true
+					V1_3: true
 				},
 				Consortium: this.consortiumName,
 				Application: {
 					Policies: implicitPolicies,
 					Organizations,
 					Capabilities: {
-						V1_4_2: true
+						V1_3: true
 					}
 				}
 			};

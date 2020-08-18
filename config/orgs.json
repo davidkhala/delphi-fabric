@@ -10,7 +10,7 @@
     }
   },
   "orderer": {
-    "type": "etcdraft",
+    "type": "solo",
     "genesis_block": {
       "file": "delphi.block",
       "profile": "delphiGenesis"

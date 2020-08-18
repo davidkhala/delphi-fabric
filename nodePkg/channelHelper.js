@@ -91,26 +91,9 @@ class ChannelHelper {
 		const {channelsConfig} = this.context;
 		const channelConfig = channelsConfig[channelName];
 		const allOrderers = this.context.newOrderers();
-		const filter = async (orderers) => {
-			const result = [];
-			for (const orderer of orderers) {
-				const isAlive = await OrdererManager.ping(orderer);
-				if (!isAlive) {
-					continue;
-				}
-				result.push(orderer);
-			}
-			return result;
-		};
-		const waitForOrderer = async () => {
-			const orderers = await filter(allOrderers);
-			if (orderers.length === 0) {
-				await sleep(1000);
-				return waitForOrderer();
-			}
-			return orderers[0];
-		};
-		const orderer = await waitForOrderer();
+
+		await sleep(1000);
+		const orderer = allOrderers[0];
 		let client;
 		if (channelName === genesis) {
 			client = this.context.getOrgAdmin(undefined, 'orderer');

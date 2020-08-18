@@ -47,9 +47,6 @@ const task = async (taskID = parseInt(process.env.taskID)) => {
 		case 3:
 			await ChaincodeExistsTest(peers, clientOrg, 'allchannel');
 			break;
-		case 4:
-			await ChaincodeExistsTest(peers, clientOrg, 'extrachannel');
-			break;
 		case 5:
 			await GetChaincodeDataTest(peers, clientOrg, 'allchannel');
 			break;

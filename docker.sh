@@ -9,7 +9,6 @@ down() {
 up() {
 	prepareNetwork
 	channelName=allchannel mocha channelSetup.js
-	channelName=extrachannel mocha channelSetup.js
 }
 
 prepareNetwork() {
