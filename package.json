@@ -1,6 +1,6 @@
 {
   "name": "delphi-fabric",
-  "version": "1.4.8",
+  "version": "1.4.0",
   "description": "node program to use Hyperledger Fabric nodejs SDK ",
   "private": true,
   "scripts": {

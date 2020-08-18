@@ -13,4 +13,3 @@ Specifically, the v1.4.2 capabilities enable the following features:
 - Migration from Kafka to Raft consensus (requires v1.4.2 orderer and channel capabilities)
 - Ability to specify orderer endpoints per organization (requires v1.4.2 channel capability)
 - Ability to store private data for invalidated transactions (requires v1.4.2 application capability)
-- Node OU support for admin and orderer identity classifications (extends the existing Node OU support for clients and peers) (requires v1.4.3 channel capability)

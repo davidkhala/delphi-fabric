@@ -1,8 +1,8 @@
 {
   "TLS": true,
   "docker": {
-    "fabricTag": "1.4.8",
-    "caTag": "1.4.7",
+    "fabricTag": "1.4.0",
+    "caTag": "1.4.0",
     "network": "delphiNetwork",
     "volumes": {
       "CONFIGTX": "Documents/delphi-fabric/config/configtx",
