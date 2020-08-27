@@ -1,7 +1,7 @@
 const helper = require('../app/helper');
-const IDService = require('../common/nodejs/admin/identityService');
-const AffiliationService = require('../common/nodejs/admin/affiliationService');
-const CAService = require('../common/nodejs/admin/ca');
+const IDService = require('../common/nodejs/identityService');
+const AffiliationService = require('../common/nodejs/affiliationService');
+const CAService = require('../common/nodejs/CAService');
 const logger = require('khala-logger/log4js').consoleLogger('ca service');
 const caCryptoGen = require('../config/caCryptoGen');
 require('chai').should();

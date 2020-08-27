@@ -1,4 +1,4 @@
-const CA = require('../common/nodejs/admin/ca');
+const CA = require('../common/nodejs/CAService');
 const {initAdmin, genPeer, init, genOrderer, genUser, genClientKeyPair} = require('../common/nodejs/ca-crypto-gen');
 const {intermediateCA} = require('../common/nodejs/ca');
 const pathUtil = require('../common/nodejs/path');
