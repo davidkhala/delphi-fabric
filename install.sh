@@ -1,12 +1,6 @@
 #!/usr/bin/env bash
 set -e
 CURRENT=$(cd $(dirname ${BASH_SOURCE}) && pwd)
-fcn=$1
-remain_params=""
-for ((i = 2; i <= ${#}; i++)); do
-	j=${!i}
-	remain_params="$remain_params $j"
-done
 
 gitSync() {
 	git pull
@@ -45,8 +39,8 @@ updateChaincode() {
 	cd -
 }
 
-if [[ -n "$fcn" ]]; then
-	$fcn $remain_params
+if [[ -n "$1" ]]; then
+	"$@"
 else
 	if [[ ! -f "$CURRENT/common/install.sh" ]]; then
 		gitSync
