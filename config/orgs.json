@@ -60,27 +60,6 @@
           ]
         }
       }
-    },
-    "extrachannel": {
-      "file": "extra.tx",
-      "organizations": {
-        "astri.org": {
-          "peerIndexes": [
-            0
-          ],
-          "anchorPeerIndexes": [
-            0
-          ]
-        },
-        "icdd": {
-          "peerIndexes": [
-            0
-          ],
-          "anchorPeerIndexes": [
-            0
-          ]
-        }
-      }
     }
   },
   "organizations": {

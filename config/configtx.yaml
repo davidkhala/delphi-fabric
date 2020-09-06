@@ -2,7 +2,7 @@ Profiles:
   delphiGenesis:
     Capabilities:
       V1_4_3: true
-    Policies: &ref_1
+    Policies: &ref_0
       Readers:
         Type: ImplicitMeta
         Rule: ANY Readers
@@ -73,8 +73,6 @@ Profiles:
               Admins:
                 Type: Signature
                 Rule: OR('ASTRIMSP.admin')
-            OrdererEndpoints: &ref_0
-              - 'orderer0.hyperledger:7050'
           - Name: icdd
             ID: icddMSP
             MSPDir: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp
@@ -88,14 +86,13 @@ Profiles:
               Admins:
                 Type: Signature
                 Rule: OR('icddMSP.admin')
-            OrdererEndpoints: *ref_0
   allchannel:
-    Policies: *ref_1
+    Policies: *ref_0
     Capabilities:
       V1_4_3: true
     Consortium: SampleConsortium
     Application:
-      Policies: *ref_1
+      Policies: *ref_0
       Organizations:
         - Name: astri.org
           ID: ASTRIMSP
@@ -110,8 +107,6 @@ Profiles:
             Admins:
               Type: Signature
               Rule: OR('ASTRIMSP.admin')
-          AnchorPeers:
-            - {}
         - Name: icdd
           ID: icddMSP
           MSPDir: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp
@@ -125,17 +120,15 @@ Profiles:
             Admins:
               Type: Signature
               Rule: OR('icddMSP.admin')
-          AnchorPeers:
-            - {}
       Capabilities:
         V1_4_2: true
   extrachannel:
-    Policies: *ref_1
+    Policies: *ref_0
     Capabilities:
       V1_4_3: true
     Consortium: SampleConsortium
     Application:
-      Policies: *ref_1
+      Policies: *ref_0
       Organizations:
         - Name: astri.org
           ID: ASTRIMSP
@@ -150,8 +143,6 @@ Profiles:
             Admins:
               Type: Signature
               Rule: OR('ASTRIMSP.admin')
-          AnchorPeers:
-            - {}
         - Name: icdd
           ID: icddMSP
           MSPDir: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp
@@ -165,7 +156,5 @@ Profiles:
             Admins:
               Type: Signature
               Rule: OR('icddMSP.admin')
-          AnchorPeers:
-            - {}
       Capabilities:
         V1_4_2: true
