@@ -105,7 +105,7 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 				const {cert} = ordererCryptoPath.TLSFile('orderer');
 				const Host = `${ordererName}.${ordererOrgName}`;
 				Addresses.push(`${Host}:7050`);
-				const consenter = {Host, Port: raftPort || 7050};
+				const consenter = {Host, Port: TLS ? 7050 : raftPort};
 
 				consenter.ClientTLSCert = cert;
 				consenter.ServerTLSCert = cert;
