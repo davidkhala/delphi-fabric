@@ -1,10 +1,8 @@
 const logger = require('khala-logger/log4js').consoleLogger('Helper');
 
-
 const ClientManager = require('khala-fabric-sdk-node-builder/client');
 const peerUtil = require('khala-fabric-sdk-node-builder/peer');
 const {CryptoPath} = require('khala-fabric-sdk-node/path');
-const path = require('path');
 
 const UserUtil = require('khala-fabric-sdk-node/user');
 const {adminName: defaultAdminName} = require('khala-fabric-formatter/user');
@@ -101,7 +99,7 @@ class Context {
 	 * @param client
 	 * @return {Client.Channel}
 	 */
-	prepareChannel(channelName, client) {
+	static prepareChannel(channelName, client) {
 		return new channelUtil({client, channelName}).channel;
 	}
 

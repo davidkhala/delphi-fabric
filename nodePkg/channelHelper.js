@@ -2,7 +2,6 @@ const Context = require('./index.js');
 const ChannelUtil = require('khala-fabric-sdk-node/channel');
 const {genesis} = require('khala-fabric-formatter/channel');
 const ChannelManager = require('khala-fabric-sdk-node-builder/channel');
-const OrdererManager = require('khala-fabric-sdk-node-builder/orderer');
 const {setAnchorPeers, getChannelConfigReadable, ConfigFactory} = require('khala-fabric-sdk-node/channelConfig');
 
 const {create, join, getGenesisBlock} = ChannelUtil;
@@ -23,7 +22,7 @@ class ChannelHelper {
 		const orgConfig = this.globalConfig.channels[channelName].organizations[OrgName];
 		const {anchorPeerIndexes} = orgConfig;
 		const client = this.context.getOrgAdmin(OrgName);
-		const channel = this.context.prepareChannel(channelName, client);
+		const channel = Context.prepareChannel(channelName, client);
 
 		const anchorPeers = [];
 		for (const peerIndex of anchorPeerIndexes) {
@@ -104,7 +103,7 @@ class ChannelHelper {
 
 			client = this.context.getOrgAdmin(orgName);
 
-			const channel = this.context.prepareChannel(channelName, client);
+			const channel = Context.prepareChannel(channelName, client);
 
 			const block = await getGenesisBlock(channel, orderer);
 			for (const peer of peers) {

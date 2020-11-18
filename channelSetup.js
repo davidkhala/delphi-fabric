@@ -23,7 +23,7 @@ describe('channel setup', () => {
 		await binManager.configtxgen(channelName, configtxYaml, channelName).genChannel(channelFile);
 		const peerOrg = context.randomOrg('peer');
 		const client = context.getOrgAdmin(peerOrg);
-		const channel = context.prepareChannel(channelName, client);
+		const channel = Context.prepareChannel(channelName, client);
 		const orderers = context.newOrderers();
 		const orderer = orderers[0];
 
@@ -44,7 +44,7 @@ describe('view channel', () => {
 	it('view channel block', async () => {
 		const client = context.getOrgAdmin(undefined, 'orderer');
 
-		const channel = context.prepareChannel(channelName, client);
+		const channel = Context.prepareChannel(channelName, client);
 		const orderer = context.newOrderers()[0];
 		const block = await ChannelUtil.getGenesisBlock(channel, orderer);
 		console.log(block);// TODO apply block decoder
