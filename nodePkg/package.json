@@ -1,6 +1,6 @@
 {
   "name": "delphi-fabric-tool",
-  "version": "1.4.0-0.0.1",
+  "version": "1.4.0-0.0.2",
   "dependencies": {
     "khala-fabric-sdk-node-builder": "latest-1.4.0",
     "khala-fabric-sdk-node": "latest-1.4.0",
