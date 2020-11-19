@@ -1,5 +1,5 @@
 const globalConfig = require('./config/orgs.json');
-const path = require('path');
+
 const logger = require('khala-logger/log4js').consoleLogger('dockerode-bootstrap');
 const peerUtil = require('./common/nodejs/peer');
 const {runCouchDB, runCA, runPeer, runOrderer, fabricImagePull, chaincodeClear, chaincodeImageClear} = require('./common/nodejs/fabric-dockerode');
@@ -18,7 +18,7 @@ const {docker: {fabricTag, caTag, network}, TLS} = globalConfig;
 const BinManager = require('./common/nodejs/binManager');
 const dockerManager = new DockerManager();
 exports.runOrderers = async (toStop) => {
-	const {orderer: {type, raftPort, genesis_block: {file: BLOCK_FILE}}} = globalConfig;
+	const {orderer: {type, raftPort}} = globalConfig;
 	const CONFIGTXVolume = 'CONFIGTX';
 	const MSPROOTVolume = 'MSPROOT';
 	const imageTag = fabricTag;
@@ -41,8 +41,7 @@ exports.runOrderers = async (toStop) => {
 			const raft_tls = cryptoPath.TLSFile(nodeType);
 			raft_tls.port = raftPort;
 			await runOrderer({
-				container_name, imageTag, port, network,
-				BLOCK_FILE, CONFIGTXVolume,
+				container_name, imageTag, port, network, CONFIGTXVolume,
 				msp: {
 					id: mspid,
 					configPath,
@@ -209,15 +208,9 @@ exports.up = async () => {
 		}
 	}
 
-	const PROFILE_BLOCK = globalConfig.orderer.genesis_block.profile;
-	const configtxFile = path.resolve(__dirname, 'config', 'configtx.yaml');
-	configConfigtx.gen({MSPROOT: MSPROOTPath, PROFILE_BLOCK, configtxFile});
-
-
-	const BLOCK_FILE = globalConfig.orderer.genesis_block.file;
-	fsExtra.ensureDirSync(CONFIGTX);
-	await binManager.configtxgen(PROFILE_BLOCK, configtxFile).genBlock(path.resolve(CONFIGTX, BLOCK_FILE));
-
 	await exports.runOrderers();
 	await exports.runPeers();
+	const path = require('path');
+	const configtxFile = path.resolve(__dirname, 'config', 'configtx.yaml');
+	configConfigtx.gen({MSPROOT: MSPROOTPath, configtxFile});
 };

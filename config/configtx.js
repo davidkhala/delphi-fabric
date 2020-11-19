@@ -18,11 +18,8 @@ const implicitPolicies = {
 		Rule: 'MAJORITY Admins'
 	}
 };
-exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, configtxFile}) => {
+exports.gen = ({MSPROOT, configtxFile}) => {
 	const channelsConfig = globalConfig.channels;
-	if (!configtxFile) {
-		configtxFile = path.resolve(__dirname, 'configtx.yaml');
-	}
 	//	refresh configtxFile
 	if (fsExtra.pathExistsSync(configtxFile)) {
 		fsExtra.removeSync(configtxFile);
@@ -64,12 +61,6 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 		return result;
 	};
 
-	const blockProfileConfig = {
-		Capabilities: {
-			V2_0: true
-		},
-		Policies: implicitPolicies
-	};
 	const OrdererConfig = {
 		OrdererType: globalConfig.orderer.type,
 		BatchTimeout: '1s',
@@ -133,33 +124,19 @@ exports.gen = ({consortiumName = 'SampleConsortium', MSPROOT, PROFILE_BLOCK, con
 		OrdererConfig.Addresses = Addresses;
 		OrdererConfig.Organizations = Organizations;
 	}
-	blockProfileConfig.Orderer = OrdererConfig;
 	const orgsConfig = globalConfig.organizations;
-	const Organizations = [];
-
-
-	for (const [orgName, orgConfig] of Object.entries(orgsConfig)) {
-		Organizations.push(OrganizationBuilder(orgName, orgConfig));
-	}
-	blockProfileConfig.Consortiums = {
-		[consortiumName]: {
-			Organizations
-		}
-	};
 
 	const Profiles = {
-		[PROFILE_BLOCK]: blockProfileConfig
 	};
 	// Write channel profiles
 	for (const channelName in channelsConfig) {
 		const channelConfig = channelsConfig[channelName];
-		const PROFILE_CHANNEL = channelName;
-		Profiles[PROFILE_CHANNEL] = {
+		Profiles[channelName] = {
 			Policies: implicitPolicies,
 			Capabilities: {
 				V2_0: true
 			},
-			Consortium: consortiumName,
+			Orderer: OrdererConfig,
 			Application: {
 				Policies: Object.assign({
 					LifecycleEndorsement:
