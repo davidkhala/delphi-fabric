@@ -1,4 +1,4 @@
-const {create, joinAll, setAnchorPeersByOrg} = require('./channelHelper');
+const {joinAll, setAnchorPeersByOrg} = require('./channelHelper');
 const ChannelUtil = require('../common/nodejs/channel');
 const helper = require('./helper');
 const {homeResolve, sleep} = require('khala-light-util');
@@ -11,13 +11,13 @@ const createTask = async (channelName) => {
 	const channelsConfig = globalConfig.channels;
 	const channelConfig = channelsConfig[channelName];
 	const binManager = new BinManager();
-	const channelFile = path.resolve(CONFIGTX, channelConfig.file);
+	const channelBlock = path.resolve(CONFIGTX, channelConfig.file);
 	const configtxFile = helper.projectResolve('config', 'configtx.yaml');
-	await binManager.configtxgen(channelName, configtxFile, channelName).genChannel(channelFile);
+	await binManager.configtxgen(channelName, configtxFile, channelName).genBlock(channelBlock);
 	const orderers = helper.newOrderers();
-	const orderer = orderers[0];
 
-	await create(channelName, orderer, undefined, process.env.useSignconfigtx);
+	// TODO WIP
+
 };
 
 describe('channelSetup', () => {

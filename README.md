@@ -35,7 +35,7 @@ Features
 - use config-less fabric-ca
 - use `npm dockerode` to run docker container with comprehensive JSON configuration file, instead of `docker-compose` on yaml file
 - JSON config cater for both application and network structure (superset of connection profile and network-yaml)
-- channel update support (including system channel)
+- channel update support
 - chaincode language support
    - nodeJS
    - golang

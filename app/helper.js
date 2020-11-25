@@ -16,6 +16,7 @@ const ChannelManager = require('../common/nodejs/admin/channel');
 const {homeResolve} = require('khala-light-util');
 const CRYPTO_CONFIG_DIR = homeResolve(globalConfig.docker.volumes.MSPROOT);
 const {randomKeyOf} = require('khala-nodeutils/random');
+const {getClientKeyPairPath} = require('../config/caCryptoGen');
 
 const preparePeer = (orgName, peerIndex, peerConfig) => {
 	const {port: peerPort} = peerConfig;
@@ -46,11 +47,14 @@ const newOrderer = (name, org, ordererSingleConfig) => {
 	if (globalConfig.TLS) {
 		const {ordererHostName} = cryptoPath;
 		const {caCert} = cryptoPath.TLSFile(nodeType);
+		const {clientKey, clientCert} = getClientKeyPairPath(cryptoPath, nodeType);
 		ordererWrapper = new Orderer({
 			host: 'localhost',
 			ordererPort,
-			cert: caCert,
+			tlsCaCert: caCert,
 			ordererHostName,
+			clientKey,
+			clientCert,
 		});
 	} else {
 		ordererWrapper = new Orderer({ordererPort});

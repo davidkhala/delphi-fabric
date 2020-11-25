@@ -12,10 +12,6 @@
   "orderer": {
     "type": "etcdraft",
     "raftPort": 6050,
-    "genesis_block": {
-      "file": "delphi.block",
-      "profile": "delphiGenesis"
-    },
     "organizations": {
       "hyperledger": {
         "mspid": "hyperledgerMSP",
@@ -41,7 +37,7 @@
   },
   "channels": {
     "allchannel": {
-      "file": "all.tx",
+      "file": "all.block",
       "organizations": {
         "astri.org": {
           "peerIndexes": [

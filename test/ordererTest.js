@@ -8,14 +8,14 @@ describe('orderer', async () => {
 		const host = 'localhost';
 		const ordererHostName = 'orderer0.hyperledger';
 		const ordererPort = 7050;
-		const cert = helper.projectResolve('config/ca-crypto-config/ordererOrganizations/hyperledger/orderers/orderer0.hyperledger/tls/ca.crt');
+		const tlsCaCert = helper.projectResolve('config/ca-crypto-config/ordererOrganizations/hyperledger/orderers/orderer0.hyperledger/tls/ca.crt');
 		const ordererUtil_nonTLS = new OrdererUtil({ordererPort});
 		await ordererUtil_nonTLS.connect();
 		logger.info('nonTLS connected');
 		ordererUtil_nonTLS.disconnect();
 		await ordererUtil_nonTLS.connect();
 		logger.info('nonTLS reconnected');
-		const ordererUtil = new OrdererUtil({host, ordererPort, ordererHostName, cert});
+		const ordererUtil = new OrdererUtil({host, ordererPort, ordererHostName, tlsCaCert});
 		logger.debug(ordererUtil.committer);
 		await ordererUtil.connect();
 	});

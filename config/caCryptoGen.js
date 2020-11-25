@@ -21,9 +21,7 @@ const getCaService = async (port) => {
 	const trustedRoots = [];
 	return new CA(caUrl, trustedRoots).caService;
 };
-exports.getCaService = getCaService;
-exports.genUser = async ({userName, password}, orgName) => {
-	logger.debug('genUser', {userName, password, orgName});
+const genExtraUser = async ({userName, password}, orgName) => {
 	const {config, nodeType} = helper.findOrgConfig(orgName);
 	const mspId = config.mspid;
 	const caService = await getCaService(config.ca.portHost, orgName);
@@ -51,26 +49,31 @@ exports.genUser = async ({userName, password}, orgName) => {
 	return await genUser(caService, cryptoPath, nodeType, admin, {TLS, affiliationRoot: orgName});
 
 };
+const getClientKeyPairPath = (cryptoPath, nodeType) => {
+	const rootDir = path.resolve(cryptoPath[`${nodeType}Org`](), 'client');
+	return {
+		clientKey: path.resolve(rootDir, 'clientKey'),
+		clientCert: path.resolve(rootDir, 'clientCert')
+	};
+};
+
 const genNSaveClientKeyPair = async (caService, cryptoPath, admin, domain, nodeType) => {
 	const {key, certificate, rootCertificate} = await genClientKeyPair(caService, {
 		enrollmentID: `${domain}.client`,
 		enrollmentSecret: 'password'
 	}, admin, domain);
-	const rootDir = path.resolve(cryptoPath[`${nodeType}Org`](), 'client');
-	const keyFile = path.resolve(rootDir, 'clientKey');
-	const certFile = path.resolve(rootDir, 'clientCert');
-	fsExtra.outputFileSync(certFile, certificate);
+	const {clientKey, clientCert} = getClientKeyPairPath(cryptoPath, nodeType);
+	fsExtra.outputFileSync(clientCert, certificate);
 	const ecdsaKey = new ECDSA_Key(key, fsExtra);
-	ecdsaKey.save(keyFile);
+	ecdsaKey.save(clientKey);
 };
 /**
  * TODO
  * @param parentCADomain
  * @param parentCAPort
  * @param nodeType
- * @return {Promise<void>}
  */
-exports.genIntermediate = async (parentCADomain, parentCAPort, nodeType) => {
+const genIntermediate = async (parentCADomain, parentCAPort, nodeType) => {
 	const caService = await getCaService(parentCAPort, parentCADomain);
 	const mspId = nodeType === 'orderer' ? globalConfig.orderer.etcdraft.organizations[parentCADomain].mspid : globalConfig.organizations[parentCADomain].mspid;
 	const adminCryptoPath = new CryptoPath(caCryptoConfig, {
@@ -92,7 +95,7 @@ exports.genIntermediate = async (parentCADomain, parentCAPort, nodeType) => {
 	logger.debug(result);
 	return {enrollmentSecret, enrollmentID};
 };
-exports.genAll = async () => {
+const genAll = async () => {
 
 	// gen orderers
 	{
@@ -167,4 +170,11 @@ exports.genAll = async () => {
 			await Promise.all(promises);
 		}
 	}
+};
+module.exports = {
+	genIntermediate,
+	genAll,
+	genExtraUser,
+	getCaService,
+	getClientKeyPairPath,
 };

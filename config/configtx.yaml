@@ -1,8 +1,6 @@
 Profiles:
-  delphiGenesis:
-    Capabilities:
-      V2_0: true
-    Policies: &ref_3
+  allchannel:
+    Policies:
       Readers: &ref_0
         Type: ImplicitMeta
         Rule: ANY Readers
@@ -12,6 +10,8 @@ Profiles:
       Admins: &ref_2
         Type: ImplicitMeta
         Rule: MAJORITY Admins
+    Capabilities:
+      V2_0: true
     Orderer:
       OrdererType: etcdraft
       BatchTimeout: 1s
@@ -35,15 +35,15 @@ Profiles:
       EtcdRaft:
         Consenters:
           - Host: orderer0.hyperledger
-            Port: 6050
+            Port: 7050
             ClientTLSCert: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/hyperledger/orderers/orderer0.hyperledger/tls/server.crt
             ServerTLSCert: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/hyperledger/orderers/orderer0.hyperledger/tls/server.crt
           - Host: orderer1.hyperledger
-            Port: 6050
+            Port: 7050
             ClientTLSCert: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/hyperledger/orderers/orderer1.hyperledger/tls/server.crt
             ServerTLSCert: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/hyperledger/orderers/orderer1.hyperledger/tls/server.crt
           - Host: orderer2.hyperledger
-            Port: 6050
+            Port: 7050
             ClientTLSCert: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/hyperledger/orderers/orderer2.hyperledger/tls/server.crt
             ServerTLSCert: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/hyperledger/orderers/orderer2.hyperledger/tls/server.crt
       Organizations:
@@ -63,46 +63,6 @@ Profiles:
             Endorsement:
               Type: Signature
               Rule: OR('hyperledgerMSP.member')
-    Consortiums:
-      SampleConsortium:
-        Organizations:
-          - Name: astri.org
-            ID: astriMSP
-            MSPDir: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/astri.org/msp
-            Policies:
-              Readers:
-                Type: Signature
-                Rule: OR('astriMSP.member')
-              Writers:
-                Type: Signature
-                Rule: OR('astriMSP.member')
-              Admins:
-                Type: Signature
-                Rule: OR('astriMSP.admin')
-              Endorsement:
-                Type: Signature
-                Rule: OR('astriMSP.member')
-          - Name: icdd
-            ID: icddMSP
-            MSPDir: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp
-            Policies:
-              Readers:
-                Type: Signature
-                Rule: OR('icddMSP.member')
-              Writers:
-                Type: Signature
-                Rule: OR('icddMSP.member')
-              Admins:
-                Type: Signature
-                Rule: OR('icddMSP.admin')
-              Endorsement:
-                Type: Signature
-                Rule: OR('icddMSP.member')
-  allchannel:
-    Policies: *ref_3
-    Capabilities:
-      V2_0: true
-    Consortium: SampleConsortium
     Application:
       Policies:
         LifecycleEndorsement:

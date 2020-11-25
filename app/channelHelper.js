@@ -10,6 +10,9 @@ const BinManager = require('../common/nodejs/binManager');
 const {CryptoPath} = require('../common/nodejs/path');
 const {adminName} = require('../common/nodejs/formatter/user');
 const channelsConfig = globalConfig.channels;
+/**
+ * @deprecated system channel deprecate
+ */
 exports.create = async (channelName, orderer, signerOrgs = [helper.randomOrg('peer')], asEnvelop) => {
 	await orderer.connect();
 	const channelConfig = channelsConfig[channelName];
