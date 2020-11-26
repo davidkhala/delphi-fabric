@@ -1,9 +1,5 @@
-const {
-	containerDelete
-} = require('../../common/nodejs/admin/helper').dockerode.util;
-const {
-	runOrderer
-} = require('../../common/nodejs/fabric-dockerode');
+const {containerDelete} = require('../../common/nodejs/admin/helper').dockerode.util;
+const {runOrderer} = require('../../common/nodejs/fabric-dockerode');
 const {sleep, homeResolve} = require('khala-light-util');
 const globalConfig = require('../../config/orgs');
 const {CryptoPath} = require('../../common/nodejs/path');
@@ -19,7 +15,6 @@ const cryptoPath = new CryptoPath(MSPROOT, {
 });
 /**
  * @deprecated TODO until use etcdraft
- * @returns {Promise<void>}
  */
 const flow = async () => {
 	const ordererConfig = globalConfig.orderer.etcdraft.organizations[org];

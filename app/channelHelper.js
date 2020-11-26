@@ -1,5 +1,6 @@
 const helper = require('./helper.js');
-const {create, join} = require('../common/nodejs/channel');
+const {join: joinPeer} = require('../common/nodejs/channel');
+const {join: joinOrderer} = require('../common/nodejs/admin/orderer');
 const logger = require('khala-logger/log4js').consoleLogger('channel helper');
 const {setAnchorPeers, getChannelConfigReadable} = require('../common/nodejs/channelConfig');
 const ConfigFactory = require('../common/nodejs/formatter/configFactory');
@@ -17,8 +18,6 @@ exports.joinAll = async (channelName) => {
 
 	const orderers = helper.newOrderers();
 
-
-	const {join: joinOrderer} = require('../common/nodejs/admin/orderer'); // FIXME module link should update to khala-fabric-admin/orderer
 	for (const orderer of orderers) {
 		const {clientKey, tlsCaCert, clientCert} = orderer;
 		await joinOrderer(orderer.adminAddress, channelName, blockFile, axiosPromise, {clientKey, tlsCaCert, clientCert});
@@ -30,11 +29,11 @@ exports.joinAll = async (channelName) => {
 		const peers = helper.newPeers(peerIndexes, orgName);
 		const user = helper.getOrgAdmin(orgName);
 		const channel = helper.prepareChannel(channelName);
-		await join(channel, peers, user, blockFile); // TODO using block to join is not ready
+		await joinPeer(channel, peers, user, blockFile);
 		const queryHub = new QueryHub(peers, user);
 		const JoinedResult = await queryHub.channelJoined();
 		for (const [index, peer] of Object.entries(peers)) {
-			logger.debug(peer.toString(), 'has joined', JoinedResult[index]);
+			logger.info(peer.toString(), 'has joined', JoinedResult[index]);
 		}
 
 	}
