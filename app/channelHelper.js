@@ -5,59 +5,32 @@ const {setAnchorPeers, getChannelConfigReadable} = require('../common/nodejs/cha
 const ConfigFactory = require('../common/nodejs/formatter/configFactory');
 const QueryHub = require('../common/nodejs/query');
 const globalConfig = require('../config/orgs');
-const {homeResolve} = require('khala-light-util');
-const BinManager = require('../common/nodejs/binManager');
-const {CryptoPath} = require('../common/nodejs/path');
-const {adminName} = require('../common/nodejs/formatter/user');
-const channelsConfig = globalConfig.channels;
-/**
- * @deprecated system channel deprecate
- */
-exports.create = async (channelName, orderer, signerOrgs = [helper.randomOrg('peer')], asEnvelop) => {
-	await orderer.connect();
-	const channelConfig = channelsConfig[channelName];
-	const channelFile = homeResolve(globalConfig.docker.volumes.CONFIGTX, channelConfig.file);
-	const user = helper.getOrgAdmin(signerOrgs[0]);
-	const signingIdentities = [];
-	if (asEnvelop) {
-		const CRYPTO_CONFIG_DIR = homeResolve(globalConfig.docker.volumes.MSPROOT);
+const {sleep} = require('khala-light-util');
 
-		const binManager = new BinManager();
-		const orgsConfig = globalConfig.organizations;
+const path = require('path');
+const {axiosPromise} = require('khala-axios');
 
-		for (const orgName of signerOrgs) {
-			const localMspId = orgsConfig[orgName].mspid;
-			const cryptoPath = new CryptoPath(CRYPTO_CONFIG_DIR, {
-				peer: {
-					org: orgName
-				},
-				user: {
-					name: adminName
-				}
-			});
-			const mspConfigPath = cryptoPath.MSP('peerUser');
-			await binManager.peer().signconfigtx(channelFile, localMspId, mspConfigPath);
-		}
-	} else {
-		for (const orgName of signerOrgs) {
-			const adminUser = helper.getOrgAdmin(orgName);
-			signingIdentities.push(adminUser.getSigningIdentity());
-		}
+exports.joinAll = async (channelName) => {
+	const channelConfig = globalConfig.channels[channelName];
+
+	const blockFile = path.resolve(channelConfig.file);
+
+	const orderers = helper.newOrderers();
+
+
+	const {join: joinOrderer} = require('../common/nodejs/admin/orderer'); // FIXME module link should update to khala-fabric-admin/orderer
+	for (const orderer of orderers) {
+		const {clientKey, tlsCaCert, clientCert} = orderer;
+		await joinOrderer(orderer.adminAddress, channelName, blockFile, axiosPromise, {clientKey, tlsCaCert, clientCert});
 	}
 
-	return await create(channelName, user, orderer, channelFile, signingIdentities, asEnvelop);
-};
-
-
-exports.joinAll = async (channelName, block, orderer) => {
-
-	const channelConfig = globalConfig.channels[channelName];
+	await sleep(1000);
 
 	for (const [orgName, {peerIndexes}] of Object.entries(channelConfig.organizations)) {
 		const peers = helper.newPeers(peerIndexes, orgName);
 		const user = helper.getOrgAdmin(orgName);
 		const channel = helper.prepareChannel(channelName);
-		await join(channel, peers, user, block, orderer);
+		await join(channel, peers, user, blockFile); // TODO using block to join is not ready
 		const queryHub = new QueryHub(peers, user);
 		const JoinedResult = await queryHub.channelJoined();
 		for (const [index, peer] of Object.entries(peers)) {

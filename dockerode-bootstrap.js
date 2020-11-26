@@ -12,10 +12,8 @@ const {copy: dockerCP} = require('khala-dockerode/dockerCmd');
 const fsExtra = require('fs-extra');
 const {homeResolve} = require('khala-light-util');
 const MSPROOTPath = homeResolve(globalConfig.docker.volumes.MSPROOT);
-const CONFIGTX = homeResolve(globalConfig.docker.volumes.CONFIGTX);
 const {docker: {fabricTag, caTag, network}, TLS} = globalConfig;
 
-const BinManager = require('./common/nodejs/binManager');
 const dockerManager = new DockerManager();
 exports.runOrderers = async (toStop) => {
 	const {orderer: {type, raftPort}} = globalConfig;
@@ -25,7 +23,7 @@ exports.runOrderers = async (toStop) => {
 	const {MSPROOT} = peerUtil.container;
 	const nodeType = 'orderer';
 
-	const toggle = async ({orderer, domain, port, mspid}, ordererType, stateVolume, operations, metrics) => {
+	const toggle = async ({orderer, domain, port, mspid, portAdmin}, ordererType, stateVolume, operations, metrics) => {
 		const cryptoPath = new CryptoPath(MSPROOT, {
 			orderer: {org: domain, name: orderer}
 		});
@@ -49,6 +47,7 @@ exports.runOrderers = async (toStop) => {
 				},
 				ordererType,
 				tls, stateVolume, raft_tls,
+				portAdmin,
 			}, operations, metrics);
 		}
 	};
@@ -60,8 +59,8 @@ exports.runOrderers = async (toStop) => {
 			if (stateVolume) {
 				stateVolume = homeResolve(stateVolume);
 			}
-			const {portHost, operations, metrics} = ordererConfig;
-			await toggle({orderer, domain, port: portHost, mspid}, type, stateVolume, operations, metrics);
+			const {portHost, operations, metrics, portAdmin} = ordererConfig;
+			await toggle({orderer, domain, port: portHost, mspid, portAdmin}, type, stateVolume, operations, metrics);
 		}
 	}
 };
@@ -175,14 +174,15 @@ exports.down = async () => {
 
 	fsExtra.emptyDirSync(MSPROOTPath);
 	logger.info(`[done] clear MSPROOT ${MSPROOTPath}`);
-	fsExtra.emptyDirSync(CONFIGTX);
-	logger.info(`[done] clear CONFIGTX ${CONFIGTX}`);
+	for (const [channelName, {file}] of Object.entries(globalConfig.channels)) {
+		fsExtra.removeSync(file);
+		logger.info(`[done] clear ${channelName}.block ${file}`);
+	}
+
 };
 
 exports.up = async () => {
 	await fabricImagePull({fabricTag, caTag});
-
-	const binManager = new BinManager();
 
 	await dockerManager.networkCreateIfNotExist({Name: network});
 

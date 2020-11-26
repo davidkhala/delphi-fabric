@@ -5,7 +5,6 @@
     "caTag": "1.4",
     "network": "delphiNetwork",
     "volumes": {
-      "CONFIGTX": "Documents/delphi-fabric/config/configtx",
       "MSPROOT": "Documents/delphi-fabric/config/ca-crypto-config/"
     }
   },
@@ -21,15 +20,15 @@
         "orderers": {
           "orderer0": {
             "portHost": 7050,
-            "operations": {
-              "port": 8443
-            }
+            "portAdmin": 9443
           },
           "orderer1": {
-            "portHost": 8050
+            "portHost": 8050,
+            "portAdmin": 9343
           },
           "orderer2": {
-            "portHost": 9050
+            "portHost": 9050,
+            "portAdmin": 9243
           }
         }
       }
@@ -37,7 +36,7 @@
   },
   "channels": {
     "allchannel": {
-      "file": "all.block",
+      "file": "Documents/delphi-fabric/config/configtx/all.block",
       "organizations": {
         "astri.org": {
           "peerIndexes": [
@@ -66,9 +65,6 @@
         {
           "container_name": "peer0.astri.org",
           "port": 7051,
-          "operations": {
-            "port": 9443
-          },
           "couchDB": {
             "container_name": "couchdb.peer0.astri.org",
             "port": 7984

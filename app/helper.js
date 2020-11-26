@@ -38,6 +38,7 @@ const preparePeer = (orgName, peerIndex, peerConfig) => {
 const newOrderer = (name, org, ordererSingleConfig) => {
 	const nodeType = 'orderer';
 	const ordererPort = ordererSingleConfig.portHost;
+	const {portAdmin} = ordererSingleConfig;
 	const cryptoPath = new CryptoPath(CRYPTO_CONFIG_DIR, {
 		orderer: {
 			org, name
@@ -59,6 +60,7 @@ const newOrderer = (name, org, ordererSingleConfig) => {
 	} else {
 		ordererWrapper = new Orderer({ordererPort});
 	}
+	ordererWrapper.adminAddress = `localhost:${portAdmin}`;
 	return ordererWrapper;
 };
 
