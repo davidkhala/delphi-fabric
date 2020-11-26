@@ -15,6 +15,7 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
+    "khala-axios": "latest",
     "khala-dockerode": "latest",
     "khala-light-util": "latest",
     "khala-nodeutils": "latest"
