@@ -2,8 +2,7 @@ const helper = require('../../../../app/helper');
 
 const chaincodeID = 'diagnose';
 
-const {installAll, queryDefinition, checkCommitReadiness, commitChaincodeDefinition} = require('../../../../app/installHelper');
-const {approves} = require('../../../../app/installHelper');
+const {installAll, queryDefinition, checkCommitReadiness, commitChaincodeDefinition, approves} = require('../../../../app/installHelper');
 const logger = require('khala-logger/log4js').consoleLogger('chaincode:diagnose');
 const QueryHub = require('../../../../common/nodejs/query');
 const orderers = helper.newOrderers();
@@ -73,15 +72,15 @@ describe('commit', () => {
 		await queryCommitReadiness(2, gate);
 	});
 
-	const commit = async (sequence, _gate) => {
+	const commit = async (_chaincodeID, sequence, _gate) => {
 		const peers = [helper.newPeer(0, 'astri.org'), helper.newPeer(0, 'icdd')];
-		await commitChaincodeDefinition({name: chaincodeID, sequence}, 'astri.org', peers, orderer, _gate);
+		await commitChaincodeDefinition({name: _chaincodeID, sequence}, 'astri.org', peers, orderer, _gate);
 	};
 	it('commit', async () => {
-		await commit(1);
+		await commit(chaincodeID, 1);
 	});
 	it('commit: with gate', async () => {
-		await commit(2, gate);
+		await commit(chaincodeID, 2, gate);
 	});
 
 

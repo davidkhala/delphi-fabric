@@ -44,14 +44,7 @@
   },
   "nodeDiagnose": {
     "type": "node",
-    "path": "Documents/chaincode/nodejs/diagnose",
-    "endorsingConfigs": {
-      "n": 1,
-      "mspid": {
-        "astriMSP": 0,
-        "icddMSP": 0
-      }
-    }
+    "path": "Documents/chaincode/nodejs/diagnose"
   },
   "nodeStress": {
     "type": "node",

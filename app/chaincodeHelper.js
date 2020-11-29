@@ -5,19 +5,25 @@ const path = require('path');
 const {discoveryChaincodeInterestBuilder} = require('../common/nodejs/serviceDiscovery');
 const {EndorseALL} = require('../common/nodejs/endorseResultInterceptor');
 const chaincodeConfig = require('../config/chaincode.json');
-const {homeResolve} = require('khala-light-util')
-const prepareInstall = async ({chaincodeId}) => {
+const {homeResolve} = require('khala-light-util');
+const prepareInstall = async ({chaincodeId}, includeDependency) => {
 	const chaincodeRelativePath = chaincodeConfig[chaincodeId].path;
 	const chaincodeType = chaincodeConfig[chaincodeId].type;
 	const chaincodePath = homeResolve(chaincodeRelativePath);
 	const chaincodePackage = new ChaincodePackage({
-		Path: chaincodeRelativePath,
+		Path: chaincodePath,
 		Type: chaincodeType,
 		Label: chaincodeId
 	});
 	const [tmpDir, t1] = tmp.createTmpDir();
 	const ccPack = path.resolve(tmpDir, 'ccPackage.tar.gz');
-	await chaincodePackage.pack(chaincodePath, ccPack);
+	if (includeDependency) {
+		await chaincodePackage.pack(ccPack);
+	} else {
+		const BinManager = require('../common/nodejs/binManager');
+		const binManager = new BinManager();
+		await chaincodePackage.pack(ccPack, binManager);
+	}
 
 
 	//TODO metadataPath = path.resolve(chaincodePath, 'META-INF');// the name is arbitrary
@@ -27,7 +33,7 @@ const prepareInstall = async ({chaincodeId}) => {
 	return [ccPack, t1];
 };
 const install = async (peers, {chaincodeId}, user) => {
-	const [ccPack, t1] = await prepareInstall({chaincodeId});
+	const [ccPack, t1] = await prepareInstall({chaincodeId}, !process.env.binPath);
 	const chaincodeAction = new ChaincodeAction(peers, user, undefined, EndorseALL);
 	chaincodeAction.setInitRequired(true);
 	const result = await chaincodeAction.install(ccPack, true);
@@ -47,7 +53,7 @@ const buildEndorsePolicy = (endorsingConfig) => {
 	const {n, reference} = endorsingConfig;
 	if (reference) {
 		if (reference === true) {
-			return {reference: '/Channel/Application/Endorsement'}
+			return {reference: '/Channel/Application/Endorsement'};
 		} else {
 			return {reference};
 		}
@@ -69,12 +75,14 @@ const getEndorsePolicy = (chaincodeId) => {
 
 const getCollectionConfig = (chaincodeId) => {
 	const {collectionsConfig} = chaincodeConfig[chaincodeId];
-	Object.values(collectionsConfig).forEach((config) => {
-		const {endorsingConfigs} = config;
-		if (endorsingConfigs) {
-			config.endorsementPolicy = buildEndorsePolicy(endorsingConfigs);
-		}
-	});
+	if (collectionsConfig) {
+		Object.values(collectionsConfig).forEach((config) => {
+			const {endorsingConfigs} = config;
+			if (endorsingConfigs) {
+				config.endorsementPolicy = buildEndorsePolicy(endorsingConfigs);
+			}
+		});
+	}
 	return collectionsConfig;
 };
 
