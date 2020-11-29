@@ -8,7 +8,6 @@ down() {
 }
 up() {
 	prepareNetwork
-	#	taskID=0 useSignconfigtx=true channelName=allchannel node app/channelSetup.js
 	channelName=allchannel mocha app/channelSetup.js --grep "create$"
 	channelName=allchannel mocha app/channelSetup.js --grep "join$"
 	if [[ -n "$anchor" ]]; then
@@ -27,7 +26,10 @@ restart() {
 	up
 }
 cc() {
-	./cc/golang/diagnose/test/e2e.sh
+	mocha ./cc/golang/diagnose/install.js
+	mocha ./cc/golang/diagnose/invoke.js --grep "^chaincode Initialize init$"
+	mocha ./cc/node/diagnose/install.js
+	mocha ./cc/node/diagnose/invoke.js --grep "^chaincode Initialize init$"
 }
 if [[ -z "$1" ]]; then
 	export anchor=true

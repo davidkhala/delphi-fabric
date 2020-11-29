@@ -1,16 +1,20 @@
 const {invoke, query} = require('../../../app/invokeHelper');
+const helper = require('../../../app/helper');
 const chaincodeId = 'nodeDiagnose';
-exports.put = async (peers, clientPeerOrg, key, value) => {
-	const fcn = 'put';
-	const args = [key, value];
-	return invoke(peers, clientPeerOrg, chaincodeId, fcn, args);
-};
-exports.get = async (peers, clientPeerOrg, key) => {
-	const fcn = 'get';
-	const args = [key];
-	return query(peers, clientPeerOrg, chaincodeId, fcn, args);
-};
-exports.whoami = async (peers, clientPeerOrg) => {
-	const fcn = 'whoami';
-	return query(peers, clientPeerOrg, chaincodeId, fcn, []);
-};
+const logger = require('khala-logger/log4js').consoleLogger(chaincodeId);
+describe('chaincode Initialize', () => {
+
+	const peers = helper.allPeers();
+	it('init', async () => {
+		const org = 'icdd';
+		try {
+			await invoke(peers, org, chaincodeId, {
+				init: true,
+			});
+		} catch (e) {
+			logger.error(e.errors);
+		}
+
+	});
+});
+

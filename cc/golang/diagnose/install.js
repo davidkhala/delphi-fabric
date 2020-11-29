@@ -1,10 +1,9 @@
-const helper = require('../../../../app/helper');
-
+const helper = require('../../../app/helper');
 const chaincodeID = 'diagnose';
 
-const {installAll, queryDefinition, checkCommitReadiness, commitChaincodeDefinition, approves} = require('../../../../app/installHelper');
+const {installAll, queryDefinition, checkCommitReadiness, commitChaincodeDefinition, approves} = require('../../../app/installHelper');
 const logger = require('khala-logger/log4js').consoleLogger('chaincode:diagnose');
-const QueryHub = require('../../../../common/nodejs/query');
+const QueryHub = require('../../../common/nodejs/query');
 const orderers = helper.newOrderers();
 const orderer = orderers[0];
 const gate = `AND('icddMSP.member', 'astriMSP.member')`;
@@ -24,20 +23,20 @@ describe('install and approve', async function () {
 			}
 			const user = helper.getOrgAdmin(org);
 			const queryHub = new QueryHub(peers, user);
-			const queryResult = await queryHub.chaincodesInstalled();
+			const queryResult = await queryHub.chaincodesInstalled(chaincodeID);
 			let PackageID;
 			for (const entry of queryResult) {
-				const PackageIDs = Object.keys(entry);
-				for (const [key, reference] of Object.entries(entry)) {
+				const _PackageIDs = Object.keys(entry);
+				for (const reference of Object.values(entry)) {
 					for (const [channelName, {chaincodes}] of Object.entries(reference)) {
 						logger.debug(channelName, chaincodes);
 					}
 				}
-				if (PackageIDs.length > 1) {
+				if (_PackageIDs.length > 1) {
 					logger.error('found multiple installed packageID');
 					logger.info(queryResult);
 				} else {
-					PackageID = PackageIDs[0];
+					PackageID = _PackageIDs[0];
 				}
 			}
 			if (PackageID) {
@@ -50,7 +49,7 @@ describe('install and approve', async function () {
 		const sequence = 1;
 		await queryInstalledAndApprove(sequence);
 	});
-	it('query installed & approve: with gate', async () => {
+	it.skip('query installed & approve: with gate', async () => {
 		const sequence = 2;
 		await queryInstalledAndApprove(sequence, gate);
 	});
@@ -68,7 +67,7 @@ describe('commit', () => {
 	it('query commit Readiness', async () => {
 		await queryCommitReadiness(1);
 	});
-	it('query commit Readiness: with gate', async () => {
+	it.skip('query commit Readiness: with gate', async () => {
 		await queryCommitReadiness(2, gate);
 	});
 
@@ -79,7 +78,7 @@ describe('commit', () => {
 	it('commit', async () => {
 		await commit(chaincodeID, 1);
 	});
-	it('commit: with gate', async () => {
+	it.skip('commit: with gate', async () => {
 		await commit(chaincodeID, 2, gate);
 	});
 

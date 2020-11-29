@@ -1,15 +1,15 @@
 const {assert} = require('chai');
 
-const helper = require('../../../../app/helper');
-const {invoke} = require('../../../../app/invokeHelper');
+const helper = require('../../../app/helper');
+const {invoke} = require('../../../app/invokeHelper');
 const {
 	putRaw, getRaw, whoami, putBatch, list, get, put, chaincodeID, getEndorsement, putEndorsement, getPage, getCertID, peerMSPID,
 	getPrivate, putPrivate, putImplicit, getImplicit,
-} = require('../diagnoseInvoke');
-const {getResponses} = require('../../../../common/nodejs/formatter/proposalResponse');
+} = require('./diagnoseInvoke');
+const {getResponses} = require('../../../common/nodejs/formatter/proposalResponse');
 const chaincodeId = 'diagnose';
 const logger = require('khala-logger/log4js').consoleLogger('chaincode:diagnose');
-const {TxValidationCode} = require('../../../../common/nodejs/formatter/constants');
+const {TxValidationCode} = require('../../../common/nodejs/formatter/constants');
 const org1 = 'icdd';
 const org2 = 'astri.org';
 const peers = helper.allPeers();
@@ -166,7 +166,7 @@ describe('chaincode query after content filled', () => {
 	});
 
 });
-const {readWritePrivate} = require('../diagnoseInvoke');
+const {readWritePrivate} = require('./diagnoseInvoke');
 describe('private data ', () => {
 	const collectionPeers = [helper.newPeer(0, org1), helper.newPeer(0, org2)];
 	const transientMap = {
