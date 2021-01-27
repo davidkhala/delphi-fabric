@@ -1,6 +1,5 @@
 Delphi-fabric
 ---------------------
-[![Build Status](https://travis-ci.com/davidkhala/delphi-fabric.svg?branch=master)](https://travis-ci.com/davidkhala/delphi-fabric)
 
 **This project is not relevant to delphi program language**
 
