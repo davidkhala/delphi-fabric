@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -e -x
+set -e
 CURRENT=$(cd $(dirname ${BASH_SOURCE}) && pwd)
 
 gitSync() {
