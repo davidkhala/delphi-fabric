@@ -8,8 +8,8 @@ down() {
 }
 up() {
 	prepareNetwork
+	sleep 3 # TODO
 	channelName=allchannel mocha channelSetup.js
-	channelName=extrachannel mocha channelSetup.js
 }
 
 prepareNetwork() {
