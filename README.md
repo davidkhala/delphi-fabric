@@ -98,7 +98,8 @@ Finished
 - system upgrade: how to migrate to 1.4. from 1.1
 - 开发模式:--peer-chaincodedev: try to set via core.yaml
 - feature: implement configtx in node-sdk??
-
+- Node-OU is a must
+    - [admincerts (Deprecated from Fabric v1.4.3 and higher)](https://hyperledger-fabric.readthedocs.io/en/release-2.2/membership/membership.html?highlight=Local%20MSPs#msp-structure)
 ## Notes
 - configtxlator Rest server is deprecated but kept. Refer to following when reuse 
     ```js
