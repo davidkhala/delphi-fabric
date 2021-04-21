@@ -64,6 +64,6 @@ describe('CA Test', function () {
 
 
 		const allCerts = await certificateService.getAll(admin, {includeExpired: true});
-		assert.strictEqual(allCerts.length, 8);
+		assert.ok(allCerts.length > 7);
 	});
 });
