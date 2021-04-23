@@ -6,15 +6,14 @@ const {setAnchorPeers, getChannelConfigReadable} = require('../common/nodejs/cha
 const ConfigFactory = require('../common/nodejs/formatter/configFactory');
 const QueryHub = require('../common/nodejs/query');
 const globalConfig = require('../config/orgs');
-const {sleep} = require('khala-light-util');
+const {sleep, homeResolve} = require('khala-light-util');
 
-const path = require('path');
 const {axiosPromise} = require('khala-axios');
 
 exports.joinAll = async (channelName) => {
 	const channelConfig = globalConfig.channels[channelName];
 
-	const blockFile = path.resolve(channelConfig.file);
+	const blockFile = homeResolve(channelConfig.file);
 
 	const orderers = helper.newOrderers();
 

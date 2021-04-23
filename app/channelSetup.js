@@ -4,12 +4,15 @@ const helper = require('./helper');
 const path = require('path');
 const globalConfig = require('../config/orgs.json');
 const BinManager = require('../common/nodejs/binManager');
+const {homeResolve} = require('khala-light-util');
 const logger = require('khala-logger/log4js').consoleLogger('channel setup');
+const channelsConfig = globalConfig.channels;
 const createTask = async (channelName) => {
-	const channelsConfig = globalConfig.channels;
+
 	const channelConfig = channelsConfig[channelName];
+	const channelBlock = homeResolve(channelConfig.file);
 	const binManager = new BinManager();
-	const channelBlock = path.resolve(channelConfig.file);
+
 	const configtxFile = helper.projectResolve('config', 'configtx.yaml');
 	await binManager.configtxgen(channelName, configtxFile, channelName).genBlock(channelBlock);
 
