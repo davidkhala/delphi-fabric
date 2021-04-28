@@ -8,14 +8,8 @@ down() {
 }
 up() {
 	prepareNetwork
-	channelName=allchannel mocha app/channelSetup.js --grep "create$"
-	channelName=allchannel mocha app/channelSetup.js --grep "join$"
-	if [[ -n "$anchor" ]]; then
-		channelName=allchannel mocha app/channelSetup.js --grep "setup anchor peer$"
-	fi
+	channelName=allchannel mocha app/channelSetup.js --grep "^channelSetup"
 
-	#	taskID=2 viaServer=true channelName=allchannel node app/channelSetup.js #
-	#	channelName=extrachannel node app/channelSetup.js
 }
 
 prepareNetwork() {
@@ -36,5 +30,5 @@ if [[ -z "$1" ]]; then
 	restart
 	cc
 else
-	$1
+	"$@"
 fi

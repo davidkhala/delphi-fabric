@@ -28,17 +28,23 @@ describe('channelSetup', () => {
 		this.timeout(30000);
 		await joinAll(channelName);
 	});
-	it('setup anchor peer', async () => {
-		process.env.binPath = path.resolve(__dirname, '../common/bin/');
-		const channelConfig = globalConfig.channels[channelName];
+	if (process.env.anchor) {
+		it('setup anchor peer', async () => {
 
-		const orderers = helper.newOrderers();
-		const orderer = orderers[0];
-		await orderer.connect();
-		for (const org in channelConfig.organizations) {
-			await setAnchorPeersByOrg(channelName, org, orderer, process.env.viaServer);
-		}
-	});
+			process.env.binPath = path.resolve(__dirname, '../common/bin/');
+			const channelConfig = globalConfig.channels[channelName];
+
+			const orderers = helper.newOrderers();
+			const orderer = orderers[0];
+			await orderer.connect();
+			for (const org in channelConfig.organizations) {
+				await setAnchorPeersByOrg(channelName, org, orderer, process.env.viaServer);
+			}
+		});
+	}
+});
+
+describe('channel view', () => {
 	it('view current channel config', async () => {
 		const user = helper.getOrgAdmin(undefined, 'orderer');
 		const channel = helper.prepareChannel(channelName);
@@ -56,7 +62,6 @@ describe('channelSetup', () => {
 		const genesisBlock = await ChannelUtil.getGenesisBlock(channel, user, orderer);
 		return genesisBlock;
 	});
-
 });
 
 
