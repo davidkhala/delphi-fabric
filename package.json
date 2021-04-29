@@ -23,7 +23,6 @@
   "devDependencies": {
     "lerna": "latest",
     "mocha": "latest",
-    "chai": "latest",
     "khala-logger": "latest"
   }
 }

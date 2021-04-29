@@ -4,7 +4,8 @@ const AffiliationService = require('../common/nodejs/affiliationService');
 const CAService = require('../common/nodejs/CAService');
 const logger = require('khala-logger/log4js').consoleLogger('ca service');
 const caCryptoGen = require('../config/caCryptoGen');
-require('chai').should();
+
+const assert = require('assert');
 const {TLS} = require('../config/orgs.json');
 describe('caCryptoGen', () => {
 	const org = 'icdd';
@@ -17,9 +18,8 @@ describe('caCryptoGen', () => {
 		try {
 			await caCryptoGen.genUser({userName}, org);
 		} catch (e) {
-			e.errors[0].code.should.equal(0);
-			e.errors[0].message.should.match(/The CN '\S+' exceeds the maximum character limit of 64/);
-
+			assert.strictEqual(e.errors[0].code, 0);
+			assert.match(e.errors[0].message, /The CN '\S+' exceeds the maximum character limit of 64/);
 		}
 
 	});
