@@ -138,3 +138,7 @@ exports.peerMSPID = async (peers, clientOrg) => {
 	const fcn = 'peerMSPID';
 	return query(peers, clientOrg, chaincodeId, {fcn});
 };
+exports.chaincodePing = async (peers, clientOrg) => {
+	const fcn = 'external';
+	return query(peers, clientOrg, chaincodeId, {fcn});
+};

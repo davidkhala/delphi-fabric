@@ -1,10 +1,10 @@
-const {assert} = require('chai');
+const assert = require('assert');
 
 const helper = require('../../../app/helper');
 const {invoke} = require('../../../app/invokeHelper');
 const {
 	putRaw, getRaw, whoami, putBatch, list, get, put, chaincodeID, getEndorsement, putEndorsement, getPage, getCertID, peerMSPID,
-	getPrivate, putPrivate, putImplicit, getImplicit,
+	getPrivate, putPrivate, putImplicit, getImplicit, chaincodePing,
 } = require('./diagnoseInvoke');
 const {getResponses} = require('../../../common/nodejs/formatter/proposalResponse');
 const chaincodeId = 'diagnose';
@@ -35,6 +35,10 @@ describe('chaincode query', () => {
 	});
 	it('peerMSPID', async () => {
 		const result = await peerMSPID(peers, org1);
+		logger.info(result);
+	});
+	it('chaincode ping (google.com)', async () => {
+		const result = await chaincodePing(peers, org1);
 		logger.info(result);
 	});
 });
@@ -124,7 +128,7 @@ describe('chaincode invoke', () => {
 	});
 });
 describe('cross chaincode', () => {
-
+	// TODO
 });
 describe('chaincode query after content filled', () => {
 	it('worldStates', async () => {
@@ -191,7 +195,7 @@ describe('private data ', () => {
 			noErr = true;
 		} catch (e) {
 			logger.info(e);
-			assert.equal(e.status, TxValidationCode['10'], 'expect endorsing error');
+			assert.strictEqual(e.status, TxValidationCode['10'], 'expect endorsing error');
 		}
 		if (noErr) {
 			assert.fail('expect endorsing error');
