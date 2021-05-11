@@ -42,6 +42,11 @@ describe('caService', () => {
 		const [allDepartments] = await affiliationService.getAll();
 		logger.info(allDepartments);
 	});
+	it('AffiliationService GetOne', async () => {
+		const result = await affiliationService.getOne('icdd1');
+		assert.ifError(result);
+
+	});
 	it('AffiliationService create, delete dummy', async () => {
 		const name = 'dummy';
 		await affiliationService.createIfNotExist(name);
