@@ -7,11 +7,12 @@ const QueryHub = require('../../../common/nodejs/query');
 const orderers = helper.newOrderers();
 const orderer = orderers[0];
 const gate = `AND('icddMSP.member', 'astriMSP.member')`;
-describe('install and approve', async function () {
+describe('install and approve', () => {
 	const allPeers = helper.allPeers();
-	this.timeout(30000 * allPeers.length);
+
 	let PackageIDs;
-	it('install', async () => {
+	it('install', async function () {
+		this.timeout(30000 * allPeers.length);
 		PackageIDs = await installAll(chaincodeID);
 		logger.debug('package id map', PackageIDs);
 	});
@@ -45,7 +46,8 @@ describe('install and approve', async function () {
 
 		}
 	};
-	it('query installed & approve', async () => {
+	it('query installed & approve', async function () {
+		this.timeout(30000 * allPeers.length);
 		const sequence = 1;
 		await queryInstalledAndApprove(sequence);
 	});
