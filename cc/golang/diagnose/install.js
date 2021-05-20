@@ -46,8 +46,7 @@ describe('install and approve', () => {
 
 		}
 	};
-	it('query installed & approve', async function () {
-		this.timeout(30000 * allPeers.length);
+	it('query installed & approve', async () => {
 		const sequence = 1;
 		await queryInstalledAndApprove(sequence);
 	});

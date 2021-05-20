@@ -36,8 +36,9 @@ describe('discovery', () => {
 	it('config', async () => {
 		slimDiscoveryService.build(identityContext, {config: true});
 		const discoveries = await slimDiscoveryService.send();
-		const trimmedResult = resultParser(discoveries);
-		logger.debug(trimmedResult);
+		const {config_result, members} = resultParser(discoveries);
+		logger.debug('orgs in channel', config_result);
+		logger.debug(members);
 	});
 	it('local: return peers only', async () => {
 		slimDiscoveryService.build(identityContext, {local: true});
