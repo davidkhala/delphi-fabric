@@ -38,7 +38,7 @@ describe('discovery', () => {
 		const discoveries = await slimDiscoveryService.send();
 		const {config_result, members} = resultParser(discoveries);
 		logger.debug('orgs in channel', config_result);
-		logger.debug(members);
+		logger.debug(peersReader(members));
 	});
 	it('local: return peers only', async () => {
 		slimDiscoveryService.build(identityContext, {local: true});
