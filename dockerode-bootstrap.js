@@ -112,7 +112,6 @@ exports.runPeers = async (toStop) => {
 			const type = 'peer';
 			const configPath = cryptoPath.MSP(type);
 			if (couchDB) {
-				// eslint-disable-next-line no-shadow
 				const {container_name, port} = couchDB;
 				await runCouchDB({container_name, port, network});
 			}
