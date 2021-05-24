@@ -45,6 +45,7 @@ describe('channelSetup', () => {
 });
 
 describe('channel view', () => {
+	const channelName = process.env.channelName ? process.env.channelName : 'allchannel';
 	it('view current channel config', async () => {
 		const user = helper.getOrgAdmin(undefined, 'orderer');
 		const channel = helper.prepareChannel(channelName);
@@ -59,8 +60,7 @@ describe('channel view', () => {
 		const channel = helper.prepareChannel(channelName);
 		const orderer = helper.newOrderers()[0];
 		await orderer.connect();
-		const genesisBlock = await ChannelUtil.getGenesisBlock(channel, user, orderer);
-		return genesisBlock;
+		return await ChannelUtil.getGenesisBlock(channel, user, orderer);
 	});
 });
 

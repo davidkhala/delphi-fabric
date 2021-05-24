@@ -5,7 +5,9 @@ const path = require('path');
 const {discoveryChaincodeInterestBuilder} = require('../common/nodejs/serviceDiscovery');
 const {EndorseALL} = require('../common/nodejs/endorseResultInterceptor');
 const chaincodeConfig = require('../config/chaincode.json');
+
 const {homeResolve} = require('khala-light-util');
+
 const prepareInstall = async ({chaincodeId}, includeDependency) => {
 	const chaincodeRelativePath = chaincodeConfig[chaincodeId].path;
 	const chaincodeType = chaincodeConfig[chaincodeId].type;

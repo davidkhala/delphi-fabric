@@ -14,8 +14,8 @@ const UserUtil = require('../common/nodejs/user');
 const Orderer = require('../common/nodejs/admin/orderer');
 const ChannelManager = require('../common/nodejs/admin/channel');
 const {homeResolve} = require('khala-light-util');
+const {randomKeyOf} = require('khala-light-util/random');
 const CRYPTO_CONFIG_DIR = homeResolve(globalConfig.docker.volumes.MSPROOT);
-const {randomKeyOf} = require('khala-nodeutils/random');
 const {getClientKeyPairPath} = require('../config/caCryptoGen');
 
 const preparePeer = (orgName, peerIndex, peerConfig) => {
@@ -64,14 +64,27 @@ const newOrderer = (name, org, ordererSingleConfig) => {
 	return ordererWrapper;
 };
 
-exports.newOrderers = () => {
+/**
+ *
+ * @param {string} [ordererOrgName] orgName filter
+ * @return {*[]}
+ */
+const newOrderers = (ordererOrgName) => {
 	const result = [];
-	for (const [ordererOrgName, ordererOrgConfig] of Object.entries(ordererConfig.organizations)) {
+	const partialResult = (_ordererOrgName, ordererOrgConfig) => {
 		for (const [ordererName, ordererSingleConfig] of Object.entries(ordererOrgConfig.orderers)) {
-			const orderer = newOrderer(ordererName, ordererOrgName, ordererSingleConfig);
+			const orderer = newOrderer(ordererName, _ordererOrgName, ordererSingleConfig);
 			result.push(orderer);
 		}
+	};
+	if (ordererOrgName) {
+		partialResult(ordererOrgName, ordererConfig.organizations[ordererOrgName]);
+	} else {
+		for (const [_ordererOrgName, ordererOrgConfig] of Object.entries(ordererConfig.organizations)) {
+			partialResult(_ordererOrgName, ordererOrgConfig);
+		}
 	}
+
 	return result;
 };
 
@@ -79,32 +92,43 @@ exports.newOrderers = () => {
  * @param channelName
  * @return {Client.Channel}
  */
-exports.prepareChannel = (channelName) => {
+const prepareChannel = (channelName) => {
 	return new ChannelManager({channelName}).channel;
 };
 
-exports.newPeer = (peerIndex, orgName) => {
+const newPeer = (peerIndex, orgName) => {
 	const peerConfig = orgsConfig[orgName].peers[peerIndex];
 	return preparePeer(orgName, peerIndex, peerConfig);
 };
-exports.allPeers = () => {
+/**
+ *
+ * @param {string} [orgName]
+ */
+const allPeers = (orgName) => {
 	let peers = [];
-	for (const [orgName, orgConfig] of Object.entries(orgsConfig)) {
+	const partialResult = (_orgName, orgConfig) => {
 		const peerIndexes = Object.keys(orgConfig.peers);
-		peers = peers.concat(exports.newPeers(peerIndexes, orgName));
+		peers = peers.concat(newPeers(peerIndexes, _orgName));
+	};
+	if (orgName) {
+		partialResult(orgName, orgsConfig[orgName]);
+	} else {
+		for (const [_orgName, orgConfig] of Object.entries(orgsConfig)) {
+			partialResult(_orgName, orgConfig);
+		}
 	}
+
 	return peers;
 };
-exports.newPeers = (peerIndexes, orgName) => {
+const newPeers = (peerIndexes, orgName) => {
 	const targets = [];
 	for (const index of peerIndexes) {
-		targets.push(exports.newPeer(index, orgName));
+		targets.push(newPeer(index, orgName));
 	}
 	return targets;
-
 };
 
-exports.findOrgConfig = (orgName, ordererName) => {
+const findOrgConfig = (orgName, ordererName) => {
 	let target;
 	let nodeType;
 	let portHost;
@@ -128,7 +152,7 @@ exports.findOrgConfig = (orgName, ordererName) => {
 	return {config: target, portHost, nodeType};
 };
 const getUser = (username, orgName) => {
-	const {config, nodeType} = exports.findOrgConfig(orgName);
+	const {config, nodeType} = findOrgConfig(orgName);
 	const mspId = config.mspid;
 	const cryptoPath = new CryptoPath(CRYPTO_CONFIG_DIR, {
 		[nodeType]: {
@@ -140,16 +164,15 @@ const getUser = (username, orgName) => {
 	});
 	return UserUtil.loadFromLocal(cryptoPath, nodeType, mspId);
 };
-exports.getUser = getUser;
 
-exports.getOrgAdmin = (orgName, nodeType = 'peer') => {
+const getOrgAdmin = (orgName, nodeType = 'peer') => {
 	if (!orgName) {
 		orgName = exports.randomOrg(nodeType);
 	}
 	logger.debug(`get ${orgName} Admin`);
 	return getUser(adminName, orgName);
 };
-exports.randomOrg = (nodeType) => {
+const randomOrg = (nodeType) => {
 	let orgName;
 	if (nodeType === 'peer') {
 		orgName = randomKeyOf(globalConfig.organizations);
@@ -162,7 +185,21 @@ exports.randomOrg = (nodeType) => {
 	logger.info(`random ${nodeType} org`, orgName);
 	return orgName;
 };
-exports.randomChannelOrg = (channelName) => {
+const randomChannelOrg = (channelName) => {
 	return randomKeyOf(channelsConfig[channelName].organizations);
 };
-exports.projectResolve = projectResolve;
+
+module.exports = {
+	projectResolve,
+	getUser,
+	randomChannelOrg,
+	randomOrg,
+	getOrgAdmin,
+	findOrgConfig,
+	newPeer,
+	newPeers,
+	allPeers,
+	newOrderers,
+	newOrderer,
+	prepareChannel,
+};
