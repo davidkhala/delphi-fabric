@@ -21,7 +21,8 @@ describe('approve', () => {
 	const orderers = helper.newOrderers();
 	const orderer = orderers[0];
 	const operator = new ChaincodeDefinitionOperator('allchannel');
-	it('approves', async () => {
+	it('approves', async function () {
+		this.timeout(30000);
 		const sequence = 1;
 		await operator.queryInstalledAndApprove(chaincodeId, sequence, orderer);
 	});
