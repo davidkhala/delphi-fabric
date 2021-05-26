@@ -10,7 +10,9 @@
     "install": "cd common/nodejs; npm install; lerna bootstrap --no-ci; cd -",
     "nuke": "cd common/nodejs; rm -rf node_modules; lerna clean --yes; cd -; rm -rf node_modules;",
     "test": "mocha test",
-    "start": "./docker.sh up; ./docker.sh cc",
+    "prestart": "./docker.sh prepareNetwork",
+    "start": "channelName=allchannel mocha app/channelSetup.js --grep \"^channelSetup\"",
+    "poststart": "./docker.sh cc",
     "stop": "./docker.sh down"
   },
   "license": "Apache-2.0",
