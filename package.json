@@ -11,7 +11,7 @@
     "nuke": "cd common/nodejs; rm -rf node_modules; lerna clean --yes; cd -; rm -rf node_modules;",
     "test": "mocha test",
     "prestart": "./docker.sh prepareNetwork",
-    "start": "channelName=allchannel mocha app/channelSetup.js --grep \"^channelSetup\"",
+    "start": "binPath=$PWD/common/bin channelName=allchannel mocha app/channelSetup.js --grep \"^channelSetup\"",
     "poststart": "./docker.sh cc",
     "stop": "./docker.sh down"
   },
