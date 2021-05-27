@@ -21,12 +21,12 @@ describe('install and approve', () => {
 	});
 
 	it('query installed & approve', async function () {
-		this.timeout(30000);
+		this.timeout(300000);
 		const sequence = 1;
 		await operator.queryInstalledAndApprove(chaincodeID, sequence, orderer);
 	});
 	it.skip('query installed & approve: with gate', async function (){
-		this.timeout(30000);
+		this.timeout(300000);
 		const sequence = 2;
 		await operator.queryInstalledAndApprove(chaincodeID, sequence, orderer, gate);
 	});
