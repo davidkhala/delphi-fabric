@@ -19,12 +19,6 @@ restart() {
 	down
 	up
 }
-repeat() {
-	local times=5
-	for ((i = 1; i <= times; i++)); do
-		./docker.sh
-	done
-}
 if [[ -z "$1" ]]; then
 	restart
 else
