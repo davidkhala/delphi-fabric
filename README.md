@@ -80,11 +80,6 @@ Finished
 - hybrid data storage model: couchdb, leveldb
 
  
-## The Expected features 
-- feature: implement configtx in node-sdk??
-- patch: configtxgen binary allow upper case channelName
-- fabric-ca: cannot change csr.cn via '--csr.cn=${container_name}' TLS CSR: {CN:example.com Names:[{C:US ST:North Carolina L: O:Hyperledger OU:Fabric SerialNumber:}] Hosts:[02cf209b65fb localhost] KeyRequest:<nil> CA:<nil> SerialNumber:}
-- External chaincode config section in core.yml can not be translated as docker or k8s pod environment, because environment variables do not accept array formats
 ## Abandoned tasks
 - docker volume plugin
 - docker swarm deployment
