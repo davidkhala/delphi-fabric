@@ -7,7 +7,7 @@ gitSync() {
 	git submodule update --init --recursive
 }
 updateChaincode() {
-
+	# TODO update with goutil script getAndEnsure
   mkdir -p ~/Documents
   cd ~/Documents
   git clone https://github.com/davidkhala/chaincode.git
