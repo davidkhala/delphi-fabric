@@ -25,6 +25,7 @@ jobs:
     - run: ./install.sh
     - run: npm i -g mocha
     - run: ./docker.sh up
-    - run: docker logs orderer0.hyperledger --follow
+    - run: docker logs orderer0.hyperledger
       name: view logs of orderer0.hyperledger
+      timeout-minutes: 2
 

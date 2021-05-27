@@ -24,7 +24,7 @@ jobs:
         node-version: ${{ matrix.node-version }}
     - run: ./common/install.sh softHSMInstall
     - run: ./install.sh
-    - run: ./test/hsm.sh
+    - run: ./test-hsm/hsm.sh
     - run: npm start
       timeout-minutes: 30
     - run: npm test

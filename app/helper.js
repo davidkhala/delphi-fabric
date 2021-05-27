@@ -167,7 +167,7 @@ const getUser = (username, orgName) => {
 
 const getOrgAdmin = (orgName, nodeType = 'peer') => {
 	if (!orgName) {
-		orgName = exports.randomOrg(nodeType);
+		orgName = randomOrg(nodeType);
 	}
 	logger.debug(`get ${orgName} Admin`);
 	return getUser(adminName, orgName);

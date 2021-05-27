@@ -10,16 +10,18 @@ const {TLS} = require('../config/orgs.json');
 describe('caCryptoGen', () => {
 	const org = 'icdd';
 	it('genUser green', async () => {
-		await caCryptoGen.genUser({userName: 'david'}, org);
+		await caCryptoGen.genExtraUser({userName: 'david'}, org, 'peer');
 	});
 	it('name length exceed', async () => {
-		// TODO fabric-ca bug: why this length illegal identity will go into CA
+
 		const userName = `${'david'.repeat(25)}@orgMSP`;
 		try {
-			await caCryptoGen.genUser({userName}, org);
+			// TODO fabric-ca bug: why this length illegal identity will go into CA
+			await caCryptoGen.genExtraUser({userName, password: 'password'}, org, 'peer');
 		} catch (e) {
-			assert.strictEqual(e.errors[0].code, 0);
-			assert.match(e.errors[0].message, /The CN '\S+' exceeds the maximum character limit of 64/);
+			const {code, message} = e.errors[0];
+			assert.strictEqual(code, 80);
+			assert.ok(/' exceeds the maximum character limit of 64$/.test(message));
 		}
 
 	});

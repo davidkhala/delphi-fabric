@@ -10,7 +10,6 @@ const globalConfig = require('../config/orgs');
 const {adminName, adminPwd} = require('../common/nodejs/formatter/user');
 const {loadFromLocal} = require('../common/nodejs/user');
 const {ECDSA_Key} = require('../common/nodejs/formatter/key');
-const helper = require('../app/helper');
 
 const path = require('path');
 const caCryptoConfig = homeResolve(globalConfig.docker.volumes.MSPROOT);
@@ -21,8 +20,16 @@ const getCaService = async (port) => {
 	const trustedRoots = [];
 	return new CA(caUrl, trustedRoots).caService;
 };
-const genExtraUser = async ({userName, password}, orgName) => {
-	const {config, nodeType} = helper.findOrgConfig(orgName);
+/**
+ *
+ * @param userName
+ * @param password
+ * @param orgName
+ * @param {NodeType} nodeType
+ * @return {Promise<User>}
+ */
+const genExtraUser = async ({userName, password}, orgName, nodeType) => {
+	const config = globalConfig.organizations[orgName];
 	const mspId = config.mspid;
 	const caService = await getCaService(config.ca.portHost, orgName);
 

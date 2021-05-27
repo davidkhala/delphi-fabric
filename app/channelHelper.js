@@ -19,7 +19,12 @@ exports.joinAll = async (channelName) => {
 
 	for (const orderer of orderers) {
 		const {clientKey, tlsCaCert, clientCert} = orderer;
-		await joinOrderer(orderer.adminAddress, channelName, blockFile, axiosPromise, {clientKey, tlsCaCert, clientCert});
+
+		await joinOrderer(orderer.adminAddress, channelName, blockFile, axiosPromise, globalConfig.TLS ? {
+			clientKey,
+			tlsCaCert,
+			clientCert
+		} : undefined);
 	}
 
 	await sleep(1000);
