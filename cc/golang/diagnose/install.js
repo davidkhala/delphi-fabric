@@ -21,11 +21,16 @@ describe('install and approve', () => {
 	});
 
 	it('query installed & approve', async function () {
-		this.timeout(300000);
+
 		const sequence = 1;
-		await operator.queryInstalledAndApprove(chaincodeID, sequence, orderer);
+		const orgs = ['icdd', 'astri.org'];
+		this.timeout(30000 * orgs.length);
+		for (const org of orgs) {
+			await operator.queryInstalledAndApprove(org, chaincodeID, sequence, orderer);
+		}
+
 	});
-	it.skip('query installed & approve: with gate', async function (){
+	it.skip('query installed & approve: with gate', async function () {
 		this.timeout(300000);
 		const sequence = 2;
 		await operator.queryInstalledAndApprove(chaincodeID, sequence, orderer, gate);

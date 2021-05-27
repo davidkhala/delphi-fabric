@@ -21,14 +21,6 @@
           "orderer0": {
             "portHost": 7050,
             "portAdmin": 9443
-          },
-          "orderer1": {
-            "portHost": 8050,
-            "portAdmin": 9343
-          },
-          "orderer2": {
-            "portHost": 9050,
-            "portAdmin": 9243
           }
         }
       }

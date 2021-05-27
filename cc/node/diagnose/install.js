@@ -22,9 +22,13 @@ describe('approve', () => {
 	const orderer = orderers[0];
 	const operator = new ChaincodeDefinitionOperator('allchannel');
 	it('approves', async function () {
-		this.timeout(30000);
+		const orgs = ['icdd', 'astri.org'];
+		this.timeout(30000 * orgs.length);
 		const sequence = 1;
-		await operator.queryInstalledAndApprove(chaincodeId, sequence, orderer);
+		for (const org of orgs) {
+			await operator.queryInstalledAndApprove(org, chaincodeId, sequence, orderer);
+		}
+
 	});
 });
 describe('commit', () => {

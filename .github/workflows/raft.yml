@@ -1,0 +1,30 @@
+name: raft orderer test
+
+on:
+  push:
+  workflow_dispatch:
+jobs:
+  networkup:
+
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        node-version: [14.x]
+        os: [ubuntu-latest]
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+    - uses: docker-practice/actions-setup-docker@master
+      if: ${{ matrix.os == 'macos-latest' }}
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+    - run: ./install.sh
+    - run: npm i -g mocha
+    - run: ./docker.sh up
+    - run: docker logs orderer0.hyperledger --follow
+      name: view logs of orderer0.hyperledger
+

@@ -47,10 +47,11 @@ class ChaincodeDefinitionOperator {
 	 */
 	constructor(channelName) {
 		this.channel = helper.prepareChannel(channelName);
+		this.waitForConsensus = 1000;
 	}
 
 	async approves({sequence, PackageID}, orgName, peers, orderer, gate) {
-		const {channel} = this;
+		const {channel, waitForConsensus} = this;
 		for (const peer of peers) {
 			await peer.connect();
 		}
@@ -66,7 +67,7 @@ class ChaincodeDefinitionOperator {
 
 		chaincodeAction.setEndorsementPolicy(endorsementPolicy);
 		chaincodeAction.setCollectionsConfig(getCollectionConfig(name));
-		await chaincodeAction.approve({name, PackageID, sequence}, orderer);
+		await chaincodeAction.approve({name, PackageID, sequence}, orderer, waitForConsensus);
 	}
 
 	async commitChaincodeDefinition({sequence, name}, orgName, peers, orderer, gate) {
@@ -113,45 +114,45 @@ class ChaincodeDefinitionOperator {
 
 	/**
 	 *
+	 * @param {string} org
 	 * @param {string} chaincodeId
 	 * @param {number} sequence
 	 * @param {Orderer} _orderer
 	 * @param {string} [_gate]
 	 */
-	async queryInstalledAndApprove(chaincodeId, sequence, _orderer, _gate) {
-		for (const org of ['icdd', 'astri.org']) {
-			const peers = helper.newPeers([0, 1], org); // TODO use discovery to find more peer
-			for (const peer of peers) {
-				await peer.connect();
-			}
-			const user = helper.getOrgAdmin(org);
-			const queryHub = new QueryHub(peers, user);
-			const queryResult = await queryHub.chaincodesInstalled(chaincodeId);
-			let PackageID;
-			for (const entry of queryResult) {
-				const PackageIDs = Object.keys(entry);
-				for (const reference of Object.values(entry)) {
-					for (const [channelName, {chaincodes}] of Object.entries(reference)) {
-						console.info(channelName, chaincodes);
-					}
-				}
-				if (PackageIDs.length > 1) {
-					console.error(queryResult);
-					console.error({PackageIDs: PackageIDs});
-					throw Error('found multiple installed packageID, could not decide which to approve');
-
-				} else {
-					if (PackageID) {
-						assert.strictEqual(PackageID, PackageIDs[0]);
-					}
-					PackageID = PackageIDs[0];
-				}
-			}
-			if (PackageID) {
-				await this.approves({PackageID, sequence}, org, peers, _orderer, _gate);
-			}
+	async queryInstalledAndApprove(org, chaincodeId, sequence, _orderer, _gate) {
+		const peers = helper.newPeers([0, 1], org); // TODO use discovery to find more peer
+		for (const peer of peers) {
+			await peer.connect();
 
 		}
+		const user = helper.getOrgAdmin(org);
+		const queryHub = new QueryHub(peers, user);
+		const queryResult = await queryHub.chaincodesInstalled(chaincodeId);
+		let PackageID;
+		for (const entry of queryResult) {
+			const PackageIDs = Object.keys(entry);
+			for (const reference of Object.values(entry)) {
+				for (const [channelName, {chaincodes}] of Object.entries(reference)) {
+					console.info(channelName, chaincodes);
+				}
+			}
+			if (PackageIDs.length > 1) {
+				console.error(queryResult);
+				console.error({PackageIDs: PackageIDs});
+				throw Error('found multiple installed packageID, could not decide which to approve');
+
+			} else {
+				if (PackageID) {
+					assert.strictEqual(PackageID, PackageIDs[0]);
+				}
+				PackageID = PackageIDs[0];
+			}
+		}
+		if (PackageID) {
+			await this.approves({PackageID, sequence}, org, peers, _orderer, _gate);
+		}
+
 	}
 }
 
