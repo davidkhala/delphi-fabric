@@ -1,5 +1,5 @@
-Delphi-fabric
----------------------
+# Delphi-fabric
+
 
 **This project is not relevant to delphi program language**
 
@@ -13,8 +13,8 @@ This project aims to provide a user-friendly fabric application development tool
 a pure helper to fabric-sdk user.
 
 
-Why
------------------------
+## Why
+
 - No multiple config file confusing anymore. All magic in `orgs.json` and `chaincode.json`  
     - no crypto-config.yaml
     - no docker-compose.yaml
@@ -28,8 +28,8 @@ Why
     - This project is the research facility of a active blockchain product
 - Perfect same crypto-material file structure as you use `cryptogen`. We have place fabric-ca response in good manner.
 
-Features
------------------------
+## Features
+
 - use fabric-ca to generate all crypto material, instead of cryptogen
 - use config-less fabric-ca
 - use `npm dockerode` to run docker container with comprehensive JSON configuration file, instead of `docker-compose` on yaml file
@@ -43,45 +43,29 @@ Features
 - update anchor peers as a normal channel config instead of using `configtx`
 - use npm:js-yaml to read|write YAML files instead of jq 
 
-Major configuration
------------------------
+### Major configuration
+
  - we cluster network and channel config in ``config/orgs.json``, enjoy!
  - chaincodes configurations: ``config/chaincode.json``
  
  [sample chaincode source](https://github.com/davidkhala/chaincode)
 
-Installation
------------------------
-
+## Installation
 
 **Installation Script**
 1. `$ ./install.sh gitSync`   
 _after first time clone this repository, submodule should be initialize_
 2. `$ ./install.sh`
-
-----
  
-**Requirements & dependencies**
-  *  **Compatible OS** 
-    - ubuntu xenial/bionic
-    - [TODO] MacOS 
-  * [Fabric](./common/README.md#Prerequisite)
+### Requirements & dependencies**
+- **Compatible OS** 
+  - ubuntu Focal
+  - MacOS 
+- [Fabric](./common/README.md#Prerequisite)
 
-Test on single host
+## Test on single host
 -----------------------
- * run `$ ./docker.sh` to restart network
+- run `$ ./docker.sh` to restart network
 
 
-Finished
------------------------
-- use npm:js-yaml to write YAML files instead of jq
-- new orderer with same org
-- chaincode version,ID string RegX
-- hybrid data storage model: couchdb, leveldb
 
- 
-## Abandoned tasks
-- docker volume plugin
-- docker swarm deployment
-- cooperate with official network_config.json
-- [grafana](https://github.com/grafana/grafana)
