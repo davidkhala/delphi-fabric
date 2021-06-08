@@ -1,6 +1,5 @@
 Delphi-fabric
 ---------------------
-[![Build Status](https://travis-ci.com/davidkhala/delphi-fabric.svg?branch=release-1.4)](https://travis-ci.com/davidkhala/delphi-fabric)
 
 About
 -----------------------

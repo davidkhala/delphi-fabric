@@ -1,0 +1,39 @@
+name: Node.js CI
+
+on:
+  push:
+    branches:
+      - release-1.4
+  workflow_dispatch:
+jobs:
+  e2e:
+
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        node-version: [12.x]
+        golang-version: [1.13]
+        os: [macos-latest, ubuntu-latest]
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - uses: docker-practice/actions-setup-docker@master
+        if: ${{ matrix.os == 'macos-latest' }}
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.golang-version }}
+      - run: ./common/install.sh softHSMInstall
+      - run: ./install.sh
+      - run: ./install.sh updateChaincode
+      - run: ./test-hsm/hsm.sh
+      - run: ./docker.sh
+        timeout-minutes: 30
+      - run: node cc/golang/diagnose/test/
+      - run: node test
