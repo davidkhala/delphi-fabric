@@ -23,7 +23,6 @@
   },
   "devDependencies": {
     "lerna": "latest",
-    "mocha": "latest-6",
-    "chai": "latest"
+    "mocha": "latest-6"
   }
 }

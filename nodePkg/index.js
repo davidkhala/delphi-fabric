@@ -198,6 +198,11 @@ class Context {
 		return orgName;
 	}
 
+	static projectResolve(...args) {
+		const path = require('path');
+		const projectRoot = path.dirname(__dirname);
+		return path.resolve(projectRoot, ...args);
+	}
 }
 
 module.exports = Context;

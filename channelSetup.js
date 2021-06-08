@@ -4,7 +4,6 @@ outputChannelJson has been moved to test/configtxlatorReadTest.js
 const ChannelHelper = require('./nodePkg/channelHelper');
 const globalConfig = require('./config/orgs.json');
 const channelHelper = new ChannelHelper(globalConfig);
-const ChannelUtil = require('./common/nodejs/channel');
 const Context = require('./nodePkg');
 const context = new Context(globalConfig);
 const path = require('path');
@@ -40,16 +39,7 @@ describe('channel setup', () => {
 		}
 	});
 });
-describe('view channel', () => {
-	it('view channel block', async () => {
-		const client = context.getOrgAdmin(undefined, 'orderer');
 
-		const channel = context.prepareChannel(channelName, client);
-		const orderer = context.newOrderers()[0];
-		const block = await ChannelUtil.getGenesisBlock(channel, orderer);
-		console.log(block);// TODO apply block decoder
-	});
-});
 
 
 

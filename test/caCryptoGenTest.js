@@ -7,7 +7,7 @@ const {getCaService, genUser} = new CaCryptoGen(globalConfig);
 const Context = require('../nodePkg/index');
 const path = require('path');
 const logger = require('khala-logger/log4js').consoleLogger('test:caCryptoGen');
-const should = require('chai').should();
+const assert = require('assert');
 const context = new Context(globalConfig);
 describe('caCryptoGen', () => {
 	let caService, domain, admin;
@@ -32,7 +32,7 @@ describe('caCryptoGen', () => {
 	it('name overflow', async () => {
 		try {
 			await genUser({userName: 'david'.repeat(13), password: 'password'}, domain);
-			should.fail('expect an error here');
+			assert.fail('expect an error here');
 		} catch (e) {
 			logger.info(e);
 			const regex = /{.*}/;
