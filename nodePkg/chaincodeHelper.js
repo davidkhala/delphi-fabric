@@ -42,7 +42,9 @@ class ChaincodeHelper {
 
 	async install(peers, {chaincodeId, chaincodeVersion}, client) {
 		const opt = await this.prepareInstall({chaincodeId});
-		opt.chaincodeVersion = chaincodeVersion;
+		if (chaincodeVersion) {
+			opt.chaincodeVersion = chaincodeVersion;
+		}
 		return install(peers, opt, client);
 	}
 

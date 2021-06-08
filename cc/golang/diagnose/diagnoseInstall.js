@@ -1,16 +1,22 @@
+const InstallHelper = require('../../../nodePkg/installHelper');
+const globalConfig = require('../../../config/orgs.json');
+const chaincodeConfig = require('../../../config/chaincode.json');
+const installHelper = new InstallHelper(globalConfig, chaincodeConfig);
 const {incrementInstallAll, installs} = require('../../../app/installHelper');
 const {instantiate} = require('../../../app/instantiateHelper');
 
 const chaincodeId = 'diagnose';
 const Context = require('../../../nodePkg/index');
-const globalConfig = require('../../../config/orgs.json');
+
 const context = new Context(globalConfig);
 const channelName = 'allchannel';
-describe('task', () => {
+describe('golang/diagnose', () => {
 	const org1 = 'astri.org';
 	const org2 = 'icdd';
-	it('step1', async () => {
-		await incrementInstallAll(chaincodeId);
+	it('install', async function () {
+		this.timeout(30000);
+		await installHelper.incrementInstallAll(chaincodeId, channelName);
+
 	});
 	it('step2', async () => {
 
