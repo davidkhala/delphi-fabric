@@ -2,6 +2,8 @@ name: Node.js CI
 
 on:
   push:
+    branches:
+     - master
   workflow_dispatch:
 jobs:
   e2e:
