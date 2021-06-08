@@ -1,17 +1,4 @@
 {
-  "master": {
-    "path": "github.com/davidkhala/chaincode/golang/master",
-    "collectionsConfig": {
-      "private1": {
-        "mspIds": [
-          "ASTRIMSP",
-          "icddMSP"
-        ],
-        "requiredPeerCount": 0,
-        "maxPeerCount": 4
-      }
-    }
-  },
   "stress": {
     "path": "github.com/davidkhala/chaincode/golang/stress"
   },
@@ -29,19 +16,6 @@
         "maxPeerCount": 4
       }
     }
-  },
-  "mainChain": {
-    "path": "github.com/davidkhala/chaincode/golang/mainChain",
-    "endorsingConfigs": {
-      "n": 2,
-      "mspId": {
-        "ASTRIMSP": "member",
-        "icddMSP": "member"
-      }
-    }
-  },
-  "global": {
-    "path": "github.com/davidkhala/chaincode/golang/tokenCommon"
   },
   "nodeDiagnose": {
     "type": "node",
@@ -61,8 +35,5 @@
   "nodeContracts": {
     "type": "node",
     "path": "github.com/davidkhala/chaincode/nodejs/contracts"
-  },
-  "stupid": {
-    "path": "github.com/davidkhala/stupid/chaincodes"
   }
 }
