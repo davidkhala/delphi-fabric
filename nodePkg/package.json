@@ -5,7 +5,10 @@
     "khala-fabric-sdk-node-builder": "latest-1.4",
     "khala-fabric-sdk-node": "latest-1.4",
     "khala-fabric-formatter": "latest-1.4",
-    "khala-light-util": "^0.0.3"
+    "khala-light-util": "latest"
+  },
+  "scripts": {
+    "nuke": "rm -rf node_modules"
   },
   "publishConfig": {
     "tag": "latest-1.4"

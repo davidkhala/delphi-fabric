@@ -1,6 +1,4 @@
 const logger = require('khala-logger/log4js').consoleLogger('Helper');
-
-
 const ClientManager = require('khala-fabric-sdk-node-builder/client');
 const peerUtil = require('khala-fabric-sdk-node-builder/peer');
 const {CryptoPath} = require('khala-fabric-sdk-node/path');
@@ -67,6 +65,26 @@ class Context {
 			orderer = new Orderer({ordererPort}).orderer;
 		}
 		return orderer;
+	}
+
+	findOrgName(mspId, nodeType) {
+		switch (nodeType) {
+			case 'peer':
+				for (const [peerOrgName, {mspid}] of Object.entries(this.globalConfig.organizations)) {
+					if (mspid === mspid) {
+						return peerOrgName;
+					}
+				}
+				break;
+			case 'orderer':
+				for (const [ordererOrgName, {mspid}] of Object.entries(this.globalConfig.orderer.organizations)) {
+					if (mspid === mspid) {
+						return ordererOrgName;
+					}
+				}
+				break;
+		}
+
 	}
 
 	toLocalhostOrderer(orderer) {
@@ -163,7 +181,6 @@ class Context {
 	randomChannelOrg(channelName) {
 		return randomKeyOf(this.channelsConfig[channelName].organizations);
 	}
-
 
 	getUserClient(username, orgName, client) {
 		const user = this.getUser(username, orgName);

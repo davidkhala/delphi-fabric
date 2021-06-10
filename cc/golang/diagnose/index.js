@@ -8,12 +8,12 @@ const installHelper = new InstallHelper(globalConfig, chaincodeConfig, binManage
 const ChaincodeHelper = require('../../../nodePkg/chaincodeHelper');
 const chaincodeHelper = new ChaincodeHelper(chaincodeConfig);
 
-const chaincodeId = 'stress';
+const chaincodeId = 'diagnose';
 const Context = require('../../../nodePkg/index');
 
 const context = new Context(globalConfig);
 const channelName = 'allchannel';
-describe('golang/stress', () => {
+describe('golang/diagnose', () => {
 	const org1 = 'astri.org';
 	const org2 = 'icdd';
 	it('install', async function () {

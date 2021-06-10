@@ -1,4 +1,4 @@
-const install = require('../../cc/golang/diagnose/diagnoseInstall');
+const install = require('../../cc/golang/diagnose');
 const invoke = require('../../cc/golang/diagnose/diagnoseInvoke');
 const fsExtra = require('fs-extra');
 const {consoleLogger} = require('khala-logger/log4js');

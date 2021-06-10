@@ -30,7 +30,7 @@ exports.prepareInstall = async ({chaincodeId}) => {
 		metadataPath = path.resolve(chaincodePath, 'META-INF');// the name is arbitrary
 	}
 	if (!chaincodeType || chaincodeType === ChaincodeType.golang) {
-		await golangUtil.setGOPATH();
+		golangUtil.setGOPATH();
 		chaincodePath = chaincodeRelativePath;
 		metadataPath = path.resolve(gopath, 'src', chaincodeRelativePath, 'META-INF');// the name is arbitrary
 	}

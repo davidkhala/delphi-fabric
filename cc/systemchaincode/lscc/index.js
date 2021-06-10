@@ -39,10 +39,10 @@ const task = async (taskID = parseInt(process.env.taskID)) => {
 	const clientOrg = 'icdd';
 	switch (taskID) {
 		case 1:
-			await require('../../golang/diagnose/diagnoseInstall').task(undefined, 1);
+			await require('../../golang/diagnose').task(undefined, 1);
 			break;
 		case 2:
-			await require('../../golang/diagnose/diagnoseInstall').task('allchannel', 2);
+			await require('../../golang/diagnose').task('allchannel', 2);
 			break;
 		case 3:
 			await ChaincodeExistsTest(peers, clientOrg, 'allchannel');

@@ -1,4 +1,4 @@
-const install = require('../diagnoseInstall');
+const install = require('../index');
 const {setEvent} = require('../diagnoseInvoke');
 const helper = require('../../../../app/helper');
 const {listenChaincodeEvent} = require('../../../../app/invokeHelper');

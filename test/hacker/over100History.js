@@ -1,7 +1,7 @@
 const helper = require('../../app/helper');
 const logger = require('khala-logger/log4js').consoleLogger('hack: >100 history');
 const {putRaw, history} = require('../../cc/golang/diagnose/diagnoseInvoke');
-const install = require('../../cc/golang/diagnose/diagnoseInstall');
+const install = require('../../cc/golang/diagnose');
 
 const taskRepeat = async (times) => {
 

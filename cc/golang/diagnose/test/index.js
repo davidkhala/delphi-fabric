@@ -5,7 +5,7 @@ const {
 const helper = require('../../../../app/helper');
 const logger = require('khala-logger/log4js').consoleLogger('invoke:diagnose');
 
-const diagnoseInstall = require('../diagnoseInstall');
+const diagnoseInstall = require('../index');
 const taskKeyEndorsement = async () => {
 	const org1 = 'icdd';
 	const org2 = 'astri.org';

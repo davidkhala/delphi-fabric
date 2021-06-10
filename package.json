@@ -4,8 +4,8 @@
   "description": "node program to use Hyperledger Fabric nodejs SDK ",
   "private": true,
   "scripts": {
-    "install": "cd common/nodejs; npm install;lerna bootstrap --no-ci; cd -",
-    "nuke": "cd common/nodejs; rm -rf node_modules; lerna clean --yes; cd -; rm -rf node_modules"
+    "install": "cd common/nodejs; npm install;lerna bootstrap --no-ci; cd -; cd nodePkg; npm i",
+    "nuke": "cd common/nodejs; rm -rf node_modules; lerna clean --yes; cd -;cd nodePkg; npm run nuke; cd -;  rm -rf node_modules"
   },
   "keywords": [
     "Hyperledger",

@@ -1,7 +1,7 @@
 const helper = require('../../app/helper');
 const logger = require('khala-logger/log4js').consoleLogger('hack: >100 history');
 const {GetCompositeStateByRange, putCompositeBatch} = require('../../cc/golang/diagnose/diagnoseInvoke');
-const install = require('../../cc/golang/diagnose/diagnoseInstall');
+const install = require('../../cc/golang/diagnose');
 const putCompositeBatchTest = async (objectType, size) => {
 	const map = {};
 	for (let i = 0; i < size; i++) {

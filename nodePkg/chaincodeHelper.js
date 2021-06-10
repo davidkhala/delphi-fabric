@@ -14,21 +14,76 @@ const path = require('path');
 
 class ChaincodeHelper {
 	constructor(chaincodeConfig) {
-		this.chaincodeConfig = chaincodeConfig;
+		Object.assign(this, {chaincodeConfig});
 	}
 
-	async prepareInstall({chaincodeId}) {
+	/**
+	 *
+	 * @param chaincodeId
+	 * @param orgName
+	 * @param chaincodeVersion
+	 * @param [instantiatePolicy]
+	 * @param globalConfig
+	 * @param binManager
+	 */
+	preparePackage(chaincodeId, chaincodeVersion, orgName, globalConfig, binManager, instantiatePolicy) {
+		const Context = require('./index');
+		const {CryptoPath} = require('khala-fabric-sdk-node/path');
+		const {createTmpDir} = require('khala-nodeutils/tmp');
+		const {mspid} = globalConfig.organizations[orgName];
 		const chaincodeRelativePath = this.chaincodeConfig[chaincodeId].path;
-		let metadataPath;
-		let chaincodePath;
+		let metadataPath, chaincodePath;
 		const chaincodeType = this.chaincodeConfig[chaincodeId].type;
-		const gopath = await golangUtil.getGOPATH();
+		const gopath = golangUtil.getGOPATH();
 		if (chaincodeType === ChaincodeType.node) {
 			chaincodePath = path.resolve(gopath, 'src', chaincodeRelativePath);
 			metadataPath = path.resolve(chaincodePath, 'META-INF');// the name is arbitrary
 		}
 		if (!chaincodeType || chaincodeType === ChaincodeType.golang) {
-			await golangUtil.setGOPATH();
+			golangUtil.setGOPATH();
+			chaincodePath = chaincodeRelativePath;
+			metadataPath = path.resolve(gopath, 'src', chaincodeRelativePath, 'META-INF');// the name is arbitrary
+		}
+		const rootPath = Context.projectResolve('config', 'ca-crypto-config');
+
+		const cryptoPath = new CryptoPath(rootPath, {
+			user: {
+				name: 'Admin'
+			}, peer: {
+				org: orgName,
+			}
+		});
+
+		const mspConfigPath = cryptoPath.MSP('peerUser');
+
+		const [outputFileDir, t1] = createTmpDir();
+		const outputFile = path.resolve(outputFileDir, `${chaincodeId}-${chaincodeType || 'golang'}-${chaincodeVersion}.chaincodePack`);
+
+		binManager.peer().package({
+			chaincodeId, chaincodePath, chaincodeVersion, metadataPath
+		}, {
+			localMspId: mspid,
+			mspConfigPath
+		}, outputFile);
+		return [outputFile, t1];
+	}
+
+	/**
+	 * @deprecated
+	 * @param chaincodeId
+	 * @return {{metadataPath: string, chaincodeId, chaincodeType, chaincodePath: string}}
+	 */
+	prepareInstall({chaincodeId}) {
+		const chaincodeRelativePath = this.chaincodeConfig[chaincodeId].path;
+		let metadataPath, chaincodePath;
+		const chaincodeType = this.chaincodeConfig[chaincodeId].type;
+		const gopath = golangUtil.getGOPATH();
+		if (chaincodeType === ChaincodeType.node) {
+			chaincodePath = path.resolve(gopath, 'src', chaincodeRelativePath);
+			metadataPath = path.resolve(chaincodePath, 'META-INF');// the name is arbitrary
+		}
+		if (!chaincodeType || chaincodeType === ChaincodeType.golang) {
+			golangUtil.setGOPATH();
 			chaincodePath = chaincodeRelativePath;
 			metadataPath = path.resolve(gopath, 'src', chaincodeRelativePath, 'META-INF');// the name is arbitrary
 		}
@@ -40,12 +95,19 @@ class ChaincodeHelper {
 		return {chaincodeId, chaincodePath, chaincodeType, metadataPath};
 	}
 
-	async install(peers, {chaincodeId, chaincodeVersion}, client) {
-		const opt = await this.prepareInstall({chaincodeId});
-		if (chaincodeVersion) {
-			opt.chaincodeVersion = chaincodeVersion;
+	async install(peers, {chaincodeId, chaincodeVersion}, client, {orgName, globalConfig, binManager} = {}) {
+		const options = {chaincodeVersion};
+		if (binManager) {
+			const [chaincodePackage, t1] = this.preparePackage(chaincodeId, chaincodeVersion, orgName, globalConfig, binManager);
+			Object.assign(options, {chaincodePackage});
+			const result = await install(peers, options, client);
+			t1();
+			return result;
+		} else {
+			Object.assign(options, this.prepareInstall({chaincodeId}));
+			return install(peers, options, client);
 		}
-		return install(peers, opt, client);
+
 	}
 
 	buildEndorsePolicy(config) {
@@ -80,6 +142,20 @@ class ChaincodeHelper {
 
 	}
 
+	/**
+	 * @typedef {Object} UpgradeOptions
+	 * @property {string} chaincodeId
+	 * @property {string[]} args
+	 * @property {Object} transientMap
+	 */
+
+	/**
+	 *
+	 * @param channel
+	 * @param richPeers
+	 * @param {UpgradeOptions} opts
+	 * @param {Orderer} orderer
+	 */
 	async upgrade(channel, richPeers, opts, orderer) {
 		const {chaincodeId} = opts;
 		const policyConfig = this.configParser(this.chaincodeConfig[chaincodeId]);
