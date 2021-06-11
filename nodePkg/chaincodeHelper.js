@@ -31,7 +31,8 @@ class ChaincodeHelper {
 		const {CryptoPath} = require('khala-fabric-sdk-node/path');
 		const {createTmpDir} = require('khala-nodeutils/tmp');
 		const {mspid} = globalConfig.organizations[orgName];
-		const chaincodeRelativePath = this.chaincodeConfig[chaincodeId].path;
+		const chaincodeConfig = this.chaincodeConfig[chaincodeId];
+		const chaincodeRelativePath = chaincodeConfig.path;
 		let metadataPath, chaincodePath;
 		const chaincodeType = this.chaincodeConfig[chaincodeId].type;
 		const gopath = golangUtil.getGOPATH();
@@ -43,6 +44,21 @@ class ChaincodeHelper {
 			golangUtil.setGOPATH();
 			chaincodePath = chaincodeRelativePath;
 			metadataPath = path.resolve(gopath, 'src', chaincodeRelativePath, 'META-INF');// the name is arbitrary
+		}
+		if (Array.isArray(chaincodeConfig.couchDBIndexes)) {
+			couchDBIndex(metadataPath, undefined, 'main.json', ...chaincodeConfig.couchDBIndexes);
+
+			const {collectionsConfig} = chaincodeConfig;
+			if (collectionsConfig) {
+				for (const [collection, {couchDBIndexes}] of Object.entries(collectionsConfig)) {
+					if (Array.isArray(couchDBIndexes)) {
+						couchDBIndex(metadataPath, collection, undefined, ...couchDBIndexes);
+					} else {
+						couchDBIndex(metadataPath, collection, undefined);
+					}
+				}
+			}
+
 		}
 		const rootPath = Context.projectResolve('config', 'ca-crypto-config');
 
@@ -60,12 +76,12 @@ class ChaincodeHelper {
 		const outputFile = path.resolve(outputFileDir, `${chaincodeId}-${chaincodeType || 'golang'}-${chaincodeVersion}.chaincodePack`);
 
 		binManager.peer().package({
-			chaincodeId, chaincodePath, chaincodeVersion, metadataPath
+			chaincodeId, chaincodePath, chaincodeVersion
 		}, {
 			localMspId: mspid,
 			mspConfigPath
 		}, outputFile);
-		return [outputFile, t1];
+		return [{metadataPath, chaincodePackage: outputFile}, t1];
 	}
 
 	/**
@@ -88,7 +104,15 @@ class ChaincodeHelper {
 			metadataPath = path.resolve(gopath, 'src', chaincodeRelativePath, 'META-INF');// the name is arbitrary
 		}
 		if (Array.isArray(this.chaincodeConfig[chaincodeId].couchDBIndexes)) {
-			couchDBIndex(metadataPath, undefined, ...this.chaincodeConfig[chaincodeId].couchDBIndexes);
+			couchDBIndex(metadataPath, undefined, undefined, ...this.chaincodeConfig[chaincodeId].couchDBIndexes);
+			for (const [collection, {couchDBIndexes}] of Object.entries(this.chaincodeConfig[chaincodeId].collectionsConfig)) {
+				if (Array.isArray(couchDBIndexes)) {
+					couchDBIndex(metadataPath, collection, undefined, ...couchDBIndexes);
+				} else {
+					couchDBIndex(metadataPath, collection);
+				}
+			}
+
 		} else {
 			metadataPath = undefined;
 		}
@@ -98,8 +122,8 @@ class ChaincodeHelper {
 	async install(peers, {chaincodeId, chaincodeVersion}, client, {orgName, globalConfig, binManager} = {}) {
 		const options = {chaincodeVersion};
 		if (binManager) {
-			const [chaincodePackage, t1] = this.preparePackage(chaincodeId, chaincodeVersion, orgName, globalConfig, binManager);
-			Object.assign(options, {chaincodePackage});
+			const [{metadataPath, chaincodePackage}, t1] = this.preparePackage(chaincodeId, chaincodeVersion, orgName, globalConfig, binManager);
+			Object.assign(options, {metadataPath, chaincodePackage});
 			const result = await install(peers, options, client);
 			t1();
 			return result;

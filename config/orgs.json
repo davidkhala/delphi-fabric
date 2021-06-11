@@ -90,9 +90,12 @@
             "statsD": {
               "host": "statsd-exporter"
             }
+          },
+          "couchDB": {
+            "container_name": "couchdb.peer1.astri.org",
+            "port": 8984
           }
-        },
-        {}
+        }
       ],
       "ca": {
         "portHost": 7054
