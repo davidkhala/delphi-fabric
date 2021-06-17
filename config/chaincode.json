@@ -1,17 +1,4 @@
 {
-  "master": {
-    "path": "Documents/chaincode/golang/master",
-    "collectionsConfig": {
-      "private1": {
-        "identities": [
-          "astriMSP",
-          "icddMSP"
-        ],
-        "required_peer_count": 0,
-        "maximum_peer_count": 4
-      }
-    }
-  },
   "stress": {
     "path": "Documents/chaincode/golang/stress"
   },

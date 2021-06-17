@@ -1,28 +1,23 @@
 const {joinAll, setAnchorPeersByOrg} = require('./channelHelper');
-const ChannelUtil = require('../common/nodejs/channel');
+
 const helper = require('./helper');
 const path = require('path');
 const globalConfig = require('../config/orgs.json');
 const BinManager = require('../common/nodejs/binManager');
 const {homeResolve} = require('khala-light-util');
-const logger = require('khala-logger/log4js').consoleLogger('channel setup');
+
 const channelsConfig = globalConfig.channels;
-const createTask = async (channelName) => {
-
-	const channelConfig = channelsConfig[channelName];
-	const channelBlock = homeResolve(channelConfig.file);
-	const binManager = new BinManager();
-
-	const configtxFile = helper.projectResolve('config', 'configtx.yaml');
-	await binManager.configtxgen(channelName, configtxFile, channelName).genBlock(channelBlock);
-
-};
 
 describe('channelSetup', () => {
-	const channelName = process.env.channelName ? process.env.channelName : 'allchannel';
+	const channelName = process.env.channelName || 'allchannel';
 	it('create', async function () {
 		this.timeout(30000);
-		await createTask(channelName);
+		const channelConfig = channelsConfig[channelName];
+		const channelBlock = homeResolve(channelConfig.file);
+		const binManager = new BinManager();
+
+		const configtxFile = helper.projectResolve('config', 'configtx.yaml');
+		await binManager.configtxgen(channelName, configtxFile, channelName).genBlock(channelBlock);
 	});
 	it('join', async function () {
 		this.timeout(30000);
@@ -44,25 +39,7 @@ describe('channelSetup', () => {
 	}
 });
 
-describe('channel view', () => {
-	const channelName = process.env.channelName ? process.env.channelName : 'allchannel';
-	it('view current channel config', async () => {
-		const user = helper.getOrgAdmin(undefined, 'orderer');
-		const channel = helper.prepareChannel(channelName);
-		const orderer = helper.newOrderers()[0];
 
-		await orderer.connect();
-		const configBlock = await ChannelUtil.getChannelConfigFromOrderer(channel.name, user, orderer);
-		logger.debug('configBlock', configBlock);
-	});
-	it('view genesis block', async () => {
-		const user = helper.getOrgAdmin(undefined, 'orderer');
-		const channel = helper.prepareChannel(channelName);
-		const orderer = helper.newOrderers()[0];
-		await orderer.connect();
-		return await ChannelUtil.getGenesisBlock(channel, user, orderer);
-	});
-});
 
 
 

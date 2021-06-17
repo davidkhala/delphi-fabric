@@ -13,7 +13,8 @@
     "prestart": "./docker.sh prepareNetwork",
     "start": "binPath=$PWD/common/bin channelName=allchannel mocha app/channelSetup.js --grep \"^channelSetup\"",
     "poststart": "./docker.sh cc",
-    "stop": "./docker.sh down"
+    "stop": "./docker.sh down",
+    "channelSetup": "mocha app/channelSetup.js --grep ^channelSetup"
   },
   "license": "Apache-2.0",
   "dependencies": {
@@ -24,7 +25,7 @@
   },
   "devDependencies": {
     "lerna": "latest",
-    "mocha": "latest",
+    "mocha": "latest-6",
     "khala-logger": "latest"
   }
 }

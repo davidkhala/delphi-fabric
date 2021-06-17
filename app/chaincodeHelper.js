@@ -5,37 +5,32 @@ const path = require('path');
 const {discoveryChaincodeInterestBuilder} = require('../common/nodejs/serviceDiscovery');
 const {EndorseALL} = require('../common/nodejs/endorseResultInterceptor');
 const chaincodeConfig = require('../config/chaincode.json');
+const {couchDBIndex} = require('../common/nodejs/couchdb');
 
 const {homeResolve} = require('khala-light-util');
 
-const prepareInstall = async ({chaincodeId}, includeDependency) => {
-	const chaincodeRelativePath = chaincodeConfig[chaincodeId].path;
-	const chaincodeType = chaincodeConfig[chaincodeId].type;
+const prepareInstall = async ({chaincodeId}, binManager) => {
+	const {path: chaincodeRelativePath, type: Type, couchDBIndexes} = chaincodeConfig[chaincodeId];
+
 	const chaincodePath = homeResolve(chaincodeRelativePath);
 	const chaincodePackage = new ChaincodePackage({
 		Path: chaincodePath,
-		Type: chaincodeType,
+		Type,
 		Label: chaincodeId
 	});
 	const [tmpDir, t1] = tmp.createTmpDir();
 	const ccPack = path.resolve(tmpDir, 'ccPackage.tar.gz');
-	if (includeDependency) {
-		await chaincodePackage.pack(ccPack);
-	} else {
-		const BinManager = require('../common/nodejs/binManager');
-		const binManager = new BinManager();
-		await chaincodePackage.pack(ccPack, binManager);
+
+	if (Array.isArray(couchDBIndexes)) {
+		couchDBIndex(path.resolve(chaincodePath, 'META-INF'), undefined, undefined, ...couchDBIndexes);
 	}
+	await chaincodePackage.pack(ccPack, binManager);
 
-
-	//TODO metadataPath = path.resolve(chaincodePath, 'META-INF');// the name is arbitrary
-
-	//TODO couchDBIndex(metadataPath, undefined, ...chaincodeConfig[chaincodeId].couchDBIndexes);
 
 	return [ccPack, t1];
 };
 const install = async (peers, {chaincodeId}, user) => {
-	const [ccPack, t1] = await prepareInstall({chaincodeId}, !process.env.binPath);
+	const [ccPack, t1] = await prepareInstall({chaincodeId});
 	const chaincodeAction = new ChaincodeAction(peers, user, undefined, EndorseALL);
 	chaincodeAction.setInitRequired(true);
 	const result = await chaincodeAction.install(ccPack, true);

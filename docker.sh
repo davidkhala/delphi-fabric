@@ -8,8 +8,8 @@ down() {
 }
 up() {
 	prepareNetwork
-	channelName=allchannel mocha app/channelSetup.js --grep "^channelSetup"
-
+	export channelName=allchannel
+	npm run channelSetup
 }
 
 prepareNetwork() {
@@ -22,8 +22,8 @@ restart() {
 cc() {
 	mocha ./cc/golang/diagnose/install.js
 	mocha ./cc/golang/diagnose/invoke.js --grep "^chaincode Initialize init$"
-	mocha ./cc/node/diagnose/install.js
-	mocha ./cc/node/diagnose/invoke.js --grep "^chaincode Initialize init$"
+#	mocha ./cc/node/diagnose/install.js
+#	mocha ./cc/node/diagnose/invoke.js --grep "^chaincode Initialize init$"
 }
 if [[ -z "$1" ]]; then
 	export anchor=true

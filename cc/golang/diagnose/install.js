@@ -11,7 +11,6 @@ describe('install and approve', () => {
 
 	const operator = new ChaincodeDefinitionOperator('allchannel');
 
-
 	let PackageIDs;
 	it('install', async function () {
 		const allPeers = helper.allPeers();

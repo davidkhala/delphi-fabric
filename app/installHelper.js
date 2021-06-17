@@ -24,17 +24,17 @@ const installs = async (chaincodeId, orgName, peerIndexes = Object.keys(globalCo
 };
 const installAll = async (chaincodeId, channelName) => {
 	const packageIDs = {};
-	const partialResult = async (peerOrg, peerIndexes) => {
+	const installOnOrg = async (peerOrg, peerIndexes) => {
 		const package_id = await installs(chaincodeId, peerOrg, peerIndexes);
 		packageIDs[peerOrg] = package_id;
 	};
 	if (channelName) {
 		for (const [peerOrg, {peerIndexes}] of Object.entries(globalConfig.channels[channelName].organizations)) {
-			await partialResult(peerOrg, peerIndexes);
+			await installOnOrg(peerOrg, peerIndexes);
 		}
 	} else {
 		for (const [peerOrg, {peers}] of Object.entries(globalConfig.organizations)) {
-			await partialResult(peerOrg, Object.keys(peers));
+			await installOnOrg(peerOrg, Object.keys(peers));
 		}
 	}
 	return packageIDs;

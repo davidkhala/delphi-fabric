@@ -1,11 +1,12 @@
 const assert = require('assert');
 
 const helper = require('../../../app/helper');
-const {invoke} = require('../../../app/invokeHelper');
+const {invoke, query} = require('../../../app/invokeHelper');
 const {
 	putRaw, getRaw, whoami, putBatch, list, get, put, chaincodeID, getEndorsement, putEndorsement, getPage, getCertID, peerMSPID,
-	getPrivate, putPrivate, putImplicit, getImplicit, chaincodePing,
+	getPrivate, putPrivate, putImplicit, getImplicit, chaincodePing, richQuery
 } = require('./diagnoseInvoke');
+
 const {getResponses} = require('../../../common/nodejs/formatter/proposalResponse');
 const chaincodeId = 'diagnose';
 const logger = require('khala-logger/log4js').consoleLogger('chaincode:diagnose');
@@ -127,6 +128,33 @@ describe('chaincode invoke', () => {
 		await multiEndorseShouldSuccess(endorseKey);
 	});
 });
+describe('couchdb', () => {
+	const peers = helper.allPeers(org2);
+	const key = 'david';
+	const value = 'khala';
+	it('write', async () => {
+
+		await put(peers, org1, key, value);
+		// validate write
+		const result = await get(peers, org1, key);
+		console.debug(result);
+	});
+	const {base64} = require('khala-nodeutils/format');
+	it('read', async () => {
+
+		const results = await richQuery(peers, org1);
+		for (const result of results) {
+			const {Namespace, Key, Value} = JSON.parse(result)[0];
+			assert.strictEqual(Namespace, 'diagnose');
+			assert.strictEqual(Key, key);
+			const {Time, Value: valueRaw} = JSON.parse(Value);
+			assert.strictEqual(JSON.parse(base64.decode(valueRaw)), value);
+		}
+
+		// Error:no_usable_index,  Status Code:400,  Reason:No index exists for this sort, try indexing by the sort fields.' },
+
+	});
+});
 describe('cross chaincode', () => {
 	// TODO
 });
@@ -136,7 +164,7 @@ describe('chaincode query after content filled', () => {
 		const queryResult = await list(peers, org);
 		logger.info(queryResult);
 	});
-	it('tricky: chaincode ID fron NameSpace', async () => {
+	it('tricky: chaincode ID from NameSpace', async () => {
 		const org = 'icdd';
 		const queryResult = await chaincodeID(peers, org);
 		logger.info(queryResult);

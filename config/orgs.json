@@ -58,13 +58,15 @@
           "container_name": "peer0.astri.org",
           "port": 7051,
           "couchDB": {
-            "container_name": "couchdb.peer0.astri.org",
-            "port": 7984
+            "container_name": "couchdb.peer0.astri.org"
           }
         },
         {
           "container_name": "peer1.astri.org",
-          "port": 7151
+          "port": 7151,
+          "couchDB": {
+            "container_name": "couchdb.peer1.astri.org"
+          }
         }
       ],
       "ca": {

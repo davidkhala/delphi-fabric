@@ -1,5 +1,6 @@
 const {invoke, query} = require('../../../app/invokeHelper');
 const {base64} = require('khala-nodeutils/format');
+const {queryBuilder} = require('../../../common/nodejs/couchdb');
 const chaincodeId = 'diagnose';
 exports.put = async (peers, clientOrg, key, value) => {
 	const fcn = 'put';
@@ -52,11 +53,9 @@ exports.cross = async (peers, clientOrg, targetChaincode, fcn, args) => {
 	});
 };
 
-const {queryBuilder} = require('../../../common/nodejs/couchdb');
-
-exports.richQuery = async (peers, clientOrg, selector) => {
+exports.richQuery = async (peers, clientOrg) => {
 	const fcn = 'richQuery';
-	const args = [queryBuilder(selector, ['Time'], 1)];
+	const args = [queryBuilder(undefined, ['Time'], 1)];
 	return query(peers, clientOrg, chaincodeId, {
 		fcn, args
 	});
