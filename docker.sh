@@ -22,8 +22,11 @@ restart() {
 cc() {
 	mocha ./cc/golang/diagnose/install.js
 	mocha ./cc/golang/diagnose/invoke.js --grep "^chaincode Initialize init$"
-#	mocha ./cc/node/diagnose/install.js
-#	mocha ./cc/node/diagnose/invoke.js --grep "^chaincode Initialize init$"
+
+}
+nodejscc() {
+	mocha ./cc/node/diagnose/install.js
+	mocha ./cc/node/diagnose/invoke.js --grep "^chaincode Initialize init$"
 }
 if [[ -z "$1" ]]; then
 	export anchor=true
