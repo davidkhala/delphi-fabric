@@ -31,7 +31,10 @@
   },
   "nodeDiagnose": {
     "type": "node",
-    "path": "Documents/chaincode/nodejs/diagnose"
+    "path": "Documents/chaincode/nodejs/diagnose",
+    "couchDBIndexes": [
+      "Time"
+    ]
   },
   "nodeStress": {
     "type": "node",
