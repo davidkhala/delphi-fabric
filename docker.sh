@@ -31,7 +31,7 @@ nodejscc() {
 if [[ -z "$1" ]]; then
 	export anchor=true
 	restart
-	cc
+	nodejscc
 else
 	"$@"
 fi
