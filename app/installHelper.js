@@ -44,22 +44,26 @@ class ChaincodeDefinitionOperator {
 	/**
 	 *
 	 * @param {string} channelName
+	 * @param {Client.User} admin
+	 * @param {Peer[]} peers
+	 * @param {boolean} [init_required]
 	 */
-	constructor(channelName) {
-		this.channel = helper.prepareChannel(channelName);
+	constructor(channelName, admin, peers, init_required) {
+		const channel = helper.prepareChannel(channelName);
 		this.waitForConsensus = 1000;
+		const chaincodeAction = new ChaincodeAction(peers, admin, channel, EndorseALL);
+		chaincodeAction.setInitRequired(init_required);
+		Object.assign(this, {chaincodeAction, peers, admin});
 	}
 
-	async approves({sequence, PackageID}, orgName, peers, orderer, gate) {
-		const {channel, waitForConsensus} = this;
+	async approves({sequence, PackageID}, orderer, gate) {
+		const {waitForConsensus, peers, chaincodeAction} = this;
 		for (const peer of peers) {
 			await peer.connect();
 		}
 		await orderer.connect();
-		const user = helper.getOrgAdmin(orgName);
 		const {name} = prepare({PackageID});
-		const chaincodeAction = new ChaincodeAction(peers, user, channel, EndorseALL);
-		chaincodeAction.setInitRequired(true);
+
 		const endorsementPolicy = {
 			gate
 		};
@@ -70,15 +74,12 @@ class ChaincodeDefinitionOperator {
 		await chaincodeAction.approve({name, PackageID, sequence}, orderer, waitForConsensus);
 	}
 
-	async commitChaincodeDefinition({sequence, name}, orgName, peers, orderer, gate) {
-		const {channel} = this;
+	async commitChaincodeDefinition({sequence, name}, orderer, gate) {
+		const {peers, chaincodeAction} = this;
 		for (const peer of peers) {
 			await peer.connect();
 		}
 		await orderer.connect();
-		const user = helper.getOrgAdmin(orgName);
-		const chaincodeAction = new ChaincodeAction(peers, user, channel, EndorseALL);
-		chaincodeAction.setInitRequired(true);
 		const endorsementPolicy = {gate};
 		Object.assign(endorsementPolicy, getEndorsePolicy(name));
 		chaincodeAction.setEndorsementPolicy(endorsementPolicy);
@@ -86,14 +87,11 @@ class ChaincodeDefinitionOperator {
 		await chaincodeAction.commitChaincodeDefinition({name, sequence}, orderer);
 	}
 
-	async checkCommitReadiness({sequence, name}, orgName, peers, gate) {
-		const {channel} = this;
+	async checkCommitReadiness({sequence, name}, gate) {
+		const {peers, chaincodeAction} = this;
 		for (const peer of peers) {
 			await peer.connect();
 		}
-		const user = helper.getOrgAdmin(orgName);
-
-		const chaincodeAction = new ChaincodeAction(peers, user, channel, EndorseALL, logger);
 		const endorsementPolicy = {gate};
 		Object.assign(endorsementPolicy, getEndorsePolicy(name));
 		chaincodeAction.setEndorsementPolicy(endorsementPolicy);
@@ -102,44 +100,40 @@ class ChaincodeDefinitionOperator {
 	}
 
 	async queryDefinition(orgName, peerIndexes, name) {
-		const {channel} = this;
-		const peers = helper.newPeers(peerIndexes, orgName);
+		const {peers, chaincodeAction} = this;
+
 		for (const peer of peers) {
 			await peer.connect();
 		}
-		const user = helper.getOrgAdmin(orgName);
-		const chaincodeAction = new ChaincodeAction(peers, user, channel, EndorseALL);
 		return await chaincodeAction.queryChaincodeDefinition(name);
 	}
 
 	/**
 	 *
-	 * @param {string} org
 	 * @param {string} chaincodeId
 	 * @param {number} sequence
 	 * @param {Orderer} _orderer
 	 * @param {string} [_gate]
 	 */
-	async queryInstalledAndApprove(org, chaincodeId, sequence, _orderer, _gate) {
-		const peers = helper.newPeers([0, 1], org); // TODO use discovery to find more peer
+	async queryInstalledAndApprove(chaincodeId, sequence, _orderer, _gate) {
+
+		const {peers, admin} = this;
 		for (const peer of peers) {
 			await peer.connect();
-
 		}
-		const user = helper.getOrgAdmin(org);
-		const queryHub = new QueryHub(peers, user);
+		const queryHub = new QueryHub(peers, admin);
 		const queryResult = await queryHub.chaincodesInstalled(chaincodeId);
 		let PackageID;
 		for (const entry of queryResult) {
 			const PackageIDs = Object.keys(entry);
 			for (const reference of Object.values(entry)) {
 				for (const [channelName, {chaincodes}] of Object.entries(reference)) {
-					console.info(channelName, chaincodes);
+					logger.info(channelName, chaincodes);
 				}
 			}
 			if (PackageIDs.length > 1) {
-				console.error(queryResult);
-				console.error({PackageIDs: PackageIDs});
+				logger.error(queryResult);
+				logger.error({PackageIDs: PackageIDs});
 				throw Error('found multiple installed packageID, could not decide which to approve');
 
 			} else {
@@ -150,7 +144,7 @@ class ChaincodeDefinitionOperator {
 			}
 		}
 		if (PackageID) {
-			await this.approves({PackageID, sequence}, org, peers, _orderer, _gate);
+			await this.approves({PackageID, sequence}, _orderer, _gate);
 		}
 
 	}
