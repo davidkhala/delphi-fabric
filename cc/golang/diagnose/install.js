@@ -7,7 +7,7 @@ const logger = require('khala-logger/log4js').consoleLogger('chaincode:diagnose'
 const orderers = helper.newOrderers();
 const orderer = orderers[0];
 const gate = `AND('icddMSP.member', 'astriMSP.member')`;
-const init_required = true;// TODO could we skip it somewhere
+const init_required = true;
 
 describe('install and approve', () => {
 
