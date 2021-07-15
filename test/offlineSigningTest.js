@@ -6,7 +6,14 @@ const UserManager = require('../common/nodejs/builder/user');
 const ClientManager = require('../common/nodejs/builder/client');
 const EventHub = require('../common/nodejs/builder/eventHub');
 const {emptyChannel} = require('../common/nodejs/builder/channel');
-const {serializeProposal, deserializeProposal, serializeToHex, deserializeFromHex, serializeProposalResponse, deserializeProposalResponse} = require('../common/nodejs/serialize');
+const {
+	serializeProposal,
+	deserializeProposal,
+	serializeToHex,
+	deserializeFromHex,
+	serializeProposalResponse,
+	deserializeProposalResponse
+} = require('../common/nodejs/formatter/serialize');
 const logger = require('khala-logger/log4js').consoleLogger('test:offline sign');
 const task = async () => {
 

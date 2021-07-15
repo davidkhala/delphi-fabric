@@ -31,14 +31,12 @@ describe('golang/stress', () => {
 		this.timeout(30000);
 		const p1 = context.newPeer(0, org1);
 		const p2 = context.newPeer(0, org2);
-		const transientMap = {
-			key: 'david'
-		};
+
 		const client = context.getOrgAdmin(org1);
 		const channel = context.prepareChannel(channelName, client);
 		const orderer = context.newOrderers()[0];
 
-		await chaincodeHelper.upgrade(channel, [p1, p2], {args: [], transientMap, chaincodeId}, orderer);
+		await chaincodeHelper.upgrade(channel, [p1, p2], {args: [], chaincodeId}, orderer);
 
 
 	});
