@@ -58,3 +58,23 @@ describe('queryTransaction', () => {
 		logger.info(result);
 	});
 });
+
+describe('query lifecycle chaincode', () => {
+	const org1 = 'icdd';
+	const peers = helper.newPeers([0], org1);
+	const admin = helper.getOrgAdmin(org1);
+	const queryHub = new QueryHub(peers, admin);
+	before(async () => {
+		for (const peer of peers) {
+			await peer.connect();
+		}
+	});
+	it('all chaincodes', async function () {
+		this.timeout(30000);
+		const installed = await queryHub.chaincodesInstalled();
+		console.debug(installed);
+
+	});
+
+});
+
