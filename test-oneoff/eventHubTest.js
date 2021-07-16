@@ -5,7 +5,7 @@ const channelName = 'allchannel';
 const helper = require('../app/helper');
 const org = 'astri.org';
 const logger = require('khala-logger/log4js').consoleLogger('test:eventHub');
-const {header, metadata} = require('../common/nodejs/formatter/blockDecoder');
+const BlockDecoder = require('../common/nodejs/formatter/blockDecoder');
 describe('eventhub', () => {
 
 	const user = helper.getOrgAdmin(org, 'peer');
@@ -27,8 +27,8 @@ describe('eventhub', () => {
 				return;
 			}
 			const {block} = event;
-			logger.debug('header', header(block));
-			logger.debug('metadata', metadata(block));
+			const decoder = new BlockDecoder(block);
+			decoder.data();
 		};
 		eventHub.blockEvent(callback);
 	});
