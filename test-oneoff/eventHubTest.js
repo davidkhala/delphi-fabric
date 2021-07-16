@@ -13,7 +13,7 @@ describe('eventhub', () => {
 	logger.info(channel.toString());
 	const peer = helper.newPeer(0, org);
 
-	it('configTx', async function () {
+	it('block parser', async function () {
 		this.timeout(30000);
 		const eventHub = new EventHub(channel, peer.eventer);
 		const identityContext = UserUtil.getIdentityContext(user);
