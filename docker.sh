@@ -11,6 +11,10 @@ up() {
 	export channelName=allchannel
 	npm run channelSetup
 }
+mirror() {
+	export channelName=mirror
+	npm run channelSetup
+}
 
 prepareNetwork() {
 	action=up node ./bootstrap.js

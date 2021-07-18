@@ -27,6 +27,29 @@
     }
   },
   "channels": {
+    "mirror": {
+      "file": "Documents/delphi-fabric/config/configtx/mirror.block",
+      "organizations": {
+        "astri.org": {
+          "peerIndexes": [
+            0,
+            1
+          ],
+          "anchorPeerIndexes": [
+            0
+          ]
+        },
+        "icdd": {
+          "peerIndexes": [
+            0,
+            1
+          ],
+          "anchorPeerIndexes": [
+            0
+          ]
+        }
+      }
+    },
     "allchannel": {
       "file": "Documents/delphi-fabric/config/configtx/all.block",
       "organizations": {
