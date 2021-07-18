@@ -3,7 +3,6 @@ const ChaincodePackage = require('../common/nodejs/chaincodePackage');
 const tmp = require('khala-nodeutils/tmp');
 const path = require('path');
 const {discoveryChaincodeInterestBuilder} = require('../common/nodejs/serviceDiscovery');
-const {EndorseALL} = require('../common/nodejs/endorseResultInterceptor');
 const chaincodeConfig = require('../config/chaincode.json');
 const {couchDBIndex} = require('../common/nodejs/couchdb');
 
@@ -24,6 +23,7 @@ const prepareInstall = async ({chaincodeId}, binManager) => {
 	if (Array.isArray(couchDBIndexes)) {
 		couchDBIndex(path.resolve(chaincodePath, 'META-INF'), undefined, undefined, ...couchDBIndexes);
 	}
+	// TODO clean vendor and re-install go vendor
 	await chaincodePackage.pack(ccPack, binManager);
 
 
@@ -31,7 +31,7 @@ const prepareInstall = async ({chaincodeId}, binManager) => {
 };
 const install = async (peers, {chaincodeId}, user) => {
 	const [ccPack, t1] = await prepareInstall({chaincodeId});
-	const chaincodeAction = new ChaincodeAction(peers, user, undefined, EndorseALL);
+	const chaincodeAction = new ChaincodeAction(peers, user);
 	const result = await chaincodeAction.install(ccPack, true);
 	return [result, t1];
 };

@@ -1,7 +1,7 @@
 const assert = require('assert');
 
 const helper = require('../../../app/helper');
-const {invoke, query} = require('../../../app/invokeHelper');
+const InvokeHelper = require('../../../app/invokeHelper');
 const {
 	putRaw, getRaw, whoami, putBatch, list, get, put, chaincodeID, getEndorsement, putEndorsement, getPage, getCertID, peerMSPID,
 	getPrivate, putPrivate, putImplicit, getImplicit, chaincodePing, richQuery
@@ -14,11 +14,13 @@ const {TxValidationCode} = require('../../../common/nodejs/formatter/constants')
 const org1 = 'icdd';
 const org2 = 'astri.org';
 const peers = helper.allPeers();
+const {channel} = process.env;
 describe('chaincode Initialize', () => {
 
 	it('init', async () => {
 		const org = 'icdd';
-		await invoke(peers, org, chaincodeId, {
+		const invokeHelper = new InvokeHelper(peers, org, chaincodeId, channel);
+		await invokeHelper.invoke({
 			init: true,
 		});
 	});

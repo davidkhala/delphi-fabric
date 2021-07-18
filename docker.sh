@@ -12,6 +12,7 @@ up() {
 	npm run channelSetup
 }
 mirror() {
+	# TODO
 	export channelName=mirror
 	npm run channelSetup
 }
@@ -35,7 +36,7 @@ nodejscc() {
 if [[ -z "$1" ]]; then
 	export anchor=true
 	restart
-	nodejscc
+	cc
 else
 	"$@"
 fi

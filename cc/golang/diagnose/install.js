@@ -8,6 +8,7 @@ const orderers = helper.newOrderers();
 const orderer = orderers[0];
 const gate = `AND('icddMSP.member', 'astriMSP.member')`;
 const init_required = true;
+const {channel = 'allchannel'} = process.env;
 
 describe('install and approve', () => {
 
@@ -27,7 +28,8 @@ describe('install and approve', () => {
 		for (const org of orgs) {
 			const admin = helper.getOrgAdmin(org);
 			const peers = helper.newPeers([0, 1], org);
-			const operator = new ChaincodeDefinitionOperator('allchannel', admin, peers, init_required);
+			const operator = new ChaincodeDefinitionOperator(channel, admin, peers, init_required);
+			await operator.connect();
 			await operator.queryInstalledAndApprove(chaincodeID, sequence, orderer);
 		}
 
@@ -38,7 +40,8 @@ describe('install and approve', () => {
 		const org = 'icdd';
 		const admin = helper.getOrgAdmin(org);
 		const peers = helper.newPeers([0, 1], org);
-		const operator = new ChaincodeDefinitionOperator('allchannel', admin, peers, init_required);
+		const operator = new ChaincodeDefinitionOperator(channel, admin, peers, init_required);
+		await operator.connect();
 		await operator.queryInstalledAndApprove(chaincodeID, sequence, orderer, gate);
 	});
 });
@@ -49,7 +52,8 @@ describe('commit', () => {
 		for (const org of ['icdd', 'astri.org']) {
 			const peers = helper.newPeers([0, 1], org);
 			const admin = helper.getOrgAdmin(org);
-			const operator = new ChaincodeDefinitionOperator('allchannel', admin, peers, init_required);
+			const operator = new ChaincodeDefinitionOperator(channel, admin, peers, init_required);
+			await operator.connect();
 			const readyState = await operator.checkCommitReadiness({name: chaincodeID, sequence}, _gate);
 			logger.info(org, readyState);
 		}
@@ -65,7 +69,8 @@ describe('commit', () => {
 		const org = 'icdd';
 		const peers = [helper.newPeer(0, 'astri.org'), helper.newPeer(0, 'icdd')];
 		const admin = helper.getOrgAdmin(org);
-		const operator = new ChaincodeDefinitionOperator('allchannel', admin, peers, init_required);
+		const operator = new ChaincodeDefinitionOperator(channel, admin, peers, init_required);
+		await operator.connect();
 		await operator.commitChaincodeDefinition({name: _chaincodeID, sequence}, orderer, _gate);
 	};
 	it('commit', async () => {
@@ -80,7 +85,8 @@ describe('commit', () => {
 		const org = 'icdd';
 		const peers = [helper.newPeer(0, 'astri.org'), helper.newPeer(0, 'icdd')];
 		const admin = helper.getOrgAdmin(org);
-		const operator = new ChaincodeDefinitionOperator('allchannel', admin, peers, init_required);
+		const operator = new ChaincodeDefinitionOperator(channel, admin, peers, init_required);
+		await operator.connect();
 		const r1 = await operator.queryDefinition('icdd', [0, 1], chaincodeID);
 		logger.debug(r1);
 		logger.debug(r1[0].collections.config[0].static_collection_config);

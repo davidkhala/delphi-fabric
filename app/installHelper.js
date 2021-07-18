@@ -3,7 +3,6 @@ const ChaincodeAction = require('../common/nodejs/chaincodeOperation');
 const helper = require('./helper');
 const globalConfig = require('../config/orgs.json');
 const logger = require('khala-logger/log4js').consoleLogger('install helper');
-const {EndorseALL} = require('../common/nodejs/endorseResultInterceptor');
 const QueryHub = require('../common/nodejs/query');
 const assert = require('assert');
 const prepare = ({PackageID}) => {
@@ -31,10 +30,12 @@ const installAll = async (chaincodeId, channelName) => {
 	if (channelName) {
 		for (const [peerOrg, {peerIndexes}] of Object.entries(globalConfig.channels[channelName].organizations)) {
 			await installOnOrg(peerOrg, peerIndexes);
+			logger.info('[DONE] installOnOrg', peerOrg);
 		}
 	} else {
 		for (const [peerOrg, {peers}] of Object.entries(globalConfig.organizations)) {
 			await installOnOrg(peerOrg, Object.keys(peers));
+			logger.info('[DONE] installOnOrg', peerOrg);
 		}
 	}
 	return packageIDs;
@@ -51,16 +52,14 @@ class ChaincodeDefinitionOperator {
 	constructor(channelName, admin, peers, init_required) {
 		const channel = helper.prepareChannel(channelName);
 		this.waitForConsensus = 1000;
-		const chaincodeAction = new ChaincodeAction(peers, admin, channel, EndorseALL);
+		const chaincodeAction = new ChaincodeAction(peers, admin, channel);
 		chaincodeAction.setInitRequired(init_required);
 		Object.assign(this, {chaincodeAction, peers, admin});
 	}
 
 	async approves({sequence, PackageID}, orderer, gate) {
-		const {waitForConsensus, peers, chaincodeAction} = this;
-		for (const peer of peers) {
-			await peer.connect();
-		}
+		const {waitForConsensus, chaincodeAction} = this;
+
 		await orderer.connect();
 		const {name} = prepare({PackageID});
 
@@ -75,10 +74,7 @@ class ChaincodeDefinitionOperator {
 	}
 
 	async commitChaincodeDefinition({sequence, name}, orderer, gate) {
-		const {peers, chaincodeAction} = this;
-		for (const peer of peers) {
-			await peer.connect();
-		}
+		const {chaincodeAction} = this;
 		await orderer.connect();
 		const endorsementPolicy = {gate};
 		Object.assign(endorsementPolicy, getEndorsePolicy(name));
@@ -88,10 +84,8 @@ class ChaincodeDefinitionOperator {
 	}
 
 	async checkCommitReadiness({sequence, name}, gate) {
-		const {peers, chaincodeAction} = this;
-		for (const peer of peers) {
-			await peer.connect();
-		}
+		const {chaincodeAction} = this;
+
 		const endorsementPolicy = {gate};
 		Object.assign(endorsementPolicy, getEndorsePolicy(name));
 		chaincodeAction.setEndorsementPolicy(endorsementPolicy);
@@ -100,12 +94,17 @@ class ChaincodeDefinitionOperator {
 	}
 
 	async queryDefinition(orgName, peerIndexes, name) {
-		const {peers, chaincodeAction} = this;
+		const {chaincodeAction} = this;
 
+
+		return await chaincodeAction.queryChaincodeDefinition(name);
+	}
+
+	async connect() {
+		const {peers} = this;
 		for (const peer of peers) {
 			await peer.connect();
 		}
-		return await chaincodeAction.queryChaincodeDefinition(name);
 	}
 
 	/**
@@ -118,9 +117,7 @@ class ChaincodeDefinitionOperator {
 	async queryInstalledAndApprove(chaincodeId, sequence, _orderer, _gate) {
 
 		const {peers, admin} = this;
-		for (const peer of peers) {
-			await peer.connect();
-		}
+
 		const queryHub = new QueryHub(peers, admin);
 		const queryResult = await queryHub.chaincodesInstalled(chaincodeId);
 		let PackageID;
