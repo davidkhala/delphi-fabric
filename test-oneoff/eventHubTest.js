@@ -36,36 +36,4 @@ describe('eventhub', () => {
 		eventHub.blockEvent(callback);
 	});
 });
-describe('tx replay', () => {
-// TODO WIP
-	const InvokeHelper = require('../app/invokeHelper')
-	const user = helper.getOrgAdmin(org, 'peer');
-	const channel = helper.prepareChannel('allchannel');
-	logger.info(channel.toString());
-	const peer = helper.newPeer(0, org);
-
-	it('block parser', async function () {
-		this.timeout(0);
-		const eventHub = new EventHub(channel, peer.eventer);
-		const identityContext = UserUtil.getIdentityContext(user);
-		const startBlock = OLDEST;
-		const endBlock = NEWEST;
-		eventHub.build(identityContext, {startBlock, endBlock});
-		await eventHub.connect();
-		const callback = async (error, event) => {
-			if (error) {
-				logger.error(error);
-				return;
-			}
-			const {block} = event;
-			const decoder = new BlockDecoder(block);
-			const {number} = decoder.header();
-			logger.debug(`---block ${number}---`);
-			const [_, txs] = decoder.data();
-			logger.debug(txs);
-
-		};
-		eventHub.blockEvent(callback);
-	});
-});
 

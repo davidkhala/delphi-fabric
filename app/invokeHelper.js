@@ -34,13 +34,13 @@ class InvokeHelper {
 		return result.queryResults;
 	}
 
-	async invoke({fcn, init, args, transientMap}, orderer = helper.newOrderers()[0], finalityRequired) {
+	async invoke({fcn, init, args, transientMap, nonce}, orderer = helper.newOrderers()[0], finalityRequired) {
 		await this.connect();
 		this.logger.debug('invoke', 'client org', this._clientOrg);
 		const {tx} = this;
 		await orderer.connect();
 
-		return await tx.submit({fcn: init ? fcn : undefined, args, transientMap, init}, orderer, finalityRequired);
+		return await tx.submit({fcn: init ? fcn : undefined, args, transientMap, init, nonce}, orderer, finalityRequired);
 	}
 }
 
