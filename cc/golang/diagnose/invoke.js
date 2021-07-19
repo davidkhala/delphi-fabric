@@ -14,12 +14,13 @@ const {TxValidationCode} = require('../../../common/nodejs/formatter/constants')
 const org1 = 'icdd';
 const org2 = 'astri.org';
 const peers = helper.allPeers();
-const {channel} = process.env;
+const {channelName} = process.env;
 describe('chaincode Initialize', () => {
 
-	it('init', async () => {
+	it('init', async function () {
+		this.timeout(30000);
 		const org = 'icdd';
-		const invokeHelper = new InvokeHelper(peers, org, chaincodeId, channel);
+		const invokeHelper = new InvokeHelper(peers, org, chaincodeId, channelName);
 		await invokeHelper.invoke({
 			init: true,
 		});

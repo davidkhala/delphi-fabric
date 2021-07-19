@@ -2,13 +2,14 @@ const InvokeHelper = require('../../../app/invokeHelper');
 const {base64} = require('khala-nodeutils/format');
 const {queryBuilder} = require('../../../common/nodejs/couchdb');
 const chaincodeId = 'diagnose';
+const {channelName} = process.env;
 const invoke = async (peers, clientOrg, {fcn, args, transientMap}) => {
-	const invokeHelper = new InvokeHelper(peers, clientOrg, chaincodeId, process.env.channelName, {args, transientMap});
-	return await invokeHelper.invoke({fcn});
+	const invokeHelper = new InvokeHelper(peers, clientOrg, chaincodeId, channelName);
+	return await invokeHelper.invoke({fcn, args, transientMap});
 };
 const query = async (peers, clientOrg, {fcn, args, transientMap}) => {
-	const invokeHelper = new InvokeHelper(peers, clientOrg, chaincodeId, process.env.channelName, {args, transientMap});
-	return await invokeHelper.query({fcn});
+	const invokeHelper = new InvokeHelper(peers, clientOrg, chaincodeId, channelName);
+	return await invokeHelper.query({fcn, args, transientMap});
 };
 exports.put = async (peers, clientOrg, key, value) => {
 	const fcn = 'put';

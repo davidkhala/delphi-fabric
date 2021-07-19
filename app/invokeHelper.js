@@ -2,14 +2,21 @@ const helper = require('./helper');
 const Transaction = require('../common/nodejs/transaction');
 
 class InvokeHelper {
-	constructor(endorsingPeers, clientOrg, chaincodeId, channelName = 'allchannel', {args, transientMap} = {}) {
+	/**
+	 *
+	 * @param endorsingPeers
+	 * @param clientOrg
+	 * @param chaincodeId
+	 * @param [channelName]
+	 */
+	constructor(endorsingPeers, clientOrg, chaincodeId, channelName = 'allchannel') {
 		const user = helper.getOrgAdmin(clientOrg);
 		const channel = helper.prepareChannel(channelName);
-		this.logger = require('khala-logger/log4js').consoleLogger('transaction helper');
+		const logger = require('khala-logger/log4js').consoleLogger('transaction helper');
+		const tx = new Transaction(endorsingPeers, user, channel, chaincodeId, logger);
 		this._clientOrg = clientOrg;
-		const tx = new Transaction(endorsingPeers, user, channel, chaincodeId, this.logger);
 
-		Object.assign(this, {tx, peers: endorsingPeers, args, transientMap});
+		Object.assign(this, {tx, peers: endorsingPeers, logger});
 	}
 
 	async connect() {
@@ -18,22 +25,22 @@ class InvokeHelper {
 		}
 	}
 
-	async query(fcn) {
+	async query({fcn, args, transientMap}) {
 		await this.connect();
 		this.logger.debug('query', 'client org', this._clientOrg);
-		const {args, transientMap, tx} = this;
+		const {tx} = this;
 		const result = await tx.evaluate({fcn, args, transientMap});
 		result.queryResults = result.queryResults.map(entry => entry.toString());
 		return result.queryResults;
 	}
 
-	async invoke({fcn, init}, orderer = helper.newOrderers()[0]) {
+	async invoke({fcn, init, args, transientMap}, orderer = helper.newOrderers()[0], finalityRequired) {
 		await this.connect();
 		this.logger.debug('invoke', 'client org', this._clientOrg);
-		const {tx, args, transientMap} = this;
+		const {tx} = this;
 		await orderer.connect();
 
-		return await tx.submit({fcn: init ? fcn : undefined, args, transientMap, init}, orderer);
+		return await tx.submit({fcn: init ? fcn : undefined, args, transientMap, init}, orderer, finalityRequired);
 	}
 }
 

@@ -63,9 +63,9 @@ exports.gen = ({MSPROOT, configtxFile}) => {
 
 	const OrdererConfig = {
 		OrdererType: globalConfig.orderer.type,
-		BatchTimeout: '1s',
+		BatchTimeout: '2s',
 		BatchSize: {
-			MaxMessageCount: 1,
+			MaxMessageCount: 10,
 			AbsoluteMaxBytes: '99 MB',
 			PreferredMaxBytes: '512 KB'
 		},

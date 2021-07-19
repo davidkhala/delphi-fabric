@@ -14,9 +14,9 @@ Profiles:
       V2_0: true
     Orderer: &ref_4
       OrdererType: etcdraft
-      BatchTimeout: 1s
+      BatchTimeout: 2s
       BatchSize:
-        MaxMessageCount: 1
+        MaxMessageCount: 10
         AbsoluteMaxBytes: 99 MB
         PreferredMaxBytes: 512 KB
       Capabilities:

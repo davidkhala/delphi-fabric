@@ -10,7 +10,7 @@ const gate = `AND('icddMSP.member', 'astriMSP.member')`;
 const init_required = true;
 const {channel = 'allchannel'} = process.env;
 
-describe('install and approve', () => {
+describe(`install and approve ${chaincodeID}`, () => {
 
 	let PackageIDs;
 	it('install', async function () {
@@ -45,7 +45,7 @@ describe('install and approve', () => {
 		await operator.queryInstalledAndApprove(chaincodeID, sequence, orderer, gate);
 	});
 });
-describe('commit', () => {
+describe(`commit ${chaincodeID}`, () => {
 
 
 	const queryCommitReadiness = async (sequence, _gate) => {
@@ -73,7 +73,8 @@ describe('commit', () => {
 		await operator.connect();
 		await operator.commitChaincodeDefinition({name: _chaincodeID, sequence}, orderer, _gate);
 	};
-	it('commit', async () => {
+	it('commit', async function () {
+		this.timeout(30000);
 		await commit(chaincodeID, 1);
 	});
 	it.skip('commit: with gate', async () => {
