@@ -30,7 +30,6 @@ const getCaService = async (port) => {
  */
 const genExtraUser = async ({userName, password}, orgName, nodeType) => {
 	const config = globalConfig.organizations[orgName];
-	const mspId = config.mspid;
 	const caService = await getCaService(config.ca.portHost, orgName);
 
 	const cryptoPath = new CryptoPath(caCryptoConfig, {
@@ -52,7 +51,7 @@ const genExtraUser = async ({userName, password}, orgName, nodeType) => {
 		password: adminPwd
 	});
 
-	const admin = loadFromLocal(adminCryptoPath, nodeType, mspId, true);
+	const admin = loadFromLocal(adminCryptoPath, nodeType, config.mspid, true);
 	return await genUser(caService, cryptoPath, nodeType, admin, {TLS, affiliationRoot: orgName});
 
 };
@@ -82,7 +81,6 @@ const genNSaveClientKeyPair = async (caService, cryptoPath, admin, domain, nodeT
  */
 const genIntermediate = async (parentCADomain, parentCAPort, nodeType) => {
 	const caService = await getCaService(parentCAPort, parentCADomain);
-	const mspId = nodeType === 'orderer' ? globalConfig.orderer.etcdraft.organizations[parentCADomain].mspid : globalConfig.organizations[parentCADomain].mspid;
 	const adminCryptoPath = new CryptoPath(caCryptoConfig, {
 		[nodeType]: {
 			org: parentCADomain
@@ -92,7 +90,7 @@ const genIntermediate = async (parentCADomain, parentCAPort, nodeType) => {
 		},
 		password: adminPwd
 	});
-	const admin = await initAdmin(caService, adminCryptoPath, nodeType, mspId, TLS);
+	const admin = await initAdmin(caService, adminCryptoPath, nodeType);
 	const enrollmentID = `${adminName}.intermediate`;
 	const enrollmentSecret = adminPwd;
 	const result = await intermediateCA.register(caService, admin, {
@@ -111,7 +109,7 @@ const genAll = async () => {
 		const ordererOrgs = globalConfig.orderer.organizations;
 		for (const domain in ordererOrgs) {
 			const ordererConfig = ordererOrgs[domain];
-			const mspId = ordererConfig.mspid;
+			const mspid = ordererConfig.mspid;
 
 			const caService = await getCaService(ordererConfig.ca.portHost, domain);
 			const adminCryptoPath = new CryptoPath(caCryptoConfig, {
@@ -123,7 +121,7 @@ const genAll = async () => {
 				},
 				password: adminPwd
 			});
-			const admin = await init(caService, adminCryptoPath, nodeType, mspId);
+			const admin = await init(caService, adminCryptoPath, nodeType, mspid);
 			await genNSaveClientKeyPair(caService, adminCryptoPath, admin, domain, nodeType);
 			for (const ordererName in ordererConfig.orderers) {
 
@@ -148,7 +146,7 @@ const genAll = async () => {
 
 		for (const domain in peerOrgs) {
 			const peerOrgConfig = peerOrgs[domain];
-			const mspId = peerOrgConfig.mspid;
+			const mspid = peerOrgConfig.mspid;
 			const adminCryptoPath = new CryptoPath(caCryptoConfig, {
 				peer: {
 					org: domain
@@ -159,7 +157,7 @@ const genAll = async () => {
 				password: adminPwd
 			});
 			const caService = await getCaService(peerOrgConfig.ca.portHost);
-			const admin = await init(caService, adminCryptoPath, nodeType, mspId);
+			const admin = await init(caService, adminCryptoPath, nodeType, mspid);
 			const promises = [];
 			await genNSaveClientKeyPair(caService, adminCryptoPath, admin, domain, nodeType);
 			for (let peerIndex = 0; peerIndex < peerOrgConfig.peers.length; peerIndex++) {

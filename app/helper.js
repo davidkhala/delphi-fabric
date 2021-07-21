@@ -152,8 +152,8 @@ const findOrgConfig = (orgName, ordererName) => {
 	return {config: target, portHost, nodeType};
 };
 const getUser = (username, orgName) => {
-	const {config, nodeType} = findOrgConfig(orgName);
-	const mspId = config.mspid;
+	const {config:{mspid}, nodeType} = findOrgConfig(orgName);
+
 	const cryptoPath = new CryptoPath(CRYPTO_CONFIG_DIR, {
 		[nodeType]: {
 			org: orgName
@@ -162,7 +162,7 @@ const getUser = (username, orgName) => {
 			name: username
 		}
 	});
-	return UserUtil.loadFromLocal(cryptoPath, nodeType, mspId);
+	return UserUtil.loadFromLocal(cryptoPath, nodeType, mspid);
 };
 
 const getOrgAdmin = (orgName, nodeType = 'peer') => {

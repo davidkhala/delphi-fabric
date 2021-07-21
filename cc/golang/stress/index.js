@@ -12,7 +12,7 @@ const init_required = false;
 describe('deploy', () => {
 	let packageIds = [];
 	it('install', async function () {
-		this.timeout(60000);
+		this.timeout(0);
 		packageIds = await installAll(chaincodeID);
 		logger.debug(packageIds);
 	});

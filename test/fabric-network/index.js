@@ -61,13 +61,13 @@ describe('fabric-network', () => {
 	describe('diagnose:discovery:eventHub', () => {
 		const discoveryOrg = org1;
 		const globalConfig = require('../../config/orgs.json');
-		const {mspid: mspId} = globalConfig.organizations[discoveryOrg];
+		const {mspid} = globalConfig.organizations[discoveryOrg];
 		const networkConfig = globalConfig;
 		before(async () => {
 			const getPeersByOrgNameCallback = (orgName) => {
 				return helper.newPeers(undefined, orgName);
 			};
-			const discoveryOptions = {mspId, networkConfig, getPeersByOrgNameCallback};
+			const discoveryOptions = {mspId: mspid, networkConfig, getPeersByOrgNameCallback};
 			const network = await gateway.connect(channelName, undefined, orderer, discoveryOptions, true);
 			contractManager = getContractManager(network, chaincodeId);
 		});

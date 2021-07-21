@@ -14,8 +14,7 @@ describe(`install and approve ${chaincodeID}`, () => {
 
 	let PackageIDs;
 	it('install', async function () {
-		const allPeers = helper.allPeers();
-		this.timeout(30000 * allPeers.length);
+		this.timeout(0);
 		PackageIDs = await installAll(chaincodeID);
 		logger.debug('package id map', PackageIDs);
 	});

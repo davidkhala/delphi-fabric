@@ -1,0 +1,53 @@
+{
+  "organizations": {
+    "hyperledger": {
+      "mspid": "hyperledgerMSP",
+      "users": {
+        "Admin": {
+          "cert": "ordererOrganizations/hyperledger/users/Admin@hyperledger/msp/signcerts/Admin@hyperledger-cert.pem",
+          "private_key": "ordererOrganizations/hyperledger/users/Admin@hyperledger/msp/keystore/998350829f4b1ade5ccb94b6253d770ea91cdf009d70df812287235148827083_sk"
+        }
+      }
+    },
+    "icdd": {
+      "mspid": "icddMSP",
+      "users": {
+        "Admin": {
+          "cert": "peerOrganizations/icdd/users/Admin@icdd/msp/signcerts/Admin@icdd-cert.pem",
+          "private_key": "peerOrganizations/icdd/users/Admin@icdd/msp/keystore/0fbd1b068008b5b4eac5cb48c9e20cfcaa5c62d123482afe469f5b4091585c75_sk"
+        }
+      }
+    },
+    "astri.org": {
+      "mspid": "astriMSP",
+      "users": {
+        "Admin": {
+          "cert": "peerOrganizations/astri.org/users/Admin@astri.org/msp/signcerts/Admin@astri.org-cert.pem",
+          "private_key": "peerOrganizations/astri.org/users/Admin@astri.org/msp/keystore/e9c056132b9d0865b6356e05065e6e9a4380ae5bf1863cc92f5235a3e6837b58_sk"
+        }
+      }
+    }
+  },
+  "orderers": {
+    "orderer0.hyperledger": {
+      "url": "localhost:7050",
+      "tlsCACerts": {
+        "path": "ordererOrganizations/hyperledger/users/Admin@hyperledger/msp/tlscacerts/tlsca.hyperledger-cert.pem"
+      }
+    }
+  },
+  "peers": {
+    "peer0.icdd": {
+      "url": "localhost:8051",
+      "tlsCACerts": {
+        "path": "peerOrganizations/icdd/users/Admin@icdd/msp/tlscacerts/tlsca.icdd-cert.pem"
+      }
+    },
+    "peer0.astri.org": {
+      "url": "localhost:7051",
+      "tlsCACerts": {
+        "path": "peerOrganizations/astri.org/users/Admin@astri.org/msp/tlscacerts/tlsca.astri.org-cert.pem"
+      }
+    }
+  }
+}

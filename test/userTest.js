@@ -23,8 +23,8 @@ describe('user', () => {
 		logger.debug(ecdsaKey.pem());
 	});
 	it('mspid', () => {
-		const mspId = getMSPID(signingIdentity);
-		logger.debug(mspId);
+		const mspid = getMSPID(signingIdentity);
+		logger.debug(mspid);
 	});
 
 });
