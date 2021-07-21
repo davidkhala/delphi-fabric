@@ -1,6 +1,5 @@
 const Transaction = require('../../common/nodejs/transaction');
 const NetworkProfile = require('./network.json');
-// TODO fabric-sdk-py/test/fixtures/network.json
 const path = require('path');
 const pwdResolve = (...tokens) => path.resolve(__dirname, ...tokens);
 
