@@ -128,31 +128,38 @@ const newPeers = (peerIndexes, orgName) => {
 	return targets;
 };
 
-const findOrgConfig = (orgName, ordererName) => {
+const findOrgConfig = (orgName) => {
 	let target;
 	let nodeType;
-	let portHost;
 	if (orgsConfig[orgName]) {
 		target = orgsConfig[orgName];
 		nodeType = 'peer';
 	} else {
 		nodeType = 'orderer';
-		const {type} = ordererConfig;
-		if (ordererConfig[type].organizations[orgName]) {
-			target = ordererConfig[type].organizations[orgName];
-			if (!ordererName) {
-				ordererName = randomKeyOf(target.orderers);
-			}
-			portHost = target.orderers[ordererName].portHost;
+		if (ordererConfig.organizations[orgName]) {
+			target = ordererConfig.organizations[orgName];
 		}
 	}
 	if (!target) {
 		throw Error(`${orgName} not found`);
 	}
-	return {config: target, portHost, nodeType};
+	return {config: target, nodeType};
+};
+const findOrgName = (mspId) => {
+	let findResult = Object.entries(orgsConfig).find(([_, {mspid}]) => mspid === mspId);
+	if (findResult) {
+		findResult.push('peer');
+
+	} else {
+		findResult = Object.entries(ordererConfig.organizations).find(([_, {mspid}]) => mspid === mspId);
+		if (findResult) {
+			findResult.push('orderer');
+		}
+	}
+	return findResult;
 };
 const getUser = (username, orgName) => {
-	const {config:{mspid}, nodeType} = findOrgConfig(orgName);
+	const {config: {mspid}, nodeType} = findOrgConfig(orgName);
 
 	const cryptoPath = new CryptoPath(CRYPTO_CONFIG_DIR, {
 		[nodeType]: {
@@ -202,4 +209,5 @@ module.exports = {
 	newOrderers,
 	newOrderer,
 	prepareChannel,
+	findOrgName,
 };
