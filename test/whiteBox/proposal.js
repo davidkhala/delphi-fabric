@@ -1,5 +1,6 @@
 const Transaction = require('../../common/nodejs/transaction');
 const NetworkProfile = require('./network.json');
+const {TLS} = require('../../config/orgs.json');
 const path = require('path');
 const pwdResolve = (...tokens) => path.resolve(__dirname, ...tokens);
 
@@ -51,6 +52,55 @@ describe('proposal', () => {
 		const transaction = new Transaction(peers, peerAdmin, channel, chaincodeId);
 
 		await transaction.evaluate({});
+	});
+
+});
+const {Endorser, Endpoint, Discoverer} = require('fabric-common');
+const fs = require('fs');
+const assert = require('assert');
+
+describe('yeasy simple3', () => {
+	const cryptoRoot = path.resolve(__dirname, '../../config/ca-crypto-config');
+	const orgName = 'icdd';
+
+	const cert = path.resolve(cryptoRoot, 'peerOrganizations', orgName, 'tlsca', `tlsca.${orgName}-cert.pem`);
+	const pem = fs.readFileSync(cert).toString();
+
+	const peerPort = 8051;
+	const host = 'localhost';
+	const peerURL = `grpcs://${host}:${peerPort}`;
+	const peerHost = 'peer0.icdd';
+
+	const mspId = 'icddMSP';
+	it('connect', async function () {
+		this.timeout(0);
+
+		const options = {
+			url: peerURL,
+			'grpc-wait-for-ready-timeout': 30000
+		};
+		if (TLS) {
+			Object.assign(options, {pem, 'grpc.ssl_target_name_override': peerHost});
+		}
+		const endpoint = new Endpoint(options);
+
+
+		const endorser = new Endorser('myEndorser', {}, mspId);
+		endorser.setEndpoint(endpoint);
+		await endorser.connect(endpoint);
+
+
+		let isConnected = await endorser.checkConnection();
+		assert.ok(isConnected);
+
+
+		// test using discoverer
+		const discoverer = new Discoverer('myDiscoverer', {}, mspId);
+		discoverer.setEndpoint(endpoint);
+
+		await discoverer.connect();
+		isConnected = await discoverer.checkConnection();
+		assert.ok(isConnected);
 	});
 
 });

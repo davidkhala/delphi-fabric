@@ -33,7 +33,7 @@ Profiles:
       EtcdRaft:
         Consenters:
           - Host: orderer0.hyperledger
-            Port: 6050
+            Port: 7050
             ClientTLSCert: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/hyperledger/orderers/orderer0.hyperledger/tls/server.crt
             ServerTLSCert: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/hyperledger/orderers/orderer0.hyperledger/tls/server.crt
       Organizations:

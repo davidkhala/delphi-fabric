@@ -20,7 +20,7 @@ describe('deploy', () => {
 
 		const sequence = 1;
 		const orgs = ['icdd', 'astri.org'];
-		this.timeout(60000);
+		this.timeout(0);
 		for (const org of orgs) {
 			const admin = helper.getOrgAdmin(org);
 			const peers = helper.newPeers([0, 1], org);

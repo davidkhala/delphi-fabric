@@ -23,7 +23,7 @@ describe(`install and approve ${chaincodeID}`, () => {
 
 		const sequence = 1;
 		const orgs = ['icdd', 'astri.org'];
-		this.timeout(30000 * orgs.length);
+		this.timeout(0);
 		for (const org of orgs) {
 			const admin = helper.getOrgAdmin(org);
 			const peers = helper.newPeers([0, 1], org);
