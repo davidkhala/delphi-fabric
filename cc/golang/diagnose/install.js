@@ -34,7 +34,7 @@ describe(`install and approve ${chaincodeID}`, () => {
 
 	});
 	it.skip('query installed & approve: with gate', async function () {
-		this.timeout(300000);
+		this.timeout(0);
 		const sequence = 2;
 		const org = 'icdd';
 		const admin = helper.getOrgAdmin(org);
@@ -73,7 +73,7 @@ describe(`commit ${chaincodeID}`, () => {
 		await operator.commitChaincodeDefinition({name: _chaincodeID, sequence}, orderer, _gate);
 	};
 	it('commit', async function () {
-		this.timeout(30000);
+		this.timeout(0);
 		await commit(chaincodeID, 1);
 	});
 	it.skip('commit: with gate', async () => {

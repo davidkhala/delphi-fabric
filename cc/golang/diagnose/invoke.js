@@ -18,7 +18,7 @@ const {channelName} = process.env;
 describe('chaincode Initialize', () => {
 
 	it('init', async function () {
-		this.timeout(30000);
+		this.timeout(0);
 		const org = 'icdd';
 		const invokeHelper = new InvokeHelper(peers, org, chaincodeId, channelName);
 		await invokeHelper.invoke({

@@ -93,7 +93,7 @@ describe('chaincode rich query', async () => {
 	it('loop to put', async function () {
 		const peers = helper.allPeers();
 		const size = 100;
-		this.timeout(size * 3000);
+		this.timeout(0);
 		for (let i = 0; i < size; i++) {
 			await invoke(peers, org, chaincodeId, {
 				fcn: 'put', args: [`${i}`, `${Date.now()}`]

@@ -8,8 +8,7 @@ const init_required = true;
 describe(`install ${chaincodeId}`, () => {
 
 	it('install', async function () {
-		const allPeers = helper.allPeers();
-		this.timeout(30000 * allPeers.length);
+		this.timeout(0);
 		const PackageIDs = await installAll(chaincodeId);
 		logger.debug('package id map', PackageIDs);
 
@@ -24,7 +23,7 @@ describe('approve', () => {
 
 	it('approves', async function () {
 		const orgs = ['icdd', 'astri.org'];
-		this.timeout(30000 * orgs.length);
+		this.timeout(0);
 		const sequence = 1;
 
 		for (const org of orgs) {

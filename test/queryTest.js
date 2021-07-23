@@ -46,7 +46,7 @@ describe('queryTransaction', () => {
 	const channel = emptyChannel(channelName);
 	const eventHub = new EventHub(channel, eventer);
 	it('by txID', async function () {
-		this.timeout(30000);
+		this.timeout(0);
 		const txs = await replayTx(eventHub, queryHub.identityContext, 3);
 		logger.info(txs);
 		const {transactionId} = txs.find(tx => tx.transactionId);
@@ -70,7 +70,7 @@ describe('query lifecycle chaincode', () => {
 		}
 	});
 	it('all chaincodes', async function () {
-		this.timeout(30000);
+		this.timeout(0);
 		const installed = await queryHub.chaincodesInstalled();
 		console.debug(installed);
 

@@ -14,7 +14,7 @@ describe('peerLedger', () => {
 		await stateLeveldb.disconnect();
 	});
 	it('ledgersData', async function () {
-		this.timeout(30000);
+		this.timeout(0);
 		const rawList = await stateLeveldb.list();
 		logger.debug('stateLeveldb', rawList.filter(({key, value}) => PeerLedger.filter.stateLeveldb({
 			key,

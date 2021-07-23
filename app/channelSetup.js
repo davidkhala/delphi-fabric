@@ -11,7 +11,7 @@ const channelsConfig = globalConfig.channels;
 describe('channelSetup', () => {
 	const channelName = process.env.channelName || 'allchannel';
 	it('create', async function () {
-		this.timeout(30000);
+		this.timeout(0);
 		const channelConfig = channelsConfig[channelName];
 		const channelBlock = homeResolve(channelConfig.file);
 		const binManager = new BinManager();
@@ -20,7 +20,7 @@ describe('channelSetup', () => {
 		await binManager.configtxgen(channelName, configtxFile, channelName).genBlock(channelBlock);
 	});
 	it('join', async function () {
-		this.timeout(30000);
+		this.timeout(0);
 		await joinAll(channelName);
 	});
 	if (process.env.anchor) {

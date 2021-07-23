@@ -6,7 +6,7 @@ describe('orderer', async () => {
 
 	if (globalConfig.TLS) {
 		it('nonTLS connect for TLS enabled orderer', async function () {
-			this.timeout(30000);
+			this.timeout(0);
 			const host = 'localhost';
 			const ordererHostName = 'orderer0.hyperledger';
 			const ordererPort = 7050;

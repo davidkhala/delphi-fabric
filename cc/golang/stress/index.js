@@ -31,7 +31,7 @@ describe('deploy', () => {
 
 	});
 	it('commit', async function () {
-		this.timeout(3000);
+		this.timeout(0);
 		const org = 'icdd';
 		const sequence = 1;
 		const peers = [helper.newPeer(0, 'astri.org'), helper.newPeer(0, 'icdd')];

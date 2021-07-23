@@ -14,7 +14,7 @@ describe('uninstall lifecycle chaincode', () => {
 		}
 	});
 	it('uninstall diagnose', async function () {
-		this.timeout(30000);
+		this.timeout(0);
 		const containerName = 'peer0.icdd';
 		const installed = await queryHub.chaincodesInstalled();
 		const packageId = Object.keys(installed[0])[0];
