@@ -1,4 +1,6 @@
 const logger = require('khala-logger/log4js').consoleLogger('test:fabric-network');
+const {common: commonProto} = require('fabric-protos');
+
 const helper = require('../../app/helper');
 const org1 = 'astri.org';
 const org2 = 'icdd';
@@ -95,5 +97,30 @@ describe('nodeContracts:eventHub', async () => {
 	it('shimError', async () => {
 		await contractManager.submitTransaction('shimError');
 	});
+});
+describe('qscc', () => {
+	const peers = [helper.newPeer(0, org1), helper.newPeer(0, org2)];
+	let contractManager;
+	before(async () => {
+		const network = await gateway.connect(channelName, peers, undefined, undefined, true);
+		contractManager = getContractManager(network, 'qscc');
+	});
+
+	it('chainInfo', async () => {
+		const fcn = 'GetChainInfo';
+		const args = [channelName];
+		contractManager.setBufferToString((result) => {
+			const {height, currentBlockHash, previousBlockHash} = commonProto.BlockchainInfo.decode(result);
+			return {
+				height: height.toInt(),
+				currentBlockHash: currentBlockHash.toString('hex'),
+				previousBlockHash: previousBlockHash.toString('hex'),
+			};
+		});
+		const result = await contractManager.evaluateTransaction(fcn, undefined, ...args);
+
+		console.debug(result);
+	});
+
 });
 

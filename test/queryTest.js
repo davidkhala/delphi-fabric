@@ -15,7 +15,7 @@ describe('query', () => {
 		}
 	});
 	it('chain info', async () => {
-		const result = await queryHub.chain(channelName);
+		const result = await queryHub.getChainInfo(channelName);
 		logger.info(result);
 		sampleBlockHashHex = result[0].currentBlockHash;
 	});
