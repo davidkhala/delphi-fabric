@@ -70,7 +70,11 @@ class ChaincodeDefinitionOperator {
 
 		chaincodeAction.setEndorsementPolicy(endorsementPolicy);
 		chaincodeAction.setCollectionsConfig(getCollectionConfig(name));
-		await chaincodeAction.approve({name, PackageID, sequence}, orderer, waitForConsensus);
+		try {
+			await chaincodeAction.approve({name, PackageID, sequence}, orderer, waitForConsensus);
+		} finally {
+			orderer.disconnect();
+		}
 	}
 
 	async commitChaincodeDefinition({sequence, name}, orderer, gate) {
@@ -80,7 +84,12 @@ class ChaincodeDefinitionOperator {
 		Object.assign(endorsementPolicy, getEndorsePolicy(name));
 		chaincodeAction.setEndorsementPolicy(endorsementPolicy);
 		chaincodeAction.setCollectionsConfig(getCollectionConfig(name));
-		await chaincodeAction.commitChaincodeDefinition({name, sequence}, orderer);
+		try {
+			await chaincodeAction.commitChaincodeDefinition({name, sequence}, orderer);
+		} finally {
+			orderer.disconnect();
+		}
+
 	}
 
 	async checkCommitReadiness({sequence, name}, gate) {
@@ -104,6 +113,13 @@ class ChaincodeDefinitionOperator {
 		const {peers} = this;
 		for (const peer of peers) {
 			await peer.connect();
+		}
+	}
+
+	disconnect() {
+		const {peers} = this;
+		for (const peer of peers) {
+			peer.disconnect();
 		}
 	}
 

@@ -1,6 +1,5 @@
 const globalConfig = require('./orgs.json');
 const {TLS} = globalConfig;
-const path = require('path');
 const yaml = require('khala-nodeutils/yaml');
 const fsExtra = require('fs-extra');
 const {CryptoPath} = require('../common/nodejs/path');

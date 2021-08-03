@@ -1,5 +1,5 @@
 {
-  "TLS": true,
+  "TLS": false,
   "docker": {
     "fabricTag": "2.3",
     "caTag": "1.5",
@@ -21,6 +21,14 @@
           "orderer0": {
             "portHost": 7050,
             "portAdmin": 9443
+          },
+          "orderer1": {
+            "portHost": 8050,
+            "portAdmin": 7443
+          },
+          "orderer2": {
+            "portHost": 9050,
+            "portAdmin": 8443
           }
         }
       }

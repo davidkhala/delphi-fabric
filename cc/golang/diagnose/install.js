@@ -30,6 +30,8 @@ describe(`install and approve ${chaincodeID}`, () => {
 			const operator = new ChaincodeDefinitionOperator(channel, admin, peers, init_required);
 			await operator.connect();
 			await operator.queryInstalledAndApprove(chaincodeID, sequence, orderer);
+			console.debug(`done for org ${org}`);
+			await operator.disconnect();
 		}
 
 	});
