@@ -184,8 +184,7 @@ const randomOrg = (nodeType) => {
 	if (nodeType === 'peer') {
 		orgName = randomKeyOf(globalConfig.organizations);
 	} else if (nodeType === 'orderer') {
-		const {type} = globalConfig.orderer;
-		orgName = randomKeyOf(globalConfig.orderer[type].organizations);
+		orgName = randomKeyOf(globalConfig.orderer.organizations);
 	} else {
 		throw Error(`invalid nodeType ${nodeType}`);
 	}

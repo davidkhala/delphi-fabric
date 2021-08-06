@@ -37,7 +37,7 @@ describe('eventhub', () => {
 	});
 });
 describe('tx replay', () => {
-
+	const channelName = 'allchannel';
 	const user = helper.getOrgAdmin(org, 'peer');
 	const channel = helper.prepareChannel(channelName);
 	logger.info(channel.toString());

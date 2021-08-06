@@ -1,7 +1,7 @@
 const helper = require('../app/helper');
 const IDService = require('../common/nodejs/identityService');
 const AffiliationService = require('../common/nodejs/affiliationService');
-const CAService = require('../common/nodejs/CAService');
+const CAService = require('../common/nodejs/admin/ca');
 const logger = require('khala-logger/log4js').consoleLogger('ca service');
 const caCryptoGen = require('../config/caCryptoGen');
 
@@ -30,9 +30,12 @@ describe('caCryptoGen', () => {
 
 describe('caService', () => {
 	const org = 'icdd';
-	const caUrl = `http${TLS ? 's' : ''}://localhost:8054`;
 	const admin = helper.getOrgAdmin(org);
-	const {caService} = new CAService(caUrl);
+	const protocol = `http${TLS ? 's' : ''}`;
+	const hostname = 'localhost';
+	const port = 8054;
+
+	const caService = new CAService({protocol, hostname, port});
 	const idService = new IDService(caService, admin);
 
 	it('identity service', async () => {

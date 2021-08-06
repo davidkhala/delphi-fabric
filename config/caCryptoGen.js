@@ -1,6 +1,5 @@
-const CA = require('../common/nodejs/CAService');
-const {initAdmin, genPeer, init, genOrderer, genUser, genClientKeyPair} = require('../common/nodejs/ca-crypto-gen');
-const {intermediateCA} = require('../common/nodejs/ca');
+const CA = require('../common/nodejs/admin/ca');
+const CaCryptoGen = require('../common/nodejs/ca-crypto-gen');
 const pathUtil = require('../common/nodejs/path');
 const fsExtra = require('fs-extra');
 const {homeResolve} = require('khala-light-util');
@@ -9,16 +8,14 @@ const logger = require('khala-logger/log4js').consoleLogger('caCryptoGen');
 const globalConfig = require('../config/orgs');
 const {adminName, adminPwd} = require('../common/nodejs/formatter/user');
 const {loadFromLocal} = require('../common/nodejs/user');
-const {ECDSA_Key} = require('../common/nodejs/formatter/key');
 
 const path = require('path');
 const caCryptoConfig = homeResolve(globalConfig.docker.volumes.MSPROOT);
 const {TLS} = globalConfig;
 const protocol = TLS ? 'https' : 'http';
+const hostname = 'localhost';
 const getCaService = async (port) => {
-	const caUrl = `${protocol}://localhost:${port}`;
-	const trustedRoots = [];
-	return new CA(caUrl, trustedRoots).caService;
+	return new CA({protocol, hostname, port});
 };
 /**
  *
@@ -52,7 +49,8 @@ const genExtraUser = async ({userName, password}, orgName, nodeType) => {
 	});
 
 	const admin = loadFromLocal(adminCryptoPath, nodeType, config.mspid, true);
-	return await genUser(caService, cryptoPath, nodeType, admin, {TLS, affiliationRoot: orgName});
+	const caCryptoGen = new CaCryptoGen(caService, cryptoPath);
+	return await caCryptoGen.genUser(nodeType, admin, {TLS, affiliationRoot: orgName});
 
 };
 const getClientKeyPairPath = (cryptoPath, nodeType) => {
@@ -64,42 +62,17 @@ const getClientKeyPairPath = (cryptoPath, nodeType) => {
 };
 
 const genNSaveClientKeyPair = async (caService, cryptoPath, admin, domain, nodeType) => {
-	const {key, certificate, rootCertificate} = await genClientKeyPair(caService, {
+	const caCryptoGen = new CaCryptoGen(caService, cryptoPath);
+	const {key, certificate, rootCertificate} = await caCryptoGen.genClientKeyPair({
 		enrollmentID: `${domain}.client`,
 		enrollmentSecret: 'password'
 	}, admin, domain);
 	const {clientKey, clientCert} = getClientKeyPairPath(cryptoPath, nodeType);
 	fsExtra.outputFileSync(clientCert, certificate);
-	const ecdsaKey = new ECDSA_Key(key, fsExtra);
-	ecdsaKey.save(clientKey);
+
+	fsExtra.outputFileSync(clientKey, key.toBytes());
 };
-/**
- * TODO
- * @param parentCADomain
- * @param parentCAPort
- * @param nodeType
- */
-const genIntermediate = async (parentCADomain, parentCAPort, nodeType) => {
-	const caService = await getCaService(parentCAPort, parentCADomain);
-	const adminCryptoPath = new CryptoPath(caCryptoConfig, {
-		[nodeType]: {
-			org: parentCADomain
-		},
-		user: {
-			name: adminName
-		},
-		password: adminPwd
-	});
-	const admin = await initAdmin(caService, adminCryptoPath, nodeType);
-	const enrollmentID = `${adminName}.intermediate`;
-	const enrollmentSecret = adminPwd;
-	const result = await intermediateCA.register(caService, admin, {
-		enrollmentID, enrollmentSecret,
-		affiliation: parentCADomain
-	});
-	logger.debug(result);
-	return {enrollmentSecret, enrollmentID};
-};
+
 const genAll = async () => {
 
 	// gen orderers
@@ -121,8 +94,10 @@ const genAll = async () => {
 				},
 				password: adminPwd
 			});
-			const admin = await init(caService, adminCryptoPath, nodeType, mspid);
+			const caCryptoGen = new CaCryptoGen(caService, adminCryptoPath);
+			const admin = await caCryptoGen.init(nodeType, mspid);
 			await genNSaveClientKeyPair(caService, adminCryptoPath, admin, domain, nodeType);
+			await caCryptoGen.genOrg(admin, nodeType);
 			for (const ordererName in ordererConfig.orderers) {
 
 				const cryptoPath = new CryptoPath(caCryptoConfig, {
@@ -133,7 +108,9 @@ const genAll = async () => {
 						name: adminName
 					}
 				});
-				await genOrderer(caService, cryptoPath, admin, {TLS});
+				// eslint-disable-next-line no-shadow
+				const caCryptoGen = new CaCryptoGen(caService, cryptoPath);
+				await caCryptoGen.genOrderer(admin, {TLS});
 			}
 
 		}
@@ -157,8 +134,12 @@ const genAll = async () => {
 				password: adminPwd
 			});
 			const caService = await getCaService(peerOrgConfig.ca.portHost);
-			const admin = await init(caService, adminCryptoPath, nodeType, mspid);
-			const promises = [];
+			const caCryptoGen = new CaCryptoGen(caService, adminCryptoPath);
+			const admin = await caCryptoGen.init(nodeType, mspid);
+			if (TLS) {
+				await caCryptoGen.genOrg(admin, nodeType);
+			}
+
 			await genNSaveClientKeyPair(caService, adminCryptoPath, admin, domain, nodeType);
 			for (let peerIndex = 0; peerIndex < peerOrgConfig.peers.length; peerIndex++) {
 				const peerName = `peer${peerIndex}`;
@@ -170,14 +151,16 @@ const genAll = async () => {
 						name: adminName
 					}
 				});
-				promises.push(genPeer(caService, cryptoPath, admin, {TLS}));
+				// eslint-disable-next-line no-shadow
+				const caCryptoGen = new CaCryptoGen(caService, cryptoPath, logger);
+				await caCryptoGen.genPeer(admin, {TLS});
+
 			}
-			await Promise.all(promises);
+
 		}
 	}
 };
 module.exports = {
-	genIntermediate,
 	genAll,
 	genExtraUser,
 	getCaService,

@@ -135,27 +135,25 @@ exports.runCAs = async (toStop) => {
 
 	const imageTag = caTag;
 
-	const toggle = async ({container_name, port, Issuer}) => {
+	const toggle = async ({container_name, port}) => {
 
 		if (toStop) {
 			await dockerManager.containerDelete(container_name);
 		} else {
-			await runCA({container_name, port, network, imageTag, TLS, issuer: Issuer});
+			await runCA({container_name, port, network, imageTag, TLS});
 		}
 	};
 
 	for (const [ordererOrg, ordererOrgConfig] of Object.entries(globalConfig.orderer.organizations)) {
 		const {portHost: port} = ordererOrgConfig.ca;
 		const container_name = `ca.${ordererOrg}`;
-		const Issuer = {CN: ordererOrg};
-		await toggle({container_name, port, Issuer});
+		await toggle({container_name, port});
 	}
 
 	for (const [orgName, orgConfig] of Object.entries(peerOrgsConfig)) {
 		const {ca: {portHost: port}} = orgConfig;
 		const container_name = `ca.${orgName}`;
-		const Issuer = {CN: orgName};
-		await toggle({container_name, port, Issuer});
+		await toggle({container_name, port});
 	}
 };
 
