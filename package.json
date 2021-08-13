@@ -26,7 +26,6 @@
   "devDependencies": {
     "lerna": "latest",
     "mocha": "latest-6",
-    "khala-logger": "latest",
-    "fabric-common": "latest"
+    "khala-logger": "latest"
   }
 }
