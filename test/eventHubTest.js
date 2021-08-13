@@ -18,8 +18,8 @@ describe('eventhub', () => {
 		const eventHub = new EventHub(channel, peer.eventer);
 		const identityContext = UserUtil.getIdentityContext(user);
 		const startBlock = OLDEST;
-		const endBlock = NEWEST;
-		eventHub.build(identityContext, {startBlock, endBlock});
+
+		eventHub.build(identityContext, {startBlock});
 		await eventHub.connect();
 	});
 });

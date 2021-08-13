@@ -35,9 +35,9 @@ describe('query', () => {
 });
 const EventHub = require('../common/nodejs/admin/eventHub');
 const {emptyChannel} = require('../common/nodejs/admin/channel');
-const {replayTx} = require('../common/nodejs/eventHub');
+const EventHubQuery = require('../common/nodejs/eventHub');
 describe('queryTransaction', () => {
-	const peers = [helper.newPeer(1, 'icdd'), helper.newPeer(1, 'astri.org')];
+	const peers = [helper.newPeer(0, 'icdd'), helper.newPeer(0, 'astri.org')];
 	const org = 'icdd';
 	const user = helper.getOrgAdmin(org);
 	const eventer = peers[0].eventer;
@@ -45,17 +45,32 @@ describe('queryTransaction', () => {
 	const channelName = 'allchannel';
 	const channel = emptyChannel(channelName);
 	const eventHub = new EventHub(channel, eventer);
-	it('by txID', async function () {
+	it('for all transactions', async function () {
 		this.timeout(0);
-		const txs = await replayTx(eventHub, queryHub.identityContext, 3);
+		const eventHubQuery = new EventHubQuery(eventHub, queryHub.identityContext);
+		const txs = await eventHubQuery.replayTx(4);
 		logger.info(txs);
 		const {transactionId} = txs.find(tx => tx.transactionId);
 		logger.info('query on txID', transactionId);
 		for (const peer of peers) {
 			await peer.connect();
 		}
+
 		const result = await queryHub.tx(channelName, transactionId);
 		logger.info(result);
+	});
+	it('for single transaction', async function () {
+		this.timeout(0);
+		for (const peer of peers) {
+			await peer.connect();
+		}
+		// NOTE: channel config tx cannot be found by query
+		const transactionId = '2f01799f8235107808d2973cda997f145d686b23571b5c1418402d081b3d40ff';
+
+		const result = await queryHub.tx(channelName, transactionId);
+		logger.info(result);
+
+
 	});
 });
 

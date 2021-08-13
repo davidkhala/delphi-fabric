@@ -45,18 +45,4 @@ class InvokeHelper {
 }
 
 module.exports = InvokeHelper;
-// exports.listenChaincodeEvent = async (peers, clientPeerOrg, chaincodeId, eventName = /event/i) => {
-// 	const logger = require('khala-logger/log4js').consoleLogger('chaincode event');
-// 	const client = await helper.getOrgAdmin(clientPeerOrg);
-// 	const channel = helper.prepareChannel(channelName, client, true);
-// 	const eventHub = newEventHub(channel, peers[0], true);
-// 	const validator = (data) => {
-// 		logger.debug('default validator', data);
-// 		return {valid: true, interrupt: false};
-// 	};
-// 	return chaincodeEvent(eventHub, validator, {chaincodeId, eventName}, () => {
-// 	}, (err) => {
-// 		logger.error('onError', err);
-// 	});
-// };
 

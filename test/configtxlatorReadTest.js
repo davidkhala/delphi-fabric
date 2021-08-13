@@ -1,5 +1,5 @@
 const helper = require('../app/helper');
-const channelConfig = require('../common/nodejs/channelConfig');
+const {ChannelConfig} = require('../common/nodejs/channelConfig');
 const channelName = 'allchannel';
 const fs = require('fs');
 const logger = require('khala-logger/log4js').consoleLogger('test:configtxlator');
@@ -7,6 +7,7 @@ const orderers = helper.newOrderers();
 const orderer = orderers[0];
 const BinManager = require('../common/nodejs/binManager');
 const path = require('path');
+const url = require('url');
 process.env.binPath = path.resolve(__dirname, '../common/bin/');
 describe('configtxlator', async () => {
 	let viaServer;
@@ -26,7 +27,8 @@ describe('configtxlator', async () => {
 		const user = helper.getOrgAdmin(undefined, 'peer');
 
 		it('read', async () => {
-			const {json} = await channelConfig.getChannelConfigReadable(channelName, user, orderer, viaServer);
+			const channelConfig = new ChannelConfig(channelName, user, orderer);
+			const {json} = await channelConfig.getChannelConfigReadable();
 			logger.info(JSON.parse(json));
 		});
 
@@ -34,7 +36,8 @@ describe('configtxlator', async () => {
 	describe('systemChannel', () => {
 		const user = helper.getOrgAdmin(undefined, 'orderer');
 		it('read', async () => {
-			const {json} = await channelConfig.getChannelConfigReadable(channelName, user, orderer, viaServer);
+			const channelConfig = new ChannelConfig(channelName, user, orderer);
+			const {json} = await channelConfig.getChannelConfigReadable();
 			logger.info(JSON.parse(json));
 			fs.writeFileSync('systemChannel.json', json);
 		});

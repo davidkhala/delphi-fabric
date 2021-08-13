@@ -17,8 +17,7 @@ describe('user', () => {
 		logger.debug(ecdsaKey.pem());
 	});
 	it('certificate', () => {
-		const certificate = getCertificate(signingIdentity);
-		logger.debug(certificate);// TODO check equality with input
+		logger.debug(getCertificate(signingIdentity));
 	});
 
 	it('public key', () => {
