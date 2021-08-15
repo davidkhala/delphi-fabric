@@ -24,9 +24,8 @@ describe('package', () => {
 	const BinManager = require('../common/nodejs/binManager');
 	const binPath = path.resolve(__dirname, '../common/bin');
 	const binManager = new BinManager(binPath);
-	it('pack golang: binManager', async () => {
-
-
+	it('pack golang:binManager', async function () {
+		this.timeout(0);
 		const Path = homeResolve('Documents/chaincode/golang/diagnose');
 		const Label = 'diagnose';
 		const output = Label + '.ccPack.tar';
