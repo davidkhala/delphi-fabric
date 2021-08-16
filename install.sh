@@ -13,17 +13,6 @@ updateChaincode() {
   git clone https://github.com/davidkhala/chaincode.git
 	echo "==source download complete=="
 
-  # go env setup
-	if [[ -z "$GOPATH" ]]; then
-		export GOPATH=$(go env GOPATH)
-	fi
-	export GO111MODULE=on
-  # go env setup
-
-
-	cd ~/Documents/chaincode/golang/diagnose
-	go mod vendor
-
 	cd $CURRENT
 }
 

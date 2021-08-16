@@ -5,13 +5,19 @@ const path = require('path');
 const {discoveryChaincodeInterestBuilder} = require('../common/nodejs/serviceDiscovery');
 const chaincodeConfig = require('../config/chaincode.json');
 const {couchDBIndex} = require('../common/nodejs/couchdb');
+const {ChaincodeType: {golang}} = require('../common/nodejs/formatter/chaincode');
 
 const {homeResolve} = require('khala-light-util');
+const {execSync} = require('khala-light-util/index');
 
 const prepareInstall = async ({chaincodeId}, binManager) => {
 	const {path: chaincodeRelativePath, type: Type, couchDBIndexes} = chaincodeConfig[chaincodeId];
-
 	const chaincodePath = homeResolve(chaincodeRelativePath);
+
+	if (!Type || Type === golang) {
+		execSync(`GO111MODULE=on && cd ${chaincodePath} && go mod vendor`);
+	}
+
 	const chaincodePackage = new ChaincodePackage({
 		Path: chaincodePath,
 		Type,
