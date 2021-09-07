@@ -10,12 +10,12 @@ const {ChaincodeType: {golang}} = require('../common/nodejs/formatter/chaincode'
 const {homeResolve} = require('khala-light-util');
 const {execSync} = require('khala-light-util/index');
 
-const prepareInstall = async ({chaincodeId}, binManager) => {
+const prepareInstall = async (chaincodeId, binManager) => {
 	const {path: chaincodeRelativePath, type: Type, couchDBIndexes} = chaincodeConfig[chaincodeId];
 	const chaincodePath = homeResolve(chaincodeRelativePath);
 
 	if (!Type || Type === golang) {
-		execSync(`GO111MODULE=on && cd ${chaincodePath} && go mod vendor`);
+		execSync(`GO111MODULE=on && cd ${chaincodePath} && rm -rf vendor && go mod vendor`);
 	}
 
 	const chaincodePackage = new ChaincodePackage({
@@ -29,14 +29,13 @@ const prepareInstall = async ({chaincodeId}, binManager) => {
 	if (Array.isArray(couchDBIndexes)) {
 		couchDBIndex(path.resolve(chaincodePath, 'META-INF'), undefined, undefined, ...couchDBIndexes);
 	}
-	// TODO clean vendor and re-install go vendor
 	await chaincodePackage.pack(ccPack, binManager);
 
 
 	return [ccPack, t1];
 };
 const install = async (peers, {chaincodeId}, user) => {
-	const [ccPack, t1] = await prepareInstall({chaincodeId});
+	const [ccPack, t1] = await prepareInstall(chaincodeId);
 	const chaincodeAction = new ChaincodeAction(peers, user);
 	const result = await chaincodeAction.install(ccPack, true);
 	return [result, t1];
