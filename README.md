@@ -1,7 +1,8 @@
 # Delphi-fabric
 
+Delphi method is a structured, interactive forecasting communication technique which relies on a panel of experts. 
 
-**This project is not relevant to delphi program language**
+This is why 'Delphi' here, instead of referring to a program language 
 
 ![](./delphi-fabric.png)
 
@@ -61,6 +62,7 @@ _after first time clone this repository, submodule should be initialize_
 - **Compatible OS** 
   - ubuntu Focal
   - MacOS 
+  - Oracle Linux 8
 - [Fabric](./common/README.md#Prerequisite)
 
 ## Test on single host
