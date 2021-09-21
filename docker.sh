@@ -3,7 +3,8 @@ set -e
 CURRENT=$(cd $(dirname ${BASH_SOURCE}) && pwd)
 export binPath=$CURRENT/common/bin/
 down() {
-	action=down node ./bootstrap.js
+
+	mocha dockerode-bootstrap.js --grep "^down "
 	sudo rm -rf $CURRENT/stateVolumes/*
 }
 up() {
@@ -18,7 +19,7 @@ mirror() {
 }
 
 prepareNetwork() {
-	action=up node ./bootstrap.js
+	mocha dockerode-bootstrap.js --grep "^up "
 }
 restart() {
 	down

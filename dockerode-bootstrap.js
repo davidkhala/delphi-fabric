@@ -188,12 +188,17 @@ describe('down', () => {
 			logger.info(`[done] clear ${channelName}.block ${file}`);
 		}
 	});
-
+	after(function () {
+		if (this.currentTest.state === 'passed') {
+			logger.debug('[DONE] down');
+		}
+	});
 });
 
 
 describe('up', () => {
-	it('pull container image', async () => {
+	it('pull container image', async function () {
+		this.timeout(0);
 		await fabricImagePull({fabricTag, caTag});
 	});
 	it('create docker network', async () => {
@@ -205,7 +210,8 @@ describe('up', () => {
 	it('run CAs', async () => {
 		await runCAs();
 	});
-	it('cryptogen', async () => {
+	it('cryptogen', async function () {
+		this.timeout(0);
 		await caCrypoGenUtil.genAll();
 	});
 	// TODO idemix
@@ -233,6 +239,11 @@ describe('up', () => {
 	it('Configtxgen', async () => {
 		const configtxFile = path.resolve(__dirname, 'config', 'configtx.yaml');
 		configConfigtx.gen({MSPROOT: MSPROOTPath, configtxFile});
+	});
+	after(function () {
+		if (this.currentTest.state === 'passed') {
+			logger.debug('[DONE] up');
+		}
 	});
 
 });
