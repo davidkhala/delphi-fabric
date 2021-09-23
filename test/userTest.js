@@ -9,15 +9,15 @@ describe('user', () => {
 	const user = helper.getOrgAdmin(undefined, 'orderer');
 	assert.ok(!!user, 'user not found');
 	const userBuilder = new UserBuilder(undefined, user);
-	const signingIdentity = userBuilder.getSigningIdentity();
+	const signingIdentity = userBuilder.signingIdentity;
 
 	it('private key pem', () => {
 		const privateKey = getPrivateKey(signingIdentity);
 		const ecdsaKey = new ECDSA_PrvKey(privateKey);
-		logger.debug(ecdsaKey.pem());
+		assert.strictEqual(ecdsaKey.pem(), userBuilder.key);
 	});
 	it('certificate', () => {
-		logger.debug(getCertificate(signingIdentity));
+		assert.strictEqual(userBuilder.certificate, getCertificate(signingIdentity));
 	});
 
 	it('public key', () => {
@@ -26,7 +26,7 @@ describe('user', () => {
 	});
 	it('mspid', () => {
 		const mspid = getMSPID(signingIdentity);
-		logger.debug(mspid);
+		assert.strictEqual(userBuilder.mspId, mspid);
 	});
 
 });
