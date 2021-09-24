@@ -19,7 +19,7 @@ mirror() {
 }
 
 prepareNetwork() {
-	mocha dockerode-bootstrap.js --grep "^up "
+	mocha dockerode-bootstrap.js --grep "^up " --bail
 }
 restart() {
 	down
