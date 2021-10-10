@@ -14,8 +14,8 @@ describe('build', () => {
 
 	it('gateway', async () => {
 		const gateway = new FabricGateway(peer, userBuilder);
-		const network = gateway.getNetwork('mychannel');
-		const contract = network.getContract('basic');
+
+		const contract = gateway.getContract('allchannel', 'diagnose');
 	});
 
 });

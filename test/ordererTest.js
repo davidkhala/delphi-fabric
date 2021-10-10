@@ -33,7 +33,7 @@ describe('orderer', async () => {
 	it('ping', async () => {
 		const orderers = await helper.newOrderers();
 		const orderer = orderers[0];
-		const result = await orderer.ping(orderer);
+		const result = await orderer.ping();
 		logger.debug(orderer.toString(), result);
 	});
 });
