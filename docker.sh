@@ -2,6 +2,7 @@
 set -e
 CURRENT=$(cd $(dirname ${BASH_SOURCE}) && pwd)
 export binPath=$CURRENT/common/bin/
+export finalityRequired=true
 down() {
 
 	mocha dockerode-bootstrap.js --grep "^down "

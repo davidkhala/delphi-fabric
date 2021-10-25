@@ -92,6 +92,7 @@ describe('channelSetup', () => {
 
 	it('setup anchor peer', async function () {
 		this.timeout(0);
+		await sleep(30000);
 		if (!process.env.anchor) {
 			logger.warn('it skipped due to unspecified process.env.anchor');
 			return;
@@ -106,7 +107,7 @@ describe('channelSetup', () => {
 		const orderer = orderers[0];
 		await orderer.connect();
 		for (const org in channelConfig.organizations) {
-			await setAnchorPeersByOrg(channelName, org, orderer, process.env.viaServer);
+			await setAnchorPeersByOrg(channelName, org, orderer, process.env.finalityRequired);
 		}
 	});
 });

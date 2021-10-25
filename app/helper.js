@@ -12,7 +12,7 @@ const projectResolve = (...args) => path.resolve(projectRoot, ...args);
 const {adminName} = require('../common/nodejs/formatter/user');
 const UserUtil = require('../common/nodejs/user');
 const Orderer = require('../common/nodejs/admin/orderer');
-const ChannelManager = require('../common/nodejs/admin/channel');
+const {emptyChannel} = require('../common/nodejs/admin/channel');
 const {homeResolve} = require('khala-light-util');
 const {randomKeyOf} = require('khala-light-util/random');
 const CRYPTO_CONFIG_DIR = homeResolve(globalConfig.docker.volumes.MSPROOT);
@@ -24,10 +24,9 @@ const preparePeer = (orgName, peerIndex, peerConfig) => {
 	let peer;
 	const cryptoPath = new CryptoPath(CRYPTO_CONFIG_DIR,
 		{peer: {name: `peer${peerIndex}`, org: orgName}});
-	const {peerHostName} = cryptoPath;
 	if (globalConfig.TLS) {
 		const {caCert} = cryptoPath.TLSFile('peer');
-		peer = new Peer({host: 'localhost', peerPort, cert: caCert, peerHostName});
+		peer = new Peer({host: 'localhost', peerPort, cert: caCert});
 	} else {
 		peer = new Peer({peerPort});
 	}
@@ -46,14 +45,12 @@ const newOrderer = (name, org, ordererSingleConfig) => {
 	});
 	let ordererWrapper;
 	if (globalConfig.TLS) {
-		const {ordererHostName} = cryptoPath;
 		const {caCert} = cryptoPath.TLSFile(nodeType);
 		const {clientKey, clientCert} = getClientKeyPairPath(cryptoPath, nodeType);
 		ordererWrapper = new Orderer({
 			host: 'localhost',
 			ordererPort,
 			tlsCaCert: caCert,
-			ordererHostName,
 			clientKey,
 			clientCert,
 		});
@@ -93,7 +90,7 @@ const newOrderers = (ordererOrgName) => {
  * @return {Client.Channel}
  */
 const prepareChannel = (channelName) => {
-	return new ChannelManager({channelName}).channel;
+	return emptyChannel(channelName);
 };
 
 const newPeer = (peerIndex, orgName) => {

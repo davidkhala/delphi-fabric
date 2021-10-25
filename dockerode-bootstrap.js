@@ -161,15 +161,18 @@ const runCAs = async (toStop) => {
 describe('down', () => {
 	const toStop = true;
 
-	it('stop CAs', async () => {
+	it('stop CAs', async function () {
+		this.timeout(0);
 		await runCAs(toStop);
 	});
 
-	it('stop peers', async () => {
+	it('stop peers', async function () {
+		this.timeout(0);
 		await runPeers(toStop);
 	});
 
-	it('stop orderers', async () => {
+	it('stop orderers', async function () {
+		this.timeout(0);
 		await runOrderers(toStop);
 	});
 	it('prune docker in system', async () => {
