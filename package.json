@@ -20,12 +20,13 @@
   "dependencies": {
     "khala-axios": "latest",
     "@davidkhala/dockerode": "latest",
-    "khala-light-util": "latest",
-    "khala-nodeutils": "latest"
+    "@davidkhala/light": "latest",
+    "@davidkhala/nodeutils": "latest"
   },
   "devDependencies": {
     "lerna": "latest",
-    "mocha": "latest-6",
-    "khala-logger": "latest"
-  }
+    "mocha": "latest",
+    "@davidkhala/logger": "latest"
+  },
+  "type": "module"
 }

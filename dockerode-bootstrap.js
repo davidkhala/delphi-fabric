@@ -16,7 +16,7 @@ const MSPROOTPath = homeResolve(globalConfig.docker.volumes.MSPROOT);
 const {docker: {fabricTag, caTag, network}, TLS} = globalConfig;
 
 const dockerManager = new DockerManager();
-const runOrderers = async (toStop) => {
+export const runOrderers = async (toStop) => {
 	const {orderer: {type, raftPort}} = globalConfig;
 	const CONFIGTXVolume = 'CONFIGTX';
 	const MSPROOTVolume = 'MSPROOT';
@@ -66,7 +66,7 @@ const runOrderers = async (toStop) => {
 	}
 };
 
-const volumesAction = async (toStop) => {
+export const volumesAction = async (toStop) => {
 	for (const Name in globalConfig.docker.volumes) {
 		if (toStop) {
 			await dockerManager.volumeRemove(Name);
@@ -75,7 +75,7 @@ const volumesAction = async (toStop) => {
 		await dockerManager.volumeCreateIfNotExist({Name, path: homeResolve(globalConfig.docker.volumes[Name])});
 	}
 };
-const runPeers = async (toStop) => {
+export const runPeers = async (toStop) => {
 	const imageTag = fabricTag;
 	const orgsConfig = globalConfig.organizations;
 
@@ -131,7 +131,7 @@ const runPeers = async (toStop) => {
 	}
 };
 
-const runCAs = async (toStop) => {
+export const runCAs = async (toStop) => {
 	const {organizations: peerOrgsConfig} = globalConfig;
 
 	const imageTag = caTag;
@@ -250,10 +250,3 @@ describe('up', () => {
 	});
 
 });
-
-module.exports = {
-	runOrderers,
-	runPeers,
-	runCAs,
-	volumesAction,
-};

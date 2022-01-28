@@ -1,22 +1,23 @@
-const {setAnchorPeersByOrg} = require('./channelHelper');
-const logger = require('khala-logger/log4js').consoleLogger('channel setup');
-const helper = require('./helper');
-const path = require('path');
-const globalConfig = require('../config/orgs.json');
-const BinManager = require('../common/nodejs/binManager');
-const {homeResolve, sleep} = require('khala-light-util');
-const {join: joinOrderer} = require('../common/nodejs/admin/orderer');
-const {axiosPromise} = require('khala-axios');
-const {getGenesisBlock, join: joinPeer} = require('../common/nodejs/channel');
-const assert = require('assert');
-const QueryHub = require('../common/nodejs/query');
+import {setAnchorPeersByOrg} from './channelHelper.js';
+import {consoleLogger} from '@davidkhala/logger/log4.js';
+
+import helper from './helper.js';
+import path from 'path';
+import globalConfig from '../config/orgs.json';
+import BinManager from '../common/nodejs/binManager.js';
+import {homeResolve, sleep} from '@davidkhala/light/index.js';
+import {join as joinOrderer} from '../common/nodejs/admin/orderer.js';
+import {axiosPromise} from 'khala-axios';
+import {getGenesisBlock, join as joinPeer} from '../common/nodejs/channel.js';
+import assert from 'assert';
+import QueryHub from '../common/nodejs/query.js';
+import {Status} from '../common/nodejs/formatter/constants.js';
+import {DeliverResponseType} from '../common/nodejs/formatter/eventHub';
 const binPath = process.env.binPath || path.resolve(__dirname, '../common/bin/');
 
 const channelsConfig = globalConfig.channels;
 
-const {Status: {SERVICE_UNAVAILABLE}} = require('../common/nodejs/formatter/constants');
-const {DeliverResponseType: {STATUS}} = require('../common/nodejs/formatter/eventHub');
-
+const logger = consoleLogger('channel setup');
 describe('channelSetup', () => {
 	const channelName = process.env.channelName || 'allchannel';
 	it('generate Block', async function () {
@@ -63,8 +64,8 @@ describe('channelSetup', () => {
 					} catch (e) {
 						logger.warn(e);
 						const {status, Type} = e;
-						assert.strictEqual(status, SERVICE_UNAVAILABLE);
-						assert.strictEqual(Type, STATUS);
+						assert.strictEqual(status, Status.SERVICE_UNAVAILABLE);
+						assert.strictEqual(Type, DeliverResponseType.STATUS);
 						logger.warn(orderer.toString(), {status, Type});
 						await sleep(1000);
 						await waitForGenesisBlock();

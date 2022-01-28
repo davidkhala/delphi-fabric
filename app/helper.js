@@ -1,22 +1,26 @@
-const logger = require('khala-logger/log4js').consoleLogger('Helper');
-const globalConfig = require('../config/orgs.json');
+import {consoleLogger} from '@davidkhala/logger/log4.js';
+import path from 'path';
+import globalConfig from '../config/orgs.json';
+import Peer from '../common/nodejs/admin/peer.js';
+import {CryptoPath} from '../common/nodejs/path.js';
+import {adminName} from '../common/nodejs/formatter/user';
+import UserUtil from '../common/nodejs/user';
+import Orderer from '../common/nodejs/admin/orderer';
+import {emptyChannel} from '../common/nodejs/admin/channel.js';
+import {homeResolve} from '@davidkhala/light/index.js';
+import {randomKeyOf} from '@davidkhala/light/random.js';
+import {getClientKeyPairPath} from '../config/caCryptoGen.js';
 
+const logger = consoleLogger('Helper');
 const orgsConfig = globalConfig.organizations;
 const channelsConfig = globalConfig.channels;
 const ordererConfig = globalConfig.orderer;
-const Peer = require('../common/nodejs/admin/peer');
-const {CryptoPath} = require('../common/nodejs/path');
-const path = require('path');
+
 const projectRoot = path.dirname(__dirname);
 const projectResolve = (...args) => path.resolve(projectRoot, ...args);
-const {adminName} = require('../common/nodejs/formatter/user');
-const UserUtil = require('../common/nodejs/user');
-const Orderer = require('../common/nodejs/admin/orderer');
-const {emptyChannel} = require('../common/nodejs/admin/channel');
-const {homeResolve} = require('khala-light-util');
-const {randomKeyOf} = require('khala-light-util/random');
+
+
 const CRYPTO_CONFIG_DIR = homeResolve(globalConfig.docker.volumes.MSPROOT);
-const {getClientKeyPairPath} = require('../config/caCryptoGen');
 
 const preparePeer = (orgName, peerIndex, peerConfig) => {
 	const {port: peerPort} = peerConfig;

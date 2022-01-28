@@ -1,10 +1,10 @@
-const helper = require('./helper.js');
-const {ChannelConfig} = require('../common/nodejs/channelConfig');
-const ConfigFactory = require('../common/nodejs/formatter/configFactory');
-const globalConfig = require('../config/orgs');
-const assert = require('assert');
+import helper from './helper.js';
+import {ChannelConfig} from '../common/nodejs/channelConfig.js';
+import ConfigFactory from '../common/nodejs/formatter/configFactory.js';
+import globalConfig from '../config/orgs.json';
+import assert from 'assert';
 
-exports.setAnchorPeersByOrg = async (channelName, orgName, orderer, finalityRequired) => {
+export const setAnchorPeersByOrg = async (channelName, orgName, orderer, finalityRequired) => {
 	const orgConfig = globalConfig.channels[channelName].organizations[orgName];
 	const {anchorPeerIndexes} = orgConfig;
 	const user = helper.getOrgAdmin(orgName);

@@ -1,20 +1,20 @@
-const ChaincodeAction = require('../common/nodejs/chaincodeOperation');
-const ChaincodePackage = require('../common/nodejs/chaincodePackage');
-const tmp = require('khala-nodeutils/tmp');
-const path = require('path');
-const {discoveryChaincodeInterestBuilder} = require('../common/nodejs/serviceDiscovery');
-const chaincodeConfig = require('../config/chaincode.json');
-const {couchDBIndex} = require('../common/nodejs/couchdb');
-const {ChaincodeType: {golang}} = require('../common/nodejs/formatter/chaincode');
+import tmp from '@davidkhala/nodeutils/tmp.js';
+import path from 'path';
+import ChaincodeAction from '../common/nodejs/chaincodeOperation.js';
+import ChaincodePackage from '../common/nodejs/chaincodePackage.js';
 
-const {homeResolve} = require('khala-light-util');
-const {execSync} = require('khala-light-util/index');
+import {discoveryChaincodeInterestBuilder} from '../common/nodejs/serviceDiscovery.js';
+import chaincodeConfig from '../config/chaincode.json';
+import {couchDBIndex} from '../common/nodejs/couchdb.js';
+import {ChaincodeType} from '../common/nodejs/formatter/chaincode.js';
+
+import {homeResolve, execSync} from '@davidkhala/light/index.js';
 
 const prepareInstall = async (chaincodeId, binManager) => {
 	const {path: chaincodeRelativePath, type: Type, couchDBIndexes} = chaincodeConfig[chaincodeId];
 	const chaincodePath = homeResolve(chaincodeRelativePath);
 
-	if (!Type || Type === golang) {
+	if (!Type || Type === ChaincodeType.golang) {
 		execSync(`GO111MODULE=on && cd ${chaincodePath} && rm -rf vendor && go mod vendor`);
 	}
 
@@ -34,7 +34,7 @@ const prepareInstall = async (chaincodeId, binManager) => {
 
 	return [ccPack, t1];
 };
-const install = async (peers, {chaincodeId}, user) => {
+export const install = async (peers, {chaincodeId}, user) => {
 	const [ccPack, t1] = await prepareInstall(chaincodeId);
 	const chaincodeAction = new ChaincodeAction(peers, user);
 	const result = await chaincodeAction.install(ccPack, true);
@@ -67,14 +67,14 @@ const buildEndorsePolicy = (endorsingConfig) => {
 		return {json: simplePolicyBuilder(identities, n)};
 	}
 };
-const getEndorsePolicy = (chaincodeId) => {
+export const getEndorsePolicy = (chaincodeId) => {
 	const {endorsingConfigs} = chaincodeConfig[chaincodeId];
 	if (endorsingConfigs) {
 		return buildEndorsePolicy(endorsingConfigs);
 	}
 };
 
-const getCollectionConfig = (chaincodeId) => {
+export const getCollectionConfig = (chaincodeId) => {
 	const {collectionsConfig} = chaincodeConfig[chaincodeId];
 	if (collectionsConfig) {
 		Object.values(collectionsConfig).forEach((config) => {
@@ -88,7 +88,7 @@ const getCollectionConfig = (chaincodeId) => {
 };
 
 
-const discoveryChaincodeInterestTranslator = (chaincodeIDs) => {
+export const discoveryChaincodeInterestTranslator = (chaincodeIDs) => {
 	const translatedConfig = {};
 	for (const chaincodeID of chaincodeIDs) {
 		const {collectionsConfig} = chaincodeConfig[chaincodeID];
@@ -102,10 +102,3 @@ const discoveryChaincodeInterestTranslator = (chaincodeIDs) => {
 	return discoveryChaincodeInterestBuilder(translatedConfig);
 };
 
-
-module.exports = {
-	getEndorsePolicy,
-	getCollectionConfig,
-	install,
-	discoveryChaincodeInterestTranslator,
-};

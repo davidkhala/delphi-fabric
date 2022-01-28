@@ -1,20 +1,25 @@
-const CA = require('../common/nodejs/admin/ca');
-const CaCryptoGen = require('../common/nodejs/ca-crypto-gen');
-const pathUtil = require('../common/nodejs/path');
-const fsExtra = require('fs-extra');
-const {homeResolve} = require('khala-light-util');
-const {CryptoPath} = pathUtil;
-const logger = require('khala-logger/log4js').consoleLogger('caCryptoGen');
-const globalConfig = require('../config/orgs');
-const {adminName, adminPwd} = require('../common/nodejs/formatter/user');
-const {loadFromLocal} = require('../common/nodejs/user');
+import path from 'path';
+import fsExtra from 'fs-extra';
+import {homeResolve} from '@davidkhala/light/index.js';
+import {consoleLogger} from '@davidkhala/logger/log4.js';
 
-const path = require('path');
+import CA from '../common/nodejs/admin/ca.js';
+import CaCryptoGen from '../common/nodejs/ca-crypto-gen.js';
+import pathUtil from '../common/nodejs/path.js';
+
+const logger = consoleLogger('caCryptoGen');
+import globalConfig from '../config/orgs.json';
+
+import {adminName, adminPwd} from '../common/nodejs/formatter/user.js';
+import {loadFromLocal} from '../common/nodejs/user.js';
+
+const {CryptoPath} = pathUtil;
+
 const caCryptoConfig = homeResolve(globalConfig.docker.volumes.MSPROOT);
 const {TLS} = globalConfig;
 const protocol = TLS ? 'https' : 'http';
 const hostname = 'localhost';
-const getCaService = async (port) => {
+export const getCaService = async (port) => {
 	return new CA({protocol, hostname, port});
 };
 /**
@@ -25,7 +30,7 @@ const getCaService = async (port) => {
  * @param {NodeType} nodeType
  * @return {Promise<User>}
  */
-const genExtraUser = async ({userName, password}, orgName, nodeType) => {
+export const genExtraUser = async ({userName, password}, orgName, nodeType) => {
 	const config = globalConfig.organizations[orgName];
 	const caService = await getCaService(config.ca.portHost, orgName);
 
@@ -53,7 +58,7 @@ const genExtraUser = async ({userName, password}, orgName, nodeType) => {
 	return await caCryptoGen.genUser(nodeType, admin, {TLS, affiliationRoot: orgName});
 
 };
-const getClientKeyPairPath = (cryptoPath, nodeType) => {
+export const getClientKeyPairPath = (cryptoPath, nodeType) => {
 	const rootDir = path.resolve(cryptoPath[`${nodeType}Org`](), 'client');
 	return {
 		clientKey: path.resolve(rootDir, 'clientKey'),
@@ -73,7 +78,7 @@ const genNSaveClientKeyPair = async (caService, cryptoPath, admin, domain, nodeT
 	fsExtra.outputFileSync(clientKey, key.toBytes());
 };
 
-const genAll = async () => {
+export const genAll = async () => {
 
 	// gen orderers
 	{
@@ -159,10 +164,4 @@ const genAll = async () => {
 
 		}
 	}
-};
-module.exports = {
-	genAll,
-	genExtraUser,
-	getCaService,
-	getClientKeyPairPath,
 };
