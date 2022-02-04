@@ -1,7 +1,7 @@
-const helper = require('./helper');
-const Transaction = require('../common/nodejs/transaction');
+import helper from './helper';
+import Transaction from '../common/nodejs/transaction';
 
-class InvokeHelper {
+export default class InvokeHelper {
 	/**
 	 *
 	 * @param endorsingPeers
@@ -43,6 +43,4 @@ class InvokeHelper {
 		return await tx.submit({fcn: init ? fcn : undefined, args, transientMap, init, nonce}, orderer, finalityRequired);
 	}
 }
-
-module.exports = InvokeHelper;
 
