@@ -1,9 +1,11 @@
-const helper = require('../../../app/helper');
+import helper from '../../../app/helper.js';
+import {installAll, ChaincodeDefinitionOperator} from '../../../app/installHelper.js';
+import {consoleLogger} from '@davidkhala/logger/log4.js';
+
+const logger = consoleLogger('chaincode:diagnose');
 const chaincodeID = 'diagnose';
 
-const {installAll, ChaincodeDefinitionOperator} = require('../../../app/installHelper');
 
-const logger = require('khala-logger/log4js').consoleLogger('chaincode:diagnose');
 const orderers = helper.newOrderers();
 const orderer = orderers[0];
 const gate = `AND('icddMSP.member', 'astriMSP.member')`;

@@ -1,16 +1,17 @@
-const assert = require('assert');
-
-const helper = require('../../../app/helper');
-const InvokeHelper = require('../../../app/invokeHelper');
-const {
+import assert from 'assert';
+import helper from '../../../app/helper.js';
+import InvokeHelper from '../../../app/invokeHelper';
+import {
 	putRaw, getRaw, whoami, putBatch, list, get, put, chaincodeID, getEndorsement, putEndorsement, getPage, getCertID, peerMSPID,
 	getPrivate, putPrivate, putImplicit, getImplicit, chaincodePing, richQuery
-} = require('./diagnoseInvoke');
+} from './diagnoseInvoke';
 
-const {getResponses} = require('../../../common/nodejs/formatter/proposalResponse');
+import {getResponses} from '../../../common/nodejs/formatter/proposalResponse';
+import {consoleLogger} from '@davidkhala/logger/log4.js';
+import {TxValidationCode} from '../../../common/nodejs/formatter/constants.js';
+import {base64} from '@davidkhala/nodeutils/format';
+const logger = consoleLogger('chaincode:diagnose');
 const chaincodeId = 'diagnose';
-const logger = require('khala-logger/log4js').consoleLogger('chaincode:diagnose');
-const {TxValidationCode} = require('../../../common/nodejs/formatter/constants');
 const org1 = 'icdd';
 const org2 = 'astri.org';
 const peers = helper.allPeers();
@@ -142,7 +143,7 @@ describe('couchdb', () => {
 		const result = await get(peers, org1, key);
 		console.debug(result);
 	});
-	const {base64} = require('khala-nodeutils/format');
+
 	it('read', async () => {
 
 		const results = await richQuery(peers, org1);

@@ -1,20 +1,19 @@
-const {
-	containerDelete
-} = require('../../common/nodejs/admin/helper').dockerode.util;
-const {
-	runPeer
-} = require('../../common/nodejs/fabric-dockerode');
-const {nodeUtil} = require('../../common/nodejs/admin/helper');
-const {homeResolve} = nodeUtil.helper();
-const globalConfig = require('../../config/orgs');
+import DockerManager from '@davidkhala/dockerode/docker.js';
+import {runPeer} from '../../common/nodejs/fabric-dockerode.js';
+
+import {homeResolve} from '@davidkhala/light/index.js';
+import globalConfig from '../../config/orgs.json';
+import peerUtil from '../../common/nodejs/peer.js';
+import {CryptoPath} from '../../common/nodejs/path.js';
+
 const {TLS} = globalConfig;
-const peerUtil = require('../../common/nodejs/peer');
-const {CryptoPath} = require('../../common/nodejs/path');
-exports.stopPeer = async (org, peerIndex) => {
+const docker = new DockerManager();
+
+export const stopPeer = async (org, peerIndex) => {
 	const peerName = globalConfig.organizations[org].peers[peerIndex].container_name;
-	await containerDelete(peerName);
+	await docker.containerDelete(peerName);
 };
-exports.resumePeer = async (org, peerIndex) => {
+export const resumePeer = async (org, peerIndex) => {
 
 
 	const {docker: {network, fabricTag: imageTag}} = globalConfig;
@@ -56,6 +55,4 @@ exports.resumePeer = async (org, peerIndex) => {
 			configPath
 		}, couchDB, stateVolume
 	});
-
-
 };

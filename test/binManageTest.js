@@ -1,12 +1,13 @@
-const path = require('path');
+import path from 'path';
 process.env.binPath = path.resolve(__dirname, '../common/bin');
-const BinManager = require('../common/nodejs/binManager');
-const fsExtra = require('fs-extra');
+import BinManager from '../common/nodejs/binManager.js';
+import fsExtra from 'fs-extra';
+import Package from '../common/nodejs/chaincodePackage.js';
+import {homeResolve} from '@davidkhala/light/index.js';
 const binManager = new BinManager();
 fsExtra.ensureDirSync(path.resolve(__dirname, 'artifacts'));
-const Package = require('../common/nodejs/chaincodePackage');
 describe('lifeCycle', () => {
-	const {homeResolve} = require('khala-light-util');
+
 	const chaincodeId = 'nodeDiagnose';
 	const outputFile = chaincodeId + '.ccPackage.tar.gz';
 	it('package', async () => {

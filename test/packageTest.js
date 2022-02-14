@@ -1,7 +1,8 @@
-const Package = require('../common/nodejs/chaincodePackage');
-const path = require('path');
+import Package from '../common/nodejs/chaincodePackage.js';
+import path from 'path';
+import {homeResolve} from '@davidkhala/light/index.js';
 describe('package', () => {
-	const {homeResolve} = require('khala-light-util');
+
 	it('pack golang', async () => {
 
 		const Path = homeResolve('Documents/chaincode/golang/diagnose');

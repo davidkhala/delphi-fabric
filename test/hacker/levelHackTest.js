@@ -1,7 +1,9 @@
-const {PeerLedger} = require('../../common/nodejs/leveldb');
-const logger = require('khala-logger/log4js').consoleLogger('test:peerLedger');
-const {organizations} = require('../../config/orgs.json');
-const {homeResolve} = require('khala-light-util');
+import {PeerLedger} from '../../common/nodejs/leveldb.js';
+import {consoleLogger} from '@davidkhala/logger/log4.js';
+import {organizations} from '../../config/orgs.json';
+import {homeResolve} from '@davidkhala/light/index.js';
+
+const logger = consoleLogger('test:peerLedger');
 describe('peerLedger', () => {
 	const rootPath = homeResolve(organizations.icdd.peers[0].stateVolume);
 	const peerLedger = new PeerLedger(rootPath);

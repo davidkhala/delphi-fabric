@@ -1,8 +1,11 @@
-const QueryHub = require('../../common/nodejs/query');
-const helper = require('../../app/helper');
-const {uninstallChaincode} = require('../../common/nodejs/fabric-dockerode');
-const logger = require('khala-logger/log4js').consoleLogger('test:uninstall');
-const {sleep} = require('khala-light-util');
+import QueryHub from '../../common/nodejs/query.js';
+import helper from '../../app/helper.js';
+import {uninstallChaincode} from '../../common/nodejs/fabric-dockerode';
+import {sleep} from '@davidkhala/light/index.js';
+import {consoleLogger} from '@davidkhala/logger/log4.js';
+
+const logger = consoleLogger('test:uninstall');
+
 describe('uninstall lifecycle chaincode', () => {
 	const org1 = 'icdd';
 	const peers = helper.newPeers([0], org1);

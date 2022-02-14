@@ -1,11 +1,14 @@
-const helper = require('../../app/helper');
-const logger = require('khala-logger/log4js').consoleLogger('test:backup: chaincode=master');
-const {stopPeer, resumePeer} = require('./index');
-const {sleep} = require('../../common/nodejs/admin/helper').nodeUtil.helper();
-const {putPrivate, getPrivate} = require('../../cc/golang/master/masterInvoke');
-const install = require('../../cc/golang/master/masterInstall');
+import helper from '../../app/helper.js';
+import {consoleLogger} from '@davidkhala/logger/log4.js';
+import {stopPeer, resumePeer} from './index.js';
+
+const logger = consoleLogger('test:backup: chaincode=master');
+import {sleep} from '@davidkhala/light/index.js';
+
+import {putPrivate, getPrivate} from '../../cc/golang/diagnose/diagnoseInvoke.js';
+import '../../cc/golang/diagnose/install.js';
+
 const flow = async () => {
-	await install.task();
 	const offlineOrg = 'astri.org';
 	const offlineIndex = 0;
 	await stopPeer(offlineOrg, offlineIndex);

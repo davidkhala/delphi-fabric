@@ -1,21 +1,21 @@
-const globalConfig = require('./config/orgs.json');
-
-const logger = require('khala-logger/log4js').consoleLogger('dockerode-bootstrap');
-const peerUtil = require('./common/nodejs/peer');
-const {runCouchDB, runCA, runPeer, runOrderer, fabricImagePull, chaincodeClear, chaincodeImageClear} = require('./common/nodejs/fabric-dockerode');
-const {CryptoPath} = require('./common/nodejs/path');
-const {container: {FABRIC_CA_HOME}} = require('./common/nodejs/ca');
-const configConfigtx = require('./config/configtx.js');
-const caCrypoGenUtil = require('./config/caCryptoGen');
-const DockerManager = require('@davidkhala/dockerode/docker');
-const {copy: dockerCP} = require('@davidkhala/dockerode/dockerCmd');
-const fsExtra = require('fs-extra');
-const path = require('path');
-const {homeResolve} = require('khala-light-util');
+import globalConfig from './config/orgs.json';
+import {consoleLogger} from '@davidkhala/logger/log4.js';
+import peerUtil from './common/nodejs/peer';
+import {runCouchDB, runCA, runPeer, runOrderer, fabricImagePull, chaincodeClear, chaincodeImageClear} from './common/nodejs/fabric-dockerode.js';
+import {CryptoPath} from './common/nodejs/path.js';
+import {container} from './common/nodejs/ca';
+import configConfigtx from './config/configtx.js';
+import caCrypoGenUtil from './config/caCryptoGen.js';
+import DockerManager from '@davidkhala/dockerode/docker.js';
+import {copy as dockerCP} from '@davidkhala/dockerode/dockerCmd';
+import fsExtra from 'fs-extra';
+import path from 'path';
+import {homeResolve} from '@davidkhala/light/index.js';
 const MSPROOTPath = homeResolve(globalConfig.docker.volumes.MSPROOT);
 const {docker: {fabricTag, caTag, network}, TLS} = globalConfig;
-
+const logger = consoleLogger('dockerode-bootstrap');
 const dockerManager = new DockerManager();
+const {FABRIC_CA_HOME} = container;
 export const runOrderers = async (toStop) => {
 	const {orderer: {type, raftPort}} = globalConfig;
 	const CONFIGTXVolume = 'CONFIGTX';

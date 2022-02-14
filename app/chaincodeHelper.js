@@ -10,7 +10,7 @@ import {ChaincodeType} from '../common/nodejs/formatter/chaincode.js';
 
 import {homeResolve, execSync} from '@davidkhala/light/index.js';
 
-const prepareInstall = async (chaincodeId, binManager) => {
+export const prepareInstall = async (chaincodeId, binManager) => {
 	const {path: chaincodeRelativePath, type: Type, couchDBIndexes} = chaincodeConfig[chaincodeId];
 	const chaincodePath = homeResolve(chaincodeRelativePath);
 
