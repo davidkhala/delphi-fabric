@@ -1,9 +1,10 @@
 import helper from './helper.js';
 import {ChannelConfig} from '../common/nodejs/channelConfig.js';
 import ConfigFactory from '../common/nodejs/formatter/configFactory.js';
-import globalConfig from '../config/orgs.json';
-import assert from 'assert';
 
+import assert from 'assert';
+import {importFrom} from '@davidkhala/light/es6.mjs';
+const globalConfig = importFrom('./config/orgs.json');
 export const setAnchorPeersByOrg = async (channelName, orgName, orderer, finalityRequired) => {
 	const orgConfig = globalConfig.channels[channelName].organizations[orgName];
 	const {anchorPeerIndexes} = orgConfig;

@@ -1,8 +1,10 @@
-const globalConfig = require('./orgs.json');
+import yaml from '@davidkhala/nodeutils/yaml.js';
+import fsExtra from 'fs-extra';
+import {CryptoPath} from '../common/nodejs/path.js';
+import {importFrom} from '@davidkhala/light/es6.mjs';
+
+const globalConfig = importFrom('./orgs.json');
 const {TLS} = globalConfig;
-const yaml = require('khala-nodeutils/yaml');
-const fsExtra = require('fs-extra');
-const {CryptoPath} = require('../common/nodejs/path');
 const implicitPolicies = {
 	Readers: {
 		Type: 'ImplicitMeta',
@@ -125,8 +127,7 @@ exports.gen = ({MSPROOT, configtxFile}) => {
 	}
 	const orgsConfig = globalConfig.organizations;
 
-	const Profiles = {
-	};
+	const Profiles = {};
 	// Write channel profiles
 	for (const channelName in channelsConfig) {
 		const channelConfig = channelsConfig[channelName];

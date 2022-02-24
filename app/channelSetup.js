@@ -3,7 +3,6 @@ import {consoleLogger} from '@davidkhala/logger/log4.js';
 
 import helper from './helper.js';
 import path from 'path';
-import globalConfig from '../config/orgs.json';
 import BinManager from '../common/nodejs/binManager.js';
 import {homeResolve, sleep} from '@davidkhala/light/index.js';
 import {join as joinOrderer} from '../common/nodejs/admin/orderer.js';
@@ -13,6 +12,8 @@ import assert from 'assert';
 import QueryHub from '../common/nodejs/query.js';
 import {Status} from '../common/nodejs/formatter/constants.js';
 import {DeliverResponseType} from '../common/nodejs/formatter/eventHub';
+import {importFrom} from '@davidkhala/light/es6.mjs';
+const globalConfig = importFrom('./config/orgs.json');
 const binPath = process.env.binPath || path.resolve(__dirname, '../common/bin/');
 
 const channelsConfig = globalConfig.channels;

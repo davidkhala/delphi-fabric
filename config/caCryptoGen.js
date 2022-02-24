@@ -8,10 +8,12 @@ import CaCryptoGen from '../common/nodejs/ca-crypto-gen.js';
 import pathUtil from '../common/nodejs/path.js';
 
 const logger = consoleLogger('caCryptoGen');
-import globalConfig from '../config/orgs.json';
+
+const globalConfig = importFrom('../config/orgs.json');
 
 import {adminName, adminPwd} from '../common/nodejs/formatter/user.js';
 import {loadFromLocal} from '../common/nodejs/user.js';
+import {importFrom} from '@davidkhala/light/es6.mjs';
 
 const {CryptoPath} = pathUtil;
 

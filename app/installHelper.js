@@ -1,16 +1,19 @@
-const {install, getEndorsePolicy, getCollectionConfig} = require('./chaincodeHelper');
-const ChaincodeAction = require('../common/nodejs/chaincodeOperation');
-const helper = require('./helper');
-const globalConfig = require('../config/orgs.json');
-const logger = require('khala-logger/log4js').consoleLogger('install helper');
-const QueryHub = require('../common/nodejs/query');
-const assert = require('assert');
+import {install, getEndorsePolicy, getCollectionConfig} from './chaincodeHelper.js';
+import ChaincodeAction from '../common/nodejs/chaincodeOperation.js';
+import helper from './helper';
+import {consoleLogger} from '@davidkhala/logger/log4.js';
+import QueryHub from '../common/nodejs/query';
+import assert from 'assert';
+import {importFrom} from '@davidkhala/light/es6.mjs';
+
+const globalConfig = importFrom('./config/orgs.json');
+const logger = consoleLogger('install helper');
 const prepare = ({PackageID}) => {
 	const name = PackageID.split(':')[0];
 	return {name};
 };
 // only one time, one org could deploy
-const installs = async (chaincodeId, orgName, peerIndexes = Object.keys(globalConfig.organizations[orgName].peers)) => {
+export const installs = async (chaincodeId, orgName, peerIndexes = Object.keys(globalConfig.organizations[orgName].peers)) => {
 	const peers = helper.newPeers(peerIndexes, orgName);
 	for (const peer of peers) {
 		await peer.connect();
@@ -21,7 +24,7 @@ const installs = async (chaincodeId, orgName, peerIndexes = Object.keys(globalCo
 	t1();
 	return packageID;
 };
-const installAll = async (chaincodeId, channelName) => {
+export const installAll = async (chaincodeId, channelName) => {
 	const packageIDs = {};
 	const installOnOrg = async (peerOrg, peerIndexes) => {
 		const package_id = await installs(chaincodeId, peerOrg, peerIndexes);
@@ -41,7 +44,7 @@ const installAll = async (chaincodeId, channelName) => {
 	return packageIDs;
 };
 
-class ChaincodeDefinitionOperator {
+export class ChaincodeDefinitionOperator {
 	/**
 	 *
 	 * @param {string} channelName
@@ -162,9 +165,3 @@ class ChaincodeDefinitionOperator {
 
 	}
 }
-
-module.exports = {
-	installs,
-	installAll,
-	ChaincodeDefinitionOperator
-};

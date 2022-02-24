@@ -1,7 +1,7 @@
-const yaml = require('khala-nodeutils/yaml');
-const logger = require('khala-logger/log4js').consoleLogger('yaml');
+import yaml from '@davidkhala/nodeutils/yaml.js';
+import path from 'path';
 
-const path = require('path');
+const logger = console;
 describe('yaml', () => {
 	it('read', () => {
 		const configtxFile = path.resolve(__dirname, '../config/configtx.yaml');

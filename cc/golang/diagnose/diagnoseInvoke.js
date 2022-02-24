@@ -1,8 +1,10 @@
 import InvokeHelper from '../../../app/invokeHelper';
 import {base64} from '@davidkhala/nodeutils/format.js';
 import {queryBuilder} from '../../../common/nodejs/couchdb';
-import {organizations} from '../../../config/orgs.json';
 
+import {importFrom} from '@davidkhala/light/es6.mjs';
+
+const {organizations} = importFrom('../../../config/orgs.json');
 const chaincodeId = 'diagnose';
 const {channelName} = process.env;
 const invoke = async (peers, clientOrg, {fcn, args, transientMap}) => {

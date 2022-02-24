@@ -1,6 +1,5 @@
 import {consoleLogger} from '@davidkhala/logger/log4.js';
 import path from 'path';
-import globalConfig from '../config/orgs.json';
 import Peer from '../common/nodejs/admin/peer.js';
 import {CryptoPath} from '../common/nodejs/path.js';
 import {adminName} from '../common/nodejs/formatter/user';
@@ -10,7 +9,9 @@ import {emptyChannel} from '../common/nodejs/admin/channel.js';
 import {homeResolve} from '@davidkhala/light/index.js';
 import {randomKeyOf} from '@davidkhala/light/random.js';
 import {getClientKeyPairPath} from '../config/caCryptoGen.js';
+import {importFrom} from '@davidkhala/light/es6.mjs';
 
+const globalConfig = importFrom('./config/orgs.json');
 const logger = consoleLogger('Helper');
 const orgsConfig = globalConfig.organizations;
 const channelsConfig = globalConfig.channels;

@@ -1,7 +1,10 @@
 import {PeerLedger} from '../../common/nodejs/leveldb.js';
 import {consoleLogger} from '@davidkhala/logger/log4.js';
-import {organizations} from '../../config/orgs.json';
+
 import {homeResolve} from '@davidkhala/light/index.js';
+import {importFrom} from '@davidkhala/light/es6.mjs';
+
+const {organizations} = importFrom('../../config/orgs.json');
 
 const logger = consoleLogger('test:peerLedger');
 describe('peerLedger', () => {

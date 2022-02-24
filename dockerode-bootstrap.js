@@ -1,16 +1,19 @@
-import globalConfig from './config/orgs.json';
 import {consoleLogger} from '@davidkhala/logger/log4.js';
-import peerUtil from './common/nodejs/peer';
+import peerUtil from './common/nodejs/peer.js';
 import {runCouchDB, runCA, runPeer, runOrderer, fabricImagePull, chaincodeClear, chaincodeImageClear} from './common/nodejs/fabric-dockerode.js';
 import {CryptoPath} from './common/nodejs/path.js';
-import {container} from './common/nodejs/ca';
+import {container} from './common/nodejs/ca.js';
 import configConfigtx from './config/configtx.js';
 import caCrypoGenUtil from './config/caCryptoGen.js';
 import DockerManager from '@davidkhala/dockerode/docker.js';
-import {copy as dockerCP} from '@davidkhala/dockerode/dockerCmd';
+import {copy as dockerCP} from '@davidkhala/dockerode/dockerCmd.js';
 import fsExtra from 'fs-extra';
 import path from 'path';
 import {homeResolve} from '@davidkhala/light/index.js';
+import {importFrom} from '@davidkhala/light/es6.mjs';
+
+const globalConfig = importFrom('./config/orgs.json');
+
 const MSPROOTPath = homeResolve(globalConfig.docker.volumes.MSPROOT);
 const {docker: {fabricTag, caTag, network}, TLS} = globalConfig;
 const logger = consoleLogger('dockerode-bootstrap');
