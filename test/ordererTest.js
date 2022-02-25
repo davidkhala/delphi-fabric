@@ -1,7 +1,7 @@
-const helper = require('../app/helper');
-const logger = require('khala-logger/log4js').consoleLogger('test:orderer');
-const OrdererUtil = require('../common/nodejs/admin/orderer');
+import * as  helper from '../app/helper.js';
+import OrdererUtil from '../common/nodejs/admin/orderer';
 const globalConfig = require('../config/orgs.json');
+const logger = require('khala-logger/log4js').consoleLogger('test:orderer');
 describe('orderer', async () => {
 
 	if (globalConfig.TLS) {

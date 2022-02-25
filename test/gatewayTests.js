@@ -1,9 +1,7 @@
-const helper = require('../app/helper');
-const UserBuilder = require('../common/nodejs/admin/user');
-const FabricGateway = require('../common/nodejs/fabric-gateway');
-
-const assert = require('assert');
-const logger = require('khala-logger/log4js').consoleLogger('fabric-gateway');
+import assert from 'assert';
+import * as  helper from '../app/helper.js';
+import UserBuilder from '../common/nodejs/admin/user.js';
+import FabricGateway from '../common/nodejs/fabric-gateway/index.js';
 
 describe('build', () => {
 	const user = helper.getOrgAdmin(undefined, 'orderer');
