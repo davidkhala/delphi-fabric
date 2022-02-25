@@ -1,4 +1,4 @@
-import helper from '../../app/helper.js';
+import * as helper from '../../app/helper.js';
 import {consoleLogger} from '@davidkhala/logger/log4.js';
 import {stopPeer, resumePeer} from './index.js';
 

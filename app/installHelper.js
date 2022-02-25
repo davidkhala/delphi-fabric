@@ -1,6 +1,6 @@
 import {install, getEndorsePolicy, getCollectionConfig} from './chaincodeHelper.js';
 import ChaincodeAction from '../common/nodejs/chaincodeOperation.js';
-import helper from './helper';
+import * as helper from './helper';
 import {consoleLogger} from '@davidkhala/logger/log4.js';
 import QueryHub from '../common/nodejs/query';
 import assert from 'assert';

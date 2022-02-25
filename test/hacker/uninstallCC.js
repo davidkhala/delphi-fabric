@@ -1,5 +1,5 @@
 import QueryHub from '../../common/nodejs/query.js';
-import helper from '../../app/helper.js';
+import * as helper from '../../app/helper.js';
 import {uninstallChaincode} from '../../common/nodejs/fabric-dockerode';
 import {sleep} from '@davidkhala/light/index.js';
 import {consoleLogger} from '@davidkhala/logger/log4.js';

@@ -10,7 +10,8 @@ import {copy as dockerCP} from '@davidkhala/dockerode/dockerCmd.js';
 import fsExtra from 'fs-extra';
 import path from 'path';
 import {homeResolve} from '@davidkhala/light/index.js';
-import {importFrom} from '@davidkhala/light/es6.mjs';
+import {importFrom, filedirname} from '@davidkhala/light/es6.mjs';
+filedirname(import.meta)
 
 const globalConfig = importFrom('./config/orgs.json', import.meta);
 

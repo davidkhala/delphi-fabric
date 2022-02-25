@@ -1,4 +1,4 @@
-import helper from './helper';
+import * as helper from './helper';
 import Transaction from '../common/nodejs/transaction';
 import {consoleLogger} from '@davidkhala/logger/log4.js';
 

@@ -1,7 +1,7 @@
 import {setAnchorPeersByOrg} from './channelHelper.js';
 import {consoleLogger} from '@davidkhala/logger/log4.js';
 
-import helper from './helper.js';
+import * as helper from './helper.js';
 import path from 'path';
 import BinManager from '../common/nodejs/binManager.js';
 import {homeResolve, sleep} from '@davidkhala/light/index.js';
@@ -11,8 +11,9 @@ import {getGenesisBlock, join as joinPeer} from '../common/nodejs/channel.js';
 import assert from 'assert';
 import QueryHub from '../common/nodejs/query.js';
 import {Status} from '../common/nodejs/formatter/constants.js';
-import {DeliverResponseType} from '../common/nodejs/formatter/eventHub';
-import {importFrom} from '@davidkhala/light/es6.mjs';
+import {DeliverResponseType} from '../common/nodejs/formatter/eventHub.js';
+import {importFrom, filedirname} from '@davidkhala/light/es6.mjs';
+filedirname(import.meta)
 const globalConfig = importFrom('./config/orgs.json');
 const binPath = process.env.binPath || path.resolve(__dirname, '../common/bin/');
 

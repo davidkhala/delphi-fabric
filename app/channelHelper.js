@@ -1,4 +1,4 @@
-import helper from './helper.js';
+import * as helper from './helper.js';
 import {ChannelConfig} from '../common/nodejs/channelConfig.js';
 import ConfigFactory from '../common/nodejs/formatter/configFactory.js';
 

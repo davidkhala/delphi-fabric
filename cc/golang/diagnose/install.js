@@ -1,4 +1,4 @@
-import helper from '../../../app/helper.js';
+import * as helper from '../../../app/helper.js';
 import {installAll, ChaincodeDefinitionOperator} from '../../../app/installHelper.js';
 import {consoleLogger} from '@davidkhala/logger/log4.js';
 

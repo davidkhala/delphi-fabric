@@ -1,12 +1,15 @@
-const helper = require('../app/helper');
-const IDService = require('../common/nodejs/identityService');
-const AffiliationService = require('../common/nodejs/affiliationService');
-const CAService = require('../common/nodejs/admin/ca');
-const logger = require('khala-logger/log4js').consoleLogger('ca service');
-const caCryptoGen = require('../config/caCryptoGen');
+import assert from 'assert';
+import * as helper from '../app/helper.js';
+import IDService from '../common/nodejs/identityService.js';
+import AffiliationService from '../common/nodejs/affiliationService.js';
+import CAService from '../common/nodejs/admin/ca.js';
+import {consoleLogger} from '@davidkhala/logger/log4.js';
+import * as caCryptoGen from '../config/caCryptoGen.js';
+import {importFrom} from '@davidkhala/light/es6.mjs';
 
-const assert = require('assert');
-const {TLS} = require('../config/orgs.json');
+const logger = consoleLogger('ca service');
+const {TLS} = importFrom('../config/orgs.json', import.meta);
+
 describe('caCryptoGen', () => {
 	const org = 'icdd';
 	it('genUser green', async () => {

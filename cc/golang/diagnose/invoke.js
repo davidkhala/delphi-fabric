@@ -1,6 +1,6 @@
 import assert from 'assert';
-import helper from '../../../app/helper.js';
-import InvokeHelper from '../../../app/invokeHelper';
+import * as helper from '../../../app/helper.js';
+import InvokeHelper from '../../../app/invokeHelper.js';
 import {
 	putRaw, getRaw, whoami, putBatch, list, get, put, chaincodeID, getEndorsement, putEndorsement, getPage, getCertID, peerMSPID,
 	getPrivate, putPrivate, putImplicit, getImplicit, chaincodePing, richQuery
