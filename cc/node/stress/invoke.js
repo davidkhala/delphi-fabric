@@ -1,7 +1,7 @@
-const chaincodeId = 'nodeStress';
-const InvokeHelper = require('../../../app/invokeHelper');
+import InvokeHelper from '../../../app/invokeHelper.js';
+import * as helper from '../../../app/helper.js';
 
-const helper = require('../../../app/helper');
+const chaincodeId = 'nodeStress';
 describe('chaincode invoke', () => {
 	const org = 'icdd';
 	const peers = helper.allPeers();

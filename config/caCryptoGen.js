@@ -2,18 +2,18 @@ import path from 'path';
 import fsExtra from 'fs-extra';
 import {homeResolve} from '@davidkhala/light/index.js';
 import {consoleLogger} from '@davidkhala/logger/log4.js';
-
-import CA from '../common/nodejs/admin/ca.js';
-import CaCryptoGen from '../common/nodejs/ca-crypto-gen.js';
-import pathUtil from '../common/nodejs/path.js';
-
-const logger = consoleLogger('caCryptoGen');
-
-const globalConfig = importFrom('../config/orgs.json');
-
 import {adminName, adminPwd} from '../common/nodejs/formatter/user.js';
 import {loadFromLocal} from '../common/nodejs/user.js';
 import {importFrom} from '@davidkhala/light/es6.mjs';
+import CA from '../common/nodejs/admin/ca.js';
+import CaCryptoGen from '../common/nodejs/ca-crypto-gen.js';
+import * as pathUtil from '../common/nodejs/path.js';
+
+const logger = consoleLogger('caCryptoGen');
+
+const globalConfig = importFrom('../config/orgs.json', import.meta);
+
+
 
 const {CryptoPath} = pathUtil;
 

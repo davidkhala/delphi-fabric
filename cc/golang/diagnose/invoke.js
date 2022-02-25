@@ -10,6 +10,7 @@ import {getResponses} from '../../../common/nodejs/formatter/proposalResponse';
 import {consoleLogger} from '@davidkhala/logger/log4.js';
 import {TxValidationCode} from '../../../common/nodejs/formatter/constants.js';
 import {base64} from '@davidkhala/nodeutils/format';
+import {readWritePrivate} from './diagnoseInvoke.js';
 const logger = consoleLogger('chaincode:diagnose');
 const chaincodeId = 'diagnose';
 const org1 = 'icdd';
@@ -202,7 +203,7 @@ describe('chaincode query after content filled', () => {
 	});
 
 });
-const {readWritePrivate} = require('./diagnoseInvoke');
+
 describe('private data ', () => {
 	const collectionPeers = [helper.newPeer(0, org1), helper.newPeer(0, org2)];
 	const transientMap = {

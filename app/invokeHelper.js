@@ -1,6 +1,8 @@
 import helper from './helper';
 import Transaction from '../common/nodejs/transaction';
+import {consoleLogger} from '@davidkhala/logger/log4.js';
 
+const defaultLogger = consoleLogger('transaction helper');
 export default class InvokeHelper {
 	/**
 	 *
@@ -9,10 +11,10 @@ export default class InvokeHelper {
 	 * @param chaincodeId
 	 * @param [channelName]
 	 */
-	constructor(endorsingPeers, clientOrg, chaincodeId, channelName = 'allchannel') {
+	constructor(endorsingPeers, clientOrg, chaincodeId, channelName = 'allchannel', logger = defaultLogger) {
 		const user = helper.getOrgAdmin(clientOrg);
 		const channel = helper.prepareChannel(channelName);
-		const logger = require('khala-logger/log4js').consoleLogger('transaction helper');
+
 		const tx = new Transaction(endorsingPeers, user, channel, chaincodeId, logger);
 		this._clientOrg = clientOrg;
 

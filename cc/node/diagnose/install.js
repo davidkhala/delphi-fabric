@@ -1,9 +1,8 @@
-const {installAll, ChaincodeDefinitionOperator} = require('../../../app/installHelper');
-
-
+import {installAll, ChaincodeDefinitionOperator} from '../../../app/installHelper.js';
+import * as helper from '../../../app/helper.js';
+import {consoleLogger} from '@davidkhala/logger/log4.js'
 const chaincodeId = 'nodeDiagnose';
-const helper = require('../../../app/helper');
-const logger = require('khala-logger/log4js').consoleLogger(chaincodeId);
+const logger = consoleLogger(chaincodeId);
 const init_required = true;
 describe(`install ${chaincodeId}`, () => {
 

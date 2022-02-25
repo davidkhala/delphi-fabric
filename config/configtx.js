@@ -3,7 +3,7 @@ import fsExtra from 'fs-extra';
 import {CryptoPath} from '../common/nodejs/path.js';
 import {importFrom} from '@davidkhala/light/es6.mjs';
 
-const globalConfig = importFrom('./orgs.json');
+const globalConfig = importFrom('./orgs.json', import.meta);
 const {TLS} = globalConfig;
 const implicitPolicies = {
 	Readers: {

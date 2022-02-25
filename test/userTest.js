@@ -1,9 +1,8 @@
-const helper = require('../app/helper');
-const UserBuilder = require('../common/nodejs/admin/user');
-const {ECDSA_PrvKey} = require('../common/nodejs/formatter/key');
-const {getPrivateKey, getCertificate, getPublicKey, getMSPID} = require('../common/nodejs/formatter/signingIdentity');
-const assert = require('assert');
-const logger = require('khala-logger/log4js').consoleLogger('user');
+import assert from 'assert';
+import * as helper from '../app/helper.js';
+import UserBuilder from '../common/nodejs/admin/user.js';
+import {ECDSA_PrvKey} from '../common/nodejs/formatter/key.js';
+import {getPrivateKey, getCertificate, getPublicKey, getMSPID} from '../common/nodejs/formatter/signingIdentity.js';
 
 describe('user', () => {
 	const user = helper.getOrgAdmin(undefined, 'orderer');

@@ -18,8 +18,7 @@ const channelsConfig = globalConfig.channels;
 const ordererConfig = globalConfig.orderer;
 
 const projectRoot = path.dirname(__dirname);
-const projectResolve = (...args) => path.resolve(projectRoot, ...args);
-
+export const projectResolve = (...args) => path.resolve(projectRoot, ...args);
 
 const CRYPTO_CONFIG_DIR = homeResolve(globalConfig.docker.volumes.MSPROOT);
 
@@ -39,7 +38,7 @@ const preparePeer = (orgName, peerIndex, peerConfig) => {
 	return peer;
 };
 
-const newOrderer = (name, org, ordererSingleConfig) => {
+export const newOrderer = (name, org, ordererSingleConfig) => {
 	const nodeType = 'orderer';
 	const ordererPort = ordererSingleConfig.portHost;
 	const {portAdmin} = ordererSingleConfig;
@@ -71,7 +70,7 @@ const newOrderer = (name, org, ordererSingleConfig) => {
  * @param {string} [ordererOrgName] orgName filter
  * @return {*[]}
  */
-const newOrderers = (ordererOrgName) => {
+export const newOrderers = (ordererOrgName) => {
 	const result = [];
 	const partialResult = (_ordererOrgName, ordererOrgConfig) => {
 		for (const [ordererName, ordererSingleConfig] of Object.entries(ordererOrgConfig.orderers)) {
@@ -94,11 +93,11 @@ const newOrderers = (ordererOrgName) => {
  * @param channelName
  * @return {Client.Channel}
  */
-const prepareChannel = (channelName) => {
+export const prepareChannel = (channelName) => {
 	return emptyChannel(channelName);
 };
 
-const newPeer = (peerIndex, orgName) => {
+export const newPeer = (peerIndex, orgName) => {
 	const peerConfig = orgsConfig[orgName].peers[peerIndex];
 	return preparePeer(orgName, peerIndex, peerConfig);
 };
@@ -106,7 +105,7 @@ const newPeer = (peerIndex, orgName) => {
  *
  * @param {string} [orgName]
  */
-const allPeers = (orgName) => {
+export const allPeers = (orgName) => {
 	let peers = [];
 	const partialResult = (_orgName, orgConfig) => {
 		const peerIndexes = Object.keys(orgConfig.peers);
@@ -122,7 +121,7 @@ const allPeers = (orgName) => {
 
 	return peers;
 };
-const newPeers = (peerIndexes, orgName) => {
+export const newPeers = (peerIndexes, orgName) => {
 	const targets = [];
 	for (const index of peerIndexes) {
 		targets.push(newPeer(index, orgName));
@@ -130,7 +129,7 @@ const newPeers = (peerIndexes, orgName) => {
 	return targets;
 };
 
-const findOrgConfig = (orgName) => {
+export const findOrgConfig = (orgName) => {
 	let target;
 	let nodeType;
 	if (orgsConfig[orgName]) {
@@ -147,7 +146,7 @@ const findOrgConfig = (orgName) => {
 	}
 	return {config: target, nodeType};
 };
-const findOrgName = (mspId) => {
+export const findOrgName = (mspId) => {
 	let findResult = Object.entries(orgsConfig).find(([_, {mspid}]) => mspid === mspId);
 	if (findResult) {
 		findResult.push('peer');
@@ -160,7 +159,7 @@ const findOrgName = (mspId) => {
 	}
 	return findResult;
 };
-const getUser = (username, orgName) => {
+export const getUser = (username, orgName) => {
 	const {config: {mspid}, nodeType} = findOrgConfig(orgName);
 
 	const cryptoPath = new CryptoPath(CRYPTO_CONFIG_DIR, {
@@ -174,14 +173,14 @@ const getUser = (username, orgName) => {
 	return UserUtil.loadFromLocal(cryptoPath, nodeType, mspid);
 };
 
-const getOrgAdmin = (orgName, nodeType = 'peer') => {
+export const getOrgAdmin = (orgName, nodeType = 'peer') => {
 	if (!orgName) {
 		orgName = randomOrg(nodeType);
 	}
 	logger.debug(`get ${orgName} Admin`);
 	return getUser(adminName, orgName);
 };
-const randomOrg = (nodeType) => {
+export const randomOrg = (nodeType) => {
 	let orgName;
 	if (nodeType === 'peer') {
 		orgName = randomKeyOf(globalConfig.organizations);
@@ -193,22 +192,6 @@ const randomOrg = (nodeType) => {
 	logger.info(`random ${nodeType} org`, orgName);
 	return orgName;
 };
-const randomChannelOrg = (channelName) => {
+export const randomChannelOrg = (channelName) => {
 	return randomKeyOf(channelsConfig[channelName].organizations);
-};
-
-module.exports = {
-	projectResolve,
-	getUser,
-	randomChannelOrg,
-	randomOrg,
-	getOrgAdmin,
-	findOrgConfig,
-	newPeer,
-	newPeers,
-	allPeers,
-	newOrderers,
-	newOrderer,
-	prepareChannel,
-	findOrgName,
 };

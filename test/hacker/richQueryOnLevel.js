@@ -1,7 +1,9 @@
-const helper = require('../../app/helper');
-const {richQuery} = require('../../cc/golang/diagnose/diagnoseInvoke');
-const logger = require('khala-logger/log4js').consoleLogger('test: rich query');
-const assert = require('assert');
+import * as helper from '../../app/helper.js';
+import {richQuery} from '../../cc/golang/diagnose/diagnoseInvoke.js';
+import assert from 'assert';
+import {consoleLogger} from '@davidkhala/logger/log4.js';
+
+const logger = consoleLogger('test: rich query');
 describe('rich query', () => {
 	const org1 = 'icdd';
 	const peers = helper.newPeers([0], org1);

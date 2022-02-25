@@ -1,12 +1,13 @@
-const helper = require('../../../app/helper');
-const chaincodeID = 'stress';
+import * as helper from '../../../app/helper.js';
+import {installAll, ChaincodeDefinitionOperator} from '../../../app/installHelper.js';
+import InvokeHelper from '../../../app/invokeHelper.js';
+import {consoleLogger} from '@davidkhala/logger/log4.js';
 
-const {installAll, ChaincodeDefinitionOperator} = require('../../../app/installHelper');
-const InvokeHelper = require('../../../app/invokeHelper');
-const logger = require('khala-logger/log4js').consoleLogger(`chaincode:${chaincodeID}`);
+const logger = consoleLogger(`chaincode:${chaincodeID}`);
 const orderers = helper.newOrderers();
 const orderer = orderers[0];
 const {channel = 'allchannel'} = process.env;
+const chaincodeID = 'stress';
 const init_required = false;
 
 describe('deploy', () => {

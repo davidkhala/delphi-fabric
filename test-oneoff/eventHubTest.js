@@ -1,11 +1,13 @@
-const EventHub = require('../common/nodejs/admin/eventHub');
-const UserUtil = require('../common/nodejs/admin/user');
-const {BlockNumberFilterType: {NEWEST, OLDEST}} = require('../common/nodejs/formatter/eventHub');
+import EventHub from '../common/nodejs/admin/eventHub.js';
+import UserUtil from '../common/nodejs/admin/user.js';
+import * as helper from '../app/helper.js';
+import {BlockNumberFilterType} from '../common/nodejs/formatter/eventHub';
+import {consoleLogger} from '@davidkhala/logger/log4.js';
+import BlockDecoder from '../common/nodejs/formatter/blockDecoder.js';
 
-const helper = require('../app/helper');
+const logger = consoleLogger('test:eventHub');
+const {NEWEST, OLDEST} = BlockNumberFilterType;
 const org = 'astri.org';
-const logger = require('khala-logger/log4js').consoleLogger('test:eventHub');
-const BlockDecoder = require('../common/nodejs/formatter/blockDecoder');
 describe('eventhub', () => {
 	const channelName = 'allchannel';
 	const user = helper.getOrgAdmin(org, 'peer');

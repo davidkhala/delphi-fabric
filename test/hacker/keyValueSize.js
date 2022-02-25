@@ -1,9 +1,13 @@
-const invoke = require('../../cc/golang/diagnose/diagnoseInvoke');
-const fsExtra = require('fs-extra');
-const logger = require('khala-logger/log4js').consoleLogger('value size');
-const path = require('path');
+import * as invoke from '../../cc/golang/diagnose/diagnoseInvoke.js';
+import fsExtra from 'fs-extra';
+import {consoleLogger} from '@davidkhala/logger/log4.js';
+import path from 'path';
+import {filedirname} from '@davidkhala/light/es6.mjs';
+import * as helper from '../../app/helper.js';
+
+filedirname(import.meta);
+const logger = consoleLogger('value size');
 const imgPath = path.resolve(__dirname, '8m.jpg');
-const helper = require('../../app/helper');
 describe('value size', () => {
 	it('image as value', async () => {
 		const imageBuffer = fsExtra.readFileSync(imgPath);

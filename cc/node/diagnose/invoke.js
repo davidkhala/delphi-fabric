@@ -1,7 +1,9 @@
-const InvokeHelper = require('../../../app/invokeHelper');
-const helper = require('../../../app/helper');
+import InvokeHelper from '../../../app/invokeHelper.js';
+import * as helper from '../../../app/helper.js';
+import {consoleLogger} from '@davidkhala/logger/log4.js';
+import {queryBuilder} from '../../../common/nodejs/couchdb.js';
 const chaincodeId = 'nodeDiagnose';
-const logger = require('khala-logger/log4js').consoleLogger(chaincodeId);
+const logger = consoleLogger(chaincodeId);
 const {channelName} = process.env;
 const invoke = async (peers, clientOrg, {fcn, args, transientMap}) => {
 	const invokeHelper = new InvokeHelper(peers, clientOrg, chaincodeId, channelName);
@@ -85,7 +87,7 @@ describe('chaincode common query', () => {
 		console.debug(result);
 	});
 });
-const {queryBuilder} = require('../../../common/nodejs/couchdb');
+
 describe('chaincode rich query', async () => {
 	const org = 'astri.org';
 	const peers = helper.newPeers([0], org);
