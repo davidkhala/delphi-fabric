@@ -1,4 +1,4 @@
-import yaml from '@davidkhala/nodeutils/yaml.js';
+import {write} from '@davidkhala/nodeutils/yaml.js';
 import fsExtra from 'fs-extra';
 import {CryptoPath} from '../common/nodejs/path.js';
 import {importFrom} from '@davidkhala/light/es6.mjs';
@@ -19,7 +19,7 @@ const implicitPolicies = {
 		Rule: 'MAJORITY Admins'
 	}
 };
-exports.gen = ({MSPROOT, configtxFile}) => {
+export const gen = ({MSPROOT, configtxFile}) => {
 	const channelsConfig = globalConfig.channels;
 	//	refresh configtxFile
 	if (fsExtra.pathExistsSync(configtxFile)) {
@@ -157,5 +157,5 @@ exports.gen = ({MSPROOT, configtxFile}) => {
 		};
 
 	}
-	yaml.write({Profiles}, configtxFile);
+	write({Profiles}, configtxFile);
 };
