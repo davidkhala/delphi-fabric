@@ -4,7 +4,7 @@ import ConfigFactory from '../common/nodejs/formatter/configFactory.js';
 
 import assert from 'assert';
 import {importFrom} from '@davidkhala/light/es6.mjs';
-const globalConfig = importFrom('./config/orgs.json');
+const globalConfig = importFrom('../config/orgs.json', import.meta);
 export const setAnchorPeersByOrg = async (channelName, orgName, orderer, finalityRequired) => {
 	const orgConfig = globalConfig.channels[channelName].organizations[orgName];
 	const {anchorPeerIndexes} = orgConfig;

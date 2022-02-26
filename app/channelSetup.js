@@ -5,7 +5,7 @@ import * as helper from './helper.js';
 import path from 'path';
 import BinManager from '../common/nodejs/binManager.js';
 import {homeResolve, sleep} from '@davidkhala/light/index.js';
-import {join as joinOrderer} from '../common/nodejs/admin/orderer.js';
+import Orderer from '../common/nodejs/admin/orderer.js';
 import {axiosPromise} from 'khala-axios';
 import {getGenesisBlock, join as joinPeer} from '../common/nodejs/channel.js';
 import assert from 'assert';
@@ -13,17 +13,18 @@ import QueryHub from '../common/nodejs/query.js';
 import {Status} from '../common/nodejs/formatter/constants.js';
 import {DeliverResponseType} from '../common/nodejs/formatter/eventHub.js';
 import {importFrom, filedirname} from '@davidkhala/light/es6.mjs';
-filedirname(import.meta)
-const globalConfig = importFrom('./config/orgs.json');
-const binPath = process.env.binPath || path.resolve(__dirname, '../common/bin/');
 
+filedirname(import.meta);
+const globalConfig = importFrom('../config/orgs.json', import.meta);
+const binPath = process.env.binPath || path.resolve(__dirname, '../common/bin/');
+const {join: joinOrderer} = Orderer;
 const channelsConfig = globalConfig.channels;
 
 const logger = consoleLogger('channel setup');
-describe('channelSetup', () => {
+describe('channelSetup', function () {
+	this.timeout(0);
 	const channelName = process.env.channelName || 'allchannel';
-	it('generate Block', async function () {
-		this.timeout(0);
+	it('generate Block', async () => {
 		const channelConfig = channelsConfig[channelName];
 		const channelBlock = homeResolve(channelConfig.file);
 
@@ -32,12 +33,15 @@ describe('channelSetup', () => {
 		const configtxFile = helper.projectResolve('config', 'configtx.yaml');
 		await binManager.configtxgen(channelName, configtxFile, channelName).genBlock(channelBlock);
 	});
-	it('join', async function () {
-		this.timeout(0);
-		const channelConfig = globalConfig.channels[channelName];
 
+
+	it('join Orderer', async () => {
+		// params
+		const channelConfig = globalConfig.channels[channelName];
 		const blockFile = homeResolve(channelConfig.file);
 		const channel = helper.prepareChannel(channelName);
+		// end params
+
 		for (const ordererOrgName of Object.keys(globalConfig.orderer.organizations)) {
 			const orderers = helper.newOrderers(ordererOrgName);
 
@@ -77,12 +81,21 @@ describe('channelSetup', () => {
 			}
 		}
 
-
+	});
+	it('join peers', async () => {
+		// params
+		const channelConfig = globalConfig.channels[channelName];
+		const blockFile = homeResolve(channelConfig.file);
+		const channel = helper.prepareChannel(channelName);
+		// end params
 		for (const [orgName, {peerIndexes}] of Object.entries(channelConfig.organizations)) {
 			const peers = helper.newPeers(peerIndexes, orgName);
 			const user = helper.getOrgAdmin(orgName);
 
+			// FIXME, not work yet
 			await joinPeer(channel, peers, user, blockFile);
+
+
 			const queryHub = new QueryHub(peers, user);
 			const JoinedResult = await queryHub.channelJoined();
 			for (const [index, peer] of Object.entries(peers)) {
@@ -92,9 +105,7 @@ describe('channelSetup', () => {
 
 		}
 	});
-
-	it('setup anchor peer', async function () {
-		this.timeout(0);
+	it('setup anchor peer', async () => {
 		await sleep(30000);
 		if (!process.env.anchor) {
 			logger.warn('it skipped due to unspecified process.env.anchor');

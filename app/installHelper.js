@@ -6,7 +6,7 @@ import QueryHub from '../common/nodejs/query';
 import assert from 'assert';
 import {importFrom} from '@davidkhala/light/es6.mjs';
 
-const globalConfig = importFrom('./config/orgs.json');
+const globalConfig = importFrom('./config/orgs.json', import.meta);
 const logger = consoleLogger('install helper');
 const prepare = ({PackageID}) => {
 	const name = PackageID.split(':')[0];

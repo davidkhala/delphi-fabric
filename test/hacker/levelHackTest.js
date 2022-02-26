@@ -4,7 +4,7 @@ import {consoleLogger} from '@davidkhala/logger/log4.js';
 import {homeResolve} from '@davidkhala/light/index.js';
 import {importFrom} from '@davidkhala/light/es6.mjs';
 
-const {organizations} = importFrom('../../config/orgs.json');
+const {organizations} = importFrom('../../config/orgs.json', import.meta);
 
 const logger = consoleLogger('test:peerLedger');
 describe('peerLedger', () => {

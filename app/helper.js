@@ -9,14 +9,14 @@ import {emptyChannel} from '../common/nodejs/admin/channel.js';
 import {homeResolve} from '@davidkhala/light/index.js';
 import {randomKeyOf} from '@davidkhala/light/random.js';
 import {getClientKeyPairPath} from '../config/caCryptoGen.js';
-import {importFrom} from '@davidkhala/light/es6.mjs';
+import {importFrom, filedirname} from '@davidkhala/light/es6.mjs';
 
-const globalConfig = importFrom('./config/orgs.json');
+const globalConfig = importFrom('../config/orgs.json', import.meta);
 const logger = consoleLogger('Helper');
 const orgsConfig = globalConfig.organizations;
 const channelsConfig = globalConfig.channels;
 const ordererConfig = globalConfig.orderer;
-
+filedirname(import.meta)
 const projectRoot = path.dirname(__dirname);
 export const projectResolve = (...args) => path.resolve(projectRoot, ...args);
 

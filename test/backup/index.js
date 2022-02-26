@@ -6,7 +6,7 @@ import {importFrom} from '@davidkhala/light/es6.mjs';
 
 import peerUtil from '../../common/nodejs/peer.js';
 import {CryptoPath} from '../../common/nodejs/path.js';
-const globalConfig = importFrom('../../config/orgs.json');
+const globalConfig = importFrom('../../config/orgs.json', import.meta);
 
 const {TLS} = globalConfig;
 const docker = new DockerManager();

@@ -4,7 +4,7 @@ import {queryBuilder} from '../../../common/nodejs/couchdb';
 
 import {importFrom} from '@davidkhala/light/es6.mjs';
 
-const {organizations} = importFrom('../../../config/orgs.json');
+const {organizations} = importFrom('../../../config/orgs.json', import.meta);
 const chaincodeId = 'diagnose';
 const {channelName} = process.env;
 const invoke = async (peers, clientOrg, {fcn, args, transientMap}) => {
