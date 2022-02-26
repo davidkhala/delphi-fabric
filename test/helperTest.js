@@ -1,5 +1,5 @@
-const {findOrgName} = require('../app/helper');
-const assert = require('assert');
+import assert from 'assert';
+import {findOrgName} from '../app/helper.js';
 describe('helper test', () => {
 	it('findOrgName: known peer org', () => {
 		const [orgName, _, type] = findOrgName('icddMSP');

@@ -1,6 +1,7 @@
-const HSM = require('../common/nodejs/hsm');
-const logger = require('khala-logger/log4js').consoleLogger('test:hsm');
-const {projectResolve} = require('../app/helper');
+import HSM from '../common/nodejs/hsm.js';
+import {consoleLogger} from '@davidkhala/logger/log4.js';
+import {projectResolve} from '../app/helper.js';
+const logger = consoleLogger('test:hsm');
 describe('HSM', () => {
 	process.env.SOFTHSM2_CONF = projectResolve('config', 'softhsm2.conf');
 	it('generate ephemeral ECDSA key pair, sign, and verify', async () => {

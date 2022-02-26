@@ -1,10 +1,13 @@
-const EventHub = require('../common/nodejs/admin/eventHub');
-const UserUtil = require('../common/nodejs/admin/user');
-const {BlockNumberFilterType: {NEWEST, OLDEST}} = require('../common/nodejs/formatter/eventHub');
+import EventHub from '../common/nodejs/admin/eventHub.js';
+import UserUtil from '../common/nodejs/admin/user.js';
+import {BlockNumberFilterType} from '../common/nodejs/formatter/eventHub.js';
+import * as helper from '../app/helper.js';
+import {consoleLogger} from '@davidkhala/logger/log4.js'
+const {NEWEST, OLDEST} = BlockNumberFilterType;
 const channelName = 'allchannel';
-const helper = require('../app/helper');
 const org = 'astri.org';
-const logger = require('khala-logger/log4js').consoleLogger('test:eventHub');
+
+const logger = consoleLogger('test:eventHub');
 
 describe('eventhub', () => {
 

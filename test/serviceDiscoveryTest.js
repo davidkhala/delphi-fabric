@@ -1,10 +1,12 @@
-const helper = require('../app/helper');
-const logger = require('khala-logger/log4js').consoleLogger('test:serviceDiscovery');
-const SlimDiscoveryService = require('../common/nodejs/admin/discovery');
-const {getIdentityContext} = require('../common/nodejs/admin/user');
-const DockerManager = require('@davidkhala/dockerode/docker');
+import * as helper from '../app/helper.js';
+import {consoleLogger} from '@davidkhala/logger/log4.js';
+import SlimDiscoveryService from '../common/nodejs/admin/discovery.js';
+import {getIdentityContext} from '../common/nodejs/admin/user.js';
+import DockerManager from '@davidkhala/dockerode/docker.js';
+import {ParseResult, ParsePeerResult} from '../common/nodejs/formatter/discovery.js';
+
 const dockerManager = new DockerManager();
-const {ParseResult, ParsePeerResult} = require('../common/nodejs/formatter/discovery');
+const logger = consoleLogger('test:serviceDiscovery');
 describe('change container', () => {
 	it('deletePeer', async () => {
 		const containerName = 'peer0.astri.org';
