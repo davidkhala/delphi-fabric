@@ -1,5 +1,5 @@
-import * as helper from './helper';
-import Transaction from '../common/nodejs/transaction';
+import * as helper from './helper.js';
+import Transaction from '../common/nodejs/transaction.js';
 import {consoleLogger} from '@davidkhala/logger/log4.js';
 
 const defaultLogger = consoleLogger('transaction helper');

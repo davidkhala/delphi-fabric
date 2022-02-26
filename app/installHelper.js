@@ -1,12 +1,12 @@
+import assert from 'assert';
 import {install, getEndorsePolicy, getCollectionConfig} from './chaincodeHelper.js';
 import ChaincodeAction from '../common/nodejs/chaincodeOperation.js';
-import * as helper from './helper';
+import * as helper from './helper.js';
 import {consoleLogger} from '@davidkhala/logger/log4.js';
-import QueryHub from '../common/nodejs/query';
-import assert from 'assert';
+import QueryHub from '../common/nodejs/query.js';
 import {importFrom} from '@davidkhala/light/es6.mjs';
 
-const globalConfig = importFrom('./config/orgs.json', import.meta);
+const globalConfig = importFrom('../config/orgs.json', import.meta);
 const logger = consoleLogger('install helper');
 const prepare = ({PackageID}) => {
 	const name = PackageID.split(':')[0];

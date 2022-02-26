@@ -23,10 +23,8 @@ a pure helper to fabric-sdk user.
     - named docker volume to avoid infinite file path hell
 - No need to copy and paste to have a proper connection profile from existing network. Now you are simulation your own network
 - No need to global find all appearance of `org1` and replace it with `orgA`, organization names and mspid are put together
-- Forget to cleanup legacy configs after you restart your network? 
-    It is impossible here thanks to our carefully tested cleaning-up process
-- Production-level and long run maintenance
-    - This project is the research facility of a active blockchain product
+- Powered by our carefully tested cleaning-up process, it is impossible here forgetting to clean-up legacy configs after you restart your network. 
+- Production-ready and long run maintenance
 - Perfect same crypto-material file structure as you use `cryptogen`. We have place fabric-ca response in good manner.
 
 ## Features

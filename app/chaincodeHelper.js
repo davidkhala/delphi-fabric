@@ -1,14 +1,15 @@
-import tmp from '@davidkhala/nodeutils/tmp.js';
+import {createTmpDir} from '@davidkhala/nodeutils/tmp.js';
 import path from 'path';
+import {homeResolve} from '@davidkhala/light/index.js';
+import {execSync} from '@davidkhala/light/devOps.js';
+import {importFrom} from '@davidkhala/light/es6.mjs';
 import ChaincodeAction from '../common/nodejs/chaincodeOperation.js';
 import ChaincodePackage from '../common/nodejs/chaincodePackage.js';
-
 import {discoveryChaincodeInterestBuilder} from '../common/nodejs/serviceDiscovery.js';
-import chaincodeConfig from '../config/chaincode.json';
 import {couchDBIndex} from '../common/nodejs/couchdb.js';
 import {ChaincodeType} from '../common/nodejs/formatter/chaincode.js';
 
-import {homeResolve, execSync} from '@davidkhala/light/index.js';
+const chaincodeConfig = importFrom('../config/chaincode.json', import.meta);
 
 export const prepareInstall = async (chaincodeId, binManager) => {
 	const {path: chaincodeRelativePath, type: Type, couchDBIndexes} = chaincodeConfig[chaincodeId];
@@ -23,7 +24,7 @@ export const prepareInstall = async (chaincodeId, binManager) => {
 		Type,
 		Label: chaincodeId
 	});
-	const [tmpDir, t1] = tmp.createTmpDir();
+	const [tmpDir, t1] = createTmpDir();
 	const ccPack = path.resolve(tmpDir, 'ccPackage.tar.gz');
 
 	if (Array.isArray(couchDBIndexes)) {

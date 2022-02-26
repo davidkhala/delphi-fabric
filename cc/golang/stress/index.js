@@ -3,11 +3,12 @@ import {installAll, ChaincodeDefinitionOperator} from '../../../app/installHelpe
 import InvokeHelper from '../../../app/invokeHelper.js';
 import {consoleLogger} from '@davidkhala/logger/log4.js';
 
+const chaincodeID = 'stress';
 const logger = consoleLogger(`chaincode:${chaincodeID}`);
 const orderers = helper.newOrderers();
 const orderer = orderers[0];
 const {channel = 'allchannel'} = process.env;
-const chaincodeID = 'stress';
+
 const init_required = false;
 
 describe('deploy', () => {
