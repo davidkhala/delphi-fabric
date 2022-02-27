@@ -1,5 +1,5 @@
 {
-  "TLS": true,
+  "TLS": false,
   "docker": {
     "fabricTag": "2.4",
     "caTag": "1.5",
