@@ -1,15 +1,14 @@
 import assert from 'assert';
+import {base64} from '@davidkhala/light/format.js';
+import {consoleLogger} from '@davidkhala/logger/log4.js';
 import * as helper from '../../../app/helper.js';
 import InvokeHelper from '../../../app/invokeHelper.js';
 import {
 	putRaw, getRaw, whoami, putBatch, list, get, put, chaincodeID, getEndorsement, putEndorsement, getPage, getCertID, peerMSPID,
 	getPrivate, putPrivate, putImplicit, getImplicit, chaincodePing, richQuery
-} from './diagnoseInvoke';
-
-import {getResponses} from '../../../common/nodejs/formatter/proposalResponse';
-import {consoleLogger} from '@davidkhala/logger/log4.js';
+} from './diagnoseInvoke.js';
+import {getResponses} from '../../../common/nodejs/formatter/proposalResponse.js';
 import {TxValidationCode} from '../../../common/nodejs/formatter/constants.js';
-import {base64} from '@davidkhala/nodeutils/format';
 import {readWritePrivate} from './diagnoseInvoke.js';
 const logger = consoleLogger('chaincode:diagnose');
 const chaincodeId = 'diagnose';

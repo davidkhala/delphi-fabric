@@ -122,7 +122,7 @@ describe('channelSetup', function () {
 	});
 	it('query channel Joined')
 	it('setup anchor peer', async () => {
-		await sleep(30000);
+		await sleep(5000);
 		if (!process.env.anchor) {
 			logger.warn('it skipped due to unspecified process.env.anchor');
 			return;

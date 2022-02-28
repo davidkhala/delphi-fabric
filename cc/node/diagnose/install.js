@@ -1,6 +1,7 @@
 import {installAll, ChaincodeDefinitionOperator} from '../../../app/installHelper.js';
 import * as helper from '../../../app/helper.js';
-import {consoleLogger} from '@davidkhala/logger/log4.js'
+import {consoleLogger} from '@davidkhala/logger/log4.js';
+
 const chaincodeId = 'nodeDiagnose';
 const logger = consoleLogger(chaincodeId);
 const init_required = true;
