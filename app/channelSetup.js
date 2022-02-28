@@ -58,7 +58,7 @@ describe('channelSetup', function () {
 		}
 
 	});
-	it('To make raft make consensus, do check after all orderer joined', async ()=>{
+	it('To make raft make consensus, do check after all orderer joined', async () => {
 		const channel = helper.prepareChannel(channelName);
 		for (const ordererOrgName of Object.keys(globalConfig.orderer.organizations)) {
 			const orderers = helper.newOrderers(ordererOrgName);
@@ -82,7 +82,7 @@ describe('channelSetup', function () {
 				await waitForGenesisBlock();
 			}
 		}
-	})
+	});
 	it('join peers', async () => {
 		// params
 		const channelConfig = globalConfig.channels[channelName];
@@ -97,20 +97,19 @@ describe('channelSetup', function () {
 			// FIXME, not work yet
 			try {
 				await joinPeer(channel, peers, user, blockFile);
-			//	{ status: 500, message: "channel 'allchannel' not found" }
-			}
-			catch (e){
-				logger.error(e)
-				throw e
+				//	{ status: 500, message: "channel 'allchannel' not found" }
+			} catch (e) {
+				logger.error(e);
+				throw e;
 			}
 
 
 			const queryHub = new QueryHub(peers, user);
-			let JoinedResult
+			let JoinedResult;
 			try {
 				JoinedResult = await queryHub.channelJoined();
-			}catch (e){
-				logger.error(e)
+			} catch (e) {
+				logger.error(e);
 			}
 
 			for (const [index, peer] of Object.entries(peers)) {
@@ -120,13 +119,16 @@ describe('channelSetup', function () {
 
 		}
 	});
-	it('query channel Joined')
+	it('query channel Joined');
 	it('setup anchor peer', async () => {
-		await sleep(5000);
+
 		if (!process.env.anchor) {
 			logger.warn('it skipped due to unspecified process.env.anchor');
 			return;
 		}
+		const peers = helper.allPeers();
+
+		await sleep(2000 * peers.length);
 		if (!process.env.binPath) {
 			process.env.binPath = path.resolve(__dirname, '../common/bin/');
 		}
