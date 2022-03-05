@@ -1,0 +1,41 @@
+info:
+  contact:
+    email: david-khala@hotmail.com
+  title: github.com/davidkhala/delphi-fabric/app
+  version: v0.0.0
+paths:
+  /fabric/ping:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: endpoint like grpc(s)://\<fqdn\> or \<fqdn\>
+        in: body
+        name: address
+        required: true
+        schema:
+          type: string
+      - description: Certificate in PEM format
+        in: body
+        name: certificate
+        required: true
+        schema:
+          type: string
+      - description: pseudo endpoint \<fqdn\>
+        in: body
+        name: ssl-target-name-override
+        required: true
+        schema:
+          type: string
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+swagger: "2.0"

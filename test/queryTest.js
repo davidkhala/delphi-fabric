@@ -1,6 +1,11 @@
-const QueryHub = require('../common/nodejs/query');
-const helper = require('../app/helper');
-const logger = require('khala-logger/log4js').consoleLogger('test:queryTest');
+import QueryHub from '../common/nodejs/query.js';
+import * as  helper from '../app/helper.js';
+import {consoleLogger} from '@davidkhala/logger/log4.js';
+import EventHub from '../common/nodejs/admin/eventHub.js';
+import {emptyChannel} from '../common/nodejs/admin/channel.js';
+import EventHubQuery from '../common/nodejs/eventHub.js';
+
+const logger = consoleLogger('test:queryTest');
 
 describe('query', () => {
 	const peers = [helper.newPeer(0, 'icdd'), helper.newPeer(0, 'astri.org')];
@@ -33,10 +38,9 @@ describe('query', () => {
 		logger.info(result);
 	});
 });
-const EventHub = require('../common/nodejs/admin/eventHub');
-const {emptyChannel} = require('../common/nodejs/admin/channel');
-const EventHubQuery = require('../common/nodejs/eventHub');
-describe('queryTransaction', () => {
+
+describe('queryTransaction', function () {
+	this.timeout(0);
 	const peers = [helper.newPeer(0, 'icdd'), helper.newPeer(0, 'astri.org')];
 	const org = 'icdd';
 	const user = helper.getOrgAdmin(org);
@@ -45,8 +49,7 @@ describe('queryTransaction', () => {
 	const channelName = 'allchannel';
 	const channel = emptyChannel(channelName);
 	const eventHub = new EventHub(channel, eventer);
-	it('for all transactions', async function () {
-		this.timeout(0);
+	it('for all transactions', async () => {
 		const eventHubQuery = new EventHubQuery(eventHub, queryHub.identityContext);
 		const txs = await eventHubQuery.replayTx(4);
 		logger.info(txs);
@@ -59,13 +62,13 @@ describe('queryTransaction', () => {
 		const result = await queryHub.tx(channelName, transactionId);
 		logger.info(result);
 	});
-	it('for single transaction', async function () {
-		this.timeout(0);
+	it('for single transaction', async () => {
+
 		for (const peer of peers) {
 			await peer.connect();
 		}
 		// NOTE: channel config tx cannot be found by query
-		const transactionId = '2f01799f8235107808d2973cda997f145d686b23571b5c1418402d081b3d40ff';
+		const transactionId = 'b4da8d97a0a998ab288590036f5a3ce056ff7d504263dd4b6549b44cb015a1af';
 
 		const result = await queryHub.tx(channelName, transactionId);
 		logger.info(result);

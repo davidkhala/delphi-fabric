@@ -1,0 +1,65 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "github.com/davidkhala/delphi-fabric/app",
+        "contact": {
+            "email": "david-khala@hotmail.com"
+        },
+        "version": "v0.0.0"
+    },
+    "paths": {
+        "/fabric/ping": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "text/plain"
+                ],
+                "parameters": [
+                    {
+                        "description": "endpoint like grpc(s)://\\\u003cfqdn\\\u003e or \\\u003cfqdn\\\u003e",
+                        "name": "address",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Certificate in PEM format",
+                        "name": "certificate",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "pseudo endpoint \\\u003cfqdn\\\u003e",
+                        "name": "ssl-target-name-override",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
