@@ -126,7 +126,7 @@ func ProcessProposal(c *gin.Context) {
 // @Router /fabric/transact/commit [post]
 // @Produce json
 // @Accept x-www-form-urlencoded
-// @Param orderer formData json true "json data to specify orderer"
+// @Param orderer formData string true "json data to specify orderer"
 // @Param transaction formData string true "serialized signed proposalResponses as envelop protobuf with hex format"
 // @Success 200 {object} model.TxResult
 func Commit(c *gin.Context) {

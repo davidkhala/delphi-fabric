@@ -4,7 +4,6 @@ import (
 	"github.com/davidkhala/goutils"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/protobuf/proto"
-	"github.com/hyperledger/fabric-protos-go/orderer"
 	"github.com/hyperledger/fabric-protos-go/peer"
 )
 
@@ -57,4 +56,7 @@ type Node struct {
 	SslTargetNameOverride string `json:"ssl-target-name-override"`
 }
 
-type TxResult orderer.BroadcastResponse
+type TxResult struct {
+	Status int32  `json:"status,omitempty"`
+	Info   string `json:"info,omitempty"`
+}

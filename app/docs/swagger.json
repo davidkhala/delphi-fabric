@@ -14,6 +14,53 @@
                     "application/x-www-form-urlencoded"
                 ],
                 "produces": [
+                    "text/plain"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "endpoint like grpc(s)://\\\u003cfqdn\\\u003e or \\\u003cfqdn\\\u003e",
+                        "name": "address",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Certificate in PEM format. should be in hex format after translation to solve linebreak issue",
+                        "name": "certificate",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "pseudo endpoint \\\u003cfqdn\\\u003e",
+                        "name": "ssl-target-name-override",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/fabric/transact/:channel/build-proposal": {
+            "post": {
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
                     "application/json"
                 ],
                 "parameters": [
@@ -60,9 +107,83 @@
                     }
                 }
             }
+        },
+        "/fabric/transact/commit": {
+            "post": {
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "json data to specify orderer",
+                        "name": "orderer",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "serialized signed proposalResponses as envelop protobuf with hex format",
+                        "name": "transaction",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.TxResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/fabric/transact/process-proposal": {
+            "post": {
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "json data to specify endorsers",
+                        "name": "endorsers",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "serialized signed-proposal protobuf with hex format",
+                        "name": "signed-proposal",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.ProposalResponseResult"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "model.ProposalResponseResult": {
+            "type": "object",
+            "additionalProperties": {
+                "type": "string"
+            }
+        },
         "model.ProposalResult": {
             "type": "object",
             "properties": {
@@ -71,6 +192,17 @@
                 },
                 "txid": {
                     "type": "string"
+                }
+            }
+        },
+        "model.TxResult": {
+            "type": "object",
+            "properties": {
+                "info": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer"
                 }
             }
         }

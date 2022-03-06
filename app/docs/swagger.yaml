@@ -1,10 +1,21 @@
 definitions:
+  model.ProposalResponseResult:
+    additionalProperties:
+      type: string
+    type: object
   model.ProposalResult:
     properties:
       proposal-proto:
         type: string
       txid:
         type: string
+    type: object
+  model.TxResult:
+    properties:
+      info:
+        type: string
+      status:
+        type: integer
     type: object
 info:
   contact:
@@ -13,6 +24,38 @@ info:
   version: v0.0.0
 paths:
   /fabric/ping:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      parameters:
+      - description: endpoint like grpc(s)://\<fqdn\> or \<fqdn\>
+        in: formData
+        name: address
+        required: true
+        type: string
+      - description: Certificate in PEM format. should be in hex format after translation
+          to solve linebreak issue
+        in: formData
+        name: certificate
+        required: true
+        type: string
+      - description: pseudo endpoint \<fqdn\>
+        in: formData
+        name: ssl-target-name-override
+        required: true
+        type: string
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+  /fabric/transact/:channel/build-proposal:
     post:
       consumes:
       - application/x-www-form-urlencoded
@@ -47,4 +90,49 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/model.ProposalResult'
+  /fabric/transact/commit:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      parameters:
+      - description: json data to specify orderer
+        in: formData
+        name: orderer
+        required: true
+        type: string
+      - description: serialized signed proposalResponses as envelop protobuf with
+          hex format
+        in: formData
+        name: transaction
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.TxResult'
+  /fabric/transact/process-proposal:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      parameters:
+      - description: json data to specify endorsers
+        in: formData
+        name: endorsers
+        required: true
+        type: string
+      - description: serialized signed-proposal protobuf with hex format
+        in: formData
+        name: signed-proposal
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.ProposalResponseResult'
 swagger: "2.0"
