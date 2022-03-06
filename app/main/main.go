@@ -7,6 +7,7 @@ import (
 	"github.com/davidkhala/goutils/restful"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"os"
 )
 
 // @title github.com/davidkhala/delphi-fabric/app
@@ -22,5 +23,9 @@ func main() {
 	App.POST("/fabric/transact/commit", app.Commit)
 	App.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler)) // refers to /swagger/*any
 
-	goutils.PanicError(App.Run(":8080"))
+	port, exists := os.LookupEnv("PORT")
+	if !exists {
+		port = "8080"
+	}
+	goutils.PanicError(App.Run(":" + port))
 }
