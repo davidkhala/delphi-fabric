@@ -24,44 +24,63 @@ const docTemplate = `{
                     "application/x-www-form-urlencoded"
                 ],
                 "produces": [
-                    "text/plain"
+                    "application/json"
                 ],
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "endpoint like grpc(s)://\\\u003cfqdn\\\u003e or \\\u003cfqdn\\\u003e",
-                        "name": "address",
+                        "description": "fabric channel name",
+                        "name": "channel",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "fabric chaincode name",
+                        "name": "chaincode",
                         "in": "formData",
                         "required": true
                     },
                     {
                         "type": "string",
-                        "description": "Certificate in PEM format",
-                        "name": "certificate",
+                        "description": "certificate of signer",
+                        "name": "creator",
                         "in": "formData",
                         "required": true
                     },
                     {
                         "type": "string",
-                        "description": "pseudo endpoint \\\u003cfqdn\\\u003e",
-                        "name": "ssl-target-name-override",
-                        "in": "formData",
-                        "required": true
+                        "description": "Optional. chaincode version",
+                        "name": "version",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "chaincode args, including function name [fcn]",
+                        "name": "args",
+                        "in": "formData"
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/model.ProposalResult"
                         }
                     }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "model.ProposalResult": {
+            "type": "object",
+            "properties": {
+                "proposal-proto": {
+                    "type": "string"
+                },
+                "txid": {
+                    "type": "string"
                 }
             }
         }

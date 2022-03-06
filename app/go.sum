@@ -36,11 +36,12 @@ github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ3
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/davidkhala/fabric-common/golang v0.0.0-20220305105152-082769943b41 h1:NEBo5kQlYF/rMjVeIwnKKvhAd+9WlBjyLlbFT1lu5Kg=
-github.com/davidkhala/fabric-common/golang v0.0.0-20220305105152-082769943b41/go.mod h1:5lCAta7B1Ui2L3b7y2jzkwJfh+saF6mqhR34syjE71E=
+github.com/davidkhala/fabric-common/golang v0.0.0-20220306044254-8b611a53a011 h1:KHG/81Bqv/7BCna96qOV6/ZxOtdCdb64w7vLJtZVGtk=
+github.com/davidkhala/fabric-common/golang v0.0.0-20220306044254-8b611a53a011/go.mod h1:5lCAta7B1Ui2L3b7y2jzkwJfh+saF6mqhR34syjE71E=
 github.com/davidkhala/goutils v1.5.2/go.mod h1:v6p+JuaIjyb+LDQ3K2mtMLgLefwhaYeK+Zlpt0wghZ4=
-github.com/davidkhala/goutils v1.5.3 h1:zhnykFpqiz9c1LT0IUCN8RHMOeoGCu5gUawSXw3sG5M=
 github.com/davidkhala/goutils v1.5.3/go.mod h1:v6p+JuaIjyb+LDQ3K2mtMLgLefwhaYeK+Zlpt0wghZ4=
+github.com/davidkhala/goutils v1.5.4 h1:IjcCj8+6GwnCfafg+fH/0LtloicXTowavZkJYeIq7mg=
+github.com/davidkhala/goutils v1.5.4/go.mod h1:v6p+JuaIjyb+LDQ3K2mtMLgLefwhaYeK+Zlpt0wghZ4=
 github.com/davidkhala/goutils/grpc v0.0.0 h1:YxXKE2GITtvB8Nwqj4v+kdgFRSc5hT1dl6Ds2BShlAw=
 github.com/davidkhala/goutils/grpc v0.0.0/go.mod h1:NDdLnCGFhFWYZCEF/bLfIHId6I+y2NQc0KZqrCGREwQ=
 github.com/davidkhala/goutils/restful v0.0.1 h1:F6zOksfvE1aq/sjUhxViaxVqKAcmcku+7ch4mFPFRgY=

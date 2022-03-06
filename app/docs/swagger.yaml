@@ -1,3 +1,11 @@
+definitions:
+  model.ProposalResult:
+    properties:
+      proposal-proto:
+        type: string
+      txid:
+        type: string
+    type: object
 info:
   contact:
     email: david-khala@hotmail.com
@@ -9,30 +17,34 @@ paths:
       consumes:
       - application/x-www-form-urlencoded
       parameters:
-      - description: endpoint like grpc(s)://\<fqdn\> or \<fqdn\>
-        in: formData
-        name: address
+      - description: fabric channel name
+        in: path
+        name: channel
         required: true
         type: string
-      - description: Certificate in PEM format
+      - description: fabric chaincode name
         in: formData
-        name: certificate
+        name: chaincode
         required: true
         type: string
-      - description: pseudo endpoint \<fqdn\>
+      - description: certificate of signer
         in: formData
-        name: ssl-target-name-override
+        name: creator
         required: true
+        type: string
+      - description: Optional. chaincode version
+        in: formData
+        name: version
+        type: string
+      - description: chaincode args, including function name [fcn]
+        in: formData
+        name: args
         type: string
       produces:
-      - text/plain
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            type: string
-        "400":
-          description: Bad Request
-          schema:
-            type: string
+            $ref: '#/definitions/model.ProposalResult'
 swagger: "2.0"

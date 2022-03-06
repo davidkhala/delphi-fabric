@@ -16,7 +16,7 @@ import {importFrom, filedirname} from '@davidkhala/light/es6.mjs';
 
 filedirname(import.meta);
 const globalConfig = importFrom('../config/orgs.json', import.meta);
-const binPath = process.env.binPath || path.resolve(__dirname, '../common/bin/');
+const binPath = process.env.binPath || path.resolve(__dirname, '../model/bin/');
 const {join: joinOrderer} = Orderer;
 const channelsConfig = globalConfig.channels;
 
@@ -130,7 +130,7 @@ describe('channelSetup', function () {
 
 		await sleep(2000 * peers.length);
 		if (!process.env.binPath) {
-			process.env.binPath = path.resolve(__dirname, '../common/bin/');
+			process.env.binPath = path.resolve(__dirname, '../model/bin/');
 		}
 
 		const channelConfig = globalConfig.channels[channelName];
