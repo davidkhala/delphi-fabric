@@ -1,11 +1,11 @@
 FROM golang:1.16 as golang
-ADD . .
+COPY . .
 RUN go mod vendor
-RUN go build -o app github.com/davidkhala/delphi-fabric/app/main
+RUN go build -o /root/app github.com/davidkhala/delphi-fabric/app/main
 
 
 FROM alpine
-COPY --from=golang /app /usr/local/bin
+COPY --from=golang /root/app /usr/local/bin
 
 CMD ["app"]
 
