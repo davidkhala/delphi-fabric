@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/davidkhala/delphi-fabric/app/model"
 	"github.com/davidkhala/fabric-common/golang"
@@ -9,6 +10,8 @@ import (
 	"github.com/davidkhala/goutils/grpc"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/protobuf/proto"
+	tape "github.com/hyperledger-twgc/tape/pkg/infra"
+	"github.com/hyperledger/fabric-protos-go/peer"
 	"net/http"
 )
 
@@ -17,24 +20,19 @@ import (
 // @Produce text/plain
 // @Accept x-www-form-urlencoded
 // @Param address formData string true "endpoint like grpc(s)://\<fqdn\> or \<fqdn\>"
-// @Param certificate formData string true "Certificate in PEM format. Support hex as secondary format, if you suffer from PEM linebreak issue"
+// @Param certificate formData string true "Certificate in PEM format. should be in hex format after translation to solve linebreak issue"
 // @Param ssl-target-name-override formData string true "pseudo endpoint \<fqdn\>"
 // @Success 200 {string} string pong
 // @Failure 400 {string} string Bad request
 func PingFabric(c *gin.Context) {
 
 	address := c.PostForm("address")
-	certificatePEM := c.PostForm("certificate")
+	certificatePEM := model.BytesFromForm(c, "certificate")
 
-	certificate, err := crypto.ParseCertPem([]byte(certificatePEM))
+	certificate, err := crypto.ParseCertPem(certificatePEM)
 	if err != nil {
-		// support hex as secondary format, due to PEM linebreak issue
-		var decoded = goutils.HexDecodeOrPanic(certificatePEM)
-		certificate, err = crypto.ParseCertPem(decoded)
-		if err != nil {
-			c.String(http.StatusBadRequest, "Bad request: [certificate]")
-			return
-		}
+		c.String(http.StatusBadRequest, "Bad request: [certificate]")
+		return
 	}
 	var param = grpc.Params{
 		SslTargetNameOverride: c.DefaultPostForm("ssl-target-name-override", golang.ToAddress(address)),
@@ -51,7 +49,7 @@ func PingFabric(c *gin.Context) {
 }
 
 // BuildProposal
-// @Router /fabric/ping [post]
+// @Router /fabric/transact/:channel/build-proposal [post]
 // @Produce json
 // @Accept x-www-form-urlencoded
 // @Param channel path string true "fabric channel name"
@@ -85,4 +83,45 @@ func BuildProposal(c *gin.Context) {
 		Txid:          txid,
 	}
 	c.JSON(http.StatusOK, result)
+}
+
+// ProcessProposal
+// @Router /fabric/transact/process-proposal [post]
+// @Produce json
+// @Accept x-www-form-urlencoded
+// @Param endorsers formData string true "json data to specify endorsers"
+// @Param signed-proposal formData string true "serialized signed-proposal protobuf with hex format"
+// @Success 200 {object} model.ProposalResponseResult
+func ProcessProposal(c *gin.Context) {
+
+	endorsers := c.PostForm("endorsers")
+	println(endorsers)
+	signedBytes := model.BytesFromForm(c, "signed-proposal")
+	var signed = peer.SignedProposal{}
+	err := proto.Unmarshal(signedBytes, &signed)
+	goutils.PanicError(err)
+
+	ctx := context.Background()
+	proposalResponses := model.ProposalResponseResult{}
+	var endorserNodes []model.Node
+	goutils.FromJson([]byte(endorsers), &endorserNodes)
+
+	for _, node := range endorserNodes {
+		var node_translated = golang.Node{
+			Node: tape.Node{
+				Addr:          node.Address,
+				TLSCARootByte: []byte(node.TLSCARoot),
+			},
+			SslTargetNameOverride: node.SslTargetNameOverride,
+		}
+		grpcClient, _err := node_translated.AsGRPCClient()
+		goutils.PanicError(_err) // TODO use strategy here
+		endorserClient := golang.EndorserFrom(grpcClient)
+		proposalResponse, _err := endorserClient.ProcessProposal(ctx, &signed)
+		goutils.PanicError(_err)
+		proposalResponseInBytes, _err := proto.Marshal(proposalResponse)
+		goutils.PanicError(_err)
+		proposalResponses[node.Address] = model.BytesResponse(proposalResponseInBytes)
+	}
+	c.JSON(http.StatusOK, proposalResponses)
 }

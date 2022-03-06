@@ -18,6 +18,7 @@ func main() {
 	App.GET("/", restful.Ping)
 	App.POST("/fabric/ping", app.PingFabric)
 	App.POST("/fabric/transact/:channel/build-proposal", app.BuildProposal)
+	App.POST("/fabric/transact/process-proposal", app.ProcessProposal)
 	App.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler)) // refers to /swagger/*any
 
 	goutils.PanicError(App.Run(":8080"))

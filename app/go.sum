@@ -38,6 +38,10 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davidkhala/fabric-common/golang v0.0.0-20220306044254-8b611a53a011 h1:KHG/81Bqv/7BCna96qOV6/ZxOtdCdb64w7vLJtZVGtk=
 github.com/davidkhala/fabric-common/golang v0.0.0-20220306044254-8b611a53a011/go.mod h1:5lCAta7B1Ui2L3b7y2jzkwJfh+saF6mqhR34syjE71E=
+github.com/davidkhala/fabric-common/golang v0.0.0-20220306051303-e6ff1be2e543 h1:sYb685wKuPDBcPhfFYMZmD2tUguVuCwf7hyfYQFy//I=
+github.com/davidkhala/fabric-common/golang v0.0.0-20220306051303-e6ff1be2e543/go.mod h1:5lCAta7B1Ui2L3b7y2jzkwJfh+saF6mqhR34syjE71E=
+github.com/davidkhala/fabric-common/golang v0.0.0-20220306094431-98c6ba96f55d h1:kTp8hpd+mMvPxw+ZFmtR9LE/T5B3w77QKu+oGOCg/5c=
+github.com/davidkhala/fabric-common/golang v0.0.0-20220306094431-98c6ba96f55d/go.mod h1:5lCAta7B1Ui2L3b7y2jzkwJfh+saF6mqhR34syjE71E=
 github.com/davidkhala/goutils v1.5.2/go.mod h1:v6p+JuaIjyb+LDQ3K2mtMLgLefwhaYeK+Zlpt0wghZ4=
 github.com/davidkhala/goutils v1.5.3/go.mod h1:v6p+JuaIjyb+LDQ3K2mtMLgLefwhaYeK+Zlpt0wghZ4=
 github.com/davidkhala/goutils v1.5.4 h1:IjcCj8+6GwnCfafg+fH/0LtloicXTowavZkJYeIq7mg=

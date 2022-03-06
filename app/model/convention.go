@@ -8,7 +8,10 @@ import (
 )
 
 func BytesFromForm(c *gin.Context, key string) []byte {
-	return goutils.HexDecodeOrPanic(c.PostForm(key))
+	return BytesFromString(c.PostForm(key))
+}
+func BytesFromString(str string) []byte {
+	return goutils.HexDecodeOrPanic(str)
 }
 func BytesResponse(data []byte) string {
 	return goutils.HexEncode(data)
@@ -19,8 +22,17 @@ type ProposalResult struct {
 	Txid          string `json:"txid"`
 }
 
-func (result ProposalResult) ParseOrPanic() (proposal *peer.Proposal) {
-	err := proto.Unmarshal(goutils.HexDecodeOrPanic(result.ProposalProto), proposal)
+func (result ProposalResult) ParseOrPanic() *peer.Proposal {
+	var proposal = &peer.Proposal{}
+	err := proto.Unmarshal(BytesFromString(result.ProposalProto), proposal)
 	goutils.PanicError(err)
-	return
+	return proposal
+}
+
+type ProposalResponseResult map[string]string
+
+type Node struct {
+	Address               string `json:"address"`
+	TLSCARoot             string `json:"tlsca-root"`
+	SslTargetNameOverride string `json:"ssl-target-name-override"`
 }

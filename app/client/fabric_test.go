@@ -3,9 +3,10 @@ package client
 import (
 	"fmt"
 	"github.com/davidkhala/delphi-fabric/app/model"
+	"github.com/davidkhala/fabric-common/golang"
 	"github.com/davidkhala/goutils"
 	"github.com/davidkhala/goutils/http"
-	_ "github.com/davidkhala/goutils/http"
+	"github.com/golang/protobuf/proto"
 	tape "github.com/hyperledger-twgc/tape/pkg/infra"
 	"github.com/hyperledger/fabric-protos-go/peer"
 	"github.com/kortschak/utter"
@@ -48,16 +49,11 @@ vLbOgtIOBwbIcK13Gi2yMb0AIM5ropJTygIgBoOyOOrXcboyjfAiidNvfNTClpSD
 
 var cryptoConfig = tape.CryptoConfig{
 	MSPID:    "astriMSP",
-	PrivKey:  "/home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/astri.org/users/Admin@astri.org/msp/keystore/5c2c5db454e25750fc84853900e5913cb4df49bcffff8a881146d08ca409c3af_sk",
+	PrivKey:  golang.FindKeyFilesOrPanic("/home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/astri.org/users/Admin@astri.org/msp/keystore")[0],
 	SignCert: "/home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/astri.org/users/Admin@astri.org/msp/signcerts/Admin@astri.org-cert.pem",
 }
 
 var proposalObject *peer.Proposal
-
-func TestE2E(t *testing.T) {
-	t.Run("TestBuildProposal", TestSignProposal)
-	t.Run("TestSignProposal", TestSignProposal)
-}
 
 // prepare value for proposalObject
 func TestBuildProposal(t *testing.T) {
@@ -91,13 +87,38 @@ AZembctiFmYl9uQ2S1Ke
 	var dataStruct model.ProposalResult
 	var resultBody = response.Trim().Body
 	goutils.FromJson([]byte(resultBody), &dataStruct)
+	utter.Dump(dataStruct)
 	proposalObject = dataStruct.ParseOrPanic()
 }
 func TestSignProposal(t *testing.T) {
-	if proposalObject == nil {
-		t.Fail()
-	}
+	TestBuildProposal(t)
 	var signer = InitOrPanic(cryptoConfig)
 	var signed = SignProposalOrPanic(proposalObject, signer)
+	// Send out
+	var _url = buildURL("/fabric/transact/process-proposal")
+	var endorsers = []model.Node{
+		{
+			Address:               "localhost:8051",
+			TLSCARoot:             "/home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/tlsca/tlsca.icdd-cert.pem",
+			SslTargetNameOverride: "peer0.icdd",
+		},
+		{
+			Address:               "localhost:7051",
+			TLSCARoot:             "/home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/astri.org/peers/peer0.astri.org/tls/ca.crt",
+			SslTargetNameOverride: "peer0.astri.org",
+		},
+	}
+
+	var endorsersInString = string(goutils.ToJson(endorsers))
+
+	signedBytes, err := proto.Marshal(signed)
+	goutils.PanicError(err)
+	var body = url.Values{
+		"endorsers":       {endorsersInString},
+		"signed-proposal": {model.BytesResponse(signedBytes)},
+	}
+	var response = http.PostForm(_url, body, nil)
+	var resultBody = response.Trim().Body
+	utter.Dump(resultBody)
 
 }
