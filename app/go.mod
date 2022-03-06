@@ -3,7 +3,7 @@ module github.com/davidkhala/delphi-fabric/app
 go 1.16
 
 require (
-	github.com/davidkhala/fabric-common/golang v0.0.0-20220306094431-98c6ba96f55d
+	github.com/davidkhala/fabric-common/golang v0.0.0-20220306105456-1858dba6da7f
 	github.com/davidkhala/goutils v1.5.4
 	github.com/davidkhala/goutils/grpc v0.0.0
 	github.com/davidkhala/goutils/restful v0.0.1

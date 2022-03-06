@@ -8,6 +8,7 @@ import (
 	"github.com/davidkhala/goutils/http"
 	"github.com/golang/protobuf/proto"
 	tape "github.com/hyperledger-twgc/tape/pkg/infra"
+	orderer2 "github.com/hyperledger/fabric-protos-go/orderer"
 	"github.com/hyperledger/fabric-protos-go/peer"
 	"github.com/kortschak/utter"
 	rawHttp "net/http"
@@ -54,28 +55,16 @@ var cryptoConfig = tape.CryptoConfig{
 }
 
 var proposalObject *peer.Proposal
+var proposalResponses []*peer.ProposalResponse
 
 // prepare value for proposalObject
 func TestBuildProposal(t *testing.T) {
 
+	var signer = InitOrPanic(cryptoConfig)
 	var channel = "allchannel"
 	var _url = buildURL(fmt.Sprintf("/fabric/transact/%s/build-proposal", channel))
 	var chaincode = "diagnose"
-	var creator = goutils.HexEncode([]byte(`-----BEGIN CERTIFICATE-----
-MIIB6zCCAZGgAwIBAgIUOGZWFq/3C4N2MlPHMYzSoVxDejAwCgYIKoZIzj0EAwIw
-aDELMAkGA1UEBhMCVVMxFzAVBgNVBAgTDk5vcnRoIENhcm9saW5hMRQwEgYDVQQK
-EwtIeXBlcmxlZGdlcjEPMA0GA1UECxMGRmFicmljMRkwFwYDVQQDExBmYWJyaWMt
-Y2Etc2VydmVyMB4XDTIyMDMwMzA4MjMwMFoXDTIzMDMwMzA4MjgwMFowITEPMA0G
-A1UECxMGY2xpZW50MQ4wDAYDVQQDEwVBZG1pbjBZMBMGByqGSM49AgEGCCqGSM49
-AwEHA0IABP1K9sciVLcXiwMChUVQclZOBQVD8BIArpdfepjpbPtDXL50n5lLuPli
-YA0kArhat2vD0DBxWkybzcDZl+U5oN+jYDBeMA4GA1UdDwEB/wQEAwIHgDAMBgNV
-HRMBAf8EAjAAMB0GA1UdDgQWBBS/zU0CT3YbeCyFj33IWYOxxo6baTAfBgNVHSME
-GDAWgBQB1xtTp96a5Ka5KK4SQKmrVtPCCTAKBggqhkjOPQQDAgNIADBFAiEAt1uv
-MaOQU6mH104DznNOSKL6Y4mebgRsqurZeNOp+ukCIF9TR8Aflx1qriNSL1ws/r2i
-AZembctiFmYl9uQ2S1Ke
------END CERTIFICATE-----
-`))
-
+	var creator = model.BytesResponse(signer.Creator)
 	var args = `["whoami"]`
 	var body = url.Values{
 		"chaincode": {chaincode},
@@ -87,7 +76,7 @@ AZembctiFmYl9uQ2S1Ke
 	var dataStruct model.ProposalResult
 	var resultBody = response.Trim().Body
 	goutils.FromJson([]byte(resultBody), &dataStruct)
-	utter.Dump(dataStruct)
+
 	proposalObject = dataStruct.ParseOrPanic()
 }
 func TestSignProposal(t *testing.T) {
@@ -99,12 +88,12 @@ func TestSignProposal(t *testing.T) {
 	var endorsers = []model.Node{
 		{
 			Address:               "localhost:8051",
-			TLSCARoot:             "/home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/tlsca/tlsca.icdd-cert.pem",
+			TLSCARoot:             ReadPEMFile("/home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/tlsca/tlsca.icdd-cert.pem"),
 			SslTargetNameOverride: "peer0.icdd",
 		},
 		{
 			Address:               "localhost:7051",
-			TLSCARoot:             "/home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/astri.org/peers/peer0.astri.org/tls/ca.crt",
+			TLSCARoot:             ReadPEMFile("/home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/astri.org/peers/peer0.astri.org/tls/ca.crt"),
 			SslTargetNameOverride: "peer0.astri.org",
 		},
 	}
@@ -118,7 +107,30 @@ func TestSignProposal(t *testing.T) {
 		"signed-proposal": {model.BytesResponse(signedBytes)},
 	}
 	var response = http.PostForm(_url, body, nil)
-	var resultBody = response.Trim().Body
-	utter.Dump(resultBody)
+	var result = model.ProposalResponseResult{}
+	var parsedResult = result.ParseOrPanic(response.BodyBytes())
+	proposalResponses = result.ValuesOf(parsedResult)
+}
+func TestCreateSignedTx(t *testing.T) {
+	TestSignProposal(t)
+	var signer = InitOrPanic(cryptoConfig)
+	transaction, err := tape.CreateSignedTx(proposalObject, signer, proposalResponses)
+	goutils.PanicError(err)
 
+	transactionBytes, err := proto.Marshal(transaction)
+	goutils.PanicError(err)
+	var orderer = model.Node{
+		Address:               "localhost:7050",
+		TLSCARoot:             ReadPEMFile("/home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/hyperledger/orderers/orderer0.hyperledger/tls/ca.crt"),
+		SslTargetNameOverride: "orderer0.hyperledger",
+	}
+	var body = url.Values{
+		"orderer":     {string(goutils.ToJson(orderer))},
+		"transaction": {model.BytesResponse(transactionBytes)},
+	}
+	var _url = buildURL("/fabric/transact/commit")
+	var response = http.PostForm(_url, body, nil)
+	var txResult = &orderer2.BroadcastResponse{}
+	goutils.FromJson(response.BodyBytes(), txResult)
+	utter.Dump(txResult)
 }

@@ -1,6 +1,7 @@
 package client
 
 import (
+	"github.com/davidkhala/delphi-fabric/app/model"
 	"github.com/davidkhala/fabric-common/golang"
 	"github.com/davidkhala/goutils"
 	tape "github.com/hyperledger-twgc/tape/pkg/infra"
@@ -16,4 +17,10 @@ func SignProposalOrPanic(proposal *peer.Proposal, signer *tape.Crypto) *peer.Sig
 	signed, err := tape.SignProposal(proposal, signer)
 	goutils.PanicError(err)
 	return signed
+}
+
+func ReadPEMFile(file string) string {
+	byteSlice, err := goutils.ReadFile(file)
+	goutils.PanicError(err)
+	return model.BytesResponse(byteSlice)
 }

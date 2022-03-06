@@ -11,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang/protobuf/proto"
 	tape "github.com/hyperledger-twgc/tape/pkg/infra"
+	"github.com/hyperledger/fabric-protos-go/common"
 	"github.com/hyperledger/fabric-protos-go/peer"
 	"net/http"
 )
@@ -63,7 +64,6 @@ func BuildProposal(c *gin.Context) {
 	chaincode := c.PostForm("chaincode")
 	creator := model.BytesFromForm(c, "creator")
 	version := c.DefaultPostForm("version", "")
-
 	args := c.DefaultPostForm("args", "[]")
 	var arr []string
 	err := json.Unmarshal([]byte(args), &arr)
@@ -93,24 +93,20 @@ func BuildProposal(c *gin.Context) {
 // @Param signed-proposal formData string true "serialized signed-proposal protobuf with hex format"
 // @Success 200 {object} model.ProposalResponseResult
 func ProcessProposal(c *gin.Context) {
-
 	endorsers := c.PostForm("endorsers")
-	println(endorsers)
 	signedBytes := model.BytesFromForm(c, "signed-proposal")
 	var signed = peer.SignedProposal{}
 	err := proto.Unmarshal(signedBytes, &signed)
 	goutils.PanicError(err)
-
 	ctx := context.Background()
 	proposalResponses := model.ProposalResponseResult{}
 	var endorserNodes []model.Node
 	goutils.FromJson([]byte(endorsers), &endorserNodes)
-
 	for _, node := range endorserNodes {
 		var node_translated = golang.Node{
 			Node: tape.Node{
 				Addr:          node.Address,
-				TLSCARootByte: []byte(node.TLSCARoot),
+				TLSCARootByte: model.BytesFromString(node.TLSCARoot),
 			},
 			SslTargetNameOverride: node.SslTargetNameOverride,
 		}
@@ -124,4 +120,40 @@ func ProcessProposal(c *gin.Context) {
 		proposalResponses[node.Address] = model.BytesResponse(proposalResponseInBytes)
 	}
 	c.JSON(http.StatusOK, proposalResponses)
+}
+
+// Commit
+// @Router /fabric/transact/commit [post]
+// @Produce json
+// @Accept x-www-form-urlencoded
+// @Param orderer formData json true "json data to specify orderer"
+// @Param transaction formData string true "serialized signed proposalResponses as envelop protobuf with hex format"
+// @Success 200 {object} model.TxResult
+func Commit(c *gin.Context) {
+	orderer := c.PostForm("orderer")
+	transaction := model.BytesFromForm(c, "transaction")
+	var envelop = &common.Envelope{}
+	err := proto.Unmarshal(transaction, envelop)
+	goutils.PanicError(err)
+	var ordererNode model.Node
+	goutils.FromJson([]byte(orderer), &ordererNode)
+
+	var node_translated = golang.Node{
+		Node: tape.Node{
+			Addr:          ordererNode.Address,
+			TLSCARootByte: model.BytesFromString(ordererNode.TLSCARoot),
+		},
+		SslTargetNameOverride: ordererNode.SslTargetNameOverride,
+	}
+	ordererGrpc, err := node_translated.AsGRPCClient()
+	goutils.PanicError(err)
+	var committer = golang.Committer{
+		AtomicBroadcastClient: golang.CommitterFrom(ordererGrpc),
+	}
+	err = committer.Setup()
+	goutils.PanicError(err)
+
+	txResult, err := committer.SendRecv(envelop)
+	goutils.PanicError(err)
+	c.JSON(http.StatusOK, txResult)
 }
