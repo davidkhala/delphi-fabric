@@ -21,38 +21,32 @@ const docTemplate = `{
         "/fabric/ping": {
             "post": {
                 "consumes": [
-                    "application/json"
+                    "application/x-www-form-urlencoded"
                 ],
                 "produces": [
                     "text/plain"
                 ],
                 "parameters": [
                     {
+                        "type": "string",
                         "description": "endpoint like grpc(s)://\\\u003cfqdn\\\u003e or \\\u003cfqdn\\\u003e",
                         "name": "address",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
+                        "in": "formData",
+                        "required": true
                     },
                     {
+                        "type": "string",
                         "description": "Certificate in PEM format",
                         "name": "certificate",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
+                        "in": "formData",
+                        "required": true
                     },
                     {
+                        "type": "string",
                         "description": "pseudo endpoint \\\u003cfqdn\\\u003e",
                         "name": "ssl-target-name-override",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
+                        "in": "formData",
+                        "required": true
                     }
                 ],
                 "responses": {
