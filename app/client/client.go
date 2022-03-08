@@ -40,6 +40,22 @@ func CreateProposalOrPanic(creator []byte, channelName, chaincode string, args .
 	return proposal, txid
 }
 
-func Query() {
-
+func CommitProposal(signer *tape.Crypto, params QueryParams) ([]*peer.ProposalResponse, *peer.Proposal, string) {
+	var _map, proposal, txid = Propose(signer, params)
+	var result []*peer.ProposalResponse
+	for _, value := range _map {
+		result = append(result, &value)
+	}
+	return result, proposal, txid
+}
+func QueryProposal(signer *tape.Crypto, params QueryParams) string {
+	parsedResult, _, _ := Propose(signer, params)
+	// TODO think of a reducer with validation
+	for _, proposalResponse := range parsedResult {
+		if proposalResponse.Response.Status != 200 {
+			panic(proposalResponse.Response.Message)
+		}
+		return model.ShimResultFrom(proposalResponse).Payload
+	}
+	panic("no proposalResponses found")
 }

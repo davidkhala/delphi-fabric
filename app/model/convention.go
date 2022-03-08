@@ -42,13 +42,6 @@ func (p *ProposalResponseResult) ParseOrPanic(jsonBytes []byte) map[string]peer.
 	}
 	return result
 }
-func (ProposalResponseResult) ValuesOf(p map[string]peer.ProposalResponse) []*peer.ProposalResponse {
-	var result []*peer.ProposalResponse
-	for _, value := range p {
-		result = append(result, &value)
-	}
-	return result
-}
 
 type Node struct {
 	Address               string `json:"address"`

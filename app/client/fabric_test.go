@@ -44,44 +44,32 @@ var proposalObject *peer.Proposal
 var proposalResponses []*peer.ProposalResponse
 var txid string
 
+var endorsers = []model.Node{
+	{
+		Address:               "localhost:8051",
+		TLSCARoot:             ReadPEMFile("/home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/tlsca/tlsca.icdd-cert.pem"),
+		SslTargetNameOverride: "peer0.icdd",
+	},
+	{
+		Address:               "localhost:7051",
+		TLSCARoot:             ReadPEMFile("/home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/astri.org/peers/peer0.astri.org/tls/ca.crt"),
+		SslTargetNameOverride: "peer0.astri.org",
+	},
+}
+
 func TestSignProposal(t *testing.T) {
 	var signer = InitOrPanic(cryptoConfig)
 
-	var channel = "allchannel"
-	var chaincode = "diagnose"
-	var creator = signer.Creator
-	var args = "whoami"
-
-	proposalObject, txid = CreateProposalOrPanic(creator, channel, chaincode, args)
-	var signed = SignProposalOrPanic(proposalObject, signer)
-	// Send out
-	var _url = buildURL("/fabric/transact/process-proposal")
-	var endorsers = []model.Node{
-		{
-			Address:               "localhost:8051",
-			TLSCARoot:             ReadPEMFile("/home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/tlsca/tlsca.icdd-cert.pem"),
-			SslTargetNameOverride: "peer0.icdd",
-		},
-		{
-			Address:               "localhost:7051",
-			TLSCARoot:             ReadPEMFile("/home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/astri.org/peers/peer0.astri.org/tls/ca.crt"),
-			SslTargetNameOverride: "peer0.astri.org",
-		},
+	var queryParams = QueryParams{
+		Channel:   "allchannel",
+		Chaincode: "diagnose",
+		Args:      []string{"whoami"},
+		Endorsers: endorsers,
 	}
+	proposalResponses, proposalObject, txid = CommitProposal(signer, queryParams)
 
-	var endorsersInString = string(goutils.ToJson(endorsers))
+	utter.Dump(txid)
 
-	signedBytes, err := proto.Marshal(signed)
-	goutils.PanicError(err)
-	var body = url.Values{
-		"endorsers":       {endorsersInString},
-		"signed-proposal": {model.BytesResponse(signedBytes)},
-	}
-	var response = http.PostForm(_url, body, nil)
-	var result = model.ProposalResponseResult{}
-	var parsedResult = result.ParseOrPanic(response.BodyBytes())
-	proposalResponses = result.ValuesOf(parsedResult)
-	utter.Dump(model.ShimResultFrom(proposalResponses[0]))
 }
 func TestCreateSignedTx(t *testing.T) {
 	TestSignProposal(t)
@@ -106,7 +94,19 @@ func TestCreateSignedTx(t *testing.T) {
 	goutils.FromJson(response.BodyBytes(), txResult)
 	utter.Dump(txResult)
 }
-func TestQueryTransaction(t *testing.T) {
-	//	fcn: GetTransactionByID,
-	//			args: [this.channel.name, tx_id],
+func TestQueryTx(t *testing.T) {
+	if txid == "" {
+		txid = "e44f1593bb52025a8817578af500a08381601df8f4c3a6f477449d8a4f975a1b"
+	}
+	var signer = InitOrPanic(cryptoConfig)
+	var channel = "allchannel"
+	var queryParams = QueryParams{
+		Channel:   channel,
+		Chaincode: "qscc",
+		Args:      []string{"GetTransactionByID", channel, txid},
+		Endorsers: endorsers,
+	}
+
+	oneResult := QueryProposal(signer, queryParams)
+	utter.Dump(oneResult)
 }
