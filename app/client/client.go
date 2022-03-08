@@ -24,3 +24,22 @@ func ReadPEMFile(file string) string {
 	goutils.PanicError(err)
 	return model.BytesResponse(byteSlice)
 }
+
+// CreateProposalOrPanic
+func CreateProposalOrPanic(creator []byte, channelName, chaincode string, args ...string) (*peer.Proposal, string) {
+
+	var version = "" // TODO wait for fabric
+	proposal, txid, err := golang.CreateProposal(
+		creator,
+		channelName,
+		chaincode,
+		version,
+		args...,
+	)
+	goutils.PanicError(err)
+	return proposal, txid
+}
+
+func Query() {
+
+}

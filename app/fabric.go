@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/davidkhala/delphi-fabric/app/model"
 	"github.com/davidkhala/fabric-common/golang"
 	"github.com/davidkhala/goutils"
@@ -47,42 +46,6 @@ func PingFabric(c *gin.Context) {
 		return
 	}
 	c.String(http.StatusOK, "pong")
-}
-
-// BuildProposal
-// @Router /fabric/transact/:channel/build-proposal [post]
-// @Produce json
-// @Accept x-www-form-urlencoded
-// @Param channel path string true "fabric channel name"
-// @Param chaincode formData string true "fabric chaincode name"
-// @Param creator formData string true "certificate of signer"
-// @Param version formData string false "Optional. chaincode version"
-// @Param args formData string false "chaincode args, including function name [fcn]"
-// @Success 200 {object} model.ProposalResult
-func BuildProposal(c *gin.Context) {
-	channelName := c.Param("channel")
-	chaincode := c.PostForm("chaincode")
-	creator := model.BytesFromForm(c, "creator")
-	version := c.DefaultPostForm("version", "")
-	args := c.DefaultPostForm("args", "[]")
-	var arr []string
-	err := json.Unmarshal([]byte(args), &arr)
-	goutils.PanicError(err)
-	proposal, txid, err := golang.CreateProposal(
-		creator,
-		channelName,
-		chaincode,
-		version,
-		arr...,
-	)
-	goutils.PanicError(err)
-	proposalProto, err := proto.Marshal(proposal)
-	goutils.PanicError(err)
-	result := model.ProposalResult{
-		ProposalProto: model.BytesResponse(proposalProto),
-		Txid:          txid,
-	}
-	c.JSON(http.StatusOK, result)
 }
 
 // ProcessProposal
@@ -157,3 +120,8 @@ func Commit(c *gin.Context) {
 	goutils.PanicError(err)
 	c.JSON(http.StatusOK, txResult)
 }
+
+//func WaitForFinality(c *gin.Context) {
+//	orderer := c.PostForm("orderer")
+//	transaction := model.BytesFromForm(c, "transaction")
+//}

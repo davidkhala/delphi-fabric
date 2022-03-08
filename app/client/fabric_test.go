@@ -1,7 +1,6 @@
 package client
 
 import (
-	"fmt"
 	"github.com/davidkhala/delphi-fabric/app/model"
 	"github.com/davidkhala/fabric-common/golang"
 	"github.com/davidkhala/goutils"
@@ -21,21 +20,7 @@ func buildURL(route string) string {
 }
 func TestPing(t *testing.T) {
 	var _url = buildURL("/fabric/ping")
-	var Certificate = `-----BEGIN CERTIFICATE-----
-MIICFzCCAb2gAwIBAgIUS8lAQ16ZG6iTQD7H4E/UQ9d2YrwwCgYIKoZIzj0EAwIw
-aDELMAkGA1UEBhMCVVMxFzAVBgNVBAgTDk5vcnRoIENhcm9saW5hMRQwEgYDVQQK
-EwtIeXBlcmxlZGdlcjEPMA0GA1UECxMGRmFicmljMRkwFwYDVQQDExBmYWJyaWMt
-Y2Etc2VydmVyMB4XDTIyMDMwMzA4MjMwMFoXDTM3MDIyNzA4MjMwMFowaDELMAkG
-A1UEBhMCVVMxFzAVBgNVBAgTDk5vcnRoIENhcm9saW5hMRQwEgYDVQQKEwtIeXBl
-cmxlZGdlcjEPMA0GA1UECxMGRmFicmljMRkwFwYDVQQDExBmYWJyaWMtY2Etc2Vy
-dmVyMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE0qy6fs9TWREZ/vspZMSgjK2X
-lHMDcTAikBLmjpp63zxzbNkYYIWZrVlrmpdtV5XWlRIMbDkY+1c/lCStuVT7KaNF
-MEMwDgYDVR0PAQH/BAQDAgEGMBIGA1UdEwEB/wQIMAYBAf8CAQEwHQYDVR0OBBYE
-FB6QJa7MCqssjbnQ7Ral4vUGpsVvMAoGCCqGSM49BAMCA0gAMEUCIQDWb+GO0rZ8
-vLbOgtIOBwbIcK13Gi2yMb0AIM5ropJTygIgBoOyOOrXcboyjfAiidNvfNTClpSD
-4DWMi2X5N0Z5S8k=
------END CERTIFICATE-----
-`
+	var Certificate = ReadPEMFile("/home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/tlsca/tlsca.icdd-cert.pem")
 
 	var body = url.Values{
 		"address":                  {"localhost:8051"},
@@ -45,7 +30,7 @@ vLbOgtIOBwbIcK13Gi2yMb0AIM5ropJTygIgBoOyOOrXcboyjfAiidNvfNTClpSD
 
 	response, err := rawHttp.PostForm(_url, body)
 	goutils.PanicError(err)
-	utter.Dump(response)
+	utter.Dump(response.Status)
 }
 
 var cryptoConfig = tape.CryptoConfig{
@@ -54,34 +39,20 @@ var cryptoConfig = tape.CryptoConfig{
 	SignCert: "/home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/astri.org/users/Admin@astri.org/msp/signcerts/Admin@astri.org-cert.pem",
 }
 
+// client side cache
 var proposalObject *peer.Proposal
 var proposalResponses []*peer.ProposalResponse
+var txid string
 
-// prepare value for proposalObject
-func TestBuildProposal(t *testing.T) {
-
-	var signer = InitOrPanic(cryptoConfig)
-	var channel = "allchannel"
-	var _url = buildURL(fmt.Sprintf("/fabric/transact/%s/build-proposal", channel))
-	var chaincode = "diagnose"
-	var creator = model.BytesResponse(signer.Creator)
-	var args = `["whoami"]`
-	var body = url.Values{
-		"chaincode": {chaincode},
-		"creator":   {creator},
-		"args":      {args},
-	}
-	response := http.PostForm(_url, body, nil)
-
-	var dataStruct model.ProposalResult
-	var resultBody = response.Trim().Body
-	goutils.FromJson([]byte(resultBody), &dataStruct)
-
-	proposalObject = dataStruct.ParseOrPanic()
-}
 func TestSignProposal(t *testing.T) {
-	TestBuildProposal(t)
 	var signer = InitOrPanic(cryptoConfig)
+
+	var channel = "allchannel"
+	var chaincode = "diagnose"
+	var creator = signer.Creator
+	var args = "whoami"
+
+	proposalObject, txid = CreateProposalOrPanic(creator, channel, chaincode, args)
 	var signed = SignProposalOrPanic(proposalObject, signer)
 	// Send out
 	var _url = buildURL("/fabric/transact/process-proposal")
@@ -110,6 +81,7 @@ func TestSignProposal(t *testing.T) {
 	var result = model.ProposalResponseResult{}
 	var parsedResult = result.ParseOrPanic(response.BodyBytes())
 	proposalResponses = result.ValuesOf(parsedResult)
+	utter.Dump(model.ShimResultFrom(proposalResponses[0]))
 }
 func TestCreateSignedTx(t *testing.T) {
 	TestSignProposal(t)
@@ -133,4 +105,8 @@ func TestCreateSignedTx(t *testing.T) {
 	var txResult = &orderer2.BroadcastResponse{}
 	goutils.FromJson(response.BodyBytes(), txResult)
 	utter.Dump(txResult)
+}
+func TestQueryTransaction(t *testing.T) {
+	//	fcn: GetTransactionByID,
+	//			args: [this.channel.name, tx_id],
 }
