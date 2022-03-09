@@ -17,7 +17,7 @@ jobs:
         with:
           registry: ${{ env.REGISTRY }}
           username: davidkhala
-          password: ${{ secrets.TWGC_DAVIDKHALA }}
+          password: ${{ secrets.GHCR_LOGIN }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@master
