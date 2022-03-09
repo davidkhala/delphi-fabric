@@ -44,6 +44,8 @@ github.com/davidkhala/fabric-common/golang v0.0.0-20220306094431-98c6ba96f55d h1
 github.com/davidkhala/fabric-common/golang v0.0.0-20220306094431-98c6ba96f55d/go.mod h1:5lCAta7B1Ui2L3b7y2jzkwJfh+saF6mqhR34syjE71E=
 github.com/davidkhala/fabric-common/golang v0.0.0-20220306105456-1858dba6da7f h1:zS/zAlbVJQyZ0hVz8s3gtvaM7Na5QrISAS+qSjOFKFc=
 github.com/davidkhala/fabric-common/golang v0.0.0-20220306105456-1858dba6da7f/go.mod h1:5lCAta7B1Ui2L3b7y2jzkwJfh+saF6mqhR34syjE71E=
+github.com/davidkhala/fabric-common/golang v0.0.0-20220308103955-1a88b730f7a0 h1:r1loyJRSv9pSmzC/xhxxYC5cg9ttGhsUVzd62AzIEbo=
+github.com/davidkhala/fabric-common/golang v0.0.0-20220308103955-1a88b730f7a0/go.mod h1:5lCAta7B1Ui2L3b7y2jzkwJfh+saF6mqhR34syjE71E=
 github.com/davidkhala/goutils v1.5.2/go.mod h1:v6p+JuaIjyb+LDQ3K2mtMLgLefwhaYeK+Zlpt0wghZ4=
 github.com/davidkhala/goutils v1.5.3/go.mod h1:v6p+JuaIjyb+LDQ3K2mtMLgLefwhaYeK+Zlpt0wghZ4=
 github.com/davidkhala/goutils v1.5.4 h1:IjcCj8+6GwnCfafg+fH/0LtloicXTowavZkJYeIq7mg=

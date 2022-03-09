@@ -1,11 +1,16 @@
 package client
 
 import (
+	"context"
+	"fmt"
 	"github.com/davidkhala/delphi-fabric/app/model"
 	"github.com/davidkhala/fabric-common/golang"
 	"github.com/davidkhala/goutils"
+	"github.com/golang/protobuf/proto"
 	tape "github.com/hyperledger-twgc/tape/pkg/infra"
+	"github.com/hyperledger/fabric-protos-go/common"
 	"github.com/hyperledger/fabric-protos-go/peer"
+	"github.com/hyperledger/fabric/protoutil"
 )
 
 func InitOrPanic(config tape.CryptoConfig) *tape.Crypto {
@@ -58,4 +63,48 @@ func QueryProposal(signer *tape.Crypto, params QueryParams) string {
 		return model.ShimResultFrom(proposalResponse).Payload
 	}
 	panic("no proposalResponses found")
+}
+
+type GetTransactionByIDResult struct {
+	Transaction *common.Payload
+
+	Validation string
+}
+
+func (GetTransactionByIDResult) FromString(str string) GetTransactionByIDResult {
+	var as = peer.ProcessedTransaction{}
+	err := proto.Unmarshal([]byte(str), &as)
+	goutils.PanicError(err)
+	var result = GetTransactionByIDResult{}
+	result.Transaction = protoutil.UnmarshalPayloadOrPanic(as.TransactionEnvelope.Payload)
+	result.Validation = peer.TxValidationCode_name[as.ValidationCode]
+	return result
+}
+
+type Eventer struct {
+	golang.Eventer
+}
+
+// TODO support multiple eventer
+func EventerFrom(node model.Node) Eventer {
+
+	var node_translated = golang.Node{
+		Node: tape.Node{
+			Addr:          node.Address,
+			TLSCARootByte: model.BytesFromString(node.TLSCARoot),
+		},
+		SslTargetNameOverride: node.SslTargetNameOverride,
+	}
+	grpcClient, err := node_translated.AsGRPCClient()
+	goutils.PanicError(err)
+	return Eventer{golang.EventerFrom(context.Background(), grpcClient)}
+}
+
+func (e Eventer) WaitForTx(channel, txid string, signer *tape.Crypto) (txStatus string) {
+	var seek = e.AsTransactionListener(txid)
+	signedEvent, err := seek.SignBy(channel, signer)
+	goutils.PanicError(err)
+	_, err = e.SendRecv(signedEvent)
+	goutils.PanicError(err)
+	return fmt.Sprint(e.ReceiptData)
 }

@@ -43,7 +43,7 @@ var cryptoConfig = tape.CryptoConfig{
 var proposalObject *peer.Proposal
 var proposalResponses []*peer.ProposalResponse
 var txid string
-
+var channel = "allchannel"
 var endorsers = []model.Node{
 	{
 		Address:               "localhost:8051",
@@ -61,7 +61,7 @@ func TestSignProposal(t *testing.T) {
 	var signer = InitOrPanic(cryptoConfig)
 
 	var queryParams = QueryParams{
-		Channel:   "allchannel",
+		Channel:   channel,
 		Chaincode: "diagnose",
 		Args:      []string{"whoami"},
 		Endorsers: endorsers,
@@ -94,6 +94,13 @@ func TestCreateSignedTx(t *testing.T) {
 	goutils.FromJson(response.BodyBytes(), txResult)
 	utter.Dump(txResult)
 }
+func TestEventer_WaitForTx(t *testing.T) {
+	TestCreateSignedTx(t)
+	var eventer = EventerFrom(endorsers[0])
+	var signer = InitOrPanic(cryptoConfig)
+	var txStatus = eventer.WaitForTx(channel, txid, signer)
+	utter.Dump(txStatus)
+}
 func TestQueryTx(t *testing.T) {
 	if txid == "" {
 		txid = "e44f1593bb52025a8817578af500a08381601df8f4c3a6f477449d8a4f975a1b"
@@ -108,5 +115,9 @@ func TestQueryTx(t *testing.T) {
 	}
 
 	oneResult := QueryProposal(signer, queryParams)
-	utter.Dump(oneResult)
+
+	var result = GetTransactionByIDResult{}
+	result = result.FromString(oneResult)
+
+	utter.Dump(result)
 }
