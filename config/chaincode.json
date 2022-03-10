@@ -2,6 +2,9 @@
   "stress": {
     "path": "Documents/chaincode/golang/stress"
   },
+  "ecosystem": {
+    "path": "Documents/chaincode/golang/ecosystem"
+  },
   "diagnose": {
     "path": "Documents/chaincode/golang/diagnose",
     "couchDBIndexes": [

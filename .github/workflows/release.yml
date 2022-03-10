@@ -7,7 +7,7 @@ env:
   IMAGE_NAME: davidkhala/fabric-server-go
 
 jobs:
-  release-app-go:
+  release-server-go:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
