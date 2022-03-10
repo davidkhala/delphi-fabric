@@ -13,7 +13,7 @@ func BytesFromForm(c *gin.Context, key string) []byte {
 func BytesFromString(str string) []byte {
 	return goutils.HexDecodeOrPanic(str)
 }
-func BytesResponse(data []byte) string {
+func BytesPacked(data []byte) string {
 	return goutils.HexEncode(data)
 }
 
@@ -29,18 +29,23 @@ func (result ProposalResult) ParseOrPanic() *peer.Proposal {
 	return proposal
 }
 
-type ProposalResponseResult map[string]string
+type ProposalResponseResult struct {
+	ProposalResponses []string `json:"proposal_responses"`
+	// payload to be signed as signedTx
+	Payload string `json:"payload"`
+}
 
-func (p *ProposalResponseResult) ParseOrPanic(jsonBytes []byte) map[string]peer.ProposalResponse {
+func (p *ProposalResponseResult) ParseOrPanic(jsonBytes []byte) ([]peer.ProposalResponse, []byte) {
 	goutils.FromJson(jsonBytes, p)
-	var result = map[string]peer.ProposalResponse{}
-	for addr, value := range *p {
+	var result = []peer.ProposalResponse{}
+	for _, value := range p.ProposalResponses {
 		var pr = peer.ProposalResponse{}
 		err := proto.Unmarshal(BytesFromString(value), &pr)
 		goutils.PanicError(err)
-		result[addr] = pr
+		result = append(result, pr)
 	}
-	return result
+	payload := BytesFromString(p.Payload)
+	return result, payload
 }
 
 type Node struct {
@@ -52,4 +57,9 @@ type Node struct {
 type TxResult struct {
 	Status int32  `json:"status,omitempty"`
 	Info   string `json:"info,omitempty"`
+}
+
+type CreateProposalResult struct {
+	Proposal string `json:"proposal"`
+	Txid     string `json:"txid"`
 }

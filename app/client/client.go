@@ -18,43 +18,36 @@ func InitOrPanic(config tape.CryptoConfig) *tape.Crypto {
 	goutils.PanicError(err)
 	return cryptoObject
 }
-func SignProposalOrPanic(proposal *peer.Proposal, signer *tape.Crypto) *peer.SignedProposal {
-	signed, err := tape.SignProposal(proposal, signer)
-	goutils.PanicError(err)
-	return signed
-}
 
-func ReadPEMFile(file string) string {
+func ReadPEMFile(file string) []byte {
 	byteSlice, err := goutils.ReadFile(file)
 	goutils.PanicError(err)
-	return model.BytesResponse(byteSlice)
+	return byteSlice
 }
-
-// CreateProposalOrPanic
-func CreateProposalOrPanic(creator []byte, channelName, chaincode string, args ...string) (*peer.Proposal, string) {
-
-	var version = "" // TODO wait for fabric
-	proposal, txid, err := golang.CreateProposal(
-		creator,
-		channelName,
-		chaincode,
-		version,
-		args...,
-	)
+func GetProposalSigned(proposal string, signer *tape.Crypto) (signedBytes []byte) {
+	var bytes = model.BytesFromString(proposal)
+	var signature, err = signer.Sign(bytes)
 	goutils.PanicError(err)
-	return proposal, txid
-}
 
-func CommitProposal(signer *tape.Crypto, params QueryParams) ([]*peer.ProposalResponse, *peer.Proposal, string) {
-	var _map, proposal, txid = Propose(signer, params)
-	var result []*peer.ProposalResponse
-	for _, value := range _map {
-		result = append(result, &value)
+	var signed = peer.SignedProposal{
+		ProposalBytes: bytes,
+		Signature:     signature,
 	}
-	return result, proposal, txid
+	signedBytes, err = proto.Marshal(&signed)
+	goutils.PanicError(err)
+	return
 }
-func QueryProposal(signer *tape.Crypto, params QueryParams) string {
-	parsedResult, _, _ := Propose(signer, params)
+func CommitProposalAndSign(proposal string, signedBytes []byte, endorsers []model.Node, signer tape.Crypto) []byte {
+	_, payload := Propose(proposal, signedBytes, endorsers)
+	// sign the payload
+	sig, err := signer.Sign(payload)
+	goutils.PanicError(err)
+	// here's the envelope
+	var envelop = common.Envelope{Payload: payload, Signature: sig}
+	return protoutil.MarshalOrPanic(&envelop)
+}
+func QueryProposal(proposal string, signedBytes []byte, endorsers []model.Node) string {
+	parsedResult, _ := Propose(proposal, signedBytes, endorsers)
 	// TODO think of a reducer with validation
 	for _, proposalResponse := range parsedResult {
 		if proposalResponse.Response.Status != 200 {

@@ -12,6 +12,7 @@ import (
 	tape "github.com/hyperledger-twgc/tape/pkg/infra"
 	"github.com/hyperledger/fabric-protos-go/common"
 	"github.com/hyperledger/fabric-protos-go/peer"
+	"github.com/hyperledger/fabric/protoutil"
 	"net/http"
 )
 
@@ -58,11 +59,13 @@ func PingFabric(c *gin.Context) {
 func ProcessProposal(c *gin.Context) {
 	endorsers := c.PostForm("endorsers")
 	signedBytes := model.BytesFromForm(c, "signed-proposal")
+	proposalBytes := model.BytesFromForm(c, "proposal")
 	var signed = peer.SignedProposal{}
 	err := proto.Unmarshal(signedBytes, &signed)
 	goutils.PanicError(err)
 	ctx := context.Background()
-	proposalResponses := model.ProposalResponseResult{}
+	var proposalResponses = []*peer.ProposalResponse{}
+	var proposalResponseAsStrings = []string{}
 	var endorserNodes []model.Node
 	goutils.FromJson([]byte(endorsers), &endorserNodes)
 	for _, node := range endorserNodes {
@@ -78,11 +81,20 @@ func ProcessProposal(c *gin.Context) {
 		endorserClient := golang.EndorserFrom(grpcClient)
 		proposalResponse, _err := endorserClient.ProcessProposal(ctx, &signed)
 		goutils.PanicError(_err)
-		proposalResponseInBytes, _err := proto.Marshal(proposalResponse)
-		goutils.PanicError(_err)
-		proposalResponses[node.Address] = model.BytesResponse(proposalResponseInBytes)
+		proposalResponses = append(proposalResponses, proposalResponse)
+
+		proposalResponseAsStrings = append(proposalResponseAsStrings, model.BytesPacked(protoutil.MarshalOrPanic(proposalResponse)))
 	}
-	c.JSON(http.StatusOK, proposalResponses)
+
+	// prepare unsigned tx
+	proposal, err := protoutil.UnmarshalProposal(proposalBytes)
+	goutils.PanicError(err)
+	payloadBytes, err := CreateUnSignedTx(proposal, proposalResponses)
+	var result = model.ProposalResponseResult{
+		ProposalResponses: proposalResponseAsStrings,
+		Payload:           model.BytesPacked(payloadBytes),
+	}
+	c.JSON(http.StatusOK, result)
 }
 
 // Commit
@@ -120,8 +132,3 @@ func Commit(c *gin.Context) {
 	goutils.PanicError(err)
 	c.JSON(http.StatusOK, txResult)
 }
-
-//func WaitForFinality(c *gin.Context) {
-//	orderer := c.PostForm("orderer")
-//	transaction := model.BytesFromForm(c, "transaction")
-//}
