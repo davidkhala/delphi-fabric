@@ -6,7 +6,7 @@ import (
 	"github.com/davidkhala/fabric-common/golang"
 	"github.com/davidkhala/goutils"
 	"github.com/gin-gonic/gin"
-	. "github.com/hyperledger-twgc/tape/pkg/infra"
+	tape "github.com/hyperledger-twgc/tape/pkg/infra"
 	"github.com/hyperledger/fabric-protos-go/common"
 	"github.com/hyperledger/fabric-protos-go/peer"
 	"github.com/hyperledger/fabric/protoutil"
@@ -52,19 +52,19 @@ func CreateUnSignedTx(proposal *peer.Proposal, responses []*peer.ProposalRespons
 	}
 
 	// the original header
-	hdr, err := GetHeader(proposal.Header)
+	hdr, err := tape.GetHeader(proposal.Header)
 	if err != nil {
 		return nil, err
 	}
 
 	// the original payload
-	pPayl, err := GetChaincodeProposalPayload(proposal.Payload)
+	pPayl, err := tape.GetChaincodeProposalPayload(proposal.Payload)
 	if err != nil {
 		return nil, err
 	}
 
 	// get header extensions so we have the visibility field
-	_, err = GetChaincodeHeaderExtension(hdr)
+	_, err = tape.GetChaincodeHeaderExtension(hdr)
 	if err != nil {
 		return nil, err
 	}
@@ -119,11 +119,5 @@ func CreateUnSignedTx(proposal *peer.Proposal, responses []*peer.ProposalRespons
 		return nil, err
 	}
 	return paylBytes, nil
-	//// sign the payload
-	//sig, err := signer.Sign(paylBytes)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//// here's the envelope
-	//return &common.Envelope{Payload: paylBytes, Signature: sig}, nil
+
 }
