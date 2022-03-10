@@ -1,4 +1,6 @@
+# fabric-server-go
 
+server entry point
 
 ## Swagger Support
 To generate swagger docs
@@ -7,4 +9,9 @@ To generate swagger docs
 3. access swagger: go to `/swagger/index.html`
 
 ## Release
+CD powered by Github Action.
+
 ### Docker release
+```
+docker pull ghcr.io/davidkhala/fabric-server-go:latest
+```

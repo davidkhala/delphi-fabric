@@ -18,6 +18,54 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/fabric/create-proposal": {
+            "post": {
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Hex-encoded creator bytes",
+                        "name": "creator",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Fabric channel name",
+                        "name": "channel",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Fabric chaincode name",
+                        "name": "chaincode",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Fabric chaincode calling args, string array as JSON",
+                        "name": "args",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.CreateProposalResult"
+                        }
+                    }
+                }
+            }
+        },
         "/fabric/ping": {
             "post": {
                 "consumes": [
@@ -60,59 +108,6 @@ const docTemplate = `{
                         "description": "Bad Request",
                         "schema": {
                             "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/fabric/transact/:channel/build-proposal": {
-            "post": {
-                "consumes": [
-                    "application/x-www-form-urlencoded"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "fabric channel name",
-                        "name": "channel",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "fabric chaincode name",
-                        "name": "chaincode",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "certificate of signer",
-                        "name": "creator",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Optional. chaincode version",
-                        "name": "version",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "description": "chaincode args, including function name [fcn]",
-                        "name": "args",
-                        "in": "formData"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/model.ProposalResult"
                         }
                     }
                 }
@@ -170,8 +165,15 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "serialized signed-proposal protobuf with hex format",
+                        "description": "Hex-encoded and serialized signed-proposal protobuf",
                         "name": "signed-proposal",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Hex-encoded and serialized proposal protobuf",
+                        "name": "proposal",
                         "in": "formData",
                         "required": true
                     }
@@ -188,20 +190,29 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "model.ProposalResponseResult": {
-            "type": "object",
-            "additionalProperties": {
-                "type": "string"
-            }
-        },
-        "model.ProposalResult": {
+        "model.CreateProposalResult": {
             "type": "object",
             "properties": {
-                "proposal-proto": {
+                "proposal": {
                     "type": "string"
                 },
                 "txid": {
                     "type": "string"
+                }
+            }
+        },
+        "model.ProposalResponseResult": {
+            "type": "object",
+            "properties": {
+                "payload": {
+                    "description": "payload to be signed as signedTx",
+                    "type": "string"
+                },
+                "proposal_responses": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },

@@ -18,10 +18,10 @@ import (
 // @Router /fabric/create-proposal [post]
 // @Produce json
 // @Accept x-www-form-urlencoded
-// @Param creator formData string true ""
-// @Param channel formData string true ""
-// @Param chaincode formData string true ""
-// @Param args formData string true ""
+// @Param creator formData string true "Hex-encoded creator bytes"
+// @Param channel formData string true "Fabric channel name"
+// @Param chaincode formData string true "Fabric chaincode name"
+// @Param args formData string true "Fabric chaincode calling args, string array as JSON"
 // @Success 200 {object} model.CreateProposalResult
 func CreateProposal(c *gin.Context) {
 

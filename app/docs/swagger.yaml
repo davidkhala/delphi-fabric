@@ -1,14 +1,20 @@
 definitions:
-  model.ProposalResponseResult:
-    additionalProperties:
-      type: string
-    type: object
-  model.ProposalResult:
+  model.CreateProposalResult:
     properties:
-      proposal-proto:
+      proposal:
         type: string
       txid:
         type: string
+    type: object
+  model.ProposalResponseResult:
+    properties:
+      payload:
+        description: payload to be signed as signedTx
+        type: string
+      proposal_responses:
+        items:
+          type: string
+        type: array
     type: object
   model.TxResult:
     properties:
@@ -23,6 +29,38 @@ info:
   title: github.com/davidkhala/delphi-fabric/app
   version: v0.0.0
 paths:
+  /fabric/create-proposal:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      parameters:
+      - description: Hex-encoded creator bytes
+        in: formData
+        name: creator
+        required: true
+        type: string
+      - description: Fabric channel name
+        in: formData
+        name: channel
+        required: true
+        type: string
+      - description: Fabric chaincode name
+        in: formData
+        name: chaincode
+        required: true
+        type: string
+      - description: Fabric chaincode calling args, string array as JSON
+        in: formData
+        name: args
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.CreateProposalResult'
   /fabric/ping:
     post:
       consumes:
@@ -55,41 +93,6 @@ paths:
           description: Bad Request
           schema:
             type: string
-  /fabric/transact/:channel/build-proposal:
-    post:
-      consumes:
-      - application/x-www-form-urlencoded
-      parameters:
-      - description: fabric channel name
-        in: path
-        name: channel
-        required: true
-        type: string
-      - description: fabric chaincode name
-        in: formData
-        name: chaincode
-        required: true
-        type: string
-      - description: certificate of signer
-        in: formData
-        name: creator
-        required: true
-        type: string
-      - description: Optional. chaincode version
-        in: formData
-        name: version
-        type: string
-      - description: chaincode args, including function name [fcn]
-        in: formData
-        name: args
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/model.ProposalResult'
   /fabric/transact/commit:
     post:
       consumes:
@@ -123,9 +126,14 @@ paths:
         name: endorsers
         required: true
         type: string
-      - description: serialized signed-proposal protobuf with hex format
+      - description: Hex-encoded and serialized signed-proposal protobuf
         in: formData
         name: signed-proposal
+        required: true
+        type: string
+      - description: Hex-encoded and serialized proposal protobuf
+        in: formData
+        name: proposal
         required: true
         type: string
       produces:

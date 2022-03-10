@@ -54,7 +54,8 @@ func PingFabric(c *gin.Context) {
 // @Produce json
 // @Accept x-www-form-urlencoded
 // @Param endorsers formData string true "json data to specify endorsers"
-// @Param signed-proposal formData string true "serialized signed-proposal protobuf with hex format"
+// @Param signed-proposal formData string true "Hex-encoded and serialized signed-proposal protobuf"
+// @Param proposal formData string true "Hex-encoded and serialized proposal protobuf"
 // @Success 200 {object} model.ProposalResponseResult
 func ProcessProposal(c *gin.Context) {
 	endorsers := c.PostForm("endorsers")
