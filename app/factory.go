@@ -22,6 +22,7 @@ import (
 // @Param channel formData string true "Fabric channel name"
 // @Param chaincode formData string true "Fabric chaincode name"
 // @Param args formData string true "Fabric chaincode calling args, string array as JSON"
+// @Param transient formData string false "JSON format, like map[string]string"
 // @Success 200 {object} model.CreateProposalResult
 func CreateProposal(c *gin.Context) {
 
@@ -30,11 +31,25 @@ func CreateProposal(c *gin.Context) {
 	chaincode := c.PostForm("chaincode")
 	var args = []string{}
 	goutils.FromJson([]byte(c.PostForm("args")), &args)
+	var rawTransient = c.PostForm("transient")
+	var transientBytes = map[string][]byte{}
+
+	if rawTransient != "" {
+		var transient = map[string]string{}
+		goutils.FromJson([]byte(rawTransient), &transient)
+		for key, value := range transient {
+			transientBytes[key] = []byte(value)
+		}
+	} else {
+		transientBytes = nil
+	}
+
 	proposal, txid, err := golang.CreateProposal(
 		creator,
 		channel,
 		chaincode,
 		"",
+		transientBytes,
 		args...,
 	)
 

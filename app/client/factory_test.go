@@ -1,6 +1,7 @@
 package client
 
 import (
+	"github.com/davidkhala/delphi-fabric/app"
 	"github.com/davidkhala/delphi-fabric/app/model"
 	"github.com/davidkhala/fabric-common/golang"
 	"github.com/davidkhala/goutils"
@@ -33,6 +34,25 @@ var endorsers = []model.Node{
 	},
 }
 
+func postProposal(result model.CreateProposalResult, signer *tape.Crypto) {
+	var signedBytes = GetProposalSigned(result.Proposal, signer)
+	txid = result.Txid
+	var transactionBytes = CommitProposalAndSign(result.Proposal, signedBytes, endorsers, *signer)
+	var orderer = model.Node{
+		Address:               "localhost:7050",
+		TLSCARoot:             string(ReadPEMFile("/home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/hyperledger/orderers/orderer0.hyperledger/tls/ca.crt")),
+		SslTargetNameOverride: "orderer0.hyperledger",
+	}
+	var status = Commit(orderer, transactionBytes)
+	utter.Dump(status)
+	waitForTx(txid)
+}
+func waitForTx(txid string) {
+	var eventer = EventerFrom(endorsers[0])
+	var signer = InitOrPanic(cryptoConfig)
+	var txStatus = eventer.WaitForTx(channel, txid, signer)
+	utter.Dump(txStatus)
+}
 func TestTransaction(t *testing.T) {
 	var signer = InitOrPanic(cryptoConfig)
 	var chaincode = "diagnose"
@@ -50,23 +70,21 @@ func TestTransaction(t *testing.T) {
 	var result = model.CreateProposalResult{}
 	goutils.FromJson(response.BodyBytes(), &result)
 	// sign
-	var signedBytes = GetProposalSigned(result.Proposal, signer)
-	txid = result.Txid
-	var transactionBytes = CommitProposalAndSign(result.Proposal, signedBytes, endorsers, *signer)
-	var orderer = model.Node{
-		Address:               "localhost:7050",
-		TLSCARoot:             string(ReadPEMFile("/home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/hyperledger/orderers/orderer0.hyperledger/tls/ca.crt")),
-		SslTargetNameOverride: "orderer0.hyperledger",
-	}
-	var status = Commit(orderer, transactionBytes)
-	utter.Dump(status)
-
+	postProposal(result, signer)
 }
-func TestEventer_WaitForTx(t *testing.T) {
-	TestTransaction(t)
-	println("wait for " + txid)
-	var eventer = EventerFrom(endorsers[0])
+func TestCreateToken(t *testing.T) {
 	var signer = InitOrPanic(cryptoConfig)
-	var txStatus = eventer.WaitForTx(channel, txid, signer)
-	utter.Dump(txStatus)
+
+	var body = url.Values{
+		"creator": {model.BytesPacked(signer.Creator)},
+		"channel": {channel},
+		"owner":   {"david"},
+		"content": {"github.com/delphi-fabric"},
+	}
+	var _url = BuildURL("/ecosystem/createToken")
+	var response = http.PostForm(_url, body, nil)
+	var result = app.CreateTokenResult{}
+	goutils.FromJson(response.BodyBytes(), &result)
+	utter.Dump("Token:" + result.Token)
+	postProposal(result.CreateProposalResult, signer)
 }

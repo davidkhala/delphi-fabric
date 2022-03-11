@@ -21,6 +21,7 @@ func main() {
 	App.POST("/fabric/create-proposal", app.CreateProposal)
 	App.POST("/fabric/transact/process-proposal", app.ProcessProposal)
 	App.POST("/fabric/transact/commit", app.Commit)
+	App.POST("/ecosystem/createToken", app.CreateToken)
 	App.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler)) // refers to /swagger/*any
 
 	port, exists := os.LookupEnv("PORT")
