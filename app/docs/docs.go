@@ -54,6 +54,12 @@ const docTemplate = `{
                         "name": "args",
                         "in": "formData",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "JSON format, like map[string]string",
+                        "name": "transient",
+                        "in": "formData"
                     }
                 ],
                 "responses": {

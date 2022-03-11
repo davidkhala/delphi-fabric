@@ -54,6 +54,10 @@ paths:
         name: args
         required: true
         type: string
+      - description: JSON format, like map[string]string
+        in: formData
+        name: transient
+        type: string
       produces:
       - application/json
       responses:
