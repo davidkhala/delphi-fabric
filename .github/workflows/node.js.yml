@@ -7,23 +7,14 @@ on:
   workflow_dispatch:
 jobs:
   e2e:
-
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      matrix:
-        node-version: [14.x]
-        os: [macos-latest, ubuntu-latest]
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
       with:
         submodules: true
-    - uses: docker-practice/actions-setup-docker@master
-      if: ${{ matrix.os == 'macos-latest' }}
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v1
+    - uses: actions/setup-node@v1
       with:
-        node-version: ${{ matrix.node-version }}
+        node-version: 14.x
     - run: ./common/install.sh softHSMInstall
     - run: ./install.sh
     - run: ./test-hsm/hsm.sh
