@@ -4,20 +4,20 @@ import {consoleLogger} from '@davidkhala/logger/log4.js';
 import EventHub from '../common/nodejs/admin/eventHub.js';
 import {emptyChannel} from '../common/nodejs/admin/channel.js';
 import EventHubQuery from '../common/nodejs/eventHub.js';
+import assert from 'assert';
 
 const logger = consoleLogger('test:queryTest');
 
-describe('query', () => {
+describe('query', async function () {
+	this.timeout(0);
 	const peers = [helper.newPeer(0, 'icdd'), helper.newPeer(0, 'astri.org')];
 	const org = 'icdd';
 	let sampleBlockHashHex;
 	const user = helper.getOrgAdmin(org);
 	const channelName = 'allchannel';
 	const queryHub = new QueryHub(peers, user);
-	beforeEach(async () => {
-		for (const peer of peers) {
-			await peer.connect();
-		}
+	before(async () => {
+		await queryHub.connect();
 	});
 	it('chain info', async () => {
 		const result = await queryHub.getChainInfo(channelName);
@@ -34,8 +34,20 @@ describe('query', () => {
 	});
 
 	it('channelJoined', async () => {
-		const result = await queryHub.channelJoined();
-		logger.info(result);
+		try {
+			await queryHub.channelJoined();
+			assert.fail('query channelJoined on another org is not allowed');
+		} catch (e) {
+			logger.warn(e);
+		}
+		const own_peers = [helper.newPeer(0, 'icdd')];
+		const _queryHub = new QueryHub(own_peers, user);
+		await _queryHub.connect();
+		const result = await _queryHub.channelJoined();
+		assert.strictEqual(result[0][0], channelName);
+	});
+	after(async () => {
+		await queryHub.disconnect();
 	});
 });
 
@@ -53,14 +65,13 @@ describe('queryTransaction', function () {
 		const eventHubQuery = new EventHubQuery(eventHub, queryHub.identityContext);
 		const txs = await eventHubQuery.replayTx(4);
 		logger.info(txs);
-		const {transactionId} = txs.find(tx => tx.transactionId);
+		const {transactionId} = txs[0];
 		logger.info('query on txID', transactionId);
-		for (const peer of peers) {
-			await peer.connect();
-		}
 
+		await queryHub.connect();
 		const result = await queryHub.tx(channelName, transactionId);
 		logger.info(result);
+		await queryHub.disconnect();
 	});
 	it('for single transaction', async () => {
 

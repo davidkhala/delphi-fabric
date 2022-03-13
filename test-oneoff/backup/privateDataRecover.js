@@ -39,4 +39,3 @@ const flow = async () => {
 
 	}
 };
-flow();

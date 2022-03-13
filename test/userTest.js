@@ -16,7 +16,7 @@ describe('user', () => {
 		assert.strictEqual(ecdsaKey.pem(), userBuilder.key);
 	});
 	it('certificate', () => {
-		assert.strictEqual(userBuilder.certificate, getCertificate(signingIdentity));
+		assert.strictEqual(userBuilder.certificate.toString().trim(), getCertificate(signingIdentity));
 	});
 
 	it('public key', () => {

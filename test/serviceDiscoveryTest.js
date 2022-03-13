@@ -9,16 +9,7 @@ import {discoveryChaincodeInterestTranslator} from '../app/chaincodeHelper.js';
 const {getIdentityContext} = UserBuilder;
 const dockerManager = new DockerManager();
 const logger = consoleLogger('test:serviceDiscovery');
-describe('change container', () => {
-	it('deletePeer', async () => {
-		const containerName = 'peer0.astri.org';
-		await dockerManager.containerDelete(containerName);
-	});
-	it('deleteOrderer', async () => {
-		const ordererContainer = 'orderer0.icdd.astri.org';
-		await dockerManager.containerDelete(ordererContainer);
-	});
-});
+// TODO to change docker, use docker stop than delete, in order to recover
 describe('discovery', () => {
 	const org = 'icdd';
 	const peer = helper.newPeer(0, org);
