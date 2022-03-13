@@ -8,23 +8,19 @@ down() {
 	mocha dockerode-bootstrap.js --grep "^down "
 	sudo rm -rf $CURRENT/stateVolumes/*
 }
-up() {
+
+channel-less() {
+	down
 	prepareNetwork
-	export channelName=allchannel
-	npm run channelSetup
-}
-mirror() {
-	# TODO
-	export channelName=mirror
-	npm run channelSetup
 }
 
 prepareNetwork() {
 	mocha dockerode-bootstrap.js --grep "^up " --bail
 }
 restart() {
-	down
-	up
+	channel-less
+	export channelName=allchannel
+  npm run channelSetup
 }
 cc() {
 	mocha ./cc/golang/diagnose/install.js
@@ -36,7 +32,6 @@ nodejscc() {
 	mocha ./cc/node/diagnose/invoke.js --grep "^chaincode Initialize init$"
 }
 if [[ -z "$1" ]]; then
-	export anchor=true
 	restart
 	cc
 else

@@ -1,11 +1,10 @@
 import * as helper from './helper.js';
 import {ChannelConfig} from '../common/nodejs/channelConfig.js';
-import ConfigFactory from '../common/nodejs/formatter/configFactory.js';
 
-import assert from 'assert';
 import {importFrom} from '@davidkhala/light/es6.mjs';
+
 const globalConfig = importFrom('../config/orgs.json', import.meta);
-export const setAnchorPeersByOrg = async (channelName, orgName, orderer, finalityRequired) => {
+export const setAnchorPeersByOrg = async (channelName, orgName, orderer, binPath) => {
 	const orgConfig = globalConfig.channels[channelName].organizations[orgName];
 	const {anchorPeerIndexes} = orgConfig;
 	const user = helper.getOrgAdmin(orgName);
@@ -15,13 +14,8 @@ export const setAnchorPeersByOrg = async (channelName, orgName, orderer, finalit
 		return {host: container_name, port: 7051};
 	});
 
-	const channelConfig = new ChannelConfig(channelName, user, orderer);
-	await channelConfig.setAnchorPeers(undefined, orgName, anchorPeers, !!finalityRequired);
-	if (finalityRequired) {
-		const {json} = await channelConfig.getChannelConfigReadable();
-		const updatedAnchorPeers = new ConfigFactory(json).getAnchorPeers(orgName);
+	const channelConfig = new ChannelConfig(channelName, user, orderer, binPath);
+	await channelConfig.setAnchorPeers(undefined, orgName, anchorPeers, true);
 
-		assert.deepStrictEqual(updatedAnchorPeers.value.anchor_peers, anchorPeers);
-	}
 
 };

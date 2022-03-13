@@ -7,7 +7,7 @@ import BinManager from '../common/nodejs/binManager.js';
 import {homeResolve, sleep} from '@davidkhala/light/index.js';
 import Orderer from '../common/nodejs/admin/orderer.js';
 import {axiosPromise} from 'khala-axios';
-import {getGenesisBlock, join as joinPeer} from '../common/nodejs/channel.js';
+import {getGenesisBlock} from '../common/nodejs/channel.js';
 import assert from 'assert';
 import QueryHub from '../common/nodejs/query.js';
 import {Status} from '../common/nodejs/formatter/constants.js';
@@ -16,14 +16,15 @@ import {importFrom, filedirname} from '@davidkhala/light/es6.mjs';
 
 filedirname(import.meta);
 const globalConfig = importFrom('../config/orgs.json', import.meta);
-const binPath = process.env.binPath || path.resolve(__dirname, '../model/bin/');
+const binPath = process.env.binPath || path.resolve(__dirname, '../common/bin/');
 const {join: joinOrderer} = Orderer;
 const channelsConfig = globalConfig.channels;
 
 const logger = consoleLogger('channel setup');
+const channelName = process.env.channelName || 'allchannel';
 describe('channelSetup', function () {
 	this.timeout(0);
-	const channelName = process.env.channelName || 'allchannel';
+
 	it('generate Block', async () => {
 		const channelConfig = channelsConfig[channelName];
 		const channelBlock = homeResolve(channelConfig.file);
@@ -70,13 +71,14 @@ describe('channelSetup', function () {
 					try {
 						await getGenesisBlock(channel, user, orderer);
 					} catch (e) {
-						logger.warn(e);
 						const {status, Type} = e;
-						assert.strictEqual(status, Status.SERVICE_UNAVAILABLE);
-						assert.strictEqual(Type, DeliverResponseType.STATUS);
-						logger.warn(orderer.toString(), {status, Type});
-						await sleep(1000);
-						await waitForGenesisBlock();
+						if (status === Status.SERVICE_UNAVAILABLE && Type === DeliverResponseType.STATUS) {
+							logger.warn(orderer.toString(), {status, Type});
+							await sleep(1000);
+							await waitForGenesisBlock();
+						} else {
+							throw e;
+						}
 					}
 				};
 				await waitForGenesisBlock();
@@ -93,45 +95,51 @@ describe('channelSetup', function () {
 		for (const [orgName, {peerIndexes}] of Object.entries(channelConfig.organizations)) {
 			const peers = helper.newPeers(peerIndexes, orgName);
 			const user = helper.getOrgAdmin(orgName);
-
-			// FIXME, not work yet
-			try {
-				await joinPeer(channel, peers, user, blockFile);
-				//	{ status: 500, message: "channel 'allchannel' not found" }
-			} catch (e) {
-				logger.error(e);
-				throw e;
+			const queryHub = new QueryHub(peers, user);
+			await queryHub.connect();
+			if (binPath) {
+				await queryHub.joinWithFile(blockFile, channelName);
+			} else {
+				const orderers = helper.newOrderers();
+				const orderer = orderers[0];
+				await orderer.connect();
+				await queryHub.joinWithFetch(channel, orderer, user);
+				await orderer.disconnect();
 			}
 
+			await queryHub.disconnect();
+
+		}
+	});
+	it('query channel Joined', async () => {
+		const channelConfig = globalConfig.channels[channelName];
+		for (const [orgName, {peerIndexes}] of Object.entries(channelConfig.organizations)) {
+			const peers = helper.newPeers(peerIndexes, orgName);
+
+			const user = helper.getOrgAdmin(orgName);
 
 			const queryHub = new QueryHub(peers, user);
-			let JoinedResult;
-			try {
-				JoinedResult = await queryHub.channelJoined();
-			} catch (e) {
-				logger.error(e);
-			}
+			await queryHub.connect();
 
+			const JoinedResult = await queryHub.channelJoined();
 			for (const [index, peer] of Object.entries(peers)) {
 				logger.info(peer.toString(), 'has joined', JoinedResult[index]);
 				assert.ok(JoinedResult[index].includes(channelName));
 			}
+			await queryHub.disconnect();
 
 		}
 	});
-	it('query channel Joined');
+
+});
+
+describe('anchor peer', async function () {
+	this.timeout(0);
 	it('setup anchor peer', async () => {
 
-		if (!process.env.anchor) {
-			logger.warn('it skipped due to unspecified process.env.anchor');
-			return;
-		}
-		const peers = helper.allPeers();
+		// const peers = helper.allPeers();
 
-		await sleep(2000 * peers.length);
-		if (!process.env.binPath) {
-			process.env.binPath = path.resolve(__dirname, '../model/bin/');
-		}
+		// await sleep(2000 * peers.length);
 
 		const channelConfig = globalConfig.channels[channelName];
 
@@ -139,11 +147,11 @@ describe('channelSetup', function () {
 		const orderer = orderers[0];
 		await orderer.connect();
 		for (const org in channelConfig.organizations) {
-			await setAnchorPeersByOrg(channelName, org, orderer, process.env.finalityRequired);
+			await setAnchorPeersByOrg(channelName, org, orderer, binPath);
 		}
+		await orderer.disconnect();
 	});
 });
-
 
 
 
