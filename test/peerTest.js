@@ -1,6 +1,8 @@
-const helper = require('../app/helper');
-const logger = require('khala-logger/log4js').consoleLogger('test:peer');
-const assert = require('assert');
+import * as helper from '../app/helper.js';
+import assert from 'assert';
+import {consoleLogger} from '@davidkhala/logger/log4.js';
+
+const logger = consoleLogger('test:peer');
 describe('peer', () => {
 	it('ping', async () => {
 		const peers = helper.allPeers();

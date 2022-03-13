@@ -1,10 +1,12 @@
 import path from 'path';
-process.env.binPath = path.resolve(__dirname, '../common/bin');
-import BinManager from '../common/nodejs/binManager.js';
 import fsExtra from 'fs-extra';
-import Package from '../common/nodejs/chaincodePackage.js';
+import {filedirname} from '@davidkhala/light/es6.mjs';
 import {homeResolve} from '@davidkhala/light/index.js';
-const binManager = new BinManager();
+import BinManager from '../common/nodejs/binManager.js';
+import Package from '../common/nodejs/chaincodePackage.js';
+
+filedirname(import.meta);
+const binManager = new BinManager(path.resolve(__dirname, '../common/bin'));
 fsExtra.ensureDirSync(path.resolve(__dirname, 'artifacts'));
 describe('lifeCycle', () => {
 

@@ -57,7 +57,7 @@ export const genExtraUser = async ({userName, password}, orgName, nodeType) => {
 
 	const admin = loadFromLocal(adminCryptoPath, nodeType, config.mspid, true);
 	const caCryptoGen = new CaCryptoGen(caService, cryptoPath);
-	return await caCryptoGen.genUser(nodeType, admin, {TLS, affiliationRoot: orgName});
+	return await caCryptoGen.genUser(nodeType, admin);
 
 };
 export const getClientKeyPairPath = (cryptoPath, nodeType) => {

@@ -1,4 +1,4 @@
-import yaml from '@davidkhala/nodeutils/yaml.js';
+import * as yaml from '@davidkhala/nodeutils/yaml.js';
 import path from 'path';
 
 const logger = console;

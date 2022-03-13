@@ -1,10 +1,12 @@
 import * as helper from '../app/helper.js';
 import {consoleLogger} from '@davidkhala/logger/log4.js';
 import SlimDiscoveryService from '../common/nodejs/admin/discovery.js';
-import {getIdentityContext} from '../common/nodejs/admin/user.js';
+import UserBuilder from '../common/nodejs/admin/user.js';
 import DockerManager from '@davidkhala/dockerode/docker.js';
 import {ParseResult, ParsePeerResult} from '../common/nodejs/formatter/discovery.js';
+import {discoveryChaincodeInterestTranslator} from '../app/chaincodeHelper.js';
 
+const {getIdentityContext} = UserBuilder;
 const dockerManager = new DockerManager();
 const logger = consoleLogger('test:serviceDiscovery');
 describe('change container', () => {
@@ -54,7 +56,7 @@ describe('discovery', () => {
 		logger.debug(ParseResult(discoveries));
 	});
 	it('interest', async () => {
-		const {discoveryChaincodeInterestTranslator} = require('../app/chaincodeHelper');
+
 		const interest = discoveryChaincodeInterestTranslator(['diagnose']);
 		slimDiscoveryService.build(identityContext, {interest});
 		const discoveries = await slimDiscoveryService.send();

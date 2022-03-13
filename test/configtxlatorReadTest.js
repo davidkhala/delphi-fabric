@@ -1,17 +1,21 @@
-const helper = require('../app/helper');
-const {ChannelConfig} = require('../common/nodejs/channelConfig');
+import fs from 'fs';
+import path from 'path';
+import {filedirname} from '@davidkhala/light/es6.mjs';
+import * as helper from '../app/helper.js';
+import {ChannelConfig} from '../common/nodejs/channelConfig.js';
+import {consoleLogger} from '@davidkhala/logger/log4.js';
+import BinManager from '../common/nodejs/binManager.js';
+
+const logger = consoleLogger('test:configtxlator');
 const channelName = 'allchannel';
-const fs = require('fs');
-const logger = require('khala-logger/log4js').consoleLogger('test:configtxlator');
 const orderers = helper.newOrderers();
 const orderer = orderers[0];
-const BinManager = require('../common/nodejs/binManager');
-const path = require('path');
-process.env.binPath = path.resolve(__dirname, '../common/bin/');
+filedirname(import.meta);
+const binPath = path.resolve(__dirname, '../common/bin/');
 describe('configtxlator', async () => {
 
 	it('viaServer', async () => {
-		const binPath = path.resolve(__dirname, '../common/bin/');
+
 		const binManager = new BinManager(binPath);
 		await binManager.configtxlatorRESTServer('start');
 
@@ -25,7 +29,7 @@ describe('configtxlator', async () => {
 		const user = helper.getOrgAdmin(undefined, 'peer');
 
 		it('read', async () => {
-			const channelConfig = new ChannelConfig(channelName, user, orderer);
+			const channelConfig = new ChannelConfig(channelName, user, orderer, binPath);
 			const {json} = await channelConfig.getChannelConfigReadable();
 			logger.info(JSON.parse(json));
 			fs.writeFileSync(`${channelName}.json`, json);

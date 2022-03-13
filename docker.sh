@@ -29,7 +29,6 @@ restart() {
 cc() {
 	mocha ./cc/golang/diagnose/install.js
 	mocha ./cc/golang/diagnose/invoke.js --grep "^chaincode Initialize init$"
-	mocha ./cc/golang/ecosystem/index.js
 
 }
 nodejscc() {

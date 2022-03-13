@@ -1,7 +1,10 @@
 import * as  helper from '../app/helper.js';
-import OrdererUtil from '../common/nodejs/admin/orderer';
-const globalConfig = require('../config/orgs.json');
-const logger = require('khala-logger/log4js').consoleLogger('test:orderer');
+import OrdererUtil from '../common/nodejs/admin/orderer.js';
+import {consoleLogger} from '@davidkhala/logger/log4.js';
+import {importFrom} from '@davidkhala/light/es6.mjs';
+
+const globalConfig = importFrom('../config/orgs.json', import.meta);
+const logger = consoleLogger('test:orderer');
 describe('orderer', async () => {
 
 	if (globalConfig.TLS) {
