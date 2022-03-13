@@ -11,7 +11,8 @@ import fsExtra from 'fs-extra';
 import path from 'path';
 import {homeResolve} from '@davidkhala/light/index.js';
 import {importFrom, filedirname} from '@davidkhala/light/es6.mjs';
-filedirname(import.meta)
+
+filedirname(import.meta);
 
 const globalConfig = importFrom('./config/orgs.json', import.meta);
 
@@ -166,18 +167,17 @@ describe('down', function () {
 	this.timeout(0);
 	const toStop = true;
 
-	it('stop CAs', async function () {
-		this.timeout(0);
+	it('stop CAs', async () => {
+
 		await runCAs(toStop);
 	});
 
-	it('stop peers', async function () {
-		this.timeout(0);
+	it('stop peers', async () => {
+
 		await runPeers(toStop);
 	});
 
-	it('stop orderers', async function () {
-		this.timeout(0);
+	it('stop orderers', async () => {
 		await runOrderers(toStop);
 	});
 	it('prune docker in system', async () => {
@@ -204,9 +204,9 @@ describe('down', function () {
 });
 
 
-describe('up', () => {
-	it('pull container image', async function () {
-		this.timeout(0);
+describe('up', function () {
+	this.timeout(0);
+	it('pull container image', async () => {
 		await fabricImagePull({fabricTag, caTag});
 	});
 	it('create docker network', async () => {
@@ -218,8 +218,8 @@ describe('up', () => {
 	it('run CAs', async () => {
 		await runCAs();
 	});
-	it('cryptogen', async function () {
-		this.timeout(0);
+	it('cryptogen', async () => {
+
 		await caCrypoGenUtil.genAll();
 	});
 	// TODO idemix
