@@ -1,4 +1,4 @@
-name: Node.js CI
+name: Node.js Github CI
 
 on:
   push:
@@ -9,10 +9,10 @@ jobs:
   e2e:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@main
       with:
         submodules: true
-    - uses: actions/setup-node@v1
+    - uses: actions/setup-node@main
       with:
         node-version: 14.x
     - run: ./common/install.sh softHSMInstall

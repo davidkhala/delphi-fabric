@@ -2,18 +2,9 @@ import {consoleLogger} from '@davidkhala/logger/log4.js';
 import {sleep} from '@davidkhala/light/index.js';
 import * as helper from '../../app/helper.js';
 import {installs} from '../../app/installHelper.js';
-import {join} from '../../common/nodejs/channel.js';
 import {resumePeer, stopPeer} from './index.js';
 
 const logger = consoleLogger('test:peer HA');
-
-const resumePeerChannel = async (orgName, peerIndex, channelName) => {
-	const client = await helper.getOrgAdmin(orgName);
-	const channel = helper.prepareChannel(channelName, client);
-	const peer = helper.newPeer(peerIndex, orgName);
-	await join(channel, peer);
-
-};
 
 const touchCC = async (org, peerIndex) => {
 

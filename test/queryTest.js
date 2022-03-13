@@ -61,6 +61,11 @@ describe('queryTransaction', function () {
 	const channelName = 'allchannel';
 	const channel = emptyChannel(channelName);
 	const eventHub = new EventHub(channel, eventer);
+	before(async () => {
+		for (const peer of peers) {
+			await peer.connect();
+		}
+	});
 	it('for all transactions', async () => {
 		const eventHubQuery = new EventHubQuery(eventHub, queryHub.identityContext);
 		const txs = await eventHubQuery.replayTx(4);
@@ -68,24 +73,27 @@ describe('queryTransaction', function () {
 		const {transactionId} = txs[0];
 		logger.info('query on txID', transactionId);
 
-		await queryHub.connect();
+
 		const result = await queryHub.tx(channelName, transactionId);
 		logger.info(result);
-		await queryHub.disconnect();
+
 	});
 	it('for single transaction', async () => {
 
-		for (const peer of peers) {
-			await peer.connect();
-		}
+
 		// NOTE: channel config tx cannot be found by query
 		const transactionId = 'b4da8d97a0a998ab288590036f5a3ce056ff7d504263dd4b6549b44cb015a1af';
 
 		const result = await queryHub.tx(channelName, transactionId);
 		logger.info(result);
-
-
 	});
+	after(async () => {
+		await queryHub.disconnect();
+		for (const peer of peers) {
+			await peer.disconnect();
+		}
+	});
+
 });
 
 describe('query lifecycle chaincode', () => {
@@ -102,7 +110,11 @@ describe('query lifecycle chaincode', () => {
 		this.timeout(0);
 		const installed = await queryHub.chaincodesInstalled();
 		console.debug(installed);
-
+	});
+	after(async () => {
+		for (const peer of peers) {
+			await peer.disconnect();
+		}
 	});
 
 });

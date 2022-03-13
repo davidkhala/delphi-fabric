@@ -12,6 +12,7 @@ describe('peer', () => {
 		}
 	});
 	it('reconnect', async () => {
+		// TODO leakage hang for a few seconds
 		const peers = helper.allPeers();
 		for (const peer of peers) {
 			await peer.connect();
@@ -21,6 +22,7 @@ describe('peer', () => {
 		}
 	});
 	it('reconnect:streaming', async () => {
+		// TODO leakage hang for a few seconds
 		const peers = helper.allPeers();
 		for (const peer of peers) {
 			await peer.connectStream();
