@@ -7,7 +7,10 @@ on:
   workflow_dispatch:
 jobs:
   e2e:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, oracle]
+    runs-on: ${{matrix.os}}
     steps:
     - uses: actions/checkout@main
       with:
