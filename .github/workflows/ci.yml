@@ -1,10 +1,6 @@
 name: Github CI
 
 on:
-  push:
-    branches:
-      - master
-  workflow_dispatch:
   workflow_call:
     inputs:
       os:
@@ -26,7 +22,7 @@ jobs:
         timeout-minutes: 30
       - run: npm test
   softHSM:
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.os }}
     steps:
       - uses: actions/checkout@main
         with:

@@ -1,0 +1,12 @@
+name: ubuntu
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+jobs:
+  ubuntu:
+    uses: ./github-runner.yml@master
+    with:
+      os: ubuntu-latest
