@@ -7,6 +7,6 @@ on:
   workflow_dispatch:
 jobs:
   ubuntu:
-    uses: ./ci.yml@master
+    uses: ./.github/workflows/ci.yml
     with:
       os: ubuntu-latest
