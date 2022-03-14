@@ -4,6 +4,6 @@ on:
   workflow_dispatch:
 jobs:
   e2e:
-    uses: ./ci.yml@master
+    uses: ./.github/workflows/ci.yml@master
     with:
       os: self-hosted
