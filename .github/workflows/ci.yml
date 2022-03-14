@@ -21,11 +21,3 @@ jobs:
       - run: npm start
         timeout-minutes: 30
       - run: npm test
-  softHSM:
-    runs-on: ${{ inputs.os }}
-    steps:
-      - uses: actions/checkout@main
-        with:
-          submodules: true
-      - run: ./common/install.sh softHSMInstall
-      - run: ./test-hsm/hsm.sh
