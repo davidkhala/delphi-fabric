@@ -28,5 +28,8 @@ jobs:
   softHSM:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@main
+        with:
+          submodules: true
       - run: ./common/install.sh softHSMInstall
       - run: ./test-hsm/hsm.sh
