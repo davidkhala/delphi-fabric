@@ -1,0 +1,9 @@
+name: Self-host runner
+
+on:
+  workflow_dispatch:
+jobs:
+  e2e:
+    uses: ./github-runner.yml
+    with:
+      os: self-hosted
