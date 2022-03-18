@@ -4,6 +4,8 @@ on:
   workflow_dispatch:
 jobs:
   e2e:
-    uses: ./.github/workflows/ci.yml
-    with:
-      os: self-hosted
+    runs-on: self-hosted
+    steps:
+      - uses: ./.github/workflows/ci.yml
+        with:
+          os: self-hosted

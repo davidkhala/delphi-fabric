@@ -17,6 +17,9 @@ jobs:
       - uses: actions/setup-node@main
         with:
           node-version: 14.x
+      - uses: actions/setup-go@main
+        with:
+            go-version: 1.16
       - run: ./install.sh
       - run: npm start
         timeout-minutes: 30
