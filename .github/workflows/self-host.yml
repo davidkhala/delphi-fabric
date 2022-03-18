@@ -7,10 +7,7 @@ jobs:
   e2e:
     runs-on: self-hosted
     steps:
-      - uses: actions/checkout@main
-        with:
-          submodules: true
-      - uses: docker-practice/actions-setup-docker@master
+      - uses: davidkhala/ci-cd-utils/blob/master/.github/actions/ol7.yml@mastaer
       - uses: davidkhala/delphi-fabric/.github/workflows/ci.yml@master
         with:
           os: self-hosted
