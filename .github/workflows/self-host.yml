@@ -2,7 +2,7 @@ name: Self-host runner
 
 on:
   workflow_dispatch:
-  push:
+  push: # testing
 jobs:
   e2e:
     runs-on: self-hosted
