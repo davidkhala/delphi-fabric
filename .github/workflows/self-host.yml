@@ -10,6 +10,6 @@ jobs:
         with:
           submodules: true
       - uses: docker-practice/actions-setup-docker@master
-      - uses: ./.github/workflows/ci.yml
+      - uses: davidkhala/delphi-fabric/.github/workflows/ci.yml@master
         with:
           os: self-hosted

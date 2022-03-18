@@ -9,6 +9,9 @@ jobs:
   nodejs:
     runs-on: ${{ inputs.os }}
     steps:
+      - uses: actions/checkout@main
+        with:
+          submodules: true
       - uses: actions/setup-node@main
         with:
           node-version: 14.x
