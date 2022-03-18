@@ -9,6 +9,7 @@ jobs:
       - uses: actions/checkout@main
         with:
           submodules: true
+      - uses: docker-practice/actions-setup-docker@master
       - uses: ./.github/workflows/ci.yml
         with:
           os: self-hosted
