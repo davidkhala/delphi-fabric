@@ -6,6 +6,9 @@ jobs:
   e2e:
     runs-on: self-hosted
     steps:
+      - uses: actions/checkout@main
+        with:
+          submodules: true
       - uses: ./.github/workflows/ci.yml
         with:
           os: self-hosted
