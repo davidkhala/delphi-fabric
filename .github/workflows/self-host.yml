@@ -7,7 +7,7 @@ jobs:
   e2e:
     runs-on: self-hosted
     steps:
-      - uses: davidkhala/ci-cd-utils/.github/actions/ol7.yml@mastaer
+      - uses: davidkhala/setup-oracle-linux@main
       - uses: ./.github/workflows/ci.yml
         with:
           os: self-hosted
