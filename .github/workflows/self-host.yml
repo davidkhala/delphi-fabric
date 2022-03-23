@@ -5,10 +5,6 @@ on:
   push: # testing
 jobs:
   e2e:
-    runs-on: self-hosted
-    steps:
-      - uses: davidkhala/setup-oracle-linux@main
-      - uses: actions/checkout@v2
-      - uses: ./.github/workflows/ci.yml
-        with:
-          os: self-hosted
+    uses: ./.github/workflows/ci.yml
+    with:
+      os: self-hosted
