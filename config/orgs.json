@@ -24,7 +24,8 @@
           },
           "orderer1": {
             "portHost": 8050,
-            "portAdmin": 7443
+            "portAdmin": 7443,
+            "loggingLevel": "debug"
           },
           "orderer2": {
             "portHost": 9050,
@@ -113,7 +114,8 @@
         },
         {
           "container_name": "peer1.icdd",
-          "port": 8151
+          "port": 8151,
+          "loggingLevel": "debug"
         }
       ],
       "ca": {

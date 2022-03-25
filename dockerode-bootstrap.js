@@ -29,7 +29,7 @@ export const runOrderers = async (toStop) => {
 	const {MSPROOT} = peerUtil.container;
 	const nodeType = 'orderer';
 
-	const toggle = async ({orderer, domain, port, mspid, portAdmin}, ordererType, stateVolume, operations, metrics) => {
+	const toggle = async ({orderer, domain, port, mspid, portAdmin, loggingLevel}, ordererType, stateVolume, operations, metrics) => {
 		const cryptoPath = new CryptoPath(MSPROOT, {
 			orderer: {org: domain, name: orderer}
 		});
@@ -51,7 +51,7 @@ export const runOrderers = async (toStop) => {
 					configPath,
 					volumeName: MSPROOTVolume
 				},
-				ordererType,
+				ordererType, loggingLevel,
 				tls, stateVolume, raft_tls,
 				portAdmin,
 			}, operations, metrics);
@@ -65,8 +65,11 @@ export const runOrderers = async (toStop) => {
 			if (stateVolume) {
 				stateVolume = homeResolve(stateVolume);
 			}
-			const {portHost, operations, metrics, portAdmin} = ordererConfig;
-			await toggle({orderer, domain, port: portHost, mspid, portAdmin}, type, stateVolume, operations, metrics);
+			const {portHost, operations, metrics, portAdmin, loggingLevel} = ordererConfig;
+			await toggle({
+				orderer, domain, loggingLevel,
+				port: portHost, mspid, portAdmin
+			}, type, stateVolume, operations, metrics);
 		}
 	}
 };
@@ -92,7 +95,7 @@ export const runPeers = async (toStop) => {
 		const {mspid} = orgConfig;
 		for (const peerIndex in peersConfig) {
 			const peerConfig = peersConfig[peerIndex];
-			const {container_name, port, couchDB, operations} = peerConfig;
+			const {container_name, port, couchDB, operations, loggingLevel} = peerConfig;
 			let {stateVolume} = peerConfig;
 			if (stateVolume) {
 				stateVolume = homeResolve(stateVolume);
@@ -122,7 +125,7 @@ export const runPeers = async (toStop) => {
 				await runCouchDB({container_name, port, network});
 			}
 			await runPeer({
-				container_name, port, imageTag, network,
+				container_name, port, imageTag, network, loggingLevel,
 				peerHostName, tls,
 				msp: {
 					id: mspid,
