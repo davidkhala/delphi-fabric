@@ -14,7 +14,7 @@
     "start": "binPath=$PWD/common/bin channelName=allchannel mocha app/channelSetup.js --grep \"^channelSetup\"",
     "poststart": "./docker.sh cc",
     "stop": "./docker.sh down",
-    "channelSetup": "mocha app/channelSetup.js --grep ^channelSetup"
+    "channelSetup": "mocha app/channelSetup.js"
   },
   "license": "Apache-2.0",
   "dependencies": {

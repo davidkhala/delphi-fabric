@@ -137,10 +137,6 @@ describe('anchor peer', async function () {
 	this.timeout(0);
 	it('setup anchor peer', async () => {
 
-		// const peers = helper.allPeers();
-
-		// await sleep(2000 * peers.length);
-
 		const channelConfig = globalConfig.channels[channelName];
 
 		const orderers = helper.newOrderers();

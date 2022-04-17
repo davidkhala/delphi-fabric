@@ -1,7 +1,8 @@
 import * as helper from '../../../app/helper.js';
 import {installAll, ChaincodeDefinitionOperator} from '../../../app/installHelper.js';
-import InvokeHelper from '../../../app/invokeHelper.js';
+import FabricGateway from '../../../common/nodejs/fabric-gateway/index.js';
 import {consoleLogger} from '@davidkhala/logger/log4.js';
+import UserBuilder from '../../../common/nodejs/admin/user.js';
 
 const chaincodeID = 'stress';
 const logger = consoleLogger(`chaincode:${chaincodeID}`);
@@ -43,16 +44,19 @@ describe('deploy', function () {
 	});
 });
 describe('invoke', () => {
-	const peers = [helper.newPeer(0, 'astri.org'), helper.newPeer(0, 'icdd')];
+	const peer = helper.newPeer(0, 'astri.org');
 	const org = 'icdd';
-	const invokeHelper = new InvokeHelper(peers, org, chaincodeID);
+	const user = new UserBuilder(undefined, helper.getOrgAdmin(org));
+
+	const gateway = new FabricGateway(peer, user);
+	const contract = gateway.getContract(channel, chaincodeID);
 	it('touch', async () => {
 
-		await invokeHelper.query({});
+		await contract.evaluateTransaction();
 	});
 	it('stress 10', async () => {
 		for (let i = 0; i < 10; i++) {
-			await invokeHelper.invoke({}, undefined, false);
+			await contract.submit([], undefined, undefined, false);
 		}
 
 	});

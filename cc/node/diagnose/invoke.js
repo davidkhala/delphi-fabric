@@ -2,40 +2,29 @@ import InvokeHelper from '../../../app/invokeHelper.js';
 import * as helper from '../../../app/helper.js';
 import {consoleLogger} from '@davidkhala/logger/log4.js';
 import {queryBuilder} from '../../../common/nodejs/couchdb.js';
+
 const chaincodeId = 'nodeDiagnose';
 const logger = consoleLogger(chaincodeId);
 const {channelName} = process.env;
-const invoke = async (peers, clientOrg, {fcn, args, transientMap}) => {
-	const invokeHelper = new InvokeHelper(peers, clientOrg, chaincodeId, channelName);
-	return await invokeHelper.invoke({fcn, args, transientMap});
-};
-const query = async (peers, clientOrg, {fcn, args, transientMap}) => {
-	const invokeHelper = new InvokeHelper(peers, clientOrg, chaincodeId, channelName);
-	return await invokeHelper.query({fcn, args, transientMap});
-};
+const clientOrg = 'icdd';
+const peer = helper.newPeer(0, clientOrg);
+
+const invoke = new InvokeHelper(peer, clientOrg, chaincodeId, channelName).invoke;
+const query = new InvokeHelper(peer, clientOrg, chaincodeId, channelName).query;
+
 describe('chaincode Initialize', () => {
 
-	const peers = helper.allPeers();
 	it('init', async () => {
-		const org = 'icdd';
-		await invoke(peers, org, chaincodeId, {
-			init: true,
-		});
-
-
+		await invoke({args: ['init']}, true);
 	});
 });
 describe('chaincode invoke', () => {
-	const org = 'icdd';
-	const peers = helper.allPeers();
 	it('put', async () => {
 
 
-		await invoke(peers, org, chaincodeId, {
-			fcn: 'put', args: ['a', '' + Date.now()]
-		});
-		const result = await query(peers, org, chaincodeId, {
-			fcn: 'getRaw', args: ['a']
+		await invoke({args: ['put', 'a', '' + Date.now()]}, true);
+		const result = await query({
+			args: ['getRaw', 'a']
 		});
 		console.debug(result);
 
@@ -47,67 +36,63 @@ describe('chaincode invoke', () => {
 			object[i] = i;
 		}
 
-		await invoke(peers, org, chaincodeId, {
-			fcn: 'putBatch', args: [JSON.stringify(object)]
+		await invoke({
+			args: ['putBatch', JSON.stringify(object)]
 		});
 	});
 
 });
 describe('chaincode common query', () => {
-	const org = 'icdd';
-	const peers = helper.newPeers([0], org);
+
 	it('timeStamp', async () => {
 
-		const time = await query(peers, org, chaincodeId, {
-			fcn: 'timeStamp'
+		const time = await query({
+			args: ['timeStamp']
 		});
 		logger.info({time});
 
 	});
 	it('whoami', async () => {
-		const result = await query(peers, org, chaincodeId, {
-			fcn: 'whoami'
+		const result = await query({
+			args: ['whoami']
 		});
 		console.debug(result);
 
 	});
 	it('chaincodeID', async () => {
-		const result = await query(peers, org, chaincodeId, {
-			fcn: 'chaincodeId'
+		const result = await query({
+			args: ['chaincodeId']
 		});
 		console.debug(result[0]);
 	});
 	it('transient', async () => {
-		const result = await query(peers, org, chaincodeId, {
-			fcn: 'transient', transientMap: {
+		const result = await query({
+			transientMap: {
 				a: 'b'
 			},
-			args: ['a']
+			args: ['transient', 'a']
 		});
 		console.debug(result);
 	});
 });
 
 describe('chaincode rich query', async () => {
-	const org = 'astri.org';
-	const peers = helper.newPeers([0], org);
 
 	it('loop to put', async function () {
-		const peers = helper.allPeers();
+
 		const size = 100;
 		this.timeout(0);
 		for (let i = 0; i < size; i++) {
-			await invoke(peers, org, chaincodeId, {
-				fcn: 'put', args: [`${i}`, `${Date.now()}`]
+			await invoke({
+				args: ['put', `${i}`, `${Date.now()}`]
 			});
 		}
 	});
 	it('rich query', async () => {
-		const fcn = 'richQuery';
-		const args = [queryBuilder(undefined, ['Time'], 0)];
+		const args = ['richQuery', queryBuilder(undefined, ['Time'], 0)];
 
-		const queryResult = await query(peers, org, chaincodeId, {
-			fcn, args
+		const queryResult = await query(chaincodeId, {
+			args
 		});
 		const cleanResult = JSON.parse(queryResult[0]);
 		console.debug(cleanResult);
@@ -116,14 +101,11 @@ describe('chaincode rich query', async () => {
 	});
 });
 describe('chaincode stateful query', () => {
-	const org = 'astri.org';
-	const peers = helper.newPeers([0], org);
 	it('history', async () => {
-		const fcn = 'history';
-		const args = ['a'];
+		const args = ['history', 'a'];
 
-		const queryResult = await query(peers, org, chaincodeId, {
-			fcn, args
+		const queryResult = await query({
+			args
 		});
 		console.debug(queryResult[0]);
 

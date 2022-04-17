@@ -1,6 +1,6 @@
 Profiles:
-  mirror:
-    Policies: &ref_3
+  allchannel:
+    Policies:
       Readers: &ref_0
         Type: ImplicitMeta
         Rule: ANY Readers
@@ -12,7 +12,7 @@ Profiles:
         Rule: MAJORITY Admins
     Capabilities:
       V2_0: true
-    Orderer: &ref_4
+    Orderer:
       OrdererType: etcdraft
       BatchTimeout: 2s
       BatchSize:
@@ -63,57 +63,6 @@ Profiles:
             Endorsement:
               Type: Signature
               Rule: OR('hyperledgerMSP.member')
-    Application:
-      Policies:
-        LifecycleEndorsement:
-          Type: ImplicitMeta
-          Rule: MAJORITY Endorsement
-        Endorsement:
-          Type: ImplicitMeta
-          Rule: MAJORITY Endorsement
-        Readers: *ref_0
-        Writers: *ref_1
-        Admins: *ref_2
-      Organizations:
-        - Name: astri.org
-          ID: astriMSP
-          MSPDir: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/astri.org/msp
-          Policies:
-            Readers:
-              Type: Signature
-              Rule: OR('astriMSP.member')
-            Writers:
-              Type: Signature
-              Rule: OR('astriMSP.member')
-            Admins:
-              Type: Signature
-              Rule: OR('astriMSP.admin')
-            Endorsement:
-              Type: Signature
-              Rule: OR('astriMSP.member')
-        - Name: icdd
-          ID: icddMSP
-          MSPDir: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp
-          Policies:
-            Readers:
-              Type: Signature
-              Rule: OR('icddMSP.member')
-            Writers:
-              Type: Signature
-              Rule: OR('icddMSP.member')
-            Admins:
-              Type: Signature
-              Rule: OR('icddMSP.admin')
-            Endorsement:
-              Type: Signature
-              Rule: OR('icddMSP.member')
-      Capabilities:
-        V2_0: true
-  allchannel:
-    Policies: *ref_3
-    Capabilities:
-      V2_0: true
-    Orderer: *ref_4
     Application:
       Policies:
         LifecycleEndorsement:

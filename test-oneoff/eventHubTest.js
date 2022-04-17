@@ -9,14 +9,22 @@ const logger = consoleLogger('test:eventHub');
 const {NEWEST, OLDEST} = BlockNumberFilterType;
 const org = 'astri.org';
 describe('eventhub', () => {
+	this.timeout(0);
 	const channelName = 'allchannel';
 	const user = helper.getOrgAdmin(org, 'peer');
 	const channel = helper.prepareChannel(channelName);
 	logger.info(channel.toString());
 	const peer = helper.newPeer(0, org);
+	const orderers = helper.newOrderers()
+	const orderer = orderers[0]
 
-	it('block parser', async function () {
-		this.timeout(0);
+	it('wait for block', async ()=>{
+		const eventHub = new EventHub(channel, orderer.eventer);
+		const identityContext = UserUtil.getIdentityContext(user);
+
+	})
+	it('block parser', async ()=> {
+
 		const eventHub = new EventHub(channel, peer.eventer);
 		const identityContext = UserUtil.getIdentityContext(user);
 		const startBlock = OLDEST;

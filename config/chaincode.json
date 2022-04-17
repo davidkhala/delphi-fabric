@@ -11,7 +11,7 @@
       "Time"
     ],
     "endorsingConfigs": {
-      "n": 1,
+      "n": 2,
       "mspid": {
         "astriMSP": 0,
         "icddMSP": 0

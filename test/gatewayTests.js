@@ -6,7 +6,7 @@ import FabricGateway from '../common/nodejs/fabric-gateway/index.js';
 describe('gateway', function () {
 	this.timeout(0);
 	const user = helper.getOrgAdmin(undefined, 'peer');
-	const peers = helper.newPeers([0], 'icdd');
+	const peers = helper.newPeers([0], 'astri.org');
 	const peer = peers[0];
 	assert.ok(user, 'user not found');
 	const userBuilder = new UserBuilder(undefined, user);
@@ -38,8 +38,7 @@ describe('gateway', function () {
 			key: 'value'
 		};
 
-		const endorsingOrganizations = [peer.mspId];
-		await contract.submit(['putImplicit'], transientMap, endorsingOrganizations);
+		await contract.submit(['putImplicit'], transientMap);
 		const result = await contract.evaluate(['getImplicit'], transientMap);
 		assert.strictEqual(result, `{"key":"value"}`);
 	});

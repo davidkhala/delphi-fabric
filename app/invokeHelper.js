@@ -1,48 +1,60 @@
+
 import * as helper from './helper.js';
-import Transaction from '../common/nodejs/transaction.js';
 import {consoleLogger} from '@davidkhala/logger/log4.js';
+import UserBuilder from '../common/nodejs/admin/user.js';
+import FabricGateway from '../common/nodejs/fabric-gateway/index.js';
 
 const defaultLogger = consoleLogger('transaction helper');
+/**
+ * use fabric-gateway to simplify
+ */
 export default class InvokeHelper {
 	/**
 	 *
-	 * @param endorsingPeers
+	 * @param peer
 	 * @param clientOrg
 	 * @param chaincodeId
-	 * @param [channelName]
+	 * @param channelName
+	 * @param [logger]
 	 */
-	constructor(endorsingPeers, clientOrg, chaincodeId, channelName = 'allchannel', logger = defaultLogger) {
-		const user = helper.getOrgAdmin(clientOrg);
-		const channel = helper.prepareChannel(channelName);
+	constructor(peer, clientOrg, chaincodeId, channelName, logger = defaultLogger) {
+		const user = new UserBuilder(undefined, helper.getOrgAdmin(clientOrg));
 
-		const tx = new Transaction(endorsingPeers, user, channel, chaincodeId, logger);
-		this._clientOrg = clientOrg;
+		const gateway = new FabricGateway(peer, user);
 
-		Object.assign(this, {tx, peers: endorsingPeers, logger});
+		const tx = gateway.getContract(channelName, chaincodeId);
+
+		Object.assign(this, {tx, gateway, logger});
 	}
 
-	async connect() {
-		for (const peer of this.peers) {
-			await peer.connect();
-		}
+	connect() {
+		this.gateway.connect();
 	}
 
-	async query({fcn, args, transientMap}) {
+	async query({args, transientMap}) {
 		await this.connect();
-		this.logger.debug('query', 'client org', this._clientOrg);
-		const {tx} = this;
-		const result = await tx.evaluate({fcn, args, transientMap});
-		result.queryResults = result.queryResults.map(entry => entry.toString());
-		return result.queryResults;
+		const result = await this.tx.evaluate(args, transientMap);
+		await this.disconnect();
+		return result
 	}
 
-	async invoke({fcn, init, args, transientMap, nonce}, orderer = helper.newOrderers()[0], finalityRequired) {
+	/**
+	 * 'Init' function is legacy
+	 * @param args
+	 * @param [transientMap]
+	 * @param [finalityRequired]
+	 * @returns {Promise<*>}
+	 */
+	async invoke({args, transientMap}, finalityRequired) {
 		await this.connect();
-		this.logger.debug('invoke', 'client org', this._clientOrg);
 		const {tx} = this;
-		await orderer.connect();
+		const result= await tx.submit(args, transientMap, undefined, !!finalityRequired);
+		await this.disconnect()
+		return result
+	}
 
-		return await tx.submit({fcn: init ? fcn : undefined, args, transientMap, init, nonce}, orderer, finalityRequired);
+	disconnect() {
+		this.gateway.disconnect();
 	}
 }
 
