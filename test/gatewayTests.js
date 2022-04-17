@@ -26,11 +26,17 @@ describe('gateway', function () {
 	});
 	it('put raw and get', async () => {
 		const contract = gateway.getContract('allchannel', 'diagnose');
-		await contract.submitTransaction('putRaw', 'key', 'value');
+		if(process.env.CI){ // Github action workaround
+			const args = ['putRaw', 'key', 'value']
+			await contract.submit(args, undefined, ['astriMSP','icddMSP'])
+		}else {
+			await contract.submitTransaction('putRaw', 'key', 'value');
+		}
 
 		const result = await contract.evaluateTransaction('getRaw', 'key');
 		assert.strictEqual(result, 'value');
 	});
+
 	it('put private and get', async () => {
 		const contract = gateway.getContract('allchannel', 'diagnose');
 
