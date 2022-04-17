@@ -1,10 +1,11 @@
 import assert from 'assert';
+import {importFrom} from '@davidkhala/light/es6.mjs';
+import {consoleLogger} from '@davidkhala/logger/log4.js';
 import {install, getEndorsePolicy, getCollectionConfig} from './chaincodeHelper.js';
 import ChaincodeAction from '../common/nodejs/chaincodeOperation.js';
 import * as helper from './helper.js';
-import {consoleLogger} from '@davidkhala/logger/log4.js';
 import QueryHub from '../common/nodejs/query.js';
-import {importFrom} from '@davidkhala/light/es6.mjs';
+import Transaction from '../common/nodejs/transaction.js';
 
 const globalConfig = importFrom('../config/orgs.json', import.meta);
 const logger = consoleLogger('install helper');
@@ -57,7 +58,16 @@ export class ChaincodeDefinitionOperator {
 		this.waitForConsensus = 1000;
 		const chaincodeAction = new ChaincodeAction(peers, admin, channel);
 		chaincodeAction.setInitRequired(init_required);
-		Object.assign(this, {chaincodeAction, peers, admin});
+		Object.assign(this, {chaincodeAction, peers, admin, channel});
+	}
+
+	async init(chaincodeId, orderer) {
+		if (!orderer) {
+			const orderers = helper.newOrderers();
+			orderer = orderers[0];
+		}
+		const tx = new Transaction(this.peers, this.admin, this.channel, chaincodeId, logger);
+		await tx.submit({init: true}, orderer);
 	}
 
 	async approves({sequence, PackageID}, orderer, gate) {

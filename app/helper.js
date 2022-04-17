@@ -16,7 +16,7 @@ const logger = consoleLogger('Helper');
 const orgsConfig = globalConfig.organizations;
 const channelsConfig = globalConfig.channels;
 const ordererConfig = globalConfig.orderer;
-filedirname(import.meta)
+filedirname(import.meta);
 const projectRoot = path.dirname(__dirname);
 export const projectResolve = (...args) => path.resolve(projectRoot, ...args);
 

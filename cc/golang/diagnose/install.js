@@ -100,3 +100,14 @@ describe(`commit ${chaincodeID}`, () => {
 
 
 });
+describe('legacy chaincode Initialize', async function () {
+	this.timeout(0);
+	it('init', async () => {
+		const org = 'icdd';
+		const peers = helper.allPeers()
+		const admin = helper.getOrgAdmin(org);
+		const operator = new ChaincodeDefinitionOperator(channel, admin, peers);
+		await operator.connect();
+		await operator.init(chaincodeID)
+	});
+});

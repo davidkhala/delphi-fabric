@@ -2,28 +2,17 @@ import assert from 'assert';
 import {base64} from '@davidkhala/light/format.js';
 import {consoleLogger} from '@davidkhala/logger/log4.js';
 import {
-	putRaw, getRaw, whoami, putBatch, list, get, put, chaincodeID, getEndorsement, putEndorsement, getPage, getCertID, peerMSPID,
-	getPrivate, putPrivate, putImplicit, getImplicit, chaincodePing, richQuery,
-	invoke,
+	DiagnoseInvoke
 } from './diagnoseInvoke.js';
+const diagnose = new DiagnoseInvoke()
 import {getResponses} from '../../../common/nodejs/formatter/proposalResponse.js';
 import {TxValidationCode} from '../../../common/nodejs/formatter/constants.js';
-import {readWritePrivate} from './diagnoseInvoke.js';
+
 
 const logger = consoleLogger('chaincode:diagnose');
 const org1 = 'icdd';
 const org2 = 'astri.org';
 
-describe('chaincode Initialize', async function () {
-	this.timeout(0);
-	it('init', async () => {
-
-		const org = 'icdd';
-		await invoke(org, {
-			args: ['init']
-		});
-	});
-});
 describe('chaincode query', () => {
 	it('whom am i ', async () => {
 		const org = 'icdd';
