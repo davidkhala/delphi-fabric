@@ -2,16 +2,15 @@
 set -e
 CURRENT=$(cd $(dirname ${BASH_SOURCE}) && pwd)
 export binPath=$CURRENT/common/bin/
-export finalityRequired=true
+
 down() {
 
-	mocha dockerode-bootstrap.js --grep "^down "
+	npm stop
 	sudo rm -rf $CURRENT/stateVolumes/*
 }
 
 prepareNetwork() {
-	# used in package.json
-	mocha dockerode-bootstrap.js --grep "^up " --bail
+	npm run prestart
 }
 restart() {
 	down
@@ -19,13 +18,9 @@ restart() {
   npm start
 }
 cc() {
-	# used in package.json
-	mocha ./cc/golang/diagnose/install.js
+	npm run poststart
+}
 
-}
-nodejscc() {
-	mocha ./cc/node/diagnose/install.js
-}
 if [[ -z "$1" ]]; then
 	restart
 else

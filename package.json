@@ -10,10 +10,11 @@
     "install": "cd common/nodejs; npm install; lerna bootstrap --no-ci; cd -",
     "nuke": "cd common/nodejs; rm -rf node_modules; lerna clean --yes; cd -; rm -rf node_modules;",
     "test": "mocha test",
-    "prestart": "./docker.sh prepareNetwork",
+    "prestart": "mocha dockerode-bootstrap.js --grep ^up --bail",
     "start": "mocha app/channelSetup.js",
-    "poststart": "./docker.sh cc",
-    "stop": "./docker.sh down"
+    "poststart": "mocha ./cc/golang/diagnose/install.js",
+    "nodejscc": "mocha ./cc/node/diagnose/install.js",
+    "stop": "mocha dockerode-bootstrap.js --grep ^down"
   },
   "license": "Apache-2.0",
   "dependencies": {
