@@ -2,6 +2,7 @@ import * as helper from './helper.js';
 import {consoleLogger} from '@davidkhala/logger/log4.js';
 import UserBuilder from '../common/nodejs/admin/user.js';
 import FabricGateway from '../common/nodejs/fabric-gateway/index.js';
+import Transaction from '../common/nodejs/transaction.js';
 
 /**
  * use fabric-gateway to simplify
@@ -24,7 +25,12 @@ export default class InvokeHelper {
 
 		const tx = gateway.getContract(channelName, chaincodeId);
 
-		Object.assign(this, {tx, gateway, logger});
+		Object.assign(this, {tx, gateway, logger, user, channelName});
+	}
+
+	classicTransaction(peers) {
+		const channel = helper.prepareChannel(this.channelName);
+		return new Transaction(peers, this.user, channel, this.tx.contract.getChaincodeName());
 	}
 
 	connect() {

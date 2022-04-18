@@ -96,6 +96,7 @@ describe(`commit ${chaincodeID}`, () => {
 		logger.debug(r1[0].collections.config[0].static_collection_config);
 		logger.debug(r1[0].collections.config[0].static_collection_config.endorsement_policy);
 		const r2 = await operator.queryDefinition('astri.org', [0, 1], chaincodeID);
+		operator.disconnect()
 	});
 
 
@@ -109,5 +110,6 @@ describe('legacy chaincode Initialize', async function () {
 		const operator = new ChaincodeDefinitionOperator(channel, admin, peers);
 		await operator.connect();
 		await operator.init(chaincodeID)
+		operator.disconnect()
 	});
 });

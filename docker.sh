@@ -9,31 +9,25 @@ down() {
 	sudo rm -rf $CURRENT/stateVolumes/*
 }
 
-channel-less() {
-	down
-	prepareNetwork
-}
-
 prepareNetwork() {
+	# used in package.json
 	mocha dockerode-bootstrap.js --grep "^up " --bail
 }
 restart() {
-	channel-less
+	down
 	export channelName=allchannel
-  npm run channelSetup
+  npm start
 }
 cc() {
+	# used in package.json
 	mocha ./cc/golang/diagnose/install.js
-	mocha ./cc/golang/diagnose/invoke.js --grep "^chaincode Initialize init$"
 
 }
 nodejscc() {
 	mocha ./cc/node/diagnose/install.js
-	mocha ./cc/node/diagnose/invoke.js --grep "^chaincode Initialize init$"
 }
 if [[ -z "$1" ]]; then
 	restart
-	cc
 else
 	"$@"
 fi
