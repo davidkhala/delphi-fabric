@@ -95,7 +95,7 @@ export const runPeers = async (toStop) => {
 		const {mspid} = orgConfig;
 		for (const peerIndex in peersConfig) {
 			const peerConfig = peersConfig[peerIndex];
-			const {container_name, port, couchDB, operations, loggingLevel} = peerConfig;
+			const {container_name, port, couchDB, operations, loggingLevel, chaincodeOpts} = peerConfig;
 			let {stateVolume} = peerConfig;
 			if (stateVolume) {
 				stateVolume = homeResolve(stateVolume);
@@ -127,6 +127,7 @@ export const runPeers = async (toStop) => {
 			await runPeer({
 				container_name, port, imageTag, network, loggingLevel,
 				peerHostName, tls,
+				chaincodeOpts,
 				msp: {
 					id: mspid,
 					volumeName: 'MSPROOT',

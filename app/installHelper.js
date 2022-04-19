@@ -23,6 +23,9 @@ export const installs = async (chaincodeId, orgName, peerIndexes = Object.keys(g
 	const [result, t1] = await install(peers, {chaincodeId}, user);
 	const packageID = result.responses[0].response.package_id;
 	t1();
+	for (const peer of peers){
+		peer.disconnect()
+	}
 	return packageID;
 };
 export const installAll = async (chaincodeId, channelName) => {
