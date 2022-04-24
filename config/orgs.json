@@ -89,13 +89,14 @@
           "container_name": "peer0.icdd",
           "port": 8051,
           "chaincodeOpts": {
-            "dockerPort": "2375"
           }
         },
         {
           "container_name": "peer1.icdd",
           "port": 8151,
-          "loggingLevel": "debug"
+          "loggingLevel": "debug",
+          "chaincodeOpts": {
+          }
         }
       ],
       "ca": {

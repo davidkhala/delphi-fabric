@@ -16,7 +16,7 @@ export const prepareInstall = async (chaincodeId, binManager) => {
 	const chaincodePath = homeResolve(chaincodeRelativePath);
 
 	if (!Type || Type === ChaincodeType.golang) {
-		execSync(`GO111MODULE=on && cd ${chaincodePath} && rm -rf vendor && go mod vendor`);
+		execSync(`cd ${chaincodePath} && rm -rf vendor && go mod vendor`);
 	}
 
 	const chaincodePackage = new ChaincodePackage({
