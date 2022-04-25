@@ -12,20 +12,21 @@ const gate = `AND('icddMSP.member', 'astriMSP.member')`;
 const init_required = true;
 const {channel = 'allchannel'} = process.env;
 
-describe(`install and approve ${chaincodeID}`, () => {
-
+describe(`install and approve ${chaincodeID}`, function () {
+	this.timeout(0);
 	let PackageIDs;
-	it('install', async function () {
-		this.timeout(0);
+	it('install', async () => {
+
 		PackageIDs = await installAll(chaincodeID);
 		logger.debug('package id map', PackageIDs);
+
+
 	});
 
-	it('query installed & approve', async function () {
+	it('query installed & approve', async () => {
 
 		const sequence = 1;
 		const orgs = ['icdd', 'astri.org'];
-		this.timeout(0);
 		for (const org of orgs) {
 			const admin = helper.getOrgAdmin(org);
 			const peers = helper.newPeers([0, 1], org);
@@ -37,20 +38,11 @@ describe(`install and approve ${chaincodeID}`, () => {
 		}
 
 	});
-	it.skip('query installed & approve: with gate', async function () {
-		this.timeout(0);
-		const sequence = 2;
-		const org = 'icdd';
-		const admin = helper.getOrgAdmin(org);
-		const peers = helper.newPeers([0, 1], org);
-		const operator = new ChaincodeDefinitionOperator(channel, admin, peers, init_required);
-		await operator.connect();
-		await operator.queryInstalledAndApprove(chaincodeID, sequence, orderer, gate);
-	});
+
 });
-describe(`commit ${chaincodeID}`, () => {
+describe(`commit ${chaincodeID}`, function () {
 
-
+	this.timeout(0)
 	const queryCommitReadiness = async (sequence, _gate) => {
 		for (const org of ['icdd', 'astri.org']) {
 			const peers = helper.newPeers([0, 1], org);
@@ -76,8 +68,8 @@ describe(`commit ${chaincodeID}`, () => {
 		await operator.connect();
 		await operator.commitChaincodeDefinition({name: _chaincodeID, sequence}, orderer, _gate);
 	};
-	it('commit', async function () {
-		this.timeout(0);
+	it('commit', async () => {
+
 		await commit(chaincodeID, 1);
 	});
 	it.skip('commit: with gate', async () => {
@@ -96,20 +88,37 @@ describe(`commit ${chaincodeID}`, () => {
 		logger.debug(r1[0].collections.config[0].static_collection_config);
 		logger.debug(r1[0].collections.config[0].static_collection_config.endorsement_policy);
 		const r2 = await operator.queryDefinition('astri.org', [0, 1], chaincodeID);
-		operator.disconnect()
+		operator.disconnect();
 	});
 
 
 });
+
 describe('legacy chaincode Initialize', async function () {
 	this.timeout(0);
 	it('init', async () => {
 		const org = 'icdd';
-		const peers = helper.allPeers()
+		const peers = helper.allPeers();
 		const admin = helper.getOrgAdmin(org);
 		const operator = new ChaincodeDefinitionOperator(channel, admin, peers);
 		await operator.connect();
-		await operator.init(chaincodeID)
-		operator.disconnect()
+		await operator.init(chaincodeID);
+		operator.disconnect();
+	});
+});
+
+describe('upgrade:install, query,approve and commit  ', function () {
+	this.timeout(0)
+	it('query installed & approve: with gate', async () => {
+		const sequence = 2;
+		const org = 'icdd';
+		const admin = helper.getOrgAdmin(org);
+		const peers = helper.newPeers([0, 1], org);
+		const operator = new ChaincodeDefinitionOperator(channel, admin, peers, init_required);
+		await operator.connect();
+
+		await operator.queryInstalledAndApprove(chaincodeID, sequence, orderer, gate);
+
+
 	});
 });

@@ -2,13 +2,15 @@ import {createTmpDir} from '@davidkhala/nodeutils/tmp.js';
 import path from 'path';
 import {homeResolve} from '@davidkhala/light/index.js';
 import {execSync} from '@davidkhala/light/devOps.js';
-import {importFrom} from '@davidkhala/light/es6.mjs';
+import {filedirname, importFrom} from '@davidkhala/light/es6.mjs';
 import ChaincodeAction from '../common/nodejs/chaincodeOperation.js';
 import ChaincodePackage from '../common/nodejs/chaincodePackage.js';
 import {discoveryChaincodeInterestBuilder} from '../common/nodejs/serviceDiscovery.js';
 import {couchDBIndex} from '../common/nodejs/couchdb.js';
 import {ChaincodeType} from '../common/nodejs/formatter/chaincode.js';
+import BinManager from '../common/nodejs/binManager.js';
 
+filedirname(import.meta);
 const chaincodeConfig = importFrom('../config/chaincode.json', import.meta);
 
 export const prepareInstall = async (chaincodeId, binManager) => {
@@ -32,13 +34,14 @@ export const prepareInstall = async (chaincodeId, binManager) => {
 	}
 	await chaincodePackage.pack(ccPack, binManager);
 
-
 	return [ccPack, t1];
 };
 export const install = async (peers, {chaincodeId}, user) => {
-	const [ccPack, t1] = await prepareInstall(chaincodeId);
+	const binPath = path.resolve(__dirname, '../common/bin');
+	const binManager = new BinManager(binPath);
+	const [ccPack, t1] = await prepareInstall(chaincodeId, binManager);
 	const chaincodeAction = new ChaincodeAction(peers, user);
-	const result = await chaincodeAction.install(ccPack, true);
+	const result = await chaincodeAction.install(ccPack);
 	return [result, t1];
 };
 

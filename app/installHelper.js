@@ -60,7 +60,7 @@ export class ChaincodeDefinitionOperator {
 		const channel = helper.prepareChannel(channelName);
 		this.waitForConsensus = 1000;
 		const chaincodeAction = new ChaincodeAction(peers, admin, channel);
-		chaincodeAction.setInitRequired(init_required);
+		chaincodeAction.init_required = !!init_required
 		Object.assign(this, {chaincodeAction, peers, admin, channel});
 	}
 
@@ -157,7 +157,7 @@ export class ChaincodeDefinitionOperator {
 			const PackageIDs = Object.keys(entry);
 			for (const reference of Object.values(entry)) {
 				for (const [channelName, {chaincodes}] of Object.entries(reference)) {
-					logger.info(channelName, chaincodes);
+					logger.info(PackageIDs, channelName, chaincodes);
 				}
 			}
 			if (PackageIDs.length > 1) {
