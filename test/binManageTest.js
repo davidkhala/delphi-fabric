@@ -30,14 +30,14 @@ describe('lifeCycle', () => {
 		const chaincodeId = 'diagnose';
 		const outputFile = chaincodeId + '.ccPackage.tar.gz';
 		const chaincodePackage = new Package({
-			Type: 'golang',
 			Path: homeResolve('Documents/chaincode/golang/diagnose'),
 			Label: chaincodeId,
 		});
-		await chaincodePackage.pack(outputFile, binManager);
+		chaincodePackage.pack(outputFile, binManager);
 		const packageID = chaincodePackage.calculateId(outputFile, binManager);
 
-		assert.strictEqual(packageID, 'diagnose:db2c2e31fc6294c1d324b6303510ad38185527119af4a1d3bf576b05a2bad38c')
+		assert.strictEqual(packageID, 'diagnose:db2c2e31fc6294c1d324b6303510ad38185527119af4a1d3bf576b05a2bad38c');
 		fsExtra.unlinkSync(outputFile);
 	});
+
 });
