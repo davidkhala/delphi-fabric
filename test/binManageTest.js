@@ -20,7 +20,7 @@ describe('lifeCycle', () => {
 			Label: chaincodeId,
 		});
 		await chaincodePackage.pack(outputFile, binManager);
-		const packageID = chaincodePackage.calculateId(outputFile, binManager);
+		const packageID = chaincodePackage.calculateID(outputFile, binManager);
 
 		console.debug(packageID);
 		fsExtra.unlinkSync(outputFile);
@@ -34,7 +34,7 @@ describe('lifeCycle', () => {
 			Label: chaincodeId,
 		});
 		chaincodePackage.pack(outputFile, binManager);
-		const packageID = chaincodePackage.calculateId(outputFile, binManager);
+		const packageID = chaincodePackage.calculateID(outputFile, binManager);
 
 		assert.strictEqual(packageID, 'diagnose:db2c2e31fc6294c1d324b6303510ad38185527119af4a1d3bf576b05a2bad38c');
 		fsExtra.unlinkSync(outputFile);

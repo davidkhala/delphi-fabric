@@ -20,7 +20,7 @@ describe('package', function () {
 			const pack = new Package({Path, Label});
 			const output2 = Label + '.bin.ccPack.tar';
 			await pack.pack(output2, binManager);
-			const binID = pack.calculateId(output2, binManager);
+			const binID = pack.calculateID(output2, binManager);
 			console.debug({binID});
 
 		});
@@ -73,8 +73,9 @@ describe('package id', function () {
 			Label: chaincodeId,
 		});
 		chaincodePackage.pack(outputFile, binManager);
-		const packageID = chaincodePackage.calculateId(outputFile, binManager);
-		assert.strictEqual(packageID, chaincodePackage.calculateId(outputFile));
+		const packageID = chaincodePackage.calculateID(outputFile, binManager);
+		assert.strictEqual(packageID, chaincodePackage.calculateID(outputFile));
+		assert.strictEqual(packageID, chaincodePackage.calculateID(outputFile, undefined, true));
 		const digest = sha2_256(fs.readFileSync(outputFile));
 
 		assert.ok(packageID.endsWith(digest));
