@@ -78,8 +78,7 @@ describe('queryTransaction', function () {
 		logger.info(result);
 
 	});
-	it('for single transaction', async () => {
-
+	it('for single transaction', async function () {
 
 		// NOTE: channel config tx cannot be found by query
 		const transactionId = 'b4da8d97a0a998ab288590036f5a3ce056ff7d504263dd4b6549b44cb015a1af';

@@ -32,7 +32,7 @@ describe('package', function () {
 			const Path = homeResolve('Documents/chaincode/nodejs/diagnose');
 			const Type = 'node';
 			const pack = new Package({Path, Type, Label});
-			await pack.pack(outputFile);
+			await pack.pack(outputFile, binManager);
 		});
 
 
@@ -57,8 +57,7 @@ describe('package', function () {
 			const outputFile = Label + '.ccPackage.tar.gz';
 			const Path = homeResolve('Documents/chaincode/golang/external');
 			const pack = new Package({Path, Label});
-			const connect = {address};
-			await pack.pack(outputFile, undefined, connect);
+			await pack.pack(outputFile, binManager);
 		});
 	}
 );
