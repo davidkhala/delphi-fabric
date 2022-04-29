@@ -18,10 +18,15 @@ describe('package', function () {
 			const Path = homeResolve('Documents/chaincode/golang/diagnose');
 			const Label = 'diagnose';
 			const pack = new Package({Path, Label});
-			const output2 = Label + '.bin.ccPack.tar';
-			await pack.pack(output2, binManager);
-			const binID = pack.calculateID(output2, binManager);
-			console.debug({binID});
+			const binOutput = Label + '.bin.ccPack.tar';
+			const diyOutput = Label + '.diy.ccPack.tar';
+			await pack.pack(binOutput, binManager);
+			await pack.pack(diyOutput);
+			const binID = pack.calculateID(binOutput, binManager);
+			const diyID = pack.calculateID(diyOutput);
+			console.debug({binID, diyID});
+			assert.strictEqual(binID, Label + ':b3b9c7963a25754e6562d0be8c72f4b2dbdaca2203b82da36331a87cb4b2e0ea');
+			assert.strictEqual(diyID, Label + ':d371ba2a7eb68548427b8b368314a62fd0aa3a934d0189752c143a22dad69ac9');
 
 		});
 
@@ -56,8 +61,9 @@ describe('package', function () {
 			const Label = 'external';
 			const outputFile = Label + '.ccPackage.tar.gz';
 			const Path = homeResolve('Documents/chaincode/golang/external');
-			const pack = new Package({Path, Label});
-			await pack.pack(outputFile, binManager);
+			const pack = new Package({Type: 'external', Label, Path});
+			const packageID = pack.pack(outputFile, binManager);
+			console.debug(packageID);
 		});
 	}
 );
