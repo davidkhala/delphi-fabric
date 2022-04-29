@@ -13,18 +13,21 @@ const binPath = path.resolve(__dirname, '../common/bin');
 const binManager = new BinManager(binPath);
 describe('package', function () {
 		this.timeout(0);
-		it('pack golang: no DIY packer yet', async () => {
+		it('pack golang: diy packer is required for external chaincode', async () => {
 
 			const Path = homeResolve('Documents/chaincode/golang/diagnose');
 			const Label = 'diagnose';
 			const pack = new Package({Path, Label});
 			const binOutput = Label + '.bin.ccPack.tar';
 			const diyOutput = Label + '.diy.ccPack.tar';
-			await pack.pack(binOutput, binManager);
-			await pack.pack(diyOutput);
+			pack.pack(binOutput, binManager);
+			pack.pack(diyOutput);
 			const binID = pack.calculateID(binOutput, binManager);
 			const diyID = pack.calculateID(diyOutput);
 			console.debug({binID, diyID});
+			// Even binID is related to userid, so it can be
+			// db2c2e31fc6294c1d324b6303510ad38185527119af4a1d3bf576b05a2bad38c by npm test
+			// CI
 			assert.strictEqual(binID, Label + ':b3b9c7963a25754e6562d0be8c72f4b2dbdaca2203b82da36331a87cb4b2e0ea');
 			assert.strictEqual(diyID, Label + ':d371ba2a7eb68548427b8b368314a62fd0aa3a934d0189752c143a22dad69ac9');
 
