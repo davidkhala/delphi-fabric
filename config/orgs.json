@@ -89,6 +89,7 @@
           "container_name": "peer0.icdd",
           "port": 8051,
           "chaincodeOpts": {
+            "external": true
           }
         },
         {

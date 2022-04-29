@@ -6,6 +6,7 @@
     "path": "Documents/chaincode/golang/ecosystem"
   },
   "diagnose": {
+    "type": "external",
     "path": "Documents/chaincode/golang/diagnose",
     "couchDBIndexes": [
       "Time"
