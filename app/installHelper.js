@@ -85,6 +85,7 @@ export class ChaincodeDefinitionOperator {
 		Object.assign(endorsementPolicy, getEndorsePolicy(name));
 
 		chaincodeAction.setEndorsementPolicy(endorsementPolicy);
+		logger.debug(endorsementPolicy)
 		chaincodeAction.setCollectionsConfig(getCollectionConfig(name));
 		try {
 			await chaincodeAction.approve({name, PackageID, sequence}, orderer, waitForConsensus);

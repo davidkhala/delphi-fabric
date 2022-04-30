@@ -42,7 +42,7 @@ describe('package', function () {
 			const Path = homeResolve('Documents/chaincode/nodejs/diagnose');
 			const Type = 'node';
 			const pack = new Package({Path, Type, Label});
-			await pack.pack(outputFile, binManager);
+			pack.pack(outputFile, binManager);
 		});
 
 
@@ -51,7 +51,7 @@ describe('package', function () {
 			const Label = 'diagnose';
 			const output = Label + '.ccPack.tar';
 			const pack = new Package({Path, Label});
-			await pack.pack(output, binManager);
+			pack.pack(output, binManager);
 		});
 		it('pack nodejs:binManager', async () => {
 
@@ -60,7 +60,7 @@ describe('package', function () {
 			const Path = homeResolve('Documents/chaincode/nodejs/diagnose');
 			const Type = 'node';
 			const pack = new Package({Path, Type, Label});
-			await pack.pack(outputFile, binManager);
+			pack.pack(outputFile, binManager);
 		});
 		it('pack external', async () => {
 			const Label = 'external';

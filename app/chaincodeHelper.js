@@ -13,7 +13,14 @@ import BinManager from '../common/nodejs/binManager.js';
 filedirname(import.meta);
 const chaincodeConfig = importFrom('../config/chaincode.json', import.meta);
 
-export const prepareInstall = async (chaincodeId, binManager) => {
+/**
+ *
+ * @param chaincodeId
+ * @param [binManager]
+ * @param [outputDir]
+ * @returns {(string|(function(...[*]=)))[]}
+ */
+export const prepareInstall = (chaincodeId, binManager, outputDir) => {
 	const {path: chaincodeRelativePath, type: Type, couchDBIndexes} = chaincodeConfig[chaincodeId];
 	const chaincodePath = homeResolve(chaincodeRelativePath);
 
@@ -26,20 +33,25 @@ export const prepareInstall = async (chaincodeId, binManager) => {
 		Type,
 		Label: chaincodeId
 	});
-	const [tmpDir, t1] = createTmpDir();
-	const ccPack = path.resolve(tmpDir, 'ccPackage.tar.gz');
+	let cleanup;
+	if (!outputDir) {
+		const [tmpDir, t1] = createTmpDir();
+		outputDir = tmpDir;
+		cleanup = t1;
+	}
+	const ccPack = path.resolve(outputDir, chaincodeId + '.ccPackage.tar.gz');
 
 	if (Array.isArray(couchDBIndexes)) {
 		couchDBIndex(path.resolve(chaincodePath, 'META-INF'), undefined, undefined, ...couchDBIndexes);
 	}
-	await chaincodePackage.pack(ccPack, binManager);
+	const packageid = chaincodePackage.pack(ccPack, binManager);
 
-	return [ccPack, t1];
+	return [ccPack, packageid, cleanup];
 };
 export const install = async (peers, {chaincodeId}, user) => {
 	const binPath = path.resolve(__dirname, '../common/bin');
 	const binManager = new BinManager(binPath);
-	const [ccPack, t1] = await prepareInstall(chaincodeId, binManager);
+	const [ccPack, packageId, t1] = prepareInstall(chaincodeId, binManager);
 	const chaincodeAction = new ChaincodeAction(peers, user);
 	const result = await chaincodeAction.install(ccPack);
 	return [result, t1];

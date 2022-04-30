@@ -2,6 +2,16 @@
   "stress": {
     "path": "Documents/chaincode/golang/stress"
   },
+  "external": {
+    "type": "ccaas",
+    "path": "Documents/chaincode/golang/external",
+    "endorsingConfigs": {
+      "n": 1,
+      "mspid": {
+        "icddMSP": 0
+      }
+    }
+  },
   "ecosystem": {
     "path": "Documents/chaincode/golang/ecosystem"
   },
