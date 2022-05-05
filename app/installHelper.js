@@ -52,7 +52,7 @@ export class ChaincodeDefinitionOperator {
 	/**
 	 *
 	 * @param {string} channelName
-	 * @param {Client.User} admin
+	 * @param {User} admin Client.User
 	 * @param {Peer[]} peers
 	 * @param {boolean} [init_required]
 	 */
@@ -119,10 +119,8 @@ export class ChaincodeDefinitionOperator {
 		return await chaincodeAction.checkCommitReadiness({name, sequence});
 	}
 
-	async queryDefinition(orgName, peerIndexes, name) {
+	async queryDefinition(name) {
 		const {chaincodeAction} = this;
-
-
 		return await chaincodeAction.queryChaincodeDefinition(name);
 	}
 
