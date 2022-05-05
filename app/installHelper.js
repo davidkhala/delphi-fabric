@@ -3,16 +3,14 @@ import {importFrom} from '@davidkhala/light/es6.mjs';
 import {consoleLogger} from '@davidkhala/logger/log4.js';
 import {install, getEndorsePolicy, getCollectionConfig} from './chaincodeHelper.js';
 import ChaincodeAction from '../common/nodejs/chaincodeOperation.js';
+import {parsePackageID} from '../common/nodejs/formatter/chaincode.js';
 import * as helper from './helper.js';
 import QueryHub from '../common/nodejs/query.js';
 import Transaction from '../common/nodejs/transaction.js';
 
 const globalConfig = importFrom('../config/orgs.json', import.meta);
 const logger = consoleLogger('install helper');
-const prepare = ({PackageID}) => {
-	const name = PackageID.split(':')[0];
-	return {name};
-};
+
 // only one time, one org could deploy
 export const installs = async (chaincodeId, orgName, peerIndexes = Object.keys(globalConfig.organizations[orgName].peers)) => {
 	const peers = helper.newPeers(peerIndexes, orgName);
@@ -23,8 +21,8 @@ export const installs = async (chaincodeId, orgName, peerIndexes = Object.keys(g
 	const [result, t1] = await install(peers, {chaincodeId}, user);
 	const packageID = result.responses[0].response.package_id;
 	t1();
-	for (const peer of peers){
-		peer.disconnect()
+	for (const peer of peers) {
+		peer.disconnect();
 	}
 	return packageID;
 };
@@ -60,7 +58,7 @@ export class ChaincodeDefinitionOperator {
 		const channel = helper.prepareChannel(channelName);
 		this.waitForConsensus = 1000;
 		const chaincodeAction = new ChaincodeAction(peers, admin, channel);
-		chaincodeAction.init_required = !!init_required
+		chaincodeAction.init_required = !!init_required;
 		Object.assign(this, {chaincodeAction, peers, admin, channel});
 	}
 
@@ -77,7 +75,8 @@ export class ChaincodeDefinitionOperator {
 		const {waitForConsensus, chaincodeAction} = this;
 
 		await orderer.connect();
-		const {name} = prepare({PackageID});
+
+		const {name} = parsePackageID(PackageID);
 
 		const endorsementPolicy = {
 			gate
@@ -85,7 +84,7 @@ export class ChaincodeDefinitionOperator {
 		Object.assign(endorsementPolicy, getEndorsePolicy(name));
 
 		chaincodeAction.setEndorsementPolicy(endorsementPolicy);
-		logger.debug(endorsementPolicy)
+		logger.debug(endorsementPolicy);
 		chaincodeAction.setCollectionsConfig(getCollectionConfig(name));
 		try {
 			await chaincodeAction.approve({name, PackageID, sequence}, orderer, waitForConsensus);
@@ -138,6 +137,38 @@ export class ChaincodeDefinitionOperator {
 		}
 	}
 
+	async queryInstalled(label, packageId) {
+		const {peers, admin} = this;
+		if (packageId && !label) {
+			label = parsePackageID(packageId).label;
+		}
+		const queryHub = new QueryHub(peers, admin);
+		const queryResult = await queryHub.chaincodesInstalled(label, packageId);
+		for (const entry of queryResult) {
+			const PackageIDs = Object.keys(entry);
+			if (packageId) {
+				assert.strictEqual(packageId, PackageIDs[0]);
+				assert.ok(PackageIDs.length === 1);
+			}
+			for (const [_packageid, moreInfo] of Object.entries(entry)) {
+				if (Object.keys(moreInfo).length === 0) {
+					logger.info(_packageid, 'installed while not deployed');
+				} else {
+					for (const [channelName, {chaincodes}] of Object.entries(moreInfo)) {
+						for (const {name, version} of chaincodes) {
+							assert.strictEqual(name, label);
+							logger.info(_packageid, channelName, {version});
+						}
+
+					}
+				}
+
+			}
+
+		}
+		return queryResult;
+	}
+
 	/**
 	 *
 	 * @param {string} chaincodeId
@@ -154,11 +185,6 @@ export class ChaincodeDefinitionOperator {
 		let PackageID;
 		for (const entry of queryResult) {
 			const PackageIDs = Object.keys(entry);
-			for (const reference of Object.values(entry)) {
-				for (const [channelName, {chaincodes}] of Object.entries(reference)) {
-					logger.info(PackageIDs, channelName, chaincodes);
-				}
-			}
 			if (PackageIDs.length > 1) {
 				logger.error(queryResult);
 				logger.error({PackageIDs: PackageIDs});
