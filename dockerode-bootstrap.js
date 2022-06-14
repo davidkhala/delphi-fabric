@@ -1,12 +1,13 @@
 import {consoleLogger} from '@davidkhala/logger/log4.js';
 import * as peerUtil from './common/nodejs/peer.js';
-import {runCouchDB, runCA, runPeer, runOrderer, fabricImagePull, chaincodeClear, chaincodeImageClear} from './common/nodejs/fabric-dockerode.js';
+import {FabricDockerode} from './common/nodejs/fabric-dockerode.js';
 import {CryptoPath} from './common/nodejs/path.js';
 import {container} from './common/nodejs/ca.js';
 import * as configConfigtx from './config/configtx.js';
 import * as caCrypoGenUtil from './config/caCryptoGen.js';
-import DockerManager from '@davidkhala/dockerode/docker.js';
+import {Podman} from '@davidkhala/dockerode/podman.js';
 import {copy as dockerCP} from '@davidkhala/dockerode/dockerCmd.js';
+import {socketPath} from '@davidkhala/dockerode/podman.js'
 import fsExtra from 'fs-extra';
 import path from 'path';
 import {homeResolve} from '@davidkhala/light/index.js';
@@ -19,7 +20,8 @@ const globalConfig = importFrom('./config/orgs.json', import.meta);
 const MSPROOTPath = homeResolve(globalConfig.docker.volumes.MSPROOT);
 const {docker: {fabricTag, caTag, network}, TLS} = globalConfig;
 const logger = consoleLogger('dockerode-bootstrap');
-const dockerManager = new DockerManager();
+const dockerManager = new Podman({socketPath});
+const dockernode = new FabricDockerode(dockerManager)
 const {FABRIC_CA_HOME} = container;
 export const runOrderers = async (toStop) => {
 	const {orderer: {type, raftPort}} = globalConfig;
@@ -44,7 +46,7 @@ export const runOrderers = async (toStop) => {
 			const tls = TLS ? cryptoPath.TLSFile(nodeType) : undefined;
 			const raft_tls = cryptoPath.TLSFile(nodeType);
 			raft_tls.port = raftPort;
-			await runOrderer({
+			await dockernode.runOrderer({
 				container_name, imageTag, port, network, CONFIGTXVolume,
 				msp: {
 					id: mspid,
@@ -122,9 +124,9 @@ export const runPeers = async (toStop) => {
 			const configPath = cryptoPath.MSP(type);
 			if (couchDB) {
 				const {container_name, port} = couchDB;
-				await runCouchDB({container_name, port, network});
+				await dockernode.runCouchDB({container_name, port, network});
 			}
-			await runPeer({
+			await dockernode.runPeer({
 				container_name, port, imageTag, network, loggingLevel,
 				peerHostName, tls,
 				chaincodeOpts,
@@ -150,7 +152,7 @@ export const runCAs = async (toStop) => {
 		if (toStop) {
 			await dockerManager.containerDelete(container_name);
 		} else {
-			await runCA({container_name, port, network, imageTag, TLS});
+			await dockernode.runCA({container_name, port, network, imageTag, TLS});
 		}
 	};
 
@@ -188,8 +190,8 @@ describe('down', function () {
 		await dockerManager.prune.system();
 	});
 	it('clear chaincode legacy', async () => {
-		await chaincodeClear();
-		await chaincodeImageClear();
+		await dockernode.chaincodeClear();
+		await dockernode.chaincodeImageClear();
 	});
 	it('clear volumes and local artifacts', async () => {
 		await volumesAction(toStop);
@@ -211,10 +213,10 @@ describe('down', function () {
 describe('up', function () {
 	this.timeout(0);
 	it('pull container image', async () => {
-		await fabricImagePull({fabricTag, caTag});
+		await dockernode.fabricImagePull({fabricTag, caTag});
 	});
 	it('create docker network', async () => {
-		await dockerManager.networkCreateIfNotExist({Name: network});
+		await dockerManager.networkCreate({Name: network}, true);
 	});
 	it('setup docker volume', async () => {
 		await volumesAction();

@@ -51,10 +51,10 @@ export const prepareInstall = (chaincodeId, binManager, outputDir) => {
 export const install = async (peers, {chaincodeId}, user) => {
 	const binPath = path.resolve(__dirname, '../common/bin');
 	const binManager = new BinManager(binPath);
-	const [ccPack, packageId, t1] = prepareInstall(chaincodeId, binManager);
+	const [ccPack, packageId, cleanup] = prepareInstall(chaincodeId, binManager);
 	const chaincodeAction = new ChaincodeAction(peers, user);
 	const result = await chaincodeAction.install(ccPack);
-	return [result, t1];
+	return [result, cleanup];
 };
 
 const simplePolicyBuilder = (identities, n) => {

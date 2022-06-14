@@ -1,5 +1,5 @@
 import * as helper from '../../../app/helper.js';
-import {installAll, ChaincodeDefinitionOperator, installs} from '../../../app/installHelper.js';
+import {ChaincodeDefinitionOperator, installs} from '../../../app/installHelper.js';
 import {consoleLogger} from '@davidkhala/logger/log4.js';
 
 const logger = consoleLogger('chaincode:diagnose');
@@ -29,16 +29,16 @@ describe(`install and approve ${chaincodeID}`, function () {
 		const result = await operator.queryInstalled(undefined, 'diagnose:db2c2e31fc6294c1d324b6303510ad38185527119af4a1d3bf576b05a2bad38c');
 		await operator.disconnect();
 	});
-	it('query installed & approve', async () => {
-
+	it('approve', async () => {
+		const PackageID='diagnose:db2c2e31fc6294c1d324b6303510ad38185527119af4a1d3bf576b05a2bad38c'
 		const sequence = 1;
-		const orgs = ['icdd', 'astri.org'];
+		const orgs = ['icdd'];
 		for (const org of orgs) {
 			const admin = helper.getOrgAdmin(org);
 			const peers = helper.newPeers([0, 1], org);
 			const operator = new ChaincodeDefinitionOperator(channel, admin, peers, init_required);
 			await operator.connect();
-			await operator.queryInstalledAndApprove(chaincodeID, sequence, orderer, gate);
+			await operator.approves({sequence:1,PackageID}, orderer, gate);
 			console.debug(`done for org ${org}`);
 			await operator.disconnect();
 		}
@@ -66,7 +66,7 @@ describe(`commit ${chaincodeID}`, function () {
 
 	const commit = async (_chaincodeID, sequence, _gate) => {
 		const org = 'icdd';
-		const peers = [helper.newPeer(0, 'icdd'), helper.newPeer(0,'astri.org')];
+		const peers = [helper.newPeer(0, 'icdd')];
 		const admin = helper.getOrgAdmin(org);
 		const operator = new ChaincodeDefinitionOperator(channel, admin, peers, init_required);
 		await operator.connect();
@@ -101,7 +101,7 @@ describe('legacy chaincode Initialize', async function () {
 	this.timeout(0);
 	it('init', async () => {
 		const org = 'icdd';
-		const peers = helper.allPeers();
+		const peers = helper.newPeers([0, 1], org);
 		const admin = helper.getOrgAdmin(org);
 		const operator = new ChaincodeDefinitionOperator(channel, admin, peers);
 		await operator.connect();

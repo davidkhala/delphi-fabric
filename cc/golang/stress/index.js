@@ -30,6 +30,7 @@ describe('deploy', function () {
 			const operator = new ChaincodeDefinitionOperator(channel, admin, peers, init_required);
 			await operator.connect();
 			await operator.queryInstalledAndApprove(chaincodeID, sequence, orderer);
+			await operator.disconnect();
 		}
 
 	});
@@ -41,6 +42,7 @@ describe('deploy', function () {
 		const operator = new ChaincodeDefinitionOperator(channel, admin, peers, init_required);
 		await operator.connect();
 		await operator.commitChaincodeDefinition({name: chaincodeID, sequence}, orderer);
+		await operator.disconnect();
 	});
 });
 describe('invoke', () => {
