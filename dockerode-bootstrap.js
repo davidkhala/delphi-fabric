@@ -5,7 +5,7 @@ import {CryptoPath} from './common/nodejs/path.js';
 import {container} from './common/nodejs/ca.js';
 import * as configConfigtx from './config/configtx.js';
 import * as caCrypoGenUtil from './config/caCryptoGen.js';
-import {Podman} from '@davidkhala/dockerode/podman.js';
+import {Podman, PodmanContainerOptsBuilder} from '@davidkhala/dockerode/podman.js';
 import {copy as dockerCP} from '@davidkhala/dockerode/dockerCmd.js';
 import {socketPath} from '@davidkhala/dockerode/podman.js'
 import fsExtra from 'fs-extra';
@@ -21,7 +21,7 @@ const MSPROOTPath = homeResolve(globalConfig.docker.volumes.MSPROOT);
 const {docker: {fabricTag, caTag, network}, TLS} = globalConfig;
 const logger = consoleLogger('dockerode-bootstrap');
 const dockerManager = new Podman({socketPath});
-const dockernode = new FabricDockerode(dockerManager)
+const dockernode = new FabricDockerode(dockerManager, PodmanContainerOptsBuilder)
 const {FABRIC_CA_HOME} = container;
 export const runOrderers = async (toStop) => {
 	const {orderer: {type, raftPort}} = globalConfig;
@@ -216,7 +216,7 @@ describe('up', function () {
 		await dockernode.fabricImagePull({fabricTag, caTag});
 	});
 	it('create docker network', async () => {
-		await dockerManager.networkCreate({Name: network}, true);
+		await dockerManager.networkCreate({Name: network});
 	});
 	it('setup docker volume', async () => {
 		await volumesAction();
