@@ -6,7 +6,7 @@ import path from 'path';
 import BinManager from '../common/nodejs/binManager.js';
 import {homeResolve, sleep} from '@davidkhala/light/index.js';
 import Orderer from '../common/nodejs/admin/orderer.js';
-import {axiosPromise} from 'khala-axios';
+import {axiosPromise} from '@davidkhala/axios/index.js';
 import {getGenesisBlock} from '../common/nodejs/channel.js';
 import assert from 'assert';
 import QueryHub from '../common/nodejs/query.js';
