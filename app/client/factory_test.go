@@ -14,8 +14,8 @@ import (
 
 var cryptoConfig = tape.CryptoConfig{
 	MSPID:    "astriMSP",
-	PrivKey:  golang.FindKeyFilesOrPanic("/home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/astri.org/users/Admin@astri.org/msp/keystore")[0],
-	SignCert: "/home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/astri.org/users/Admin@astri.org/msp/signcerts/Admin@astri.org-cert.pem",
+	PrivKey:  golang.FindKeyFilesOrPanic("/home/davidliu/delphi-fabric/config/ca-crypto-config/peerOrganizations/astri.org/users/Admin@astri.org/msp/keystore")[0],
+	SignCert: "/home/davidliu/delphi-fabric/config/ca-crypto-config/peerOrganizations/astri.org/users/Admin@astri.org/msp/signcerts/Admin@astri.org-cert.pem",
 }
 
 // client side cache
@@ -24,12 +24,12 @@ var channel = "allchannel"
 var endorsers = []model.Node{
 	{
 		Address:               "localhost:8051",
-		TLSCARoot:             string(ReadPEMFile("/home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/tlsca/tlsca.icdd-cert.pem")),
+		TLSCARoot:             string(ReadPEMFile("/home/davidliu/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/tlsca/tlsca.icdd-cert.pem")),
 		SslTargetNameOverride: "peer0.icdd",
 	},
 	{
 		Address:               "localhost:7051",
-		TLSCARoot:             string(ReadPEMFile("/home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/astri.org/peers/peer0.astri.org/tls/ca.crt")),
+		TLSCARoot:             string(ReadPEMFile("/home/davidliu/delphi-fabric/config/ca-crypto-config/peerOrganizations/astri.org/peers/peer0.astri.org/tls/ca.crt")),
 		SslTargetNameOverride: "peer0.astri.org",
 	},
 }
@@ -40,7 +40,7 @@ func postProposal(result model.CreateProposalResult, signer *tape.Crypto) {
 	var transactionBytes = CommitProposalAndSign(result.Proposal, signedBytes, endorsers, *signer)
 	var orderer = model.Node{
 		Address:               "localhost:7050",
-		TLSCARoot:             string(ReadPEMFile("/home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/hyperledger/orderers/orderer0.hyperledger/tls/ca.crt")),
+		TLSCARoot:             string(ReadPEMFile("/home/davidliu/delphi-fabric/config/ca-crypto-config/ordererOrganizations/hyperledger/orderers/orderer0.hyperledger/tls/ca.crt")),
 		SslTargetNameOverride: "orderer0.hyperledger",
 	}
 	var status = Commit(orderer, transactionBytes)

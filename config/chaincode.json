@@ -1,10 +1,10 @@
 {
   "stress": {
-    "path": "Documents/chaincode/golang/stress"
+    "path": "chaincode/golang/stress"
   },
   "external": {
     "type": "ccaas",
-    "path": "Documents/chaincode/golang/external",
+    "path": "chaincode/golang/external",
     "endorsingConfigs": {
       "n": 1,
       "mspid": {
@@ -13,10 +13,10 @@
     }
   },
   "ecosystem": {
-    "path": "Documents/chaincode/golang/ecosystem"
+    "path": "chaincode/golang/ecosystem"
   },
   "diagnose": {
-    "path": "Documents/chaincode/golang/diagnose",
+    "path": "chaincode/golang/diagnose",
     "couchDBIndexes": [
       "Time"
     ],
@@ -37,13 +37,13 @@
   },
   "nodeDiagnose": {
     "type": "node",
-    "path": "Documents/chaincode/nodejs/diagnose",
+    "path": "chaincode/nodejs/diagnose",
     "couchDBIndexes": [
       "Time"
     ]
   },
   "nodeStress": {
     "type": "node",
-    "path": "Documents/chaincode/nodejs/stress"
+    "path": "chaincode/nodejs/stress"
   }
 }

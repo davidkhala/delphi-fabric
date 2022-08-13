@@ -16,7 +16,7 @@ describe('lifeCycle', () => {
 		const outputFile = chaincodeId + '.ccPackage.tar.gz';
 		const chaincodePackage = new Package({
 			Type: 'node',
-			Path: homeResolve('Documents/chaincode/nodejs/diagnose'),
+			Path: homeResolve('chaincode/nodejs/diagnose'),
 			Label: chaincodeId,
 		});
 		await chaincodePackage.pack(outputFile, binManager);
@@ -30,7 +30,7 @@ describe('lifeCycle', () => {
 		const chaincodeId = 'diagnose';
 		const outputFile = chaincodeId + '.ccPackage.tar.gz';
 		const chaincodePackage = new Package({
-			Path: homeResolve('Documents/chaincode/golang/diagnose'),
+			Path: homeResolve('chaincode/golang/diagnose'),
 			Label: chaincodeId,
 		});
 		chaincodePackage.pack(outputFile, binManager);

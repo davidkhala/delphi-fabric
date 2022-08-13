@@ -10,10 +10,9 @@ gitSync() {
 	git pull
 }
 updateChaincode() {
-
-  mkdir -p ~/Documents
-  cd ~/Documents
-  git clone https://github.com/davidkhala/chaincode.git
+	
+	cd ~
+	git clone https://github.com/davidkhala/chaincode.git
 	echo "==source download complete=="
 
 	cd $CURRENT
@@ -22,9 +21,8 @@ updateChaincode() {
 if [[ -n "$1" ]]; then
 	"$@"
 else
-	if [[ ! -f "$CURRENT/common/install.sh" ]]; then
-		gitSync
-	fi
+
+	gitSync
 
 	cd common
 	./install.sh golang

@@ -11,7 +11,7 @@ import (
 
 func TestPing(t *testing.T) {
 	var _url = BuildURL("/fabric/ping")
-	var Certificate = model.BytesPacked(ReadPEMFile("/home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/tlsca/tlsca.icdd-cert.pem"))
+	var Certificate = model.BytesPacked(ReadPEMFile("/home/davidliu/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/tlsca/tlsca.icdd-cert.pem"))
 
 	var body = url.Values{
 		"address":                  {"localhost:8051"},

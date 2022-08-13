@@ -15,7 +15,7 @@ describe('package', function () {
 		this.timeout(0);
 		it('pack golang: diy packer is required for external chaincode', async () => {
 
-			const Path = homeResolve('Documents/chaincode/golang/diagnose');
+			const Path = homeResolve('chaincode/golang/diagnose');
 			const Label = 'diagnose';
 			const pack = new Package({Path, Label});
 			const binOutput = Label + '.bin.ccPack.tar';
@@ -39,7 +39,7 @@ describe('package', function () {
 
 			const Label = 'nodeDiagnose';
 			const outputFile = Label + '.ccPackage.tar.gz';
-			const Path = homeResolve('Documents/chaincode/nodejs/diagnose');
+			const Path = homeResolve('chaincode/nodejs/diagnose');
 			const Type = 'node';
 			const pack = new Package({Path, Type, Label});
 			pack.pack(outputFile, binManager);
@@ -47,7 +47,7 @@ describe('package', function () {
 
 
 		it('pack golang:binManager', async () => {
-			const Path = homeResolve('Documents/chaincode/golang/diagnose');
+			const Path = homeResolve('chaincode/golang/diagnose');
 			const Label = 'diagnose';
 			const output = Label + '.ccPack.tar';
 			const pack = new Package({Path, Label});
@@ -57,7 +57,7 @@ describe('package', function () {
 
 			const Label = 'nodeDiagnose';
 			const outputFile = Label + '.ccPackage.tar.gz';
-			const Path = homeResolve('Documents/chaincode/nodejs/diagnose');
+			const Path = homeResolve('chaincode/nodejs/diagnose');
 			const Type = 'node';
 			const pack = new Package({Path, Type, Label});
 			pack.pack(outputFile, binManager);
@@ -65,7 +65,7 @@ describe('package', function () {
 		it('pack external', async () => {
 			const Label = 'external';
 			const outputFile = Label + '.ccPackage.tar.gz';
-			const Path = homeResolve('Documents/chaincode/golang/external');
+			const Path = homeResolve('chaincode/golang/external');
 			const pack = new Package({Type: 'external', Label, Path});
 			const packageID = pack.pack(outputFile, binManager);
 			console.debug(packageID);
@@ -79,7 +79,7 @@ describe('package id', function () {
 		const chaincodeId = 'diagnose';
 		const outputFile = chaincodeId + '.ccPackage.tar.gz';
 		const chaincodePackage = new Package({
-			Path: homeResolve('Documents/chaincode/golang/diagnose'),
+			Path: homeResolve('chaincode/golang/diagnose'),
 			Label: chaincodeId,
 		});
 		chaincodePackage.pack(outputFile, binManager);
