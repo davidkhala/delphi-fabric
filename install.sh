@@ -5,6 +5,9 @@ CURRENT=$(cd $(dirname ${BASH_SOURCE}) && pwd)
 gitSync() {
 	git pull
 	git submodule update --init --recursive
+	cd common
+	git checkout master
+	git pull
 }
 updateChaincode() {
 
