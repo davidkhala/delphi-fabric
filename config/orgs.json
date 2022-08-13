@@ -5,7 +5,7 @@
     "caTag": "1.5",
     "network": "delphiNetwork",
     "volumes": {
-      "MSPROOT": "Documents/delphi-fabric/config/ca-crypto-config/"
+      "MSPROOT": "delphi-fabric/config/ca-crypto-config/"
     }
   },
   "orderer": {
@@ -37,7 +37,7 @@
   },
   "channels": {
     "allchannel": {
-      "file": "Documents/delphi-fabric/config/configtx/all.block",
+      "file": "delphi-fabric/config/configtx/all.block",
       "organizations": {
         "astri.org": {
           "peerIndexes": [
