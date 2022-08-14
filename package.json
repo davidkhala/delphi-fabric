@@ -21,7 +21,7 @@
     "@davidkhala/dockerode": "latest",
     "@davidkhala/light": "latest",
     "@davidkhala/nodeutils": "latest",
-    "khala-axios": "latest"
+    "@davidkhala/axios": "latest"
   },
   "devDependencies": {
     "@davidkhala/logger": "latest",

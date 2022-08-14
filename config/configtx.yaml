@@ -36,20 +36,20 @@ Profiles:
         Consenters:
           - Host: orderer0.hyperledger
             Port: 7050
-            ClientTLSCert: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/hyperledger/orderers/orderer0.hyperledger/tls/server.crt
-            ServerTLSCert: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/hyperledger/orderers/orderer0.hyperledger/tls/server.crt
+            ClientTLSCert: /home/ubuntu/delphi-fabric/config/ca-crypto-config/ordererOrganizations/hyperledger/orderers/orderer0.hyperledger/tls/server.crt
+            ServerTLSCert: /home/ubuntu/delphi-fabric/config/ca-crypto-config/ordererOrganizations/hyperledger/orderers/orderer0.hyperledger/tls/server.crt
           - Host: orderer1.hyperledger
             Port: 7050
-            ClientTLSCert: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/hyperledger/orderers/orderer1.hyperledger/tls/server.crt
-            ServerTLSCert: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/hyperledger/orderers/orderer1.hyperledger/tls/server.crt
+            ClientTLSCert: /home/ubuntu/delphi-fabric/config/ca-crypto-config/ordererOrganizations/hyperledger/orderers/orderer1.hyperledger/tls/server.crt
+            ServerTLSCert: /home/ubuntu/delphi-fabric/config/ca-crypto-config/ordererOrganizations/hyperledger/orderers/orderer1.hyperledger/tls/server.crt
           - Host: orderer2.hyperledger
             Port: 7050
-            ClientTLSCert: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/hyperledger/orderers/orderer2.hyperledger/tls/server.crt
-            ServerTLSCert: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/hyperledger/orderers/orderer2.hyperledger/tls/server.crt
+            ClientTLSCert: /home/ubuntu/delphi-fabric/config/ca-crypto-config/ordererOrganizations/hyperledger/orderers/orderer2.hyperledger/tls/server.crt
+            ServerTLSCert: /home/ubuntu/delphi-fabric/config/ca-crypto-config/ordererOrganizations/hyperledger/orderers/orderer2.hyperledger/tls/server.crt
       Organizations:
         - Name: hyperledger
           ID: hyperledgerMSP
-          MSPDir: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/ordererOrganizations/hyperledger/msp
+          MSPDir: /home/ubuntu/delphi-fabric/config/ca-crypto-config/ordererOrganizations/hyperledger/msp
           Policies:
             Readers:
               Type: Signature
@@ -77,7 +77,7 @@ Profiles:
       Organizations:
         - Name: astri.org
           ID: astriMSP
-          MSPDir: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/astri.org/msp
+          MSPDir: /home/ubuntu/delphi-fabric/config/ca-crypto-config/peerOrganizations/astri.org/msp
           Policies:
             Readers:
               Type: Signature
@@ -93,7 +93,7 @@ Profiles:
               Rule: OR('astriMSP.member')
         - Name: icdd
           ID: icddMSP
-          MSPDir: /home/davidliu/Documents/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp
+          MSPDir: /home/ubuntu/delphi-fabric/config/ca-crypto-config/peerOrganizations/icdd/msp
           Policies:
             Readers:
               Type: Signature

@@ -35,9 +35,11 @@ describe('orderer', async () => {
 	});
 	it('ping', async () => {
 		const orderers = await helper.newOrderers();
-		const orderer = orderers[0];
-		const result = await orderer.ping();
-		logger.debug(orderer.toString(), result);
+		for(const orderer of orderers){
+			const result = await orderer.ping();
+			logger.info(orderer.toString(), result);
+		}
+
 	});
 });
 
