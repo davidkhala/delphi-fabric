@@ -1,17 +1,16 @@
+import fsExtra from 'fs-extra';
+import path from 'path';
 import {consoleLogger} from '@davidkhala/logger/log4.js';
+import {ContainerManager, ContainerOptsBuilder, socketPath} from '@davidkhala/dockerode/docker.js';
+import {copy as dockerCP} from '@davidkhala/dockerode/dockerCmd.js';
+import {homeResolve} from '@davidkhala/light/index.js';
+import {importFrom, filedirname} from '@davidkhala/light/es6.mjs';
 import * as peerUtil from './common/nodejs/peer.js';
 import {FabricDockerode} from './common/nodejs/fabric-dockerode.js';
 import {CryptoPath} from './common/nodejs/path.js';
 import {container} from './common/nodejs/ca.js';
 import * as configConfigtx from './config/configtx.js';
 import * as caCrypoGenUtil from './config/caCryptoGen.js';
-import {Podman, PodmanContainerOptsBuilder} from '@davidkhala/dockerode/podman.js';
-import {copy as dockerCP} from '@davidkhala/dockerode/dockerCmd.js';
-import {socketPath} from '@davidkhala/dockerode/podman.js'
-import fsExtra from 'fs-extra';
-import path from 'path';
-import {homeResolve} from '@davidkhala/light/index.js';
-import {importFrom, filedirname} from '@davidkhala/light/es6.mjs';
 
 filedirname(import.meta);
 
@@ -20,8 +19,8 @@ const globalConfig = importFrom('./config/orgs.json', import.meta);
 const MSPROOTPath = homeResolve(globalConfig.docker.volumes.MSPROOT);
 const {docker: {fabricTag, caTag, network}, TLS} = globalConfig;
 const logger = consoleLogger('dockerode-bootstrap');
-const dockerManager = new Podman({socketPath});
-const dockernode = new FabricDockerode(dockerManager, PodmanContainerOptsBuilder)
+const dockerManager = new ContainerManager({socketPath});
+const dockernode = new FabricDockerode(dockerManager, ContainerOptsBuilder)
 const {FABRIC_CA_HOME} = container;
 export const runOrderers = async (toStop) => {
 	const {orderer: {type, raftPort}} = globalConfig;

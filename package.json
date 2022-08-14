@@ -18,15 +18,15 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "khala-axios": "latest",
     "@davidkhala/dockerode": "latest",
     "@davidkhala/light": "latest",
-    "@davidkhala/nodeutils": "latest"
+    "@davidkhala/nodeutils": "latest",
+    "khala-axios": "latest"
   },
   "devDependencies": {
+    "@davidkhala/logger": "latest",
     "lerna": "latest",
-    "mocha": "latest",
-    "@davidkhala/logger": "latest"
+    "mocha": "latest"
   },
   "type": "module"
 }
