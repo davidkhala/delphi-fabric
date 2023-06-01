@@ -7,7 +7,7 @@ require (
 	github.com/davidkhala/goutils v1.5.4
 	github.com/davidkhala/goutils/grpc v0.0.0
 	github.com/davidkhala/goutils/restful v0.0.1
-	github.com/gin-gonic/gin v1.7.7
+	github.com/gin-gonic/gin v1.9.1
 	github.com/golang/protobuf v1.5.2
 	github.com/google/uuid v1.3.0
 	github.com/hyperledger-twgc/tape v0.1.4
