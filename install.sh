@@ -24,8 +24,9 @@ else
 
 	gitSync
 
+	curl --silent --show-error https://raw.githubusercontent.com/davidkhala/goutils/master/scripts/install.sh | bash -s latest
 	cd common
-	./install.sh golang
+	
 	./install.sh
 	./install.sh fabricInstall
 	cd -
