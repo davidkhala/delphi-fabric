@@ -15,7 +15,7 @@ import {DeliverResponseType} from '../common/nodejs/formatter/eventHub.js';
 import {importFrom, filedirname} from '@davidkhala/light/es6.mjs';
 
 filedirname(import.meta);
-const globalConfig = importFrom('../config/orgs.json', import.meta);
+const globalConfig = importFrom(import.meta, '../config/orgs.json');
 const binPath = process.env.binPath || path.resolve(__dirname, '../common/bin/');
 const {join: joinOrderer} = Orderer;
 const channelsConfig = globalConfig.channels;

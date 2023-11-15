@@ -1,6 +1,6 @@
 import {createTmpDir} from '@davidkhala/nodeutils/tmp.js';
 import path from 'path';
-import {homeResolve} from '@davidkhala/light/index.js';
+import {homeResolve} from '@davidkhala/light/path.js';
 import {execSync} from '@davidkhala/light/devOps.js';
 import {filedirname, importFrom} from '@davidkhala/light/es6.mjs';
 import ChaincodeAction from '../common/nodejs/chaincodeOperation.js';
@@ -11,7 +11,7 @@ import {ChaincodeType} from '../common/nodejs/formatter/chaincode.js';
 import BinManager from '../common/nodejs/binManager.js';
 
 filedirname(import.meta);
-const chaincodeConfig = importFrom('../config/chaincode.json', import.meta);
+const chaincodeConfig = importFrom(import.meta, '../config/chaincode.json');
 
 /**
  *

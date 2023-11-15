@@ -8,7 +8,7 @@ import * as helper from './helper.js';
 import QueryHub from '../common/nodejs/query.js';
 import Transaction from '../common/nodejs/transaction.js';
 
-const globalConfig = importFrom('../config/orgs.json', import.meta);
+const globalConfig = importFrom(import.meta,'../config/orgs.json');
 const logger = consoleLogger('install helper');
 
 // only one time, one org could deploy

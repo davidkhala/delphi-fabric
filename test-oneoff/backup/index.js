@@ -1,12 +1,12 @@
 import DockerManager from '@davidkhala/dockerode/docker.js';
 import {runPeer} from '../../common/nodejs/fabric-dockerode.js';
 
-import {homeResolve} from '@davidkhala/light/index.js';
+import {homeResolve} from '@davidkhala/light/path.js';
 import {importFrom} from '@davidkhala/light/es6.mjs';
 
 import peerUtil from '../../common/nodejs/peer.js';
 import {CryptoPath} from '../../common/nodejs/path.js';
-const globalConfig = importFrom('../../config/orgs.json', import.meta);
+const globalConfig = importFrom(import.meta, '../../config/orgs.json');
 
 const {TLS} = globalConfig;
 const docker = new DockerManager();

@@ -6,12 +6,12 @@ import {adminName} from '../common/nodejs/formatter/user.js';
 import * as UserUtil from '../common/nodejs/user.js';
 import Orderer from '../common/nodejs/admin/orderer.js';
 import {emptyChannel} from '../common/nodejs/admin/channel.js';
-import {homeResolve} from '@davidkhala/light/index.js';
+import {homeResolve} from '@davidkhala/light/path.js';
 import {randomKeyOf} from '@davidkhala/light/random.js';
 import {getClientKeyPairPath} from '../config/caCryptoGen.js';
 import {importFrom, filedirname} from '@davidkhala/light/es6.mjs';
 
-const globalConfig = importFrom('../config/orgs.json', import.meta);
+const globalConfig = importFrom(import.meta, '../config/orgs.json', );
 const logger = consoleLogger('Helper');
 const orgsConfig = globalConfig.organizations;
 const channelsConfig = globalConfig.channels;

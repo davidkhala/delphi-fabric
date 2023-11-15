@@ -3,7 +3,7 @@ import path from 'path';
 import {consoleLogger} from '@davidkhala/logger/log4.js';
 import {ContainerManager, ContainerOptsBuilder, socketPath} from '@davidkhala/dockerode/docker.js';
 import {copy as dockerCP} from '@davidkhala/dockerode/dockerCmd.js';
-import {homeResolve} from '@davidkhala/light/index.js';
+import {homeResolve} from '@davidkhala/light/path.js';
 import {importFrom, filedirname} from '@davidkhala/light/es6.mjs';
 import * as peerUtil from './common/nodejs/peer.js';
 import {FabricDockerode} from './common/nodejs/fabric-dockerode.js';
@@ -14,7 +14,7 @@ import * as caCrypoGenUtil from './config/caCryptoGen.js';
 
 filedirname(import.meta);
 
-const globalConfig = importFrom('./config/orgs.json', import.meta);
+const globalConfig = importFrom(import.meta, './config/orgs.json');
 
 const MSPROOTPath = homeResolve(globalConfig.docker.volumes.MSPROOT);
 const {docker: {fabricTag, caTag, network}, TLS} = globalConfig;

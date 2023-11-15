@@ -7,7 +7,7 @@
     "sample"
   ],
   "scripts": {
-    "install": "cd common/nodejs; npm run pre-install; npm install; lerna bootstrap --no-ci; cd -",
+    "install": "cd common/nodejs; npm install; lerna bootstrap --no-ci; cd -",
     "nuke": "cd common/nodejs; lerna clean --yes; rm -rf node_modules; cd -; rm -rf node_modules;",
     "test": "mocha test",
     "prestart": "mocha dockerode-bootstrap.js --grep ^up --bail",
@@ -25,8 +25,8 @@
   },
   "devDependencies": {
     "@davidkhala/logger": "latest",
-    "lerna": "latest",
-    "mocha": "latest"
+    "mocha": "latest",
+    "eslint": "latest"
   },
   "type": "module"
 }

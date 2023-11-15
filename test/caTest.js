@@ -8,7 +8,7 @@ import * as caCryptoGen from '../config/caCryptoGen.js';
 import {importFrom} from '@davidkhala/light/es6.mjs';
 
 const logger = consoleLogger('ca service');
-const {TLS} = importFrom('../config/orgs.json', import.meta);
+const {TLS} = importFrom(import.meta,'../config/orgs.json');
 
 describe('caCryptoGen', () => {
 	const org = 'icdd';

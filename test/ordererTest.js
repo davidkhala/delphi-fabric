@@ -3,7 +3,7 @@ import OrdererUtil from '../common/nodejs/admin/orderer.js';
 import {consoleLogger} from '@davidkhala/logger/log4.js';
 import {importFrom} from '@davidkhala/light/es6.mjs';
 
-const globalConfig = importFrom('../config/orgs.json', import.meta);
+const globalConfig = importFrom(import.meta, '../config/orgs.json');
 const logger = consoleLogger('test:orderer');
 describe('orderer', async () => {
 
