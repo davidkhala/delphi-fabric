@@ -215,7 +215,7 @@ describe('up', function () {
 		await dockernode.fabricImagePull({fabricTag, caTag});
 	});
 	it('create docker network', async () => {
-		await dockerManager.networkCreate({Name: network});
+		await dockerManager.networkCreate(network);
 	});
 	it('setup docker volume', async () => {
 		await volumesAction();

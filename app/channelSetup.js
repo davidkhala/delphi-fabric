@@ -1,18 +1,19 @@
-import {setAnchorPeersByOrg} from './channelHelper.js';
-import {consoleLogger} from '@davidkhala/logger/log4.js';
-
-import * as helper from './helper.js';
 import path from 'path';
-import BinManager from '../common/nodejs/binManager.js';
-import {homeResolve, sleep} from '@davidkhala/light/index.js';
-import Orderer from '../common/nodejs/admin/orderer.js';
-import {axiosPromise} from '@davidkhala/axios/index.js';
-import {getGenesisBlock} from '../common/nodejs/channel.js';
 import assert from 'assert';
+
+import {consoleLogger} from '@davidkhala/logger/log4.js';
+import {sleep} from '@davidkhala/light/index.js';
+import {homeResolve} from "@davidkhala/light/path.js";
+import {axiosPromise} from '@davidkhala/axios/index.js';
+import {importFrom, filedirname} from '@davidkhala/light/es6.mjs';
+import {setAnchorPeersByOrg} from './channelHelper.js';
+import * as helper from './helper.js';
+import BinManager from '../common/nodejs/binManager.js';
+import Orderer from '../common/nodejs/admin/orderer.js';
+import {getGenesisBlock} from '../common/nodejs/channel.js';
 import QueryHub from '../common/nodejs/query.js';
 import {Status} from '../common/nodejs/formatter/constants.js';
 import {DeliverResponseType} from '../common/nodejs/formatter/eventHub.js';
-import {importFrom, filedirname} from '@davidkhala/light/es6.mjs';
 
 filedirname(import.meta);
 const globalConfig = importFrom(import.meta, '../config/orgs.json');
