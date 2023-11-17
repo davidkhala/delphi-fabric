@@ -21,8 +21,9 @@ updateChaincode() {
 if [[ -n "$1" ]]; then
 	"$@"
 else
-
-	gitSync
+	if [ -z $CI ]; then  
+		gitSync
+	fi  
 
 	curl --silent --show-error https://raw.githubusercontent.com/davidkhala/goutils/master/scripts/install.sh | bash -s latest
 	cd common
