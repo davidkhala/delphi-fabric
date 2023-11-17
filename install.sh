@@ -1,4 +1,3 @@
-#!/usr/bin/env bash
 set -e
 CURRENT=$(cd $(dirname ${BASH_SOURCE}) && pwd)
 
@@ -10,7 +9,7 @@ gitSync() {
 	git pull
 }
 updateChaincode() {
-	
+
 	cd ~
 	git clone https://github.com/davidkhala/chaincode.git
 	echo "==source download complete=="
@@ -21,17 +20,18 @@ updateChaincode() {
 if [[ -n "$1" ]]; then
 	"$@"
 else
-	if [[ -z "$CI" ]]; then  
+	if [[ -z "$CI" ]]; then
 		gitSync
-	fi  
+    cd common
 
-	curl --silent --show-error https://raw.githubusercontent.com/davidkhala/goutils/master/scripts/install.sh | bash -s latest
-	cd common
-	
-	./install.sh
-	./install.sh fabricInstall
-	cd -
+    ./install.sh
+    ./install.sh fabricInstall
+    cd -
 
-	npm install
-	updateChaincode
+    npm install
+    curl --silent --show-error https://raw.githubusercontent.com/davidkhala/goutils/master/scripts/install.sh | bash -s latest
+    updateChaincode
+	fi
+
+
 fi

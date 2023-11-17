@@ -2,9 +2,8 @@
 
 Delphi method is a structured, interactive forecasting communication technique which relies on a panel of experts. 
 
-This is why 'Delphi' here, instead of referring to a program language 
+This is why 'Delphi' here, instead of referring to a program language, or any failed project(s) from ASTRI. 
 
-![](./delphi-fabric.png)
 
 This project aims to provide a user-friendly fabric application development toolset including
 - fabric network simulation (alternative of **Build your first network**)
