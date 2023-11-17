@@ -21,7 +21,7 @@ updateChaincode() {
 if [[ -n "$1" ]]; then
 	"$@"
 else
-	if [ -z $CI ]; then  
+	if [[ -z "$CI" ]]; then  
 		gitSync
 	fi  
 
