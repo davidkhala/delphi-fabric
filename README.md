@@ -59,7 +59,7 @@ _after first time clone this repository, submodule should be initialize_
 - **Compatible OS** 
   - ubuntu Focal
   - MacOS 
-  - Oracle Linux 8
+  - CentOS 9 Stream
 - [Fabric](./common/README.md#Prerequisite)
 
 ## Test on single host
