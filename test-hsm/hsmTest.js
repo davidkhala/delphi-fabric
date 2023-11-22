@@ -4,13 +4,14 @@ import {execSync} from '@davidkhala/light/devOps.js';
 import {consoleLogger} from '@davidkhala/logger/log4.js';
 import {filedirname} from '@davidkhala/light/es6.mjs'
 import {newHSMCryptoSuite} from '../common/nodejs/hsm.js';
-import {projectResolve} from '../app/helper.js';
+import {projectResolve, projectRoot} from '../app/helper.js';
 filedirname(import.meta)
 
 const logger = consoleLogger('test:hsm');
 describe('HSM', () => {
 	process.env.SOFTHSM2_CONF = projectResolve('config', 'softhsm2.conf');
 	before(() => {
+		process.env.projectRoot = projectRoot
 		execSync(Path.resolve(__dirname, 'hsm.sh'));
 	});
 	it('generate ephemeral ECDSA key pair, sign, and verify', async () => {

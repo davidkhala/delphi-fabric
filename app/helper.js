@@ -17,7 +17,7 @@ const orgsConfig = globalConfig.organizations;
 const channelsConfig = globalConfig.channels;
 const ordererConfig = globalConfig.orderer;
 filedirname(import.meta);
-const projectRoot = path.dirname(__dirname);
+export const projectRoot = path.dirname(__dirname);
 export const projectResolve = (...args) => path.resolve(projectRoot, ...args);
 
 const CRYPTO_CONFIG_DIR = homeResolve(globalConfig.docker.volumes.MSPROOT);
