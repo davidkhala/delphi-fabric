@@ -31,5 +31,5 @@ jobs:
       - uses: actions/checkout@main
         with:
           submodules: true
-      - run: ./common/install.sh softHSMInstall
+      - run: apt-get install -y softhsm2
       - run: ./test-hsm/hsm.sh

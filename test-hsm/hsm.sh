@@ -1,8 +1,9 @@
 set -e
+# Assume you have install softhsm.
 CURRENT=$(cd $(dirname ${BASH_SOURCE}) && pwd)
 projectRoot=$(dirname $CURRENT)
 export SOFTHSM2_CONF=$projectRoot/config/softhsm2.conf
-echo SOFTHSM2_CONF=$SOFTHSM2_CONF
+echo "[SOFTHSM2_CONF=$SOFTHSM2_CONF]"
 mkdir -p /tmp/softHSM2/ ## align with softhsm2.conf
 label="fabric"
 echo "cleaning up hsm"
