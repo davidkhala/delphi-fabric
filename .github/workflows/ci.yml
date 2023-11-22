@@ -31,5 +31,10 @@ jobs:
       - uses: actions/checkout@main
         with:
           submodules: true
+      - uses: actions/setup-node@main
+        with:
+          check-latest: true
+          node-version: lts/*
       - run: sudo apt-get install -y softhsm2
-      - run: ./test-hsm/hsm.sh
+      - run: npm install
+      - run: npx mocha test-hsm
