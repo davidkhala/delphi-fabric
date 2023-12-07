@@ -48,9 +48,9 @@ describe('channelSetup', function () {
 			const orderers = helper.newOrderers(ordererOrgName);
 
 			for (const orderer of orderers) {
-				const {clientKey, tlsCaCert, clientCert} = orderer;
+				const {clientKey, tlsCaCert, clientCert, adminAddress} = orderer;
 
-				await joinOrderer(orderer.adminAddress, channelName, blockFile, axiosPromise, globalConfig.TLS ? {
+				await joinOrderer(adminAddress, channelName, blockFile, axiosPromise, globalConfig.TLS ? {
 					clientKey,
 					tlsCaCert,
 					clientCert

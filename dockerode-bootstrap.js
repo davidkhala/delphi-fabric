@@ -1,7 +1,7 @@
 import fsExtra from 'fs-extra';
 import path from 'path';
 import {consoleLogger} from '@davidkhala/logger/log4.js';
-import {ContainerManager, ContainerOptsBuilder, socketPath} from '@davidkhala/dockerode/docker.js';
+import {ContainerManager, ContainerOptsBuilder} from '@davidkhala/dockerode/docker.js';
 import {copy as dockerCP} from '@davidkhala/dockerode/dockerCmd.js';
 import {homeResolve} from '@davidkhala/light/path.js';
 import {importFrom, filedirname} from '@davidkhala/light/es6.mjs';
@@ -19,7 +19,7 @@ const globalConfig = importFrom(import.meta, './config/orgs.json');
 const MSPROOTPath = homeResolve(globalConfig.docker.volumes.MSPROOT);
 const {docker: {fabricTag, caTag, network}, TLS} = globalConfig;
 const logger = consoleLogger('dockerode-bootstrap');
-const dockerManager = new ContainerManager({socketPath});
+const dockerManager = new ContainerManager(undefined, logger);
 const dockernode = new FabricDockerode(dockerManager, ContainerOptsBuilder)
 const {FABRIC_CA_HOME} = container;
 export const runOrderers = async (toStop) => {
@@ -215,7 +215,7 @@ describe('up', function () {
 		await dockernode.fabricImagePull({fabricTag, caTag});
 	});
 	it('create docker network', async () => {
-		await dockerManager.networkCreate(network);
+		await dockerManager.networkCreateIfNotExist(network);
 	});
 	it('setup docker volume', async () => {
 		await volumesAction();
