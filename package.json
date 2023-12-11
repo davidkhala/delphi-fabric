@@ -7,8 +7,6 @@
     "sample"
   ],
   "scripts": {
-    "install": "cd common/nodejs; npm install;",
-    "nuke": "cd common/nodejs; lerna clean --yes; rm -rf node_modules; cd -; rm -rf node_modules;",
     "test": "mocha test",
     "prestart": "mocha dockerode-bootstrap.js --grep ^up --bail",
     "start": "mocha app/channelSetup.js",
