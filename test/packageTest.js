@@ -2,7 +2,7 @@ import Package from '../common/nodejs/chaincodePackage.js';
 import path from 'path';
 
 import {homeResolve} from '@davidkhala/light/path.js';
-import BinManager from '../common/nodejs/binManager.js';
+import BinManager from '../common/nodejs/binManager/binManager.js';
 import {filedirname} from '@davidkhala/light/es6.mjs';
 import fs from 'fs';
 import assert from 'assert';

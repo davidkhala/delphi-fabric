@@ -2,7 +2,7 @@ import path from 'path';
 import fsExtra from 'fs-extra';
 import {filedirname} from '@davidkhala/light/es6.mjs';
 import {homeResolve} from '@davidkhala/light/path.js';
-import BinManager from '../common/nodejs/binManager.js';
+import BinManager from '../common/nodejs/binManager/binManager.js';
 import Package from '../common/nodejs/chaincodePackage.js';
 import assert from 'assert';
 filedirname(import.meta);

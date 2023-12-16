@@ -8,7 +8,7 @@ import ChaincodePackage from '../common/nodejs/chaincodePackage.js';
 import {discoveryChaincodeInterestBuilder} from '../common/nodejs/serviceDiscovery.js';
 import {couchDBIndex} from '../common/nodejs/couchdb.js';
 import {ChaincodeType} from '../common/nodejs/formatter/chaincode.js';
-import BinManager from '../common/nodejs/binManager.js';
+import BinManager from '../common/nodejs/binManager/binManager.js';
 
 filedirname(import.meta);
 const chaincodeConfig = importFrom(import.meta, '../config/chaincode.json');

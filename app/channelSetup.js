@@ -8,7 +8,7 @@ import {axiosPromise} from '@davidkhala/axios/index.js';
 import {importFrom, filedirname} from '@davidkhala/light/es6.mjs';
 import {setAnchorPeersByOrg} from './channelHelper.js';
 import * as helper from './helper.js';
-import BinManager from '../common/nodejs/binManager.js';
+import BinManager from '../common/nodejs/binManager/binManager.js';
 import Orderer from '../common/nodejs/admin/orderer.js';
 import {getGenesisBlock} from '../common/nodejs/channel.js';
 import QueryHub from '../common/nodejs/query.js';
