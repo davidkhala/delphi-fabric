@@ -13,7 +13,9 @@ import {getGenesisBlock} from '../common/nodejs/channel.js';
 import QueryHub from '../common/nodejs/query.js';
 import {Status} from '../common/nodejs/formatter/constants.js';
 import {DeliverResponseType} from '../common/nodejs/formatter/eventHub.js';
-import Configtxgen from '../common/nodejs/binManager/configtxgen.js';
+import Configtxgen, {configtxgenV2 as ConfigtxgenV2} from '../common/nodejs/binManager/configtxgen.js';
+import {DockerRun} from '../common/nodejs/binManager/binManager.js';
+import {ContainerManager} from '@davidkhala/docker/docker.js';
 
 filedirname(import.meta);
 const globalConfig = importFrom(import.meta, '../config/orgs.json');
@@ -26,13 +28,31 @@ const channelName = process.env.channelName || 'allchannel';
 describe('channelSetup', function () {
 	this.timeout(0);
 
+	it('generate block(win)', async () => {
+		const channelConfig = channelsConfig[channelName];
+		const channelBlock = homeResolve(channelConfig.file);
+		const configtxFile = helper.projectResolve('config', 'configtx.yaml');
+		const container = new ContainerManager()
+		const cli = new DockerRun(container);
+		await cli.stop();
+		const containerMSPROOT='/tmp/crypto-config/'
+		await cli.start({
+			MSPROOT: containerMSPROOT
+		});
+
+		const configtxgen = new ConfigtxgenV2(channelName, configtxFile, channelName, container)
+		await configtxgen.genBlock(channelBlock)
+
+
+
+
+	});
 	it('generate Block', async () => {
 		const channelConfig = channelsConfig[channelName];
 		const channelBlock = homeResolve(channelConfig.file);
 		const configtxFile = helper.projectResolve('config', 'configtx.yaml');
 
 		const configtxgen = new Configtxgen(channelName, configtxFile, channelName, binPath);
-
 		await configtxgen.genBlock(channelBlock);
 	});
 

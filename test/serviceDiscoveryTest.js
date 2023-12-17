@@ -2,12 +2,10 @@ import * as helper from '../app/helper.js';
 import {consoleLogger} from '@davidkhala/logger/log4.js';
 import SlimDiscoveryService from '../common/nodejs/admin/discovery.js';
 import UserBuilder from '../common/nodejs/admin/user.js';
-import DockerManager from '@davidkhala/dockerode/docker.js';
 import {ParseResult, ParsePeerResult} from '../common/nodejs/formatter/discovery.js';
 import {discoveryChaincodeInterestTranslator} from '../app/chaincodeHelper.js';
 
 const {getIdentityContext} = UserBuilder;
-const dockerManager = new DockerManager();
 const logger = consoleLogger('test:serviceDiscovery');
 // TODO to change docker, use docker stop than delete, in order to recover
 describe('discovery', () => {

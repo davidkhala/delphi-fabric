@@ -1,8 +1,8 @@
 import fsExtra from 'fs-extra';
 import path from 'path';
 import {consoleLogger} from '@davidkhala/logger/log4.js';
-import {ContainerManager, ContainerOptsBuilder} from '@davidkhala/dockerode/docker.js';
-import {copy as dockerCP} from '@davidkhala/dockerode/dockerCmd.js';
+import {ContainerManager, ContainerOptsBuilder} from '@davidkhala/docker/docker.js';
+import {copy as dockerCP} from '@davidkhala/docker/dockerCmd.js';
 import {homeResolve} from '@davidkhala/light/path.js';
 import {importFrom, filedirname} from '@davidkhala/light/es6.mjs';
 import * as peerUtil from './common/nodejs/peer.js';
@@ -239,8 +239,8 @@ describe('up', function () {
 			});
 
 			const {msp: {IssuerPublicKey, IssuerRevocationPublicKey}} = cryptoPath.OrgFile('peer');
-			await dockerCP(container_name, `${FABRIC_CA_HOME}/IssuerPublicKey`, IssuerPublicKey);
-			await dockerCP(container_name, `${FABRIC_CA_HOME}/IssuerRevocationPublicKey`, IssuerRevocationPublicKey);
+			dockerCP(container_name, `${FABRIC_CA_HOME}/IssuerPublicKey`, IssuerPublicKey);
+			dockerCP(container_name, `${FABRIC_CA_HOME}/IssuerRevocationPublicKey`, IssuerRevocationPublicKey);
 		}
 	});
 	it('run Orderers', async () => {

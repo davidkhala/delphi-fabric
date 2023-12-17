@@ -1,4 +1,4 @@
-import DockerManager from '@davidkhala/dockerode/docker.js';
+import DockerManager from '@davidkhala/docker/docker.js';
 import {runPeer} from '../../common/nodejs/fabric-dockerode.js';
 
 import {homeResolve} from '@davidkhala/light/path.js';
