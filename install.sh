@@ -1,13 +1,6 @@
 set -e
 CURRENT=$(cd $(dirname ${BASH_SOURCE}) && pwd)
 
-gitSync() {
-	git pull
-	git submodule update --init --recursive
-	cd common
-	git checkout master
-	git pull
-}
 updateChaincode() {
 
 	cd ~
@@ -19,7 +12,7 @@ if [[ -n "$1" ]]; then
 	"$@"
 else
 	if [[ -z "$CI" ]]; then
-		gitSync
+		./gitSync
     cd common
 
     ./install.sh
