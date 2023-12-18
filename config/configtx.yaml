@@ -32,20 +32,6 @@ Profiles:
         - orderer0.hyperledger:7050
         - orderer1.hyperledger:7050
         - orderer2.hyperledger:7050
-      EtcdRaft:
-        Consenters:
-          - Host: orderer0.hyperledger
-            Port: 7050
-            ClientTLSCert: /home/ubuntu/delphi-fabric/config/ca-crypto-config/ordererOrganizations/hyperledger/orderers/orderer0.hyperledger/tls/server.crt
-            ServerTLSCert: /home/ubuntu/delphi-fabric/config/ca-crypto-config/ordererOrganizations/hyperledger/orderers/orderer0.hyperledger/tls/server.crt
-          - Host: orderer1.hyperledger
-            Port: 7050
-            ClientTLSCert: /home/ubuntu/delphi-fabric/config/ca-crypto-config/ordererOrganizations/hyperledger/orderers/orderer1.hyperledger/tls/server.crt
-            ServerTLSCert: /home/ubuntu/delphi-fabric/config/ca-crypto-config/ordererOrganizations/hyperledger/orderers/orderer1.hyperledger/tls/server.crt
-          - Host: orderer2.hyperledger
-            Port: 7050
-            ClientTLSCert: /home/ubuntu/delphi-fabric/config/ca-crypto-config/ordererOrganizations/hyperledger/orderers/orderer2.hyperledger/tls/server.crt
-            ServerTLSCert: /home/ubuntu/delphi-fabric/config/ca-crypto-config/ordererOrganizations/hyperledger/orderers/orderer2.hyperledger/tls/server.crt
       Organizations:
         - Name: hyperledger
           ID: hyperledgerMSP
@@ -63,6 +49,20 @@ Profiles:
             Endorsement:
               Type: Signature
               Rule: OR('hyperledgerMSP.member')
+      EtcdRaft:
+        Consenters:
+          - Host: orderer0.hyperledger
+            Port: 7050
+            ClientTLSCert: /home/ubuntu/delphi-fabric/config/ca-crypto-config/ordererOrganizations/hyperledger/orderers/orderer0.hyperledger/tls/server.crt
+            ServerTLSCert: /home/ubuntu/delphi-fabric/config/ca-crypto-config/ordererOrganizations/hyperledger/orderers/orderer0.hyperledger/tls/server.crt
+          - Host: orderer1.hyperledger
+            Port: 7050
+            ClientTLSCert: /home/ubuntu/delphi-fabric/config/ca-crypto-config/ordererOrganizations/hyperledger/orderers/orderer1.hyperledger/tls/server.crt
+            ServerTLSCert: /home/ubuntu/delphi-fabric/config/ca-crypto-config/ordererOrganizations/hyperledger/orderers/orderer1.hyperledger/tls/server.crt
+          - Host: orderer2.hyperledger
+            Port: 7050
+            ClientTLSCert: /home/ubuntu/delphi-fabric/config/ca-crypto-config/ordererOrganizations/hyperledger/orderers/orderer2.hyperledger/tls/server.crt
+            ServerTLSCert: /home/ubuntu/delphi-fabric/config/ca-crypto-config/ordererOrganizations/hyperledger/orderers/orderer2.hyperledger/tls/server.crt
     Application:
       Policies:
         LifecycleEndorsement:

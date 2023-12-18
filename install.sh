@@ -12,9 +12,7 @@ updateChaincode() {
 
 	cd ~
 	git clone https://github.com/davidkhala/chaincode.git
-	echo "==source download complete=="
-
-	cd $CURRENT
+	cd -
 }
 
 if [[ -n "$1" ]]; then

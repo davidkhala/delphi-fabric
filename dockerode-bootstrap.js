@@ -6,7 +6,7 @@ import {homeResolve} from '@davidkhala/light/path.js';
 import {importFrom, filedirname} from '@davidkhala/light/es6.mjs';
 import * as peerUtil from './common/nodejs/peer.js';
 import {FabricDockerode} from './common/nodejs/fabric-dockerode.js';
-import {CryptoPath} from './common/nodejs/path.js';
+import {CryptoPath, ContainerCryptoPath} from './common/nodejs/path.js';
 import {container} from './common/nodejs/ca.js';
 
 import * as caCrypoGenUtil from './config/caCryptoGen.js';
@@ -30,7 +30,7 @@ export const runOrderers = async (toStop) => {
 	const nodeType = 'orderer';
 
 	const toggle = async ({orderer, domain, port, mspid, portAdmin, loggingLevel}, ordererType, stateVolume, operations, metrics) => {
-		const cryptoPath = new CryptoPath(MSPROOT, {
+		const cryptoPath = new ContainerCryptoPath(MSPROOT, {
 			orderer: {org: domain, name: orderer}
 		});
 
@@ -107,7 +107,7 @@ export const runPeers = async (toStop) => {
 				continue;
 			}
 
-			const cryptoPath = new CryptoPath(peerUtil.container.MSPROOT, {
+			const cryptoPath = new ContainerCryptoPath(peerUtil.container.MSPROOT, {
 				peer: {
 					org: domain, name: `peer${peerIndex}`
 				}
@@ -184,7 +184,7 @@ describe('down', function () {
 		await runOrderers(toStop);
 	});
 	it('prune docker in system', async () => {
-		await dockerManager.prune.system();
+		await dockerManager.systemPrune();
 	});
 	it('clear chaincode legacy', async () => {
 		await dockernode.chaincodeClear();

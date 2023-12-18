@@ -1,11 +1,12 @@
 import path from 'path';
 import assert from 'assert';
-import fsExtra from 'fs-extra'
+import fsExtra from 'fs-extra';
 import {consoleLogger} from '@davidkhala/logger/log4.js';
 import {sleep} from '@davidkhala/light/index.js';
 import {homeResolve} from '@davidkhala/light/path.js';
 import {axiosPromise} from '@davidkhala/axios/index.js';
 import {importFrom, filedirname} from '@davidkhala/light/es6.mjs';
+import {os} from '@davidkhala/light/devOps.js'
 import {setAnchorPeersByOrg} from './channelHelper.js';
 import {projectResolve, prepareChannel, newPeers, getOrgAdmin, newOrderers} from './helper.js';
 import Orderer from '../common/nodejs/admin/orderer.js';
@@ -29,62 +30,66 @@ const channelName = process.env.channelName || 'allchannel';
 describe('channelSetup', function () {
 	this.timeout(0);
 
-	function configtxYamlGen (MSPROOTPath, configtxFile){
+	function configtxYamlGen(MSPROOTPath, configtxFile) {
 		//	refresh configtxFile
 		if (fsExtra.pathExistsSync(configtxFile)) {
 			fsExtra.removeSync(configtxFile);
 		}
-		const fileGen = new ConfigtxFileGen(logger)
+		const fileGen = new ConfigtxFileGen(logger);
 		for (const channelName in channelsConfig) {
 			const channelConfig = channelsConfig[channelName];
-			const sectionBuilder = new OrderSectionBuilder(MSPROOTPath,'etcdraft', logger)
+			const sectionBuilder = new OrderSectionBuilder(MSPROOTPath, 'etcdraft', logger);
 			for (const [ordererOrgName, ordererOrgConfig] of Object.entries(globalConfig.orderer.organizations)) {
 				for (const ordererName in ordererOrgConfig.orderers) {
-					sectionBuilder.addOrderer(ordererName,ordererOrgName)
+					sectionBuilder.addOrderer(ordererName, ordererOrgName);
 				}
-				sectionBuilder.addOrg(ordererOrgName,ordererOrgConfig )
+				sectionBuilder.addOrg(ordererOrgName, ordererOrgConfig);
 			}
-			const Organizations = Object.keys(channelConfig.organizations).map(orgName => OrganizationBuilder(orgName, globalConfig.organizations[orgName], MSPROOTPath, 'peer'))
-			fileGen.addProfile(channelName,sectionBuilder, Organizations)
+			const Organizations = Object.keys(channelConfig.organizations).map(orgName => OrganizationBuilder(orgName, globalConfig.organizations[orgName], MSPROOTPath, 'peer'));
+			fileGen.addProfile(channelName, sectionBuilder, Organizations);
 		}
-		fileGen.build(configtxFile)
+		fileGen.build(configtxFile);
 	}
-	it('generate configtx.yaml', async () => {
-
-		configtxYamlGen('/tmp', projectResolve('config', 'configtx.yaml'))
 
 
-		/// TODO globalConfig.docker.volumes.MSPROOT
+	if (os.platform === 'win32') {
+		// TODO WIP
+		it('generate configtx.yaml (win)', async () => {
+
+			configtxYamlGen('/tmp', projectResolve('config', 'configtx.yaml'));
 
 
-
-
-	});
-	it('generate block(win)', async () => {
-		const channelConfig = channelsConfig[channelName];
-		const channelBlock = homeResolve(channelConfig.file);
-		const configtxFile = projectResolve('config', 'configtx.yaml');
-		const container = new ContainerManager();
-		const cli = new DockerRun(container);
-		await cli.stop();
-		const containerMSPROOT = '/tmp/crypto-config/';
-		await cli.start({
-			MSPROOT: containerMSPROOT
 		});
+		it('generate block(win)', async () => {
+			const channelConfig = channelsConfig[channelName];
+			const channelBlock = homeResolve(channelConfig.file);
+			const configtxFile = projectResolve('config', 'configtx.yaml');
+			const container = new ContainerManager();
+			const cli = new DockerRun(container);
+			await cli.stop();
+			const containerMSPROOT = '/tmp/crypto-config/';
+			await cli.start({
+				MSPROOT: containerMSPROOT
+			});
 
-		const configtxgen = new ConfigtxgenV2(channelName, configtxFile, channelName, container);
-		await configtxgen.genBlock(channelBlock);
+			const configtxgen = new ConfigtxgenV2(channelName, configtxFile, channelName, container);
+			await configtxgen.genBlock(channelBlock);
 
 
-	});
-	it('generate Block', async () => {
-		const channelConfig = channelsConfig[channelName];
-		const channelBlock = homeResolve(channelConfig.file);
-		const configtxFile = projectResolve('config', 'configtx.yaml');
+		});
+	}else {
+		it('generate configtx.yaml', async () => {
+			configtxYamlGen(homeResolve(globalConfig.docker.volumes.MSPROOT), projectResolve('config', 'configtx.yaml'));
+		});
+		it('generate Block', async () => {
+			const channelConfig = channelsConfig[channelName];
+			const channelBlock = homeResolve(channelConfig.file);
+			const configtxFile = projectResolve('config', 'configtx.yaml');
 
-		const configtxgen = new Configtxgen(channelName, configtxFile, channelName, binPath);
-		await configtxgen.genBlock(channelBlock);
-	});
+			const configtxgen = new Configtxgen(channelName, configtxFile, channelName, binPath);
+			await configtxgen.genBlock(channelBlock);
+		});
+	}
 
 
 	it('join Orderer', async () => {
