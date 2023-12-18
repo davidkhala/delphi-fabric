@@ -1,13 +1,13 @@
 import path from 'path';
 import assert from 'assert';
-
+import fsExtra from 'fs-extra'
 import {consoleLogger} from '@davidkhala/logger/log4.js';
 import {sleep} from '@davidkhala/light/index.js';
 import {homeResolve} from '@davidkhala/light/path.js';
 import {axiosPromise} from '@davidkhala/axios/index.js';
 import {importFrom, filedirname} from '@davidkhala/light/es6.mjs';
 import {setAnchorPeersByOrg} from './channelHelper.js';
-import * as helper from './helper.js';
+import {projectResolve, prepareChannel, newPeers, getOrgAdmin, newOrderers} from './helper.js';
 import Orderer from '../common/nodejs/admin/orderer.js';
 import {getGenesisBlock} from '../common/nodejs/channel.js';
 import QueryHub from '../common/nodejs/query.js';
@@ -16,6 +16,7 @@ import {DeliverResponseType} from '../common/nodejs/formatter/eventHub.js';
 import Configtxgen, {configtxgenV2 as ConfigtxgenV2} from '../common/nodejs/binManager/configtxgen.js';
 import {DockerRun} from '../common/nodejs/binManager/binManager.js';
 import {ContainerManager} from '@davidkhala/docker/docker.js';
+import {ConfigtxFileGen, OrderSectionBuilder, OrganizationBuilder} from '../config/configtx.js';
 
 filedirname(import.meta);
 const globalConfig = importFrom(import.meta, '../config/orgs.json');
@@ -28,29 +29,58 @@ const channelName = process.env.channelName || 'allchannel';
 describe('channelSetup', function () {
 	this.timeout(0);
 
+	function configtxYamlGen (MSPROOTPath, configtxFile){
+		//	refresh configtxFile
+		if (fsExtra.pathExistsSync(configtxFile)) {
+			fsExtra.removeSync(configtxFile);
+		}
+		const fileGen = new ConfigtxFileGen(logger)
+		for (const channelName in channelsConfig) {
+			const channelConfig = channelsConfig[channelName];
+			const sectionBuilder = new OrderSectionBuilder(MSPROOTPath,'etcdraft', logger)
+			for (const [ordererOrgName, ordererOrgConfig] of Object.entries(globalConfig.orderer.organizations)) {
+				for (const ordererName in ordererOrgConfig.orderers) {
+					sectionBuilder.addOrderer(ordererName,ordererOrgName)
+				}
+				sectionBuilder.addOrg(ordererOrgName,ordererOrgConfig )
+			}
+			const Organizations = Object.keys(channelConfig.organizations).map(orgName => OrganizationBuilder(orgName, globalConfig.organizations[orgName], MSPROOTPath, 'peer'))
+			fileGen.addProfile(channelName,sectionBuilder, Organizations)
+		}
+		fileGen.build(configtxFile)
+	}
+	it('generate configtx.yaml', async () => {
+
+		configtxYamlGen('/tmp', projectResolve('config', 'configtx.yaml'))
+
+
+		/// TODO globalConfig.docker.volumes.MSPROOT
+
+
+
+
+	});
 	it('generate block(win)', async () => {
 		const channelConfig = channelsConfig[channelName];
 		const channelBlock = homeResolve(channelConfig.file);
-		const configtxFile = helper.projectResolve('config', 'configtx.yaml');
-		const container = new ContainerManager()
+		const configtxFile = projectResolve('config', 'configtx.yaml');
+		const container = new ContainerManager();
 		const cli = new DockerRun(container);
 		await cli.stop();
-		const containerMSPROOT='/tmp/crypto-config/'
+		const containerMSPROOT = '/tmp/crypto-config/';
 		await cli.start({
 			MSPROOT: containerMSPROOT
 		});
 
-		const configtxgen = new ConfigtxgenV2(channelName, configtxFile, channelName, container)
-		await configtxgen.genBlock(channelBlock)
-
-
+		const configtxgen = new ConfigtxgenV2(channelName, configtxFile, channelName, container);
+		await configtxgen.genBlock(channelBlock);
 
 
 	});
 	it('generate Block', async () => {
 		const channelConfig = channelsConfig[channelName];
 		const channelBlock = homeResolve(channelConfig.file);
-		const configtxFile = helper.projectResolve('config', 'configtx.yaml');
+		const configtxFile = projectResolve('config', 'configtx.yaml');
 
 		const configtxgen = new Configtxgen(channelName, configtxFile, channelName, binPath);
 		await configtxgen.genBlock(channelBlock);
@@ -65,7 +95,7 @@ describe('channelSetup', function () {
 		// end params
 
 		for (const ordererOrgName of Object.keys(globalConfig.orderer.organizations)) {
-			const orderers = helper.newOrderers(ordererOrgName);
+			const orderers = newOrderers(ordererOrgName);
 
 			for (const orderer of orderers) {
 				const {clientKey, tlsCaCert, clientCert, adminAddress} = orderer;
@@ -81,12 +111,12 @@ describe('channelSetup', function () {
 
 	});
 	it('To make raft make consensus, do check after all orderer joined', async () => {
-		const channel = helper.prepareChannel(channelName);
+		const channel = prepareChannel(channelName);
 		for (const ordererOrgName of Object.keys(globalConfig.orderer.organizations)) {
-			const orderers = helper.newOrderers(ordererOrgName);
+			const orderers = newOrderers(ordererOrgName);
 
 			for (const orderer of orderers) {
-				const user = helper.getOrgAdmin(ordererOrgName, 'orderer');
+				const user = getOrgAdmin(ordererOrgName, 'orderer');
 				await orderer.connect();
 				const waitForGenesisBlock = async () => {
 					try {
@@ -110,18 +140,18 @@ describe('channelSetup', function () {
 		// params
 		const channelConfig = globalConfig.channels[channelName];
 		const blockFile = homeResolve(channelConfig.file);
-		const channel = helper.prepareChannel(channelName);
+		const channel = prepareChannel(channelName);
 		// end params
 		//
 		for (const [orgName, {peerIndexes}] of Object.entries(channelConfig.organizations)) {
-			const peers = helper.newPeers(peerIndexes, orgName);
-			const user = helper.getOrgAdmin(orgName);
+			const peers = newPeers(peerIndexes, orgName);
+			const user = getOrgAdmin(orgName);
 			const queryHub = new QueryHub(peers, user);
 			await queryHub.connect();
 			if (binPath) {
 				await queryHub.joinWithFile(blockFile, channelName);
 			} else {
-				const orderers = helper.newOrderers();
+				const orderers = newOrderers();
 				const orderer = orderers[0];
 				await orderer.connect();
 				await queryHub.joinWithFetch(channel, orderer, user);
@@ -135,9 +165,9 @@ describe('channelSetup', function () {
 	it('query channel Joined', async () => {
 		const channelConfig = globalConfig.channels[channelName];
 		for (const [orgName, {peerIndexes}] of Object.entries(channelConfig.organizations)) {
-			const peers = helper.newPeers(peerIndexes, orgName);
+			const peers = newPeers(peerIndexes, orgName);
 
-			const user = helper.getOrgAdmin(orgName);
+			const user = getOrgAdmin(orgName);
 
 			const queryHub = new QueryHub(peers, user);
 			await queryHub.connect();
@@ -160,7 +190,7 @@ describe('anchor peer', async function () {
 
 		const channelConfig = globalConfig.channels[channelName];
 
-		const orderers = helper.newOrderers();
+		const orderers = newOrderers();
 		const orderer = orderers[0];
 		await orderer.connect();
 		for (const org in channelConfig.organizations) {

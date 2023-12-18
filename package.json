@@ -16,7 +16,8 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@davidkhala/dockerode": "latest",
+    "@davidkhala/docker": "latest",
+    "@davidkhala/container": "latest",
     "@davidkhala/light": "latest",
     "@davidkhala/nodeutils": "latest",
     "@davidkhala/axios": "latest"

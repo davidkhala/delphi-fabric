@@ -1,5 +1,4 @@
 import fsExtra from 'fs-extra';
-import path from 'path';
 import {consoleLogger} from '@davidkhala/logger/log4.js';
 import {ContainerManager, ContainerOptsBuilder} from '@davidkhala/docker/docker.js';
 import {copy as dockerCP} from '@davidkhala/docker/dockerCmd.js';
@@ -9,7 +8,7 @@ import * as peerUtil from './common/nodejs/peer.js';
 import {FabricDockerode} from './common/nodejs/fabric-dockerode.js';
 import {CryptoPath} from './common/nodejs/path.js';
 import {container} from './common/nodejs/ca.js';
-import * as configConfigtx from './config/configtx.js';
+
 import * as caCrypoGenUtil from './config/caCryptoGen.js';
 
 filedirname(import.meta);
@@ -23,7 +22,7 @@ const dockerManager = new ContainerManager(undefined, logger);
 const dockernode = new FabricDockerode(dockerManager, ContainerOptsBuilder)
 const {FABRIC_CA_HOME} = container;
 export const runOrderers = async (toStop) => {
-	const {orderer: {type, raftPort}} = globalConfig;
+	const {orderer: {type}} = globalConfig;
 	const CONFIGTXVolume = 'CONFIGTX';
 	const MSPROOTVolume = 'MSPROOT';
 	const imageTag = fabricTag;
@@ -44,7 +43,6 @@ export const runOrderers = async (toStop) => {
 		} else {
 			const tls = TLS ? cryptoPath.TLSFile(nodeType) : undefined;
 			const raft_tls = cryptoPath.TLSFile(nodeType);
-			raft_tls.port = raftPort;
 			await dockernode.runOrderer({
 				container_name, imageTag, port, network, CONFIGTXVolume,
 				msp: {
@@ -249,10 +247,7 @@ describe('up', function () {
 	it('run peers', async () => {
 		await runPeers();
 	});
-	it('Configtxgen', async () => {
-		const configtxFile = path.resolve(__dirname, 'config', 'configtx.yaml');
-		configConfigtx.gen({MSPROOT: MSPROOTPath, configtxFile});
-	});
+
 	after(function () {
 		if (this.currentTest.state === 'passed') {
 			logger.debug('[DONE] up');

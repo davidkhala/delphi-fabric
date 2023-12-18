@@ -10,7 +10,6 @@
   },
   "orderer": {
     "type": "etcdraft",
-    "raftPort": 6050,
     "organizations": {
       "hyperledger": {
         "mspid": "hyperledgerMSP",
