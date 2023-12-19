@@ -1,28 +1,28 @@
-import * as helper from '../../../app/helper.js';
-import {installAll, ChaincodeDefinitionOperator} from '../../../app/installHelper.js';
-import FabricGateway from '../../../common/nodejs/fabric-gateway/index.js';
+import assert from 'assert';
+import * as helper from '../../app/helper.js';
+import {installAll, ChaincodeDefinitionOperator} from '../../app/installHelper.js';
+import FabricGateway from '../../common/nodejs/fabric-gateway/index.js';
 import {consoleLogger} from '@davidkhala/logger/log4.js';
-import UserBuilder from '../../../common/nodejs/admin/user.js';
+import UserBuilder from '../../common/nodejs/admin/user.js';
 
-const chaincodeID = 'stress';
+const chaincodeID = 'contracts';
 const logger = consoleLogger(`chaincode:${chaincodeID}`);
 const orderers = helper.newOrderers();
 const orderer = orderers[0];
-const {channel = 'allchannel'} = process.env;
+const channel = 'allchannel';
 
 const init_required = false;
 
 describe('deploy', function () {
 	this.timeout(0);
-	let packageIds = [];
-	it('install', async () => {
 
-		packageIds = await installAll(chaincodeID);
-		logger.debug(packageIds);
+	it('install', async () => {
+		await installAll(chaincodeID);
 	});
+	const sequence = 1;
 	it('query installed & approve', async () => {
 
-		const sequence = 1;
+
 		const orgs = ['icdd', 'astri.org'];
 		for (const org of orgs) {
 			const admin = helper.getOrgAdmin(org);
@@ -36,7 +36,6 @@ describe('deploy', function () {
 	});
 	it('commit', async () => {
 		const org = 'icdd';
-		const sequence = 1;
 		const peers = [helper.newPeer(0, 'astri.org'), helper.newPeer(0, 'icdd')];
 		const admin = helper.getOrgAdmin(org);
 		const operator = new ChaincodeDefinitionOperator(channel, admin, peers, init_required);
@@ -52,14 +51,18 @@ describe('invoke', () => {
 
 	const gateway = new FabricGateway(peer, user);
 	const contract = gateway.getContract(channel, chaincodeID);
-	it('touch', async () => {
 
-		await contract.evaluateTransaction();
+	it('touch', async () => {
+		contract.subContract = 'StupidContract';
+		await contract.evaluateTransaction('ping');
+		await contract.evaluateTransaction('StupidContract:ping');
+
 	});
-	it('stress 10', async () => {
-		for (let i = 0; i < 10; i++) {
-			await contract.submit([], undefined, undefined, false);
-		}
+	it('panic', async () => {
+		assert.throws(async () => {
+			await contract.evaluateTransaction('StupidContract:panic');
+		});
+
 
 	});
 });

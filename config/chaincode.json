@@ -2,6 +2,9 @@
   "stress": {
     "path": "chaincode/golang/stress"
   },
+  "contracts": {
+    "path": "chaincode/golang/contracts"
+  },
   "external": {
     "type": "ccaas",
     "path": "chaincode/golang/external",

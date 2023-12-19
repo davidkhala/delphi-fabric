@@ -8,7 +8,8 @@ import ChaincodePackage from '../common/nodejs/chaincodePackage.js';
 import {discoveryChaincodeInterestBuilder} from '../common/nodejs/serviceDiscovery.js';
 import {couchDBIndex} from '../common/nodejs/couchdb.js';
 import {ChaincodeType} from '../common/nodejs/formatter/chaincode.js';
-import BinManager from '../common/nodejs/binManager/binManager.js';
+import {lifecycle as Lifecycle} from '../common/nodejs/binManager/peer.js';
+
 
 filedirname(import.meta);
 const chaincodeConfig = importFrom(import.meta, '../config/chaincode.json');
@@ -16,7 +17,7 @@ const chaincodeConfig = importFrom(import.meta, '../config/chaincode.json');
 /**
  *
  * @param chaincodeId
- * @param [binManager]
+ * @param {lifecycle} [binManager]
  * @param [outputDir]
  * @returns {(string|(function(...[*]=)))[]}
  */
@@ -50,7 +51,7 @@ export const prepareInstall = (chaincodeId, binManager, outputDir) => {
 };
 export const install = async (peers, {chaincodeId}, user) => {
 	const binPath = path.resolve(__dirname, '../common/bin');
-	const binManager = new BinManager(binPath);
+	const binManager = new Lifecycle(binPath);
 	const [ccPack, packageId, cleanup] = prepareInstall(chaincodeId, binManager);
 	const chaincodeAction = new ChaincodeAction(peers, user);
 	const result = await chaincodeAction.install(ccPack);
