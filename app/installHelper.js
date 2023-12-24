@@ -7,8 +7,10 @@ import {parsePackageID} from '../common/nodejs/formatter/chaincode.js';
 import * as helper from './helper.js';
 import QueryHub from '../common/nodejs/query.js';
 import Transaction from '../common/nodejs/transaction.js';
+import {isEven} from '@davidkhala/light/array.js';
+import * as util from 'util';
 
-const globalConfig = importFrom(import.meta,'../config/orgs.json');
+const globalConfig = importFrom(import.meta, '../config/orgs.json');
 const logger = consoleLogger('install helper');
 
 // only one time, one org could deploy
@@ -19,7 +21,9 @@ export const installs = async (chaincodeId, orgName, peerIndexes = Object.keys(g
 	}
 	const user = helper.getOrgAdmin(orgName);
 	const [result, t1] = await install(peers, {chaincodeId}, user);
-	const packageID = result.responses[0].response.package_id;
+	const ids = result.responses.map(({response})=> response.package_id)
+	assert.ok(isEven(ids))
+	const packageID = ids[0]
 	t1();
 	for (const peer of peers) {
 		peer.disconnect();
@@ -27,10 +31,15 @@ export const installs = async (chaincodeId, orgName, peerIndexes = Object.keys(g
 	return packageID;
 };
 export const installAll = async (chaincodeId, channelName) => {
-	const packageIDs = {};
+	let package_id_already;
 	const installOnOrg = async (peerOrg, peerIndexes) => {
 		const package_id = await installs(chaincodeId, peerOrg, peerIndexes);
-		packageIDs[peerOrg] = package_id;
+		if (package_id_already) {
+			assert.strictEqual(package_id, package_id_already);
+		} else {
+			package_id_already = package_id;
+		}
+
 	};
 	if (channelName) {
 		for (const [peerOrg, {peerIndexes}] of Object.entries(globalConfig.channels[channelName].organizations)) {
@@ -43,7 +52,7 @@ export const installAll = async (chaincodeId, channelName) => {
 			logger.info('[DONE] installOnOrg', peerOrg);
 		}
 	}
-	return packageIDs;
+	return package_id_already;
 };
 
 export class ChaincodeDefinitionOperator {
@@ -114,7 +123,9 @@ export class ChaincodeDefinitionOperator {
 		Object.assign(endorsementPolicy, getEndorsePolicy(name));
 		chaincodeAction.setEndorsementPolicy(endorsementPolicy);
 		chaincodeAction.setCollectionsConfig(getCollectionConfig(name));
-		return await chaincodeAction.checkCommitReadiness({name, sequence});
+		const readyStates = await chaincodeAction.checkCommitReadiness({name, sequence});
+		assert.ok(isEven(readyStates), `CommitReadiness should be even, but got ${util.inspect(readyStates)}`);
+		return readyStates[0];
 	}
 
 	async queryDefinition(name) {

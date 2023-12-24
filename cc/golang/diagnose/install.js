@@ -1,6 +1,7 @@
 import * as helper from '../../../app/helper.js';
-import {ChaincodeDefinitionOperator, installs} from '../../../app/installHelper.js';
+import {ChaincodeDefinitionOperator, installAll, installs} from '../../../app/installHelper.js';
 import {consoleLogger} from '@davidkhala/logger/log4.js';
+import {allPeers} from '../../../app/helper.js';
 
 const logger = consoleLogger('chaincode:diagnose');
 const chaincodeID = 'diagnose';
@@ -12,12 +13,10 @@ const gate = `AND('icddMSP.member')`;
 const init_required = true;
 const {channel = 'allchannel'} = process.env;
 
-describe(`install and approve ${chaincodeID}`, function () {
+describe(`${chaincodeID} default: green path`, function () {
 	this.timeout(0);
-	let PackageIDs;
 	it('install', async () => {
-		await installs(chaincodeID, 'icdd', [0, 1]);
-		await installs(chaincodeID, 'astri.org', [0, 1]);
+		await installAll(chaincodeID);
 	});
 
 	it('query installed', async () => {
@@ -26,19 +25,22 @@ describe(`install and approve ${chaincodeID}`, function () {
 		const peers = helper.newPeers([0, 1], org);
 		const operator = new ChaincodeDefinitionOperator(channel, admin, peers, init_required);
 		await operator.connect();
-		const result = await operator.queryInstalled(undefined, 'diagnose:db2c2e31fc6294c1d324b6303510ad38185527119af4a1d3bf576b05a2bad38c');
+
+		await operator.queryInstalledAndApprove(chaincodeID, 1, orderer);
+
+
 		await operator.disconnect();
 	});
 	it('approve', async () => {
-		const PackageID='diagnose:db2c2e31fc6294c1d324b6303510ad38185527119af4a1d3bf576b05a2bad38c'
+		const PackageID = 'diagnose:db2c2e31fc6294c1d324b6303510ad38185527119af4a1d3bf576b05a2bad38c';
 		const sequence = 1;
-		const orgs = ['icdd'];
+		const orgs = ['icdd', 'astri.org'];
 		for (const org of orgs) {
 			const admin = helper.getOrgAdmin(org);
 			const peers = helper.newPeers([0, 1], org);
 			const operator = new ChaincodeDefinitionOperator(channel, admin, peers, init_required);
 			await operator.connect();
-			await operator.approves({sequence:1,PackageID}, orderer, gate);
+			await operator.approves({sequence, PackageID}, orderer, gate);
 			console.debug(`done for org ${org}`);
 			await operator.disconnect();
 		}
@@ -66,7 +68,7 @@ describe(`commit ${chaincodeID}`, function () {
 
 	const commit = async (_chaincodeID, sequence, _gate) => {
 		const org = 'icdd';
-		const peers = [helper.newPeer(0, 'icdd')];
+		const peers = allPeers();
 		const admin = helper.getOrgAdmin(org);
 		const operator = new ChaincodeDefinitionOperator(channel, admin, peers, init_required);
 		await operator.connect();
