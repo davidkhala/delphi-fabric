@@ -44,7 +44,8 @@ describe('deploy', function () {
 		await operator.disconnect();
 	});
 });
-describe('invoke', () => {
+describe('invoke', function ()  {
+	this.timeout(0)
 	const peer = helper.newPeer(0, 'astri.org');
 	const org = 'icdd';
 	const user = new UserBuilder(undefined, helper.getOrgAdmin(org));
@@ -55,7 +56,15 @@ describe('invoke', () => {
 	it('touch', async () => {
 		contract.subContract = 'StupidContract';
 		await contract.evaluateTransaction('ping');
-		await contract.evaluateTransaction('StupidContract:ping');
+	});
+	it('who', async () => {
+		contract.subContract = 'SmartContract';
+		const result = await contract.evaluateTransaction('who');
+		console.debug(result);
+	});
+	it('touch submit', async () => {
+		contract.subContract = 'StupidContract';
+		await contract.submitTransaction('ping');
 
 	});
 	it('panic', async () => {

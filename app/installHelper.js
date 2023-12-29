@@ -198,6 +198,7 @@ export class ChaincodeDefinitionOperator {
 			if (PackageIDs.length > 1) {
 				logger.error(queryResult);
 				logger.error({PackageIDs: PackageIDs});
+				// TODO to be smarter reducer
 				throw Error('found multiple installed packageID, could not decide which to approve');
 
 			} else {
