@@ -6,7 +6,7 @@ import {adminName, adminPwd} from '../common/nodejs/formatter/user.js';
 import {loadFromLocal} from '../common/nodejs/user.js';
 import {importFrom} from '@davidkhala/light/es6.mjs';
 import CA from '../common/nodejs/admin/ca.js';
-import CaCryptoGen from '../common/nodejs/ca-crypto-gen.js';
+import CaCryptoGen from '../common/nodejs/ca/ca-crypto-gen.js';
 import * as pathUtil from '../common/nodejs/path.js';
 
 const logger = consoleLogger('caCryptoGen');

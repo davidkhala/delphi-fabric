@@ -7,7 +7,7 @@ import {importFrom, filedirname} from '@davidkhala/light/es6.mjs';
 import * as peerUtil from './common/nodejs/peer.js';
 import {FabricDockerode} from './common/nodejs/fabric-dockerode.js';
 import {CryptoPath, ContainerCryptoPath} from './common/nodejs/path.js';
-import {container} from './common/nodejs/ca.js';
+import {container} from './common/nodejs/ca/ca.js';
 
 import * as caCrypoGenUtil from './config/caCryptoGen.js';
 
