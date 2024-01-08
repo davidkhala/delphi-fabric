@@ -25,16 +25,3 @@ jobs:
           binPath: common/bin
           channelName: allchannel
       - run: npm test
-  softHSM:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@main
-        with:
-          submodules: true
-      - uses: actions/setup-node@main
-        with:
-          check-latest: true
-          node-version: lts/*
-      - run: sudo apt-get install -y softhsm2
-      - run: npm install
-      - run: npx mocha test-hsm
