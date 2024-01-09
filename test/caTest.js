@@ -7,6 +7,7 @@ import {consoleLogger} from '@davidkhala/logger/log4.js';
 import * as caCryptoGen from '../config/caCryptoGen.js';
 import {importFrom} from '@davidkhala/light/es6.mjs';
 import {ping} from '../common/nodejs/ca/ca.js';
+import CertificateServiceWrapper from '../common/nodejs/ca/certificateService.js';
 
 const logger = consoleLogger('ca service');
 const {TLS} = importFrom(import.meta, '../config/orgs.json');
@@ -32,8 +33,6 @@ describe('caCryptoGen', () => {
 });
 
 describe('ca service', () => {
-	const org = 'icdd';
-	const admin = helper.getOrgAdmin(org);
 	const protocol = `http${TLS ? 's' : ''}`;
 	const hostname = 'localhost';
 	const port = 8054;
@@ -93,5 +92,31 @@ describe('identity service', function () {
 		assert.ifError(await idService.getOne({enrollmentID: 'admin'}));
 
 	});
+	it('delete: on not exist', async () => {
+		assert.ifError(await idService.delete({enrollmentID: 'admin'}));
+	});
+	it('delete: on exist', async () => {
+		const newUser = 'new';
+		await idService.createIfNotExist({
+			enrollmentID: newUser,
+			affiliation: org,
+			role: 'client'
+		});
+		const result = await idService.delete({enrollmentID: newUser});
+		logger.debug(result);
+	});
 });
+describe('certificateService', function () {
+	const org = 'icdd';
+	const admin = helper.getOrgAdmin(org);
+	const protocol = `http${TLS ? 's' : ''}`;
+	const hostname = 'localhost';
+	const port = 8054;
 
+	const caService = new CAService({protocol, hostname, port});
+	const certService = new CertificateServiceWrapper(caService, admin, logger);
+	it('get all', async () => {
+		const results = await certService.getAll();
+		logger.info(results);
+	});
+});

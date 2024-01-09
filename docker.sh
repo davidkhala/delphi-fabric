@@ -6,7 +6,6 @@ export binPath=$CURRENT/common/bin/
 down() {
 
 	npm stop
-	sudo rm -rf $CURRENT/stateVolumes/*
 }
 
 prepareNetwork() {
