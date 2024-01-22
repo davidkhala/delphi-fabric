@@ -4,6 +4,7 @@ import {installAll, ChaincodeDefinitionOperator} from '../../app/installHelper.j
 import FabricGateway from '../../common/nodejs/fabric-gateway/index.js';
 import {consoleLogger} from '@davidkhala/logger/log4.js';
 import UserBuilder from '../../common/nodejs/admin/user.js';
+import {dev} from '../testutil.js';
 
 const chaincodeID = 'contracts';
 const logger = consoleLogger(`chaincode:${chaincodeID}`);
@@ -19,33 +20,40 @@ describe('deploy', function () {
 	it('install', async () => {
 		await installAll(chaincodeID);
 	});
-	const sequence = 1;
+	it('dev', async () => {
+		const orgs = ['icdd', 'astri.org'];
+		for (const org of orgs) {
+			await dev(org, chaincodeID);
+		}
+	});
 	it('query installed & approve', async () => {
 
 
 		const orgs = ['icdd', 'astri.org'];
 		for (const org of orgs) {
+			// TODO migrate to testutil.js
 			const admin = helper.getOrgAdmin(org);
 			const peers = helper.newPeers([0, 1], org);
 			const operator = new ChaincodeDefinitionOperator(channel, admin, peers, init_required);
 			await operator.connect();
-			await operator.queryInstalledAndApprove(chaincodeID, sequence, orderer);
+			await operator.queryInstalledAndApprove(chaincodeID, orderer);
 			await operator.disconnect();
 		}
 
 	});
 	it('commit', async () => {
+		// TODO migrate to testutil.js
 		const org = 'icdd';
 		const peers = [helper.newPeer(0, 'astri.org'), helper.newPeer(0, 'icdd')];
 		const admin = helper.getOrgAdmin(org);
 		const operator = new ChaincodeDefinitionOperator(channel, admin, peers, init_required);
 		await operator.connect();
-		await operator.commitChaincodeDefinition({name: chaincodeID, sequence}, orderer);
+		await operator.queryAndCommit(chaincodeID, orderer);
 		await operator.disconnect();
 	});
 });
-describe('invoke', function ()  {
-	this.timeout(0)
+describe('invoke', function () {
+	this.timeout(0);
 	const peer = helper.newPeer(0, 'astri.org');
 	const org = 'icdd';
 	const user = new UserBuilder(undefined, helper.getOrgAdmin(org));
@@ -60,16 +68,19 @@ describe('invoke', function ()  {
 	it('who', async () => {
 		contract.subContract = 'SmartContract';
 		const result = await contract.evaluateTransaction('who');
-		console.debug(result);
+		logger.info(result);
 	});
 	it('touch submit', async () => {
 		contract.subContract = 'StupidContract';
 		await contract.submitTransaction('ping');
 
 	});
-	it('panic', async () => {
-		assert.throws(async () => {
-			await contract.evaluateTransaction('StupidContract:panic');
+	it('p1e', async () => {
+		await assert.rejects(async () => {
+			await contract.evaluateTransaction('StupidContract:P1E');
+		});
+		await assert.rejects(async () => {
+			await contract.evaluateTransaction('StupidContract:p1E');
 		});
 
 

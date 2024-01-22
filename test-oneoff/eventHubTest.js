@@ -3,30 +3,30 @@ import UserUtil from '../common/nodejs/admin/user.js';
 import * as helper from '../app/helper.js';
 import {BlockNumberFilterType} from '../common/nodejs/formatter/eventHub.js';
 import {consoleLogger} from '@davidkhala/logger/log4.js';
-import BlockDecoder from '../common/nodejs/formatter/blockDecoder.js';
+import {BlockDecoder} from '@hyperledger-twgc/fabric-formatter';
+import assert from 'assert';
 
 const logger = consoleLogger('test:eventHub');
 const {NEWEST, OLDEST} = BlockNumberFilterType;
 const org = 'astri.org';
-describe('eventhub', function ()  {
+describe('eventhub', function () {
 	this.timeout(0);
 	const channelName = 'allchannel';
 	const user = helper.getOrgAdmin(org, 'peer');
 	const channel = helper.prepareChannel(channelName);
 	logger.info(channel.toString());
 	const peer = helper.newPeer(0, org);
-	const orderers = helper.newOrderers()
-	const orderer = orderers[0]
+	const orderers = helper.newOrderers();
+	const orderer = orderers[0];
 
-	it('wait for block', async ()=>{
-		const eventHub = new EventHub(channel, orderer.eventer);
-		const identityContext = UserUtil.getIdentityContext(user);
-
-	})
-	it('block parser', async ()=> {
+	it('san check', async () => {
+		new EventHub(channel, orderer.eventer);
+		UserUtil.getIdentityContext(user);
+		assert.ok(typeof BlockDecoder === 'function');
+	});
+	it('block parser', async () => {
 
 		const eventHub = new EventHub(channel, peer.eventer);
-		console.debug(user)
 		const identityContext = UserUtil.getIdentityContext(user);
 		const startBlock = OLDEST;
 		const endBlock = NEWEST;
@@ -38,6 +38,7 @@ describe('eventhub', function ()  {
 				return;
 			}
 			const {block} = event;
+			console.debug(block)
 			const decoder = new BlockDecoder(block);
 			const {number} = decoder.header();
 			logger.debug(`---block ${number}---`);

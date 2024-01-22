@@ -21,9 +21,9 @@ export const installs = async (chaincodeId, orgName, peerIndexes = Object.keys(g
 	}
 	const user = helper.getOrgAdmin(orgName);
 	const [result, t1] = await install(peers, {chaincodeId}, user);
-	const ids = result.responses.map(({response})=> response.package_id)
-	assert.ok(isEven(ids))
-	const packageID = ids[0]
+	const ids = result.responses.map(({response}) => response.package_id);
+	assert.ok(isEven(ids));
+	const packageID = ids[0];
 	t1();
 	for (const peer of peers) {
 		peer.disconnect();
@@ -66,9 +66,11 @@ export class ChaincodeDefinitionOperator {
 	constructor(channelName, admin, peers, init_required) {
 		const channel = helper.prepareChannel(channelName);
 		this.waitForConsensus = 1000;
-		const chaincodeAction = new ChaincodeAction(peers, admin, channel);
+		const chaincodeAction = new ChaincodeAction(peers, admin, channel, logger);
 		chaincodeAction.init_required = !!init_required;
-		Object.assign(this, {chaincodeAction, peers, admin, channel});
+		this.forceUpgrade = true;
+		Object.assign(this, {chaincodeAction, peers, admin, channel, channelName});
+
 	}
 
 	async init(chaincodeId, orderer) {
@@ -80,12 +82,12 @@ export class ChaincodeDefinitionOperator {
 		await tx.submit({init: true}, orderer);
 	}
 
-	async approves({sequence, PackageID}, orderer, gate) {
+	async approves({sequence, package_id}, orderer, gate) {
 		const {waitForConsensus, chaincodeAction} = this;
 
 		await orderer.connect();
 
-		const {name} = parsePackageID(PackageID);
+		const {name} = parsePackageID(package_id);
 
 		const endorsementPolicy = {
 			gate
@@ -95,12 +97,19 @@ export class ChaincodeDefinitionOperator {
 		chaincodeAction.setEndorsementPolicy(endorsementPolicy);
 		chaincodeAction.setCollectionsConfig(getCollectionConfig(name));
 		try {
-			await chaincodeAction.approve({name, PackageID, sequence}, orderer, waitForConsensus);
+			await chaincodeAction.approve({name, package_id, sequence}, orderer, waitForConsensus);
 		} finally {
 			orderer.disconnect();
 		}
 	}
 
+	/**
+	 *
+	 * @param sequence
+	 * @param name
+	 * @param orderer
+	 * @param [gate]
+	 */
 	async commitChaincodeDefinition({sequence, name}, orderer, gate) {
 		const {chaincodeAction} = this;
 		await orderer.connect();
@@ -128,9 +137,14 @@ export class ChaincodeDefinitionOperator {
 		return readyStates[0];
 	}
 
-	async queryDefinition(name) {
+	async queryDefinition(chaincodeID) {
 		const {chaincodeAction} = this;
-		return await chaincodeAction.queryChaincodeDefinition(name);
+		const results = await chaincodeAction.queryChaincodeDefinition(chaincodeID);
+		if (results) {
+			results.every(e => assert.deepEqual(e, results[0]));
+			return results[0];
+		}
+
 	}
 
 	async connect() {
@@ -147,69 +161,70 @@ export class ChaincodeDefinitionOperator {
 		}
 	}
 
-	async queryInstalled(label, packageId) {
+	async queryInstalled(label) {
 		const {peers, admin} = this;
-		if (packageId && !label) {
-			label = parsePackageID(packageId).label;
-		}
+
 		const queryHub = new QueryHub(peers, admin);
-		const queryResult = await queryHub.chaincodesInstalled(label, packageId);
-		for (const entry of queryResult) {
-			const PackageIDs = Object.keys(entry);
-			if (packageId) {
-				assert.strictEqual(packageId, PackageIDs[0]);
-				assert.ok(PackageIDs.length === 1);
-			}
-			for (const [_packageid, moreInfo] of Object.entries(entry)) {
-				if (Object.keys(moreInfo).length === 0) {
-					logger.info(_packageid, 'installed while not deployed');
-				} else {
-					for (const [channelName, {chaincodes}] of Object.entries(moreInfo)) {
+		const queryResults = await queryHub.chaincodesInstalled(label);
+		assert.ok(isEven(queryResults), 'chaincodesInstalled results should be even');
+		const queryResult = queryResults[0];
+
+		const uncommitted = [], committed = [];
+		for (const [package_id, moreInfo] of Object.entries(queryResult)) {
+			if (Object.keys(moreInfo).length === 0) {
+				logger.info(package_id, 'installed while not committed');
+				uncommitted.push(package_id);
+			} else {
+
+				for (const [channelName, {chaincodes}] of Object.entries(moreInfo)) {
+					if (channelName === this.channelName) {
 						for (const {name, version} of chaincodes) {
 							assert.strictEqual(name, label);
-							logger.info(_packageid, channelName, {version});
+							committed.push({package_id, version});
 						}
-
 					}
 				}
-
 			}
-
 		}
-		return queryResult;
+
+		return [queryResult, uncommitted, committed];
+	}
+
+	async queryAndCommit(chaincodeID, orderer) {
+		const isCommitted = await this.queryDefinition(chaincodeID);
+
+		let sequence = 1;
+		if (isCommitted) {
+			sequence = isCommitted.sequence + 1;
+		}
+		await this.commitChaincodeDefinition({name: chaincodeID, sequence}, orderer);
+
 	}
 
 	/**
 	 *
 	 * @param {string} chaincodeId
-	 * @param {number} sequence
 	 * @param {Orderer} _orderer
 	 * @param {string} [_gate]
 	 */
-	async queryInstalledAndApprove(chaincodeId, sequence, _orderer, _gate) {
+	async queryInstalledAndApprove(chaincodeId, _orderer, _gate) {
 
-		const {peers, admin} = this;
+		const [_, uncommitted, committed] = await this.queryInstalled(chaincodeId);
 
-		const queryHub = new QueryHub(peers, admin);
-		const queryResult = await queryHub.chaincodesInstalled(chaincodeId);
-		let PackageID;
-		for (const entry of queryResult) {
-			const PackageIDs = Object.keys(entry);
-			if (PackageIDs.length > 1) {
-				logger.error(queryResult);
-				logger.error({PackageIDs: PackageIDs});
-				// TODO to be smarter reducer
-				throw Error('found multiple installed packageID, could not decide which to approve');
+		const isCommitted = await this.queryDefinition(chaincodeId);
 
-			} else {
-				if (PackageID) {
-					assert.strictEqual(PackageID, PackageIDs[0]);
-				}
-				PackageID = PackageIDs[0];
-			}
+		let sequence = 1;
+		if (isCommitted) {
+			sequence = isCommitted.sequence + 1;
 		}
-		if (PackageID) {
-			await this.approves({PackageID, sequence}, _orderer, _gate);
+		for (const package_id of uncommitted) {
+			await this.approves({package_id, sequence}, _orderer, _gate);
+		}
+		if (uncommitted.length === 0 && this.forceUpgrade) {
+			// force update
+			for (const package_id of committed.map(({package_id}) => package_id)) {
+				await this.approves({package_id, sequence}, _orderer, _gate);
+			}
 		}
 
 	}
