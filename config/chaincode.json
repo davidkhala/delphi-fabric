@@ -1,7 +1,4 @@
 {
-  "stress": {
-    "path": "chaincode/golang/stress"
-  },
   "contracts": {
     "path": "chaincode/golang/contracts"
   },

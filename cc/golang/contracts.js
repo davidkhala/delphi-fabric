@@ -1,18 +1,16 @@
 import assert from 'assert';
 import * as helper from '../../app/helper.js';
-import {installAll, ChaincodeDefinitionOperator} from '../../app/installHelper.js';
+import {installAll} from '../../app/installHelper.js';
 import FabricGateway from '../../common/nodejs/fabric-gateway/index.js';
 import {consoleLogger} from '@davidkhala/logger/log4.js';
 import UserBuilder from '../../common/nodejs/admin/user.js';
-import {dev} from '../testutil.js';
+import {dev, smartApprove, commit} from '../testutil.js';
 
 const chaincodeID = 'contracts';
 const logger = consoleLogger(`chaincode:${chaincodeID}`);
 const orderers = helper.newOrderers();
 const orderer = orderers[0];
 const channel = 'allchannel';
-
-const init_required = false;
 
 describe('deploy', function () {
 	this.timeout(0);
@@ -31,25 +29,14 @@ describe('deploy', function () {
 
 		const orgs = ['icdd', 'astri.org'];
 		for (const org of orgs) {
-			// TODO migrate to testutil.js
-			const admin = helper.getOrgAdmin(org);
-			const peers = helper.newPeers([0, 1], org);
-			const operator = new ChaincodeDefinitionOperator(channel, admin, peers, init_required);
-			await operator.connect();
-			await operator.queryInstalledAndApprove(chaincodeID, orderer);
-			await operator.disconnect();
+			await smartApprove(org, chaincodeID, orderer);
 		}
 
 	});
 	it('commit', async () => {
 		// TODO migrate to testutil.js
 		const org = 'icdd';
-		const peers = [helper.newPeer(0, 'astri.org'), helper.newPeer(0, 'icdd')];
-		const admin = helper.getOrgAdmin(org);
-		const operator = new ChaincodeDefinitionOperator(channel, admin, peers, init_required);
-		await operator.connect();
-		await operator.queryAndCommit(chaincodeID, orderer);
-		await operator.disconnect();
+		await commit(org, chaincodeID, orderer);
 	});
 });
 describe('invoke', function () {
@@ -77,13 +64,19 @@ describe('invoke', function () {
 	});
 	it('p1e', async () => {
 		await assert.rejects(async () => {
-			await contract.evaluateTransaction('StupidContract:P1E');
-		});
-		await assert.rejects(async () => {
 			await contract.evaluateTransaction('StupidContract:p1E');
 		});
-
-
+	});
+	it('stress 10', async () => {
+		for (let i = 0; i < 10; i++) {
+			await contract.submitTransaction('ping');
+		}
+		for (let i = 0; i < 10; i++) {
+			await contract.submit(['ping'], undefined, undefined, true);
+		}
+		for (let i = 0; i < 10; i++) {
+			await contract.evaluateTransaction('ping');
+		}
 	});
 });
 

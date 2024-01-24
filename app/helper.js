@@ -22,6 +22,9 @@ export const projectResolve = (...args) => path.resolve(projectRoot, ...args);
 
 const CRYPTO_CONFIG_DIR = homeResolve(globalConfig.docker.volumes.MSPROOT);
 
+export function orgNamesOfChannel(channelName){
+	return Object.keys(globalConfig.channels[channelName].organizations)
+}
 const preparePeer = (orgName, peerIndex, peerConfig) => {
 	const {port: peerPort} = peerConfig;
 
