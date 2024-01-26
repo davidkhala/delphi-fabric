@@ -1,5 +1,4 @@
 import assert from 'assert';
-import {importFrom} from '@davidkhala/light/es6.mjs';
 import {consoleLogger} from '@davidkhala/logger/log4.js';
 import {install, getEndorsePolicy, getCollectionConfig} from './chaincodeHelper.js';
 import ChaincodeAction from '../common/nodejs/chaincodeOperation.js';
@@ -10,50 +9,7 @@ import Transaction from '../common/nodejs/transaction.js';
 import {isEven} from '@davidkhala/light/array.js';
 import * as util from 'util';
 
-const globalConfig = importFrom(import.meta, '../config/orgs.json');
-const logger = consoleLogger('install helper');
-
-// only one time, one org could deploy
-export const installs = async (chaincodeId, orgName, peerIndexes = Object.keys(globalConfig.organizations[orgName].peers)) => {
-	const peers = helper.newPeers(peerIndexes, orgName);
-	for (const peer of peers) {
-		await peer.connect();
-	}
-	const user = helper.getOrgAdmin(orgName);
-	const [result, t1] = await install(peers, {chaincodeId}, user);
-	const ids = result.responses.map(({response}) => response.package_id);
-	assert.ok(isEven(ids));
-	const packageID = ids[0];
-	t1();
-	for (const peer of peers) {
-		peer.disconnect();
-	}
-	return packageID;
-};
-export const installAll = async (chaincodeId, channelName) => {
-	let package_id_already;
-	const installOnOrg = async (peerOrg, peerIndexes) => {
-		const package_id = await installs(chaincodeId, peerOrg, peerIndexes);
-		if (package_id_already) {
-			assert.strictEqual(package_id, package_id_already);
-		} else {
-			package_id_already = package_id;
-		}
-
-	};
-	if (channelName) {
-		for (const [peerOrg, {peerIndexes}] of Object.entries(globalConfig.channels[channelName].organizations)) {
-			await installOnOrg(peerOrg, peerIndexes);
-			logger.info('[DONE] installOnOrg', peerOrg);
-		}
-	} else {
-		for (const [peerOrg, {peers}] of Object.entries(globalConfig.organizations)) {
-			await installOnOrg(peerOrg, Object.keys(peers));
-			logger.info('[DONE] installOnOrg', peerOrg);
-		}
-	}
-	return package_id_already;
-};
+const logger = consoleLogger('chaincode operator');
 
 export class ChaincodeDefinitionOperator {
 	/**
@@ -67,7 +23,6 @@ export class ChaincodeDefinitionOperator {
 		const channel = helper.prepareChannel(channelName);
 		this.waitForConsensus = 1000;
 		const chaincodeAction = new ChaincodeAction(peers, admin, channel, logger);
-		chaincodeAction.init_required = !!init_required;
 		this.forceUpgrade = true;
 		Object.assign(this, {chaincodeAction, peers, admin, channel, channelName});
 
@@ -80,6 +35,12 @@ export class ChaincodeDefinitionOperator {
 		}
 		const tx = new Transaction(this.peers, this.admin, this.channel, chaincodeId, logger);
 		await tx.submit({init: true}, orderer);
+	}
+
+	async install(chaincodeId) {
+		const package_id = await install(this.peers, chaincodeId, this.admin);
+		logger.info(`${package_id} installed to peers ${this.peers.map(peer => peer.toString())}`);
+		return package_id;
 	}
 
 	async approves({sequence, package_id}, orderer, gate) {
@@ -134,6 +95,7 @@ export class ChaincodeDefinitionOperator {
 		chaincodeAction.setCollectionsConfig(getCollectionConfig(name));
 		const readyStates = await chaincodeAction.checkCommitReadiness({name, sequence});
 		assert.ok(isEven(readyStates), `CommitReadiness should be even, but got ${util.inspect(readyStates)}`);
+
 		return readyStates[0];
 	}
 
@@ -141,7 +103,7 @@ export class ChaincodeDefinitionOperator {
 		const {chaincodeAction} = this;
 		const results = await chaincodeAction.queryChaincodeDefinition(chaincodeID);
 		if (results) {
-			results.every(e => assert.deepEqual(e, results[0]));
+			assert.ok(isEven(results));
 			return results[0];
 		}
 
@@ -166,7 +128,8 @@ export class ChaincodeDefinitionOperator {
 
 		const queryHub = new QueryHub(peers, admin);
 		const queryResults = await queryHub.chaincodesInstalled(label);
-		assert.ok(isEven(queryResults), 'chaincodesInstalled results should be even');
+		assert.ok(isEven(queryResults), `ChaincodesInstalled should be even, but got ${util.inspect(queryResults)}`);
+
 		const queryResult = queryResults[0];
 
 		const uncommitted = [], committed = [];
@@ -186,8 +149,8 @@ export class ChaincodeDefinitionOperator {
 				}
 			}
 		}
-
-		return [queryResult, uncommitted, committed];
+		assert.ok(committed.length < 2, 'committed contract should not be more than 1');
+		return [queryResult, uncommitted, committed[0]];
 	}
 
 	async queryAndCommit(chaincodeID, orderer) {
@@ -205,9 +168,10 @@ export class ChaincodeDefinitionOperator {
 	 *
 	 * @param {string} chaincodeId
 	 * @param {Orderer} _orderer
+	 * @param {string} uncommitted_packageId
 	 * @param {string} [_gate]
 	 */
-	async queryInstalledAndApprove(chaincodeId, _orderer, _gate) {
+	async queryInstalledAndApprove(chaincodeId, _orderer, uncommitted_packageId, _gate) {
 
 		const [_, uncommitted, committed] = await this.queryInstalled(chaincodeId);
 
@@ -217,15 +181,20 @@ export class ChaincodeDefinitionOperator {
 		if (isCommitted) {
 			sequence = isCommitted.sequence + 1;
 		}
-		for (const package_id of uncommitted) {
-			await this.approves({package_id, sequence}, _orderer, _gate);
-		}
-		if (uncommitted.length === 0 && this.forceUpgrade) {
-			// force update
-			for (const package_id of committed.map(({package_id}) => package_id)) {
-				await this.approves({package_id, sequence}, _orderer, _gate);
+		let package_id;
+		if (uncommitted.includes(uncommitted_packageId)) {
+			package_id = uncommitted_packageId;
+		} else if (committed && committed.package_id === uncommitted_packageId) {
+			if (this.forceUpgrade) {
+				package_id = uncommitted_packageId;
+			} else {
+				return;
 			}
+		} else {
+			throw Error(`package ${uncommitted_packageId} not found within chaincode=${chaincodeId} namespace`);
 		}
+
+		await this.approves({package_id, sequence}, _orderer, _gate);
 
 	}
 }

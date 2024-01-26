@@ -9,6 +9,8 @@ import {discoveryChaincodeInterestBuilder} from '../common/nodejs/serviceDiscove
 import {couchDBIndex} from '../common/nodejs/couchdb.js';
 import {ChaincodeType} from '../common/nodejs/formatter/chaincode.js';
 import {lifecycle as Lifecycle} from '../common/nodejs/binManager/peer.js';
+import assert from 'assert';
+import {isEven} from '@davidkhala/light/array.js';
 
 
 filedirname(import.meta);
@@ -49,13 +51,19 @@ export const prepareInstall = (chaincodeId, binManager, outputDir) => {
 
 	return [ccPack, packageid, cleanup];
 };
-export const install = async (peers, {chaincodeId}, user) => {
+export const install = async (peers, chaincodeId, user) => {
 	const binPath = path.resolve(__dirname, '../common/bin');
 	const binManager = new Lifecycle(binPath);
 	const [ccPack, packageId, cleanup] = prepareInstall(chaincodeId, binManager);
 	const chaincodeAction = new ChaincodeAction(peers, user);
-	const result = await chaincodeAction.install(ccPack);
-	return [result, cleanup];
+	const result = await chaincodeAction.install(ccPack, packageId);
+	if (!result) {
+		return packageId;
+	}
+	const ids = result.queryResults.map(({package_id}) => package_id);
+	assert.ok(isEven(ids));
+	cleanup();
+	return ids[0];
 };
 
 const simplePolicyBuilder = (identities, n) => {

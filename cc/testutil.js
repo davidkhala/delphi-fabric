@@ -1,5 +1,5 @@
 import * as helper from '../app/helper.js';
-import {ChaincodeDefinitionOperator} from '../app/installHelper.js';
+import {ChaincodeDefinitionOperator} from '../app/chaincodeOperator.js';
 import {consoleLogger} from '@davidkhala/logger/log4.js';
 
 const channel = 'allchannel';
@@ -16,12 +16,14 @@ export async function dev(org, chaincodeID, init_required = false) {
 	await operator.disconnect();
 }
 
-export async function smartApprove(org, chaincodeID, orderer, init_required = false) {
+export async function installAndApprove(org, chaincodeId, orderer, init_required = false) {
 	const admin = helper.getOrgAdmin(org);
+
 	const peers = helper.newPeers([0, 1], org);
 	const operator = new ChaincodeDefinitionOperator(channel, admin, peers, init_required);
 	await operator.connect();
-	await operator.queryInstalledAndApprove(chaincodeID, orderer);
+	const package_id = await operator.install(chaincodeId);
+	await operator.queryInstalledAndApprove(chaincodeId, orderer, package_id);
 	await operator.disconnect();
 }
 

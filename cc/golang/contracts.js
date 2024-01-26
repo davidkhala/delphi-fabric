@@ -1,10 +1,9 @@
 import assert from 'assert';
 import * as helper from '../../app/helper.js';
-import {installAll} from '../../app/installHelper.js';
 import FabricGateway from '../../common/nodejs/fabric-gateway/index.js';
 import {consoleLogger} from '@davidkhala/logger/log4.js';
 import UserBuilder from '../../common/nodejs/admin/user.js';
-import {dev, smartApprove, commit} from '../testutil.js';
+import {dev, installAndApprove, commit} from '../testutil.js';
 
 const chaincodeID = 'contracts';
 const logger = consoleLogger(`chaincode:${chaincodeID}`);
@@ -15,26 +14,20 @@ const channel = 'allchannel';
 describe('deploy', function () {
 	this.timeout(0);
 
-	it('install', async () => {
-		await installAll(chaincodeID);
-	});
 	it('dev', async () => {
 		const orgs = ['icdd', 'astri.org'];
 		for (const org of orgs) {
 			await dev(org, chaincodeID);
 		}
 	});
-	it('query installed & approve', async () => {
-
-
+	it('install & approve', async () => {
 		const orgs = ['icdd', 'astri.org'];
 		for (const org of orgs) {
-			await smartApprove(org, chaincodeID, orderer);
+			await installAndApprove(org, chaincodeID, orderer);
 		}
 
 	});
 	it('commit', async () => {
-		// TODO migrate to testutil.js
 		const org = 'icdd';
 		await commit(org, chaincodeID, orderer);
 	});
@@ -51,23 +44,46 @@ describe('invoke', function () {
 	it('touch', async () => {
 		contract.subContract = 'StupidContract';
 		await contract.evaluateTransaction('ping');
+		// touch submit
+		await contract.submitTransaction('ping');
+		delete contract.subContract;
 	});
 	it('who', async () => {
 		contract.subContract = 'SmartContract';
 		const result = await contract.evaluateTransaction('who');
 		logger.info(result);
+		delete contract.subContract;
 	});
-	it('touch submit', async () => {
-		contract.subContract = 'StupidContract';
-		await contract.submitTransaction('ping');
-
-	});
-	it('p1e', async () => {
+	it('error', async () => {
 		await assert.rejects(async () => {
-			await contract.evaluateTransaction('StupidContract:p1E');
+			await contract.evaluateTransaction('StupidContract:error');
 		});
 	});
+	it('UnUsedContext', async () => {
+		const r = await contract.evaluateTransaction('StupidContract:UnUsedContext');
+		assert.ok(!r);
+	});
+	it('OnlyParams', async () => {
+		await assert.rejects(contract.evaluateTransaction('StupidContract:OnlyParams'));
+		await assert.rejects(contract.evaluateTransaction('StupidContract:OnlyParams', 'git', 'hub'));
+	});
+	it('StringParam', async () => {
+		const p1 = 'git';
+		assert.deepEqual(await contract.evaluateTransaction('StupidContract:StringParam', p1), p1);
+	});
+	it('StringParams', async () => {
+
+		await assert.rejects(contract.evaluateTransaction('StupidContract:StringParams', ['a', 'b']));
+		await assert.rejects(contract.evaluateTransaction('StupidContract:StringParams', 'a', 'b'));
+	});
+	it('standard', async () => {
+		await assert.rejects(contract.evaluateTransaction('standard'));
+		assert.equal(await contract.evaluateTransaction('standard', 'a'), 'a');
+
+
+	});
 	it('stress 10', async () => {
+		contract.subContract = 'StupidContract';
 		for (let i = 0; i < 10; i++) {
 			await contract.submitTransaction('ping');
 		}
@@ -77,6 +93,7 @@ describe('invoke', function () {
 		for (let i = 0; i < 10; i++) {
 			await contract.evaluateTransaction('ping');
 		}
+		delete contract.subContract;
 	});
 });
 

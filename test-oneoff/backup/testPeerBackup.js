@@ -1,7 +1,7 @@
 import {consoleLogger} from '@davidkhala/logger/log4.js';
 import {sleep} from '@davidkhala/light/index.js';
 import * as helper from '../../app/helper.js';
-import {installs} from '../../app/installHelper.js';
+import {installs} from '../../app/chaincodeOperator.js';
 import {resumePeer, stopPeer} from './index.js';
 
 const logger = consoleLogger('test:peer HA');
