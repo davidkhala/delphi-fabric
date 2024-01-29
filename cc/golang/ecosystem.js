@@ -1,5 +1,6 @@
 import * as helper from '../../app/helper.js';
 import {installAndApprove, commit, getContract} from '../testutil.js';
+import assert from 'assert';
 
 const chaincodeID = 'ecosystem';
 const orderers = helper.newOrderers();
@@ -24,13 +25,27 @@ describe('deploy', function () {
 describe('invoke', function () {
 	this.timeout(0);
 	const contract = getContract(chaincodeID);
+	const transientMap = {
+		token: 'secret'
+	};
 	it('CreateToken', async () => {
-		try {
-			await contract.submitTransaction('CreateToken', JSON.stringify({Owner: 'icddMSP', MintTime: new Date()}));
-		} catch (e) {
-			console.error(e);
-		}
-
+		await contract.submit(['CreateToken', JSON.stringify({Owner: 'David'})], transientMap);
+		await assert.rejects(contract.submit(['CreateToken', JSON.stringify({Owner: 'David'})], transientMap));
+	});
+	it('GetToken', async () => {
+		const tokenData = await contract.evaluate(['GetToken'], transientMap);
+		console.info(tokenData);
+	});
+	it('MoveToken', async () => {
+		await contract.submit(['MoveToken', JSON.stringify({Owner: 'Chloe', OwnerType: 'network'})], transientMap);
+	});
+	it('TokenHistory', async () => {
+		const history = await contract.evaluate(['TokenHistory'], transientMap);
+		console.info(JSON.parse(history));
 
 	});
+	it('DeleteToken', async () => {
+		await contract.submit(['DeleteToken'], transientMap);
+	});
+
 });
