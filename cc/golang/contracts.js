@@ -79,7 +79,20 @@ describe('invoke', function () {
 	it('standard', async () => {
 		await assert.rejects(contract.evaluateTransaction('standard'));
 		assert.equal(await contract.evaluateTransaction('standard', 'a'), 'a');
+		const result = await contract.evaluateTransaction('now');
+		const chaincodeTime = new Date(result);
+		assert.ok(chaincodeTime < new Date());
 
+	});
+	it('defer', async () => {
+
+		try {
+			await contract.evaluateTransaction('StupidContract:defer');
+		} catch (e) {
+			const {code, details} = e;
+			assert.equal(code, 2);
+			assert.equal(details[0].message, 'chaincode response 500, defer');
+		}
 
 	});
 	it('stress 10', async () => {

@@ -1,6 +1,8 @@
 import * as helper from '../app/helper.js';
 import {ChaincodeDefinitionOperator} from '../app/chaincodeOperator.js';
 import {consoleLogger} from '@davidkhala/logger/log4.js';
+import UserBuilder from '../common/nodejs/admin/user.js';
+import FabricGateway from '../common/nodejs/fabric-gateway/index.js';
 
 const channel = 'allchannel';
 
@@ -34,4 +36,13 @@ export async function commit(org, chaincodeID, orderer, init_required = false) {
 	await operator.connect();
 	await operator.queryAndCommit(chaincodeID, orderer);
 	await operator.disconnect();
+}
+
+export function getContract(chaincodeID) {
+	const org = 'icdd';
+	const peer = helper.newPeer(0, org);
+	const user = new UserBuilder(undefined, helper.getOrgAdmin(org));
+
+	const gateway = new FabricGateway(peer, user);
+	return gateway.getContract(channel, chaincodeID);
 }
