@@ -4,7 +4,7 @@ import {filedirname} from '@davidkhala/light/es6.mjs';
 import * as helper from '../app/helper.js';
 import {ChannelConfig} from '../common/nodejs/channelConfig.js';
 import {consoleLogger} from '@davidkhala/logger/log4.js';
-import BinManager from '../common/nodejs/binManager/binManager.js';
+import {Server} from '../common/nodejs/binManager/configtxlator.js';
 
 const logger = consoleLogger('test:configtxlator');
 const channelName = 'allchannel';
@@ -14,15 +14,12 @@ filedirname(import.meta);
 const binPath = path.resolve(__dirname, '../common/bin/');
 describe('configtxlator', async () => {
 
-	it('viaServer', async () => {
-
-		const binManager = new BinManager(binPath);
-		await binManager.configtxlatorRESTServer('start');
-
-	});
-
 	before(async () => {
 		await orderer.connect();
+		// viaServer
+		const server = new Server(binPath);
+		await server.start();
+
 	});
 	describe('app channel', () => {
 
