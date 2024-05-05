@@ -11,7 +11,6 @@
     "prestart": "mocha dockerode-bootstrap.js --grep ^up --bail",
     "start": "mocha app/channelSetup.js",
     "post-start": "mocha ./cc/golang/diagnose/install.js",
-    "nodejscc": "mocha ./cc/node/diagnose/install.js",
     "stop": "mocha dockerode-bootstrap.js --grep ^down"
   },
   "license": "Apache-2.0",
