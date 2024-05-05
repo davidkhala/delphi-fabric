@@ -1,50 +1,85 @@
+import {commit, dev, getContract, installAndApprove} from '../testutil.js';
+import {consoleLogger} from '@davidkhala/logger/log4.js';
+import * as helper from '../../app/helper.js';
+import {ChaincodeDefinitionOperator} from '../../app/chaincodeOperator.js';
 import assert from 'assert';
 import {base64} from '@davidkhala/light/format.js';
-import {consoleLogger} from '@davidkhala/logger/log4.js';
-import {
-	DiagnoseInvoke
-} from './diagnoseInvoke.js';
-
-const channelName = 'allchannel';
-const clientOrg = 'icdd';
-const peer = helper.newPeer(0, 'icdd');
-const diagnose = new DiagnoseInvoke(channelName, clientOrg, peer);
-import {getResponses} from '../../../common/nodejs/formatter/proposalResponse.js';
-import {TxValidationCode} from '../../../common/nodejs/formatter/constants.js';
-import * as helper from '../../../app/helper.js';
-
+import {TxValidationCode} from '../../common/nodejs/formatter/constants.js';
+import {getResponses} from '../../common/nodejs/formatter/proposalResponse.js';
 
 const logger = consoleLogger('chaincode:diagnose');
-const org1 = 'icdd';
-const org2 = 'astri.org';
+const chaincodeID = 'diagnose';
+describe(`${chaincodeID} : green path`, function () {
+	this.timeout(0);
+	const orderers = helper.newOrderers();
+	const orderer = orderers[0];
+	it('validate', async () => {
+		const orgs = ['icdd', 'astri.org'];
+		for (const org of orgs) {
+			await dev(org, chaincodeID);
+		}
+	});
+	it('install & approve', async () => {
+		const orgs = ['icdd', 'astri.org'];
+		for (const org of orgs) {
+			await installAndApprove(org, chaincodeID, orderer, true);
+		}
+
+	});
+	it('commit', async () => {
+		const org = 'icdd';
+		await commit(org, chaincodeID, orderer, true);
+	});
+});
+
+describe('variant', async function () {
+	this.timeout(0);
+
+	// TODO const gate = `AND('icddMSP.member')`;
+	it('init', async () => {
+		const org = 'icdd';
+		const channel = 'allchannel';
+		const peers = helper.allPeers();
+		const admin = helper.getOrgAdmin(org);
+		const operator = new ChaincodeDefinitionOperator(channel, admin, peers);
+		await operator.connect();
+		await operator.init(chaincodeID);
+
+		operator.disconnect();
+	});
+});
+
 
 describe('chaincode query', () => {
+	const contract = getContract(chaincodeID);
 	it('whom am i ', async () => {
-		const queryResult = await diagnose.whoami();
+		const queryResult = await contract.evaluate(['whoami']);
 		logger.info(queryResult);
+		const {MspID, Attrs, CertificatePem} = JSON.parse(queryResult);
+		assert.equal(MspID, 'icddMSP');
 	});
 
 	it('getCertID', async () => {
-		const result = await diagnose.getCertID();
-		logger.info('certID', result);
+		const queryResult = await contract.evaluate(['getCertID']);
+		assert.equal(queryResult, 'x509::CN=Admin,OU=client::CN=fabric-ca-server,OU=Fabric,O=Hyperledger,ST=North Carolina,C=US');
 	});
 	it('peerMSPID', async () => {
-		const result = await diagnose.peerMSPID();
-		logger.info(result);
+		const result = await contract.evaluate(['peerMSPID']);
+		assert.equal(result, 'icddMSP');
 	});
 	it('chaincode ping (google.com)', async () => {
-		const result = await diagnose.chaincodePing();
-		logger.info(result);
+		const result = await contract.evaluate(['external']);
+		assert.equal(result, '200 OK');
 	});
 });
 describe('chaincode invoke', function () {
 	this.timeout(0);
+	const contract = getContract(chaincodeID);
 	it('put & get raw value', async () => {
 		const value = Date.now().toString();
 		const key = 'a';
-		await diagnose.putRaw(key, value);
-		const queryResult = await diagnose.getRaw(key);
-		logger.info(queryResult);
+		await contract.submit(['putRaw', key, value]);
+		const queryResult = await contract.evaluate(['getRaw', key]);
 		assert.strictEqual(queryResult, value);
 	});
 

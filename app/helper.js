@@ -11,7 +11,7 @@ import {randomKeyOf} from '@davidkhala/light/random.js';
 import {getClientKeyPairPath} from '../config/caCryptoGen.js';
 import {importFrom, filedirname} from '@davidkhala/light/es6.mjs';
 
-const globalConfig = importFrom(import.meta, '../config/orgs.json', );
+const globalConfig = importFrom(import.meta, '../config/orgs.json',);
 const logger = consoleLogger('Helper');
 const orgsConfig = globalConfig.organizations;
 const channelsConfig = globalConfig.channels;
@@ -22,20 +22,22 @@ export const projectResolve = (...args) => path.resolve(projectRoot, ...args);
 
 const CRYPTO_CONFIG_DIR = homeResolve(globalConfig.docker.volumes.MSPROOT);
 
-export function orgNamesOfChannel(channelName){
-	return Object.keys(globalConfig.channels[channelName].organizations)
+export function orgNamesOfChannel(channelName) {
+	return Object.keys(globalConfig.channels[channelName].organizations);
 }
+
 const preparePeer = (orgName, peerIndex, peerConfig) => {
 	const {port: peerPort} = peerConfig;
 
 	let peer;
+	const logger = consoleLogger('peer');
 	const cryptoPath = new CryptoPath(CRYPTO_CONFIG_DIR,
 		{peer: {name: `peer${peerIndex}`, org: orgName}});
 	if (globalConfig.TLS) {
 		const {caCert} = cryptoPath.TLSFile('peer');
-		peer = new Peer({host: 'localhost', peerPort, cert: caCert});
+		peer = new Peer({host: 'localhost', peerPort, cert: caCert}, logger);
 	} else {
-		peer = new Peer({peerPort});
+		peer = new Peer({peerPort}, logger);
 	}
 
 	return peer;
@@ -51,6 +53,7 @@ export const newOrderer = (name, org, ordererSingleConfig) => {
 		}
 	});
 	let ordererWrapper;
+	const logger = consoleLogger('orderer');
 	if (globalConfig.TLS) {
 		const {caCert} = cryptoPath.TLSFile(nodeType);
 		const {clientKey, clientCert} = getClientKeyPairPath(cryptoPath, nodeType);
@@ -60,9 +63,9 @@ export const newOrderer = (name, org, ordererSingleConfig) => {
 			tlsCaCert: caCert,
 			clientKey,
 			clientCert,
-		});
+		}, undefined, logger);
 	} else {
-		ordererWrapper = new Orderer({ordererPort});
+		ordererWrapper = new Orderer({ordererPort}, undefined, logger);
 	}
 	ordererWrapper.adminAddress = `localhost:${portAdmin}`;
 	return ordererWrapper;

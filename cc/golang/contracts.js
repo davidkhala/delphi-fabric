@@ -3,7 +3,7 @@ import * as helper from '../../app/helper.js';
 import FabricGateway from '../../common/nodejs/fabric-gateway/index.js';
 import {consoleLogger} from '@davidkhala/logger/log4.js';
 import UserBuilder from '../../common/nodejs/admin/user.js';
-import {dev, installAndApprove, commit} from '../testutil.js';
+import {dev, installAndApprove, commit, getContract} from '../testutil.js';
 
 const chaincodeID = 'contracts';
 const logger = consoleLogger(`chaincode:${chaincodeID}`);
@@ -34,12 +34,7 @@ describe('deploy', function () {
 });
 describe('invoke', function () {
 	this.timeout(0);
-	const peer = helper.newPeer(0, 'astri.org');
-	const org = 'icdd';
-	const user = new UserBuilder(undefined, helper.getOrgAdmin(org));
-
-	const gateway = new FabricGateway(peer, user);
-	const contract = gateway.getContract(channel, chaincodeID);
+	const contract = getContract(chaincodeID);
 
 	it('touch', async () => {
 		contract.subContract = 'StupidContract';

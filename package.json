@@ -19,7 +19,8 @@
     "@davidkhala/container": "latest",
     "@davidkhala/light": "latest",
     "@davidkhala/nodeutils": "latest",
-    "@davidkhala/axios": "latest"
+    "@davidkhala/axios": "latest",
+    "@hyperledger-twgc/fabric-formatter": "^0.0.0-dev.11"
   },
   "devDependencies": {
     "@davidkhala/logger": "latest",

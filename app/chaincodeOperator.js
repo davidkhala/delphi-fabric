@@ -1,7 +1,7 @@
 import assert from 'assert';
 import {consoleLogger} from '@davidkhala/logger/log4.js';
 import {install, getEndorsePolicy, getCollectionConfig} from './chaincodeHelper.js';
-import ChaincodeAction from '../common/nodejs/chaincodeOperation.js';
+import ChaincodeLifecycleOperation from '../common/nodejs/chaincodeOperation.js';
 import {parsePackageID} from '../common/nodejs/formatter/chaincode.js';
 import * as helper from './helper.js';
 import QueryHub from '../common/nodejs/query.js';
@@ -22,9 +22,13 @@ export class ChaincodeDefinitionOperator {
 	constructor(channelName, admin, peers, init_required) {
 		const channel = helper.prepareChannel(channelName);
 		this.waitForConsensus = 1000;
-		const chaincodeAction = new ChaincodeAction(peers, admin, channel, logger);
+		this.init_required = init_required;
+		this.chaincodeAction = new ChaincodeLifecycleOperation(peers, admin, channel, logger);
 		this.forceUpgrade = true;
-		Object.assign(this, {chaincodeAction, peers, admin, channel, channelName});
+		this.peers = peers;
+		this.admin = admin;
+		this.channel = channel;
+		this.channelName = channelName;
 
 	}
 
@@ -44,7 +48,7 @@ export class ChaincodeDefinitionOperator {
 	}
 
 	async approves({sequence, package_id}, orderer, gate) {
-		const {waitForConsensus, chaincodeAction} = this;
+		const {waitForConsensus, chaincodeAction, init_required} = this;
 
 		await orderer.connect();
 
@@ -58,7 +62,7 @@ export class ChaincodeDefinitionOperator {
 		chaincodeAction.setEndorsementPolicy(endorsementPolicy);
 		chaincodeAction.setCollectionsConfig(getCollectionConfig(name));
 		try {
-			await chaincodeAction.approve({name, package_id, sequence}, orderer, waitForConsensus);
+			await chaincodeAction.approve({name, package_id, sequence, init_required}, orderer, waitForConsensus);
 		} finally {
 			orderer.disconnect();
 		}
@@ -72,14 +76,14 @@ export class ChaincodeDefinitionOperator {
 	 * @param [gate]
 	 */
 	async commitChaincodeDefinition({sequence, name}, orderer, gate) {
-		const {chaincodeAction} = this;
+		const {chaincodeAction, init_required} = this;
 		await orderer.connect();
 		const endorsementPolicy = {gate};
 		Object.assign(endorsementPolicy, getEndorsePolicy(name));
 		chaincodeAction.setEndorsementPolicy(endorsementPolicy);
 		chaincodeAction.setCollectionsConfig(getCollectionConfig(name));
 		try {
-			await chaincodeAction.commitChaincodeDefinition({name, sequence}, orderer);
+			await chaincodeAction.commitChaincodeDefinition({name, sequence, init_required}, orderer);
 		} finally {
 			orderer.disconnect();
 		}

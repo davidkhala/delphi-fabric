@@ -1,5 +1,5 @@
 import * as helper from '../../../app/helper.js';
-import {ChaincodeDefinitionOperator} from '../../../app/installHelper.js';
+import {ChaincodeDefinitionOperator} from '../../../app/chaincodeOperator.js';
 import {prepareInstall} from '../../../app/chaincodeHelper.js';
 import {consoleLogger} from '@davidkhala/logger/log4.js';
 import ChaincodeAction from '../../../common/nodejs/chaincodeOperation.js';
@@ -38,7 +38,7 @@ describe(`install and approve ${chaincodeID}`, function () {
 		const peers = helper.newPeers([0], org);
 		const operator = new ChaincodeDefinitionOperator(channel, admin, peers, init_required);
 		await operator.connect();
-		await operator.queryInstalledAndApprove(chaincodeID, sequence, orderer, gate);
+		await operator.queryInstalledAndApprove(chaincodeID, orderer, undefined, gate);
 		console.debug(`done for org ${org}`);
 		await operator.disconnect();
 
@@ -82,11 +82,11 @@ describe(`commit ${chaincodeID}`, function () {
 		const admin = helper.getOrgAdmin(org);
 		const operator = new ChaincodeDefinitionOperator(channel, admin, peers, init_required);
 		await operator.connect();
-		const r1 = await operator.queryDefinition('icdd', [0], chaincodeID);
+		const r1 = await operator.queryDefinition(chaincodeID);
 		logger.debug(r1);
 		logger.debug(r1[0].collections.config[0].static_collection_config);
 		logger.debug(r1[0].collections.config[0].static_collection_config.endorsement_policy);
-		const r2 = await operator.queryDefinition('icdd', [0], chaincodeID);
+		const r2 = await operator.queryDefinition(chaincodeID);
 		operator.disconnect();
 	});
 

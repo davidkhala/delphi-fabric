@@ -1,4 +1,4 @@
-import {installAll, ChaincodeDefinitionOperator} from '../../../app/installHelper.js';
+import {installAll, ChaincodeDefinitionOperator} from '../../../app/chaincodeOperator.js';
 import * as helper from '../../../app/helper.js';
 import {consoleLogger} from '@davidkhala/logger/log4.js';
 
@@ -31,7 +31,7 @@ describe('approve', function () {
 			const peers = helper.newPeers([0, 1], org);
 			const operator = new ChaincodeDefinitionOperator('allchannel', admin, peers, init_required);
 			await operator.connect();
-			await operator.queryInstalledAndApprove(chaincodeId, sequence, orderer);
+			await operator.queryInstalledAndApprove(chaincodeId, orderer);
 		}
 
 	});
